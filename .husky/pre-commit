@@ -1,0 +1,5 @@
+npm run lint-staged
+
+npm run type-check
+
+npm run fsd-check
