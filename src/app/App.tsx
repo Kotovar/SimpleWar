@@ -1,10 +1,7 @@
+import { Game } from '@widgets/game';
+
 function App() {
-  return (
-    <>
-      <div>Game</div>
-      <canvas width={600} height={600}></canvas>
-    </>
-  );
+  return <Game />;
 }
 
 export default App;

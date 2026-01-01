@@ -1,0 +1,7 @@
+.Main {
+  display: grid;
+  padding: 48px;
+  gap: 16px;
+
+  grid-template-columns: 1fr 1fr;
+}
