@@ -1,4 +1,4 @@
-import { Game } from '@widgets/game';
+import { Game } from '@app/game';
 
 function App() {
   return <Game />;

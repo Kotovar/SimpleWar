@@ -1,0 +1,26 @@
+.GameControls {
+  text-align: center;
+  border: 3px solid rgb(60, 139, 172);
+}
+
+.IsWalkable {
+  color: green;
+}
+
+.IsNotWalkable {
+  color: red;
+}
+
+.Info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.Section {
+  border-block: 2px solid rgb(60, 139, 172);
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}

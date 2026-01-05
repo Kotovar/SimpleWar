@@ -1,0 +1,15 @@
+.Canvas {
+  border: 3px solid rgb(60, 139, 172);
+}
+
+.Pointer {
+  cursor: pointer;
+}
+
+.Move {
+  cursor: move;
+}
+
+.Building {
+  cursor: help;
+}
