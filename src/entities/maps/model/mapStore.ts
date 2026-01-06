@@ -10,8 +10,6 @@ type MapState = {
   initMap: (size: number, seed?: number) => void;
   getCell: (x: number, y: number) => Cell | null;
   setCell: (x: number, y: number, newCell: Partial<Cell>) => void;
-
-  // findPath: (from: {x,y}, to: {x,y}) => {x,y}[] | null;
 };
 
 export const useMapStore = create<MapState>()(

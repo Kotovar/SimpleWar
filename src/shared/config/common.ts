@@ -8,3 +8,8 @@ export type Cell = {
   type: CellType;
   isWalkable: boolean;
 };
+
+export type Position = {
+  x: number;
+  y: number;
+};

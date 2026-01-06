@@ -1,9 +1,7 @@
-import { CELL_SIZE } from '@shared/config';
-
-import type { Building } from '@entities/buildings';
-import type { Unit } from '@entities/units';
+import { CELL_SIZE, Unit } from '@shared/config';
 import { drawBase } from './drawBuildings';
 import { drawSwordsman } from './drawUnits';
+import type { Building } from '@entities/buildings';
 
 export const renderEntitiesLayer = (
   ctx: CanvasRenderingContext2D,

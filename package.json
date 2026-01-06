@@ -15,9 +15,11 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@types/pathfinding": "^0.1.0",
     "clsx": "^2.1.1",
     "immer": "^11.1.3",
     "normalize.css": "^8.0.1",
+    "pathfinding": "^0.4.18",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "simplex-noise": "^4.0.3",

@@ -1,13 +1,13 @@
 import { useCallback } from 'react';
 import {
   renderEntitiesLayer,
+  renderMovementLayer,
   renderSelectionLayer,
   renderTerrainLayer,
   withClear,
 } from '@widgets/map/lib';
 import type { Building } from '@entities/buildings';
-import type { Unit } from '@entities/units';
-import type { Cell } from '@shared/config';
+import type { Cell, Position, Unit } from '@shared/config';
 import type { Selection } from '@features/selection';
 
 type Props = {
@@ -15,6 +15,8 @@ type Props = {
   buildings: Record<string, Building>;
   units: Record<string, Unit>;
   selection: Selection;
+  reachableCells: Position[] | null;
+  attackableTargets: Position[] | null;
 };
 
 export const useRenderFunctions = ({
@@ -22,6 +24,8 @@ export const useRenderFunctions = ({
   buildings,
   units,
   selection,
+  reachableCells,
+  attackableTargets,
 }: Props) => {
   const renderTerrain = useCallback(
     (ctx: CanvasRenderingContext2D) => {
@@ -37,6 +41,15 @@ export const useRenderFunctions = ({
     [buildings, units],
   );
 
+  const renderMovement = useCallback(
+    (ctx: CanvasRenderingContext2D) => {
+      withClear(ctx, () =>
+        renderMovementLayer(ctx, reachableCells, attackableTargets),
+      );
+    },
+    [attackableTargets, reachableCells],
+  );
+
   const renderSelection = useCallback(
     (ctx: CanvasRenderingContext2D) => {
       withClear(ctx, () =>
@@ -46,5 +59,5 @@ export const useRenderFunctions = ({
     [buildings, selection, units],
   );
 
-  return { renderTerrain, renderEntities, renderSelection };
+  return { renderTerrain, renderEntities, renderSelection, renderMovement };
 };

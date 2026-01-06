@@ -19,8 +19,12 @@
   z-index: 20;
 }
 
-.Highlight {
+.Movement {
   z-index: 30;
+}
+
+.Highlight {
+  z-index: 40;
 }
 
 .Pointer {

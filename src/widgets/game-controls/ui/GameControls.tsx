@@ -56,6 +56,7 @@ export const GameControls = () => {
               HP: {unit.hp} / {unit.maxHp}
             </div>
             <div>Дальность хода: {unit.moveRange}</div>
+            <div>Радиус атаки: {unit.attackRange}</div>
           </section>
         )}
 

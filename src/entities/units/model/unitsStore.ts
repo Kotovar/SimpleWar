@@ -1,19 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { UNITS_CONFIG } from '@shared/config';
-import type { Owner, UnitType } from '@shared/config';
-
-export type Unit = {
-  id: string;
-  type: UnitType;
-  x: number;
-  y: number;
-  hp: number;
-  maxHp: number;
-  moveRange: number;
-  attack: number;
-  owner: Owner;
-};
+import type { Owner, Unit, UnitType } from '@shared/config';
 
 type UnitsState = {
   units: Record<string, Unit>;
@@ -48,6 +36,7 @@ export const useUnitsStore = create<UnitsState>()(
           maxHp: config.maxHp,
           moveRange: config.moveRange,
           attack: config.attack,
+          attackRange: config.attackRange,
         };
       });
 

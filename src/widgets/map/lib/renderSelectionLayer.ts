@@ -1,8 +1,7 @@
-import { CELL_SIZE } from '@shared/config';
+import { CELL_SIZE, Unit } from '@shared/config';
 import { drawSelectionHighlight } from './drawUnits';
 import { drawTerrainHighlight } from './drawTerrain';
 import type { Building } from '@entities/buildings';
-import type { Unit } from '@entities/units';
 import type { Selection } from '@features/selection';
 
 export const renderSelectionLayer = (

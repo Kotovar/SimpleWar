@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { Unit, useUnitsStore } from '@entities/units';
+import { useUnitsStore } from '@entities/units';
 import { Building, useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
-import type { Cell } from '@shared/config';
+import type { Cell, Unit } from '@shared/config';
 import type { Selection } from '@features/selection';
 
 interface SelectionState {
