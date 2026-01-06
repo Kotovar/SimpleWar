@@ -22,7 +22,7 @@ export const UNITS_CONFIG: Record<
   swordsman: {
     maxHp: 100,
     attack: 20,
-    moveRange: 2,
+    moveRange: 3,
     attackRange: 1,
   },
 };

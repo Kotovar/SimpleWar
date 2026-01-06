@@ -94,6 +94,7 @@ export const Map = () => {
 
     if (building) {
       clearSelection();
+      clearMovement();
       selectBuilding(building.id);
 
       return;
@@ -101,6 +102,7 @@ export const Map = () => {
 
     if (unit) {
       clearSelection();
+      clearMovement();
       selectUnit(unit.id);
 
       if (unit.owner === 'player') {
