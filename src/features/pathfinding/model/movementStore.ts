@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import type { Position } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useMapStore } from '@entities/maps';
-import type { Position } from '@shared/config';
 import {
   getReachableCells,
   createMovementPFGrid,
   getAttackableTargets,
-} from '../lib';
+} from '@features/pathfinding/lib';
 
 interface MovementState {
   reachableCells: Position[] | null;

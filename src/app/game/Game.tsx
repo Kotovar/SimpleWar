@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Map } from '@widgets/map';
-import { useStartGame } from '@features/start-game';
+import { useStartGame } from '@widgets/start-game';
 import { GameControls } from '@widgets/game-controls';
 import styles from './styles.module.css';
 
