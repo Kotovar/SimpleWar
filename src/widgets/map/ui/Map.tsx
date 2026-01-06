@@ -4,29 +4,26 @@ import type { MouseEvent } from 'react';
 import { CANVAS_SIZE, CELL_SIZE, GRID_SIZE } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
+import { useMapStore } from '@entities/maps';
 import { useSelectionSelectors } from '@features/selection';
 import {
   useMapSelectors,
   useBuildingsSelectors,
   useUnitsSelectors,
 } from '@widgets/map/model';
-import {
-  drawSwordsman,
-  drawBackgroundAndGrid,
-  drawBase,
-  drawWater,
-  drawForest,
-  drawMountains,
-  drawGoldOre,
-  drawSelectionHighlight,
-  drawTerrainHighlight,
-} from '@widgets/map/lib';
+import { getCtx, getGridCoordsFromEvent } from './utils';
+import { useRenderFunctions } from './utils/useRenderFunctions';
 import styles from './styles.module.css';
-import { useMapStore } from '@entities/maps';
-import { getGridCoordsFromEvent } from './utils';
+
+const CANVAS_SIZES = {
+  width: CANVAS_SIZE,
+  height: CANVAS_SIZE,
+};
 
 export const Map = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const terrainRef = useRef<HTMLCanvasElement>(null);
+  const unitsRef = useRef<HTMLCanvasElement>(null);
+  const highlightRef = useRef<HTMLCanvasElement>(null);
 
   const { grid } = useMapSelectors();
   const { units, moveUnit } = useUnitsSelectors();
@@ -36,8 +33,8 @@ export const Map = () => {
     terrainSelection,
     unitsSelection,
     buildingsSelection,
-    clearSelection,
     selection,
+    clearSelection,
     isClickOnCurrentSelection,
   } = useSelectionSelectors();
 
@@ -45,8 +42,12 @@ export const Map = () => {
   const { selectUnit, getSelectedUnit } = unitsSelection;
   const { selectBuilding } = buildingsSelection;
 
+  const { renderTerrain, renderEntities, renderSelection } = useRenderFunctions(
+    { grid, buildings, units, selection },
+  );
+
   const handleCanvasClick = (event: MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
+    const canvas = highlightRef.current;
     if (!canvas) return;
 
     const { x: gridX, y: gridY } = getGridCoordsFromEvent(
@@ -98,90 +99,54 @@ export const Map = () => {
     }
   };
 
-  const kind = selection?.kind;
-  const selectionID = selection?.kind !== 'cell' ? selection?.id : undefined;
-  const selectionX = selection?.kind === 'cell' ? selection.x : undefined;
-  const selectionY = selection?.kind === 'cell' ? selection.y : undefined;
-
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
+    const ctx = getCtx(terrainRef);
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-    drawBackgroundAndGrid(ctx, CANVAS_SIZE, CELL_SIZE, GRID_SIZE);
+    renderTerrain(ctx);
+  }, [renderTerrain]);
 
-    // Слои отрисовки
-    // 1. Вода
-    grid.forEach((row, y) =>
-      row.forEach((cell, x) => {
-        if (cell.type === 'water') drawWater(ctx, x, y, CELL_SIZE);
-      }),
-    );
+  useEffect(() => {
+    const ctx = getCtx(unitsRef);
+    if (!ctx) return;
 
-    // 2. Горы
-    grid.forEach((row, y) =>
-      row.forEach((cell, x) => {
-        if (cell.type === 'mountain') drawMountains(ctx, x, y, CELL_SIZE);
-      }),
-    );
+    renderEntities(ctx);
+  }, [renderEntities]);
 
-    // 3. Лес + золото
-    grid.forEach((row, y) =>
-      row.forEach((cell, x) => {
-        if (cell.type === 'forest') drawForest(ctx, x, y, CELL_SIZE);
-        if (cell.type === 'gold') drawGoldOre(ctx, x, y, CELL_SIZE);
-      }),
-    );
+  useEffect(() => {
+    const ctx = getCtx(highlightRef);
+    if (!ctx) return;
 
-    // 4. Здания
-    Object.values(buildings).forEach(building => {
-      const { x, y, type } = building;
-      if (type === 'base') drawBase(ctx, x, y, CELL_SIZE);
-    });
-
-    // 5. Юниты
-    Object.values(units).forEach(unit => {
-      const { x, y, type } = unit;
-      if (type === 'swordsman') drawSwordsman(ctx, x, y, CELL_SIZE);
-    });
-
-    // 6. Подсветки
-    Object.values(buildings).forEach(building => {
-      const { x, y, id } = building;
-
-      if (kind === 'building' && selectionID === id)
-        drawSelectionHighlight(ctx, x, y, CELL_SIZE);
-    });
-
-    Object.values(units).forEach(unit => {
-      const { x, y, id } = unit;
-      if (kind === 'unit' && selectionID === id)
-        drawSelectionHighlight(ctx, x, y, CELL_SIZE);
-    });
-
-    if (
-      kind === 'cell' &&
-      selectionX !== undefined &&
-      selectionY !== undefined
-    ) {
-      drawTerrainHighlight(ctx, selectionX, selectionY, CELL_SIZE);
-    }
-  }, [buildings, grid, kind, selectionID, selectionX, selectionY, units]);
+    renderSelection(ctx);
+  }, [renderSelection]);
 
   return (
-    <canvas
-      className={clsx(styles.Canvas, {
-        [styles.Pointer]: true,
-        [styles.Move]: selection?.kind === 'unit',
-        [styles.Building]: selection?.kind === 'building',
-      })}
-      ref={canvasRef}
-      width={CANVAS_SIZE}
-      height={CANVAS_SIZE}
-      onClick={handleCanvasClick}
-    />
+    <div
+      className={styles.CanvasWrapper}
+      style={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}
+    >
+      <canvas
+        className={clsx(styles.CanvasLayer, styles.Terrain, {
+          [styles.Pointer]: true,
+          [styles.Move]: selection?.kind === 'unit',
+          [styles.Building]: selection?.kind === 'building',
+        })}
+        ref={terrainRef}
+        {...CANVAS_SIZES}
+      />
+
+      <canvas
+        className={clsx(styles.CanvasLayer, styles.Unit)}
+        ref={unitsRef}
+        {...CANVAS_SIZES}
+      />
+
+      <canvas
+        className={clsx(styles.CanvasLayer, styles.Highlight)}
+        ref={highlightRef}
+        onClick={handleCanvasClick}
+        {...CANVAS_SIZES}
+      />
+    </div>
   );
 };

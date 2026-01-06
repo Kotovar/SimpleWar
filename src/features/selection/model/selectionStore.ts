@@ -4,12 +4,7 @@ import { Unit, useUnitsStore } from '@entities/units';
 import { Building, useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
 import type { Cell } from '@shared/config';
-
-type Selection =
-  | { kind: 'cell'; x: number; y: number }
-  | { kind: 'unit'; id: string }
-  | { kind: 'building'; id: string }
-  | null;
+import type { Selection } from '@features/selection';
 
 interface SelectionState {
   selection: Selection | null;
