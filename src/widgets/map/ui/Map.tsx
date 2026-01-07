@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import clsx from 'clsx';
 import type { MouseEvent } from 'react';
 import { CANVAS_SIZE, CELL_SIZE, GRID_SIZE, Position } from '@shared/config';
@@ -6,13 +6,8 @@ import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
 import { useSelectionSelectors } from '@features/selection';
-import {
-  useMapSelectors,
-  useBuildingsSelectors,
-  useUnitsSelectors,
-  useMovementSelectors,
-} from '@widgets/map/model';
-import { getCtx, getGridCoordsFromEvent } from './utils';
+import { useUnitsSelectors, useMovementSelectors } from '@widgets/map/model';
+import { getGridCoordsFromEvent } from './utils';
 import { useRenderFunctions } from './utils/useRenderFunctions';
 import styles from './styles.module.css';
 
@@ -33,9 +28,7 @@ export const Map = () => {
   const movementRef = useRef<HTMLCanvasElement>(null);
   const highlightRef = useRef<HTMLCanvasElement>(null);
 
-  const { grid } = useMapSelectors();
-  const { units, moveUnit } = useUnitsSelectors();
-  const { buildings } = useBuildingsSelectors();
+  const { moveUnit } = useUnitsSelectors();
 
   const {
     terrainSelection,
@@ -46,26 +39,21 @@ export const Map = () => {
     isClickOnCurrentSelection,
   } = useSelectionSelectors();
 
-  const {
-    reachableCells,
-    attackableTargets,
-    calculateMovement,
-    clearMovement,
-  } = useMovementSelectors();
+  const { reachableCells, calculateMovement, clearMovement } =
+    useMovementSelectors();
 
   const { selectCell } = terrainSelection;
   const { selectUnit, getSelectedUnit } = unitsSelection;
   const { selectBuilding } = buildingsSelection;
 
-  const { renderTerrain, renderEntities, renderSelection, renderMovement } =
-    useRenderFunctions({
-      grid,
-      buildings,
-      units,
-      selection,
-      reachableCells,
-      attackableTargets,
-    });
+  useRenderFunctions({
+    selection,
+    reachableCells,
+    terrainRef,
+    unitsRef,
+    movementRef,
+    highlightRef,
+  });
 
   const handleCanvasClick = (event: MouseEvent<HTMLCanvasElement>) => {
     const canvas = highlightRef.current;
@@ -133,34 +121,6 @@ export const Map = () => {
       }
     }
   };
-
-  useEffect(() => {
-    const ctx = getCtx(terrainRef);
-    if (!ctx) return;
-
-    renderTerrain(ctx);
-  }, [renderTerrain]);
-
-  useEffect(() => {
-    const ctx = getCtx(unitsRef);
-    if (!ctx) return;
-
-    renderEntities(ctx);
-  }, [renderEntities]);
-
-  useEffect(() => {
-    const ctx = getCtx(movementRef);
-    if (!ctx) return;
-
-    renderMovement(ctx);
-  }, [renderMovement]);
-
-  useEffect(() => {
-    const ctx = getCtx(highlightRef);
-    if (!ctx) return;
-
-    renderSelection(ctx);
-  }, [renderSelection]);
 
   return (
     <div

@@ -1,4 +1,6 @@
-import { useCallback } from 'react';
+import { RefObject, useCallback, useEffect } from 'react';
+import type { Position } from '@shared/config';
+import type { Selection } from '@features/selection';
 import {
   renderEntitiesLayer,
   renderMovementLayer,
@@ -6,27 +8,36 @@ import {
   renderTerrainLayer,
   withClear,
 } from '@widgets/map/lib';
-import type { Building } from '@entities/buildings';
-import type { Cell, Position, Unit } from '@shared/config';
-import type { Selection } from '@features/selection';
+import { getCtx } from '@widgets/map/ui/utils/getCtx';
+import {
+  useBuildingsSelectors,
+  useMapSelectors,
+  useMovementSelectors,
+  useUnitsSelectors,
+} from '@widgets/map/model';
 
 type Props = {
-  grid: Cell[][];
-  buildings: Record<string, Building>;
-  units: Record<string, Unit>;
   selection: Selection;
   reachableCells: Position[] | null;
-  attackableTargets: Position[] | null;
+  terrainRef: RefObject<HTMLCanvasElement | null>;
+  unitsRef: RefObject<HTMLCanvasElement | null>;
+  movementRef: RefObject<HTMLCanvasElement | null>;
+  highlightRef: RefObject<HTMLCanvasElement | null>;
 };
 
 export const useRenderFunctions = ({
-  grid,
-  buildings,
-  units,
   selection,
   reachableCells,
-  attackableTargets,
+  terrainRef,
+  unitsRef,
+  movementRef,
+  highlightRef,
 }: Props) => {
+  const { grid } = useMapSelectors();
+  const { buildings } = useBuildingsSelectors();
+  const { units } = useUnitsSelectors();
+  const { attackableTargets } = useMovementSelectors();
+
   const renderTerrain = useCallback(
     (ctx: CanvasRenderingContext2D) => {
       withClear(ctx, () => renderTerrainLayer(ctx, grid));
@@ -59,5 +70,31 @@ export const useRenderFunctions = ({
     [buildings, selection, units],
   );
 
-  return { renderTerrain, renderEntities, renderSelection, renderMovement };
+  useEffect(() => {
+    const ctx = getCtx(terrainRef);
+    if (!ctx) return;
+
+    renderTerrain(ctx);
+  }, [renderTerrain, terrainRef]);
+
+  useEffect(() => {
+    const ctx = getCtx(unitsRef);
+    if (!ctx) return;
+
+    renderEntities(ctx);
+  }, [renderEntities, unitsRef]);
+
+  useEffect(() => {
+    const ctx = getCtx(movementRef);
+    if (!ctx) return;
+
+    renderMovement(ctx);
+  }, [movementRef, renderMovement]);
+
+  useEffect(() => {
+    const ctx = getCtx(highlightRef);
+    if (!ctx) return;
+
+    renderSelection(ctx);
+  }, [highlightRef, renderSelection]);
 };

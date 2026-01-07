@@ -39,7 +39,6 @@ export const useMovementStore = create<MovementState>()(
 
       const enemies = getAttackableTargets(
         { x: unit.x, y: unit.y },
-        reachable,
         unit.attackRange,
       );
 
