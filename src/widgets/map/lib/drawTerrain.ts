@@ -11,8 +11,6 @@ const MOUNTAIN_DARK = '#6e6e6e';
 const MOUNTAIN_LIGHT = '#9a9a9a';
 const MOUNTAIN_SNOW = '#eaeaea';
 
-const WATER_COLOR = '#3399ff';
-
 const SELECTED_TERRAIN = '#6766b090';
 
 const GRID_LINE_THICKNESS = 1;
@@ -163,24 +161,6 @@ export const drawMountains = (
   drawPeak(baseX + 0.12 * cellSize, 0.28 * cellSize, 0.32 * cellSize);
   drawPeak(baseX + 0.36 * cellSize, 0.34 * cellSize, 0.4 * cellSize);
   drawPeak(baseX + 0.62 * cellSize, 0.24 * cellSize, 0.28 * cellSize);
-};
-
-export const drawWater = (
-  ctx: CanvasRenderingContext2D,
-  cellX: number,
-  cellY: number,
-  cellSize: number,
-) => {
-  ctx.fillStyle = WATER_COLOR;
-  const baseX = cellX * cellSize;
-  const baseY = cellY * cellSize;
-
-  ctx.fillRect(
-    baseX + GRID_LINE_THICKNESS,
-    baseY + GRID_LINE_THICKNESS,
-    cellSize - GRID_LINE_THICKNESS * 2,
-    cellSize - GRID_LINE_THICKNESS * 2,
-  );
 };
 
 export const drawTerrainHighlight = (

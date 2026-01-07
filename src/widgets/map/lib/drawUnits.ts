@@ -1,25 +1,46 @@
-const UNIT_BODY_SWORDSMAN = '#2a1e12ff';
-const UNIT_HEAD = '#d2b48c';
-const UNIT_SWORD = '#cfcfcf';
-const UNIT_SWORD_HILT = '#6b4a2b';
+import type { Owner } from '@shared/config';
 
-const UNIT_BOW_LIMB = '#8B4513';
-const UNIT_BOW_STRING = '#2F2F2F';
-const UNIT_ARROW_SHAFT = '#DEB887';
+type UnitPalette = {
+  body: string;
+  bodyArcher: string;
+  head: string;
+  sword: string;
+  arrowShaft: string;
+  accent: string;
+};
 
-const UNIT_BODY_ARCHER = '#e3dd23ff';
+const PALETTES: Record<Owner, UnitPalette> = {
+  player: {
+    body: '#0b1eb0ff',
+    bodyArcher: '#2e42daff',
+    head: '#d2b48c',
+    sword: '#cfcfcf',
+    arrowShaft: '#DEB887',
+    accent: '#3a7afe',
+  },
+  enemy: {
+    body: '#922424ff',
+    bodyArcher: '#ef6413ff',
+    head: '#cfa08a',
+    sword: '#cfcfcf',
+    arrowShaft: '#DEB887',
+    accent: '#b22222',
+  },
+};
 
 export const drawSwordsman = (
   ctx: CanvasRenderingContext2D,
   cellX: number,
   cellY: number,
   cellSize: number,
+  owner: Owner,
 ) => {
+  const palette = PALETTES[owner];
   const baseX = cellX * cellSize;
   const baseY = cellY * cellSize;
 
   // ноги
-  ctx.fillStyle = UNIT_BODY_SWORDSMAN;
+  ctx.fillStyle = palette.body;
   ctx.fillRect(
     baseX + 0.45 * cellSize,
     baseY + 0.6 * cellSize,
@@ -42,7 +63,7 @@ export const drawSwordsman = (
   );
 
   // голова
-  ctx.fillStyle = UNIT_HEAD;
+  ctx.fillStyle = palette.head;
   ctx.fillRect(
     baseX + 0.44 * cellSize,
     baseY + 0.32 * cellSize,
@@ -51,7 +72,7 @@ export const drawSwordsman = (
   );
 
   // меч — клинок
-  ctx.fillStyle = UNIT_SWORD;
+  ctx.fillStyle = palette.sword;
   ctx.fillRect(
     baseX + 0.6 * cellSize,
     baseY + 0.38 * cellSize,
@@ -60,7 +81,7 @@ export const drawSwordsman = (
   );
 
   // меч — рукоять
-  ctx.fillStyle = UNIT_SWORD_HILT;
+  ctx.fillStyle = palette.accent;
   ctx.fillRect(
     baseX + 0.58 * cellSize,
     baseY + 0.56 * cellSize,
@@ -74,12 +95,14 @@ export const drawArcher = (
   cellX: number,
   cellY: number,
   cellSize: number,
+  owner: Owner,
 ) => {
+  const palette = PALETTES[owner];
   const baseX = cellX * cellSize;
   const baseY = cellY * cellSize;
 
   // ноги
-  ctx.fillStyle = UNIT_BODY_ARCHER;
+  ctx.fillStyle = palette.bodyArcher;
   ctx.fillRect(
     baseX + 0.45 * cellSize,
     baseY + 0.6 * cellSize,
@@ -102,7 +125,7 @@ export const drawArcher = (
   );
 
   // голова
-  ctx.fillStyle = UNIT_HEAD;
+  ctx.fillStyle = palette.head;
   ctx.fillRect(
     baseX + 0.44 * cellSize,
     baseY + 0.32 * cellSize,
@@ -111,7 +134,7 @@ export const drawArcher = (
   );
 
   // стрела — древко
-  ctx.fillStyle = UNIT_ARROW_SHAFT;
+  ctx.fillStyle = palette.arrowShaft;
   ctx.fillRect(
     baseX + 0.62 * cellSize,
     baseY + 0.49 * cellSize,
@@ -119,18 +142,18 @@ export const drawArcher = (
     0.02 * cellSize,
   );
 
-  // лук — вертикальная дуга (условно)
-  ctx.fillStyle = UNIT_BOW_LIMB;
+  // лук — вертикальная дуга
+  ctx.fillStyle = palette.body;
   ctx.fillRect(
-    baseX + 0.59 * cellSize,
+    baseX + 0.61 * cellSize,
     baseY + 0.36 * cellSize,
     0.01 * cellSize,
     0.28 * cellSize,
   );
 
-  const stringOffsetX = -0.03 * cellSize;
+  const stringOffsetX = -0.01 * cellSize;
 
-  ctx.strokeStyle = UNIT_BOW_STRING;
+  ctx.strokeStyle = palette.accent;
   ctx.lineWidth = 0.01 * cellSize;
   ctx.beginPath();
 
@@ -142,17 +165,7 @@ export const drawArcher = (
     baseX + 0.63 * cellSize + stringOffsetX,
     baseY + 0.64 * cellSize,
   );
-
   ctx.stroke();
-
-  // // тетива
-  // ctx.fillStyle = UNIT_BOW_STRING;
-  // ctx.fillRect(
-  //   baseX + 0.6 * cellSize,
-  //   baseY + 0.36 * cellSize,
-  //   0.005 * cellSize,
-  //   0.28 * cellSize,
-  // );
 
   // стрела — наконечник
   ctx.fillRect(

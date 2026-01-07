@@ -1,34 +1,55 @@
-const GRASS_COLOR = 'rgba(31, 171, 42, 1)';
-const GRID_LINE_COLOR = '#ccc';
+import { CANVAS_SIZE, Cell, CELL_SIZE } from '@shared/config';
+
 const GRID_LINE_THICKNESS = 1;
+const GRID_LINE_COLOR = 'rgba(0, 0, 0, 0.04)';
+
+const GRASS_BASE = { r: 46, g: 160, b: 55 };
+const WATER_BASE = { r: 40, g: 110, b: 180 };
+
+const drawCellBackground = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  cellSize: number,
+  color: { r: number; g: number; b: number },
+  variation: number,
+) => {
+  ctx.fillStyle = `rgb(
+    ${color.r + variation},
+    ${color.g + variation},
+    ${color.b + variation}
+  )`;
+
+  ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+};
 
 export const drawBackgroundAndGrid = (
   ctx: CanvasRenderingContext2D,
-  size: number,
-  cellSize: number,
   gridSize: number,
+  noise: number[][],
+  grid: Cell[][],
 ) => {
-  ctx.fillStyle = GRASS_COLOR;
-  ctx.fillRect(0, 0, size, size);
+  grid.forEach((row, y) =>
+    row.forEach((cell, x) => {
+      if (cell.type === 'water') {
+        drawCellBackground(ctx, x, y, CELL_SIZE, WATER_BASE, noise[y][x]);
+      } else {
+        drawCellBackground(ctx, x, y, CELL_SIZE, GRASS_BASE, noise[y][x]);
+      }
+    }),
+  );
 
+  // сетка поверх
   ctx.strokeStyle = GRID_LINE_COLOR;
   ctx.lineWidth = GRID_LINE_THICKNESS;
 
-  // Вертикальные линии
   ctx.beginPath();
   for (let i = 0; i <= gridSize; i++) {
-    const x = i * cellSize;
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, size);
-  }
-  ctx.stroke();
-
-  // Горизонтальные линии
-  ctx.beginPath();
-  for (let i = 0; i <= gridSize; i++) {
-    const y = i * cellSize;
-    ctx.moveTo(0, y);
-    ctx.lineTo(size, y);
+    const p = i * CELL_SIZE;
+    ctx.moveTo(p, 0);
+    ctx.lineTo(p, CANVAS_SIZE);
+    ctx.moveTo(0, p);
+    ctx.lineTo(CANVAS_SIZE, p);
   }
   ctx.stroke();
 };

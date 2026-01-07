@@ -1,18 +1,37 @@
-const BASE_WALL = '#8b8b8b';
-const BASE_ROOF = '#5a5a5a';
-const BASE_DOOR = '#3a3a3a';
+import { Owner } from '@shared/config';
+
+type BuildingPalette = {
+  wall: string;
+  roof: string;
+  door: string;
+};
+
+const PALETTES: Record<Owner, BuildingPalette> = {
+  player: {
+    wall: '#8b8b8b',
+    roof: '#355724ff',
+    door: '#2b8200ff',
+  },
+  enemy: {
+    wall: '#8b8b8b',
+    roof: '#bc1f1fff',
+    door: '#ea0404ff',
+  },
+};
 
 export const drawBase = (
   ctx: CanvasRenderingContext2D,
   cellX: number,
   cellY: number,
   cellSize: number,
+  owner: Owner,
 ) => {
+  const palette = PALETTES[owner];
   const baseX = cellX * cellSize;
   const baseY = cellY * cellSize;
 
   // стены
-  ctx.fillStyle = BASE_WALL;
+  ctx.fillStyle = palette.wall;
   ctx.fillRect(
     baseX + 0.22 * cellSize,
     baseY + 0.35 * cellSize,
@@ -21,7 +40,7 @@ export const drawBase = (
   );
 
   // дверь
-  ctx.fillStyle = BASE_DOOR;
+  ctx.fillStyle = palette.door;
   ctx.fillRect(
     baseX + 0.46 * cellSize,
     baseY + 0.48 * cellSize,
@@ -30,7 +49,7 @@ export const drawBase = (
   );
 
   // крыша
-  ctx.fillStyle = BASE_ROOF;
+  ctx.fillStyle = palette.roof;
   ctx.fillRect(
     baseX + 0.18 * cellSize,
     baseY + 0.28 * cellSize,

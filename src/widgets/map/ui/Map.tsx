@@ -84,7 +84,6 @@ export const Map = () => {
     }
 
     // 2. Если выбрана вражеская сущность (юнит ИЛИ здание) — любой клик снимает выделение
-    //    и больше ничего не делает (не выделяем клетку, не атакуем и т.д.)
     if (
       selectedUnit?.owner === 'enemy' ||
       selectedBuilding?.owner === 'enemy'
@@ -112,7 +111,6 @@ export const Map = () => {
     }
 
     // 4. Выбрана своя сущность
-    //    Пока можно отдавать приказы только с выбранным своим юнитом
     if (selectedUnit && selectedUnit.owner === 'player') {
       handleClickWithPlayerUnitSelected(
         selectedUnit,

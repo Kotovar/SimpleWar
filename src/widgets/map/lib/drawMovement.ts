@@ -1,5 +1,5 @@
 const SELECTED_MOVEMENT = '#00ff4871';
-const SELECTED_ENEMY = '#ff0000ad';
+const SELECTED_ENEMY = '#ff000041';
 const GRID_LINE_THICKNESS = 2;
 
 export const drawMovement = (

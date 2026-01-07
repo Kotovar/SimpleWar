@@ -10,24 +10,24 @@ export const renderEntitiesLayer = (
   units: Record<string, Unit>,
 ) => {
   Object.values(buildings).forEach(building => {
-    const { x, y, type, hp, maxHp } = building;
+    const { x, y, type, hp, maxHp, owner } = building;
     const hpRatio = hp / maxHp;
     if (type === 'base') {
-      drawBase(ctx, x, y, CELL_SIZE);
+      drawBase(ctx, x, y, CELL_SIZE, owner);
       drawHpBar(ctx, x, y, CELL_SIZE, hpRatio);
     }
   });
 
   Object.values(units).forEach(unit => {
-    const { x, y, type, hp, maxHp } = unit;
+    const { x, y, type, hp, maxHp, owner } = unit;
     const hpRatio = hp / maxHp;
     if (type === 'swordsman') {
-      drawSwordsman(ctx, x, y, CELL_SIZE);
+      drawSwordsman(ctx, x, y, CELL_SIZE, owner);
       drawHpBar(ctx, x, y, CELL_SIZE, hpRatio);
     }
 
     if (type === 'archer') {
-      drawArcher(ctx, x, y, CELL_SIZE);
+      drawArcher(ctx, x, y, CELL_SIZE, owner);
       drawHpBar(ctx, x, y, CELL_SIZE, hpRatio);
     }
   });
