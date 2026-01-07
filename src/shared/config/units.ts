@@ -1,6 +1,6 @@
 import type { Owner } from './common';
 
-export type UnitType = 'swordsman';
+export type UnitType = 'swordsman' | 'archer';
 
 export type Unit = {
   id: string;
@@ -24,5 +24,11 @@ export const UNITS_CONFIG: Record<
     attack: 20,
     moveRange: 3,
     attackRange: 1,
+  },
+  archer: {
+    maxHp: 40,
+    attack: 25,
+    moveRange: 3,
+    attackRange: 2,
   },
 };

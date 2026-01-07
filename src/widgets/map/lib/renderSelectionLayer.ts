@@ -1,5 +1,5 @@
 import { CELL_SIZE, Unit } from '@shared/config';
-import { drawSelectionHighlight } from './drawUnits';
+import { drawSelectionHighlight } from './drawSelectionHighlight';
 import { drawTerrainHighlight } from './drawTerrain';
 import type { Building } from '@entities/buildings';
 import type { Selection } from '@features/selection';

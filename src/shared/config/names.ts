@@ -4,6 +4,7 @@ import type { UnitType } from './units';
 
 export const UNITS_NAME = {
   swordsman: 'Meчник',
+  archer: 'Лучник',
 } satisfies Record<UnitType, string>;
 
 export const BUILDINGS_NAME = {

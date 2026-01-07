@@ -57,6 +57,7 @@ export const GameControls = () => {
             </div>
             <div>Дальность хода: {unit.moveRange}</div>
             <div>Радиус атаки: {unit.attackRange}</div>
+            <div>Урон: {unit.attack}</div>
           </section>
         )}
 

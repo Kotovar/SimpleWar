@@ -68,7 +68,7 @@ export const useStartGame = () => {
       );
 
       spawnUnit('swordsman', 2, 1, 'player');
-      spawnUnit('swordsman', GRID_SIZE - 7, GRID_SIZE - 2, 'player');
+      spawnUnit('archer', GRID_SIZE - 7, GRID_SIZE - 2, 'player');
       spawnUnit('swordsman', GRID_SIZE - 3, GRID_SIZE - 2, 'enemy');
     },
     [spawnBuilding, spawnUnit],

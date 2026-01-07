@@ -1,6 +1,6 @@
 import { CELL_SIZE, Unit } from '@shared/config';
 import { drawBase } from './drawBuildings';
-import { drawSwordsman } from './drawUnits';
+import { drawArcher, drawSwordsman } from './drawUnits';
 import type { Building } from '@entities/buildings';
 import { drawHpBar } from './drawHpBar';
 
@@ -23,6 +23,11 @@ export const renderEntitiesLayer = (
     const hpRatio = hp / maxHp;
     if (type === 'swordsman') {
       drawSwordsman(ctx, x, y, CELL_SIZE);
+      drawHpBar(ctx, x, y, CELL_SIZE, hpRatio);
+    }
+
+    if (type === 'archer') {
+      drawArcher(ctx, x, y, CELL_SIZE);
       drawHpBar(ctx, x, y, CELL_SIZE, hpRatio);
     }
   });
