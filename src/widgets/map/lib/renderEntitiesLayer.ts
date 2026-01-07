@@ -1,7 +1,6 @@
-import { CELL_SIZE, Unit } from '@shared/config';
+import { Building, CELL_SIZE, Unit } from '@shared/config';
 import { drawBase } from './drawBuildings';
 import { drawArcher, drawSwordsman } from './drawUnits';
-import type { Building } from '@entities/buildings';
 import { drawHpBar } from './drawHpBar';
 
 export const renderEntitiesLayer = (

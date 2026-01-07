@@ -1,5 +1,4 @@
-import { Building } from '@entities/buildings';
-import { Position, Unit } from '@shared/config';
+import type { Building, Position, Unit } from '@shared/config';
 
 const isTargetInReachableCells = (
   reachableCells: Position[] | null,

@@ -1,17 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { BUILDINGS_CONFIG } from '@shared/config';
-import type { Owner, BuildingType } from '@shared/config';
-
-export type Building = {
-  id: string;
-  type: BuildingType;
-  x: number;
-  y: number;
-  hp: number;
-  maxHp: number;
-  owner: Owner;
-};
+import type { Owner, BuildingType, Building } from '@shared/config';
 
 type BuildingsState = {
   buildings: Record<string, Building>;
@@ -24,6 +14,8 @@ type BuildingsState = {
   ) => string | null;
   damageBuilding: (id: string, damage: number) => void;
   getBuildingAt: (x?: number, y?: number) => Building | null;
+  resetBuildingsForNewTurn: () => void;
+  changeAttackPoints: (id: string) => void;
 };
 
 export const useBuildingsStore = create<BuildingsState>()(
@@ -44,6 +36,10 @@ export const useBuildingsStore = create<BuildingsState>()(
           owner,
           hp: config.maxHp,
           maxHp: config.maxHp,
+          attack: config.attack ?? 0,
+          attackRange: config.attackRange ?? 0,
+          attackPoints: config.attackPoints ?? 0, // ← вот так безопаснее
+          maxAttackPoints: config.attackPoints ?? 0,
         };
       });
 
@@ -69,6 +65,29 @@ export const useBuildingsStore = create<BuildingsState>()(
           building => building.x === x && building.y === y,
         ) || null
       );
+    },
+
+    resetBuildingsForNewTurn: () =>
+      set(state => {
+        Object.values(state.buildings).forEach(building => {
+          if (
+            building.maxAttackPoints !== undefined &&
+            building.maxAttackPoints > 0
+          ) {
+            building.attackPoints = building.maxAttackPoints;
+          }
+        });
+      }),
+
+    changeAttackPoints: (id: string) => {
+      set(state => {
+        const building = state.buildings[id];
+        if (!building) return;
+
+        if (building.attackPoints !== undefined && building.attackPoints > 0) {
+          building.attackPoints--;
+        }
+      });
     },
   })),
 );

@@ -78,18 +78,6 @@ export const useUnitsStore = create<UnitsState>()(
       });
     },
 
-    changeAttackPoints: (id: string) => {
-      set(state => {
-        const unit = state.units[id];
-
-        if (unit?.attackPoints <= 0) return;
-        unit.attackPoints--;
-        if (unit.attackPoints <= 0) {
-          unit.movePoints = 0;
-        }
-      });
-    },
-
     getUnitAt: (x, y) => {
       const units = Object.values(get().units);
       return units.find(unit => unit.x === x && unit.y === y) || null;
@@ -102,5 +90,17 @@ export const useUnitsStore = create<UnitsState>()(
           unit.attackPoints = unit.maxAttackPoints;
         });
       }),
+
+    changeAttackPoints: (id: string) => {
+      set(state => {
+        const unit = state.units[id];
+
+        if (unit?.attackPoints <= 0) return;
+        unit.attackPoints--;
+        if (unit.attackPoints <= 0) {
+          unit.movePoints = 0;
+        }
+      });
+    },
   })),
 );

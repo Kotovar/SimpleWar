@@ -3,19 +3,24 @@ import { immer } from 'zustand/middleware/immer';
 
 interface GameLoopStoreState {
   currentTurn: number;
+  activePlayer: 'player' | 'ai';
 
-  nextTurn: () => void;
+  endTurn: () => void;
+  // startTurn(owner);
+  // canEndTurn(owner);
 }
 
 export const useGameLoopStore = create<GameLoopStoreState>()(
   immer(set => ({
     currentTurn: 0,
+    activePlayer: 'player',
 
-    nextTurn: () => {
+    endTurn: () =>
       set(state => {
-        state.currentTurn ??= 0;
-        state.currentTurn++;
-      });
-    },
+        if (state.activePlayer === 'ai') {
+          state.currentTurn++;
+        }
+        state.activePlayer = state.activePlayer === 'player' ? 'ai' : 'player';
+      }),
   })),
 );

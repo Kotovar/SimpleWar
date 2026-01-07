@@ -31,7 +31,7 @@
   border: 1px solid #2d1e3c;
   border-radius: 8px;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background-color: rgb(59, 59, 204);
     color: white;
   }

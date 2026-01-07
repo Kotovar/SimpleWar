@@ -13,6 +13,7 @@ import {
 } from './utils';
 import { useRenderFunctions } from './utils/useRenderFunctions';
 import { attack } from '@features/combat';
+import { useGameLoopSelectors } from '@features/game-loop';
 import styles from './styles.module.css';
 
 const CANVAS_SIZES = {
@@ -27,6 +28,7 @@ export const Map = () => {
   const highlightRef = useRef<HTMLCanvasElement>(null);
 
   const { moveUnit } = useUnitsSelectors();
+  const { activePlayer } = useGameLoopSelectors();
 
   const {
     terrainSelection,
@@ -160,7 +162,7 @@ export const Map = () => {
       <canvas
         className={clsx(styles.CanvasLayer, styles.Highlight)}
         ref={highlightRef}
-        onClick={handleCanvasClick}
+        onClick={activePlayer === 'player' ? handleCanvasClick : undefined}
         {...CANVAS_SIZES}
       />
     </div>

@@ -26,8 +26,9 @@ export const GameControls = () => {
   const cell = terrainSelection.getSelectedCell();
   const unit = unitsSelection.getSelectedUnit();
   const building = buildingsSelection.getSelectedBuilding();
+  const { activePlayer } = useGameLoopSelectors();
 
-  const onNextTurn = () => {
+  const onNextTurn = async () => {
     nextTurn();
     clearSelection();
     clearMovement();
@@ -39,10 +40,15 @@ export const GameControls = () => {
       <div className={styles.Info}>
         <section className={styles.Section}>
           <div>Текущий ход: {currentTurn}</div>
+          <div>Ходит: {activePlayer === 'ai' ? 'компьютер' : 'игрок'}</div>
           <div>Поле: {GRID_SIZE + ' на ' + GRID_SIZE}</div>
           <div>Ширина: {CANVAS_SIZE + ' пикселей'}</div>
 
-          <button className={styles.Button} onClick={onNextTurn}>
+          <button
+            className={styles.Button}
+            onClick={onNextTurn}
+            disabled={activePlayer === 'ai'}
+          >
             Следующий ход
           </button>
         </section>
