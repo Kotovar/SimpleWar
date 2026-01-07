@@ -1,26 +1,24 @@
 import { useRef } from 'react';
 import clsx from 'clsx';
 import type { MouseEvent } from 'react';
-import { CANVAS_SIZE, CELL_SIZE, GRID_SIZE, Position } from '@shared/config';
+import { CANVAS_SIZE, CELL_SIZE, GRID_SIZE } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
-import { useMapStore } from '@entities/maps';
 import { useSelectionSelectors } from '@features/selection';
 import { useUnitsSelectors, useMovementSelectors } from '@widgets/map/model';
-import { getGridCoordsFromEvent } from './utils';
+import {
+  getGridCoordsFromEvent,
+  handleClickWithoutSelectedUnit,
+  handleClickWithPlayerUnitSelected,
+} from './utils';
 import { useRenderFunctions } from './utils/useRenderFunctions';
+import { attack } from '@features/combat';
 import styles from './styles.module.css';
 
 const CANVAS_SIZES = {
   width: CANVAS_SIZE,
   height: CANVAS_SIZE,
 };
-
-const isTargetInReachableCells = (
-  reachableCells: Position[] | null,
-  gridX: number,
-  gridY: number,
-) => reachableCells?.some(cell => cell.x === gridX && cell.y === gridY);
 
 export const Map = () => {
   const terrainRef = useRef<HTMLCanvasElement>(null);
@@ -39,12 +37,16 @@ export const Map = () => {
     isClickOnCurrentSelection,
   } = useSelectionSelectors();
 
-  const { reachableCells, calculateMovement, clearMovement } =
-    useMovementSelectors();
+  const {
+    reachableCells,
+    attackableTargets,
+    calculateMovement,
+    clearMovement,
+  } = useMovementSelectors();
 
   const { selectCell } = terrainSelection;
   const { selectUnit, getSelectedUnit } = unitsSelection;
-  const { selectBuilding } = buildingsSelection;
+  const { selectBuilding, getSelectedBuilding } = buildingsSelection;
 
   useRenderFunctions({
     selection,
@@ -71,54 +73,62 @@ export const Map = () => {
 
     const unit = useUnitsStore.getState().getUnitAt(gridX, gridY);
     const building = useBuildingsStore.getState().getBuildingAt(gridX, gridY);
-    const cell = useMapStore.getState().getCell(gridX, gridY);
+    const selectedUnit = getSelectedUnit();
+    const selectedBuilding = getSelectedBuilding();
 
+    // 1. Клик по уже выбранной сущности (юнит, здание или клетка) — снимаем выделение
     if (isClickOnCurrentSelection(gridX, gridY)) {
       clearSelection();
       clearMovement();
-
       return;
     }
 
-    if (building) {
+    // 2. Если выбрана вражеская сущность (юнит ИЛИ здание) — любой клик снимает выделение
+    //    и больше ничего не делает (не выделяем клетку, не атакуем и т.д.)
+    if (
+      selectedUnit?.owner === 'enemy' ||
+      selectedBuilding?.owner === 'enemy'
+    ) {
       clearSelection();
       clearMovement();
-      selectBuilding(building.id);
-
       return;
     }
 
-    if (unit) {
-      clearSelection();
-      clearMovement();
-      selectUnit(unit.id);
-
-      if (unit.owner === 'player') {
-        calculateMovement(unit.id);
-      }
-
+    // 3. Ничего не выбрано — выбираем новую сущность или клетку
+    if (!selectedUnit && !selectedBuilding) {
+      handleClickWithoutSelectedUnit(
+        unit,
+        building,
+        gridX,
+        gridY,
+        selectUnit,
+        selectBuilding,
+        selectCell,
+        calculateMovement,
+        clearSelection,
+        clearMovement,
+      );
       return;
     }
 
-    if (cell) {
-      const selectedUnit = getSelectedUnit();
+    // 4. Выбрана своя сущность
+    //    Пока можно отдавать приказы только с выбранным своим юнитом
+    if (selectedUnit && selectedUnit.owner === 'player') {
+      handleClickWithPlayerUnitSelected(
+        selectedUnit,
+        gridX,
+        gridY,
+        unit,
+        building,
+        reachableCells,
+        attackableTargets,
+        moveUnit,
+        attack,
+        clearSelection,
+        clearMovement,
+      );
 
-      if (!selectedUnit) {
-        clearSelection();
-        selectCell(gridX, gridY);
-        return;
-      }
-
-      if (
-        selectedUnit.owner === 'player' &&
-        isTargetInReachableCells(reachableCells, gridX, gridY)
-      ) {
-        moveUnit(selectedUnit.id, gridX, gridY);
-        clearSelection();
-        clearMovement();
-      } else {
-        return;
-      }
+      return;
     }
   };
 

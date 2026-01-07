@@ -22,6 +22,7 @@ type BuildingsState = {
     y: number,
     owner: Owner,
   ) => string | null;
+  damageBuilding: (id: string, damage: number) => void;
   getBuildingAt: (x?: number, y?: number) => Building | null;
 };
 
@@ -47,6 +48,19 @@ export const useBuildingsStore = create<BuildingsState>()(
       });
 
       return id;
+    },
+
+    damageBuilding: (id: string, damage: number) => {
+      set(state => {
+        const building = state.buildings[id];
+        const resultHP = building.hp - damage;
+
+        if (resultHP > 0) {
+          building.hp = resultHP;
+        } else {
+          delete state.buildings[id];
+        }
+      });
     },
 
     getBuildingAt: (x, y) => {

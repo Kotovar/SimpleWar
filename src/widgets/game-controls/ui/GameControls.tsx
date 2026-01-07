@@ -64,6 +64,9 @@ export const GameControls = () => {
           <section className={styles.Section}>
             <div>Выбрано здание: {BUILDINGS_NAME[building.type]}</div>
             <div>Владелец: {OWNER_NAME[building.owner]}</div>
+            <div>
+              HP: {building.hp} / {building.maxHp}
+            </div>
           </section>
         )}
 

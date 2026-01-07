@@ -3,6 +3,7 @@ export * from './drawGrid';
 export * from './drawTerrain';
 export * from './drawMovement';
 export * from './drawUnits';
+export * from './drawHpBar';
 export * from './renderEntitiesLayer';
 export * from './renderSelectionLayer';
 export * from './renderTerrainLayer';

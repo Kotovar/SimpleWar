@@ -14,6 +14,7 @@ type UnitsState = {
   ) => string | null;
   moveUnit: (id: string, x: number, y: number) => void;
   getUnitAt: (x?: number, y?: number) => Unit | null;
+  damageUnit: (id: string, damage: number) => void;
 };
 
 export const useUnitsStore = create<UnitsState>()(
@@ -51,6 +52,19 @@ export const useUnitsStore = create<UnitsState>()(
           unit.y = y;
         }
       }),
+
+    damageUnit: (id: string, damage: number) => {
+      set(state => {
+        const unit = state.units[id];
+        const resultHP = unit.hp - damage;
+
+        if (resultHP > 0) {
+          unit.hp = resultHP;
+        } else {
+          delete state.units[id];
+        }
+      });
+    },
 
     getUnitAt: (x, y) => {
       const units = Object.values(get().units);
