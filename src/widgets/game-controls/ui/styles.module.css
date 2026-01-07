@@ -24,3 +24,15 @@
   flex-direction: column;
   gap: 4px;
 }
+
+.Button {
+  align-self: anchor-center;
+  background-color: transparent;
+  border: 1px solid #2d1e3c;
+  border-radius: 8px;
+
+  &:hover {
+    background-color: rgb(59, 59, 204);
+    color: white;
+  }
+}

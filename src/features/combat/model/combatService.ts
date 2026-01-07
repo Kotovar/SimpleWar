@@ -5,8 +5,9 @@ export const attack = (attackerId: string, targetId: string) => {
   const unitsStore = useUnitsStore.getState();
   const buildingsStore = useBuildingsStore.getState();
 
-  const attacker =
-    unitsStore.units[attackerId] || buildingsStore.buildings[attackerId];
+  const attackerUnit = unitsStore.units[attackerId];
+  const attackerBuilding = buildingsStore.buildings[attackerId];
+  const attacker = attackerUnit ?? attackerBuilding;
 
   if (!attacker) return;
 
@@ -21,8 +22,11 @@ export const attack = (attackerId: string, targetId: string) => {
 
   const damage = attacker.attack;
 
+  if ('attackPoints' in attacker && attacker.attackPoints <= 0) return;
+
   if (targetUnit) {
     unitsStore.damageUnit(targetUnit.id, damage);
+    unitsStore.changeAttackPoints(attacker.id);
     return;
   }
 

@@ -15,6 +15,8 @@ type UnitsState = {
   moveUnit: (id: string, x: number, y: number) => void;
   getUnitAt: (x?: number, y?: number) => Unit | null;
   damageUnit: (id: string, damage: number) => void;
+  resetUnitsForNewTurn: () => void;
+  changeAttackPoints: (id: string) => void;
 };
 
 export const useUnitsStore = create<UnitsState>()(
@@ -35,8 +37,11 @@ export const useUnitsStore = create<UnitsState>()(
           owner,
           hp: config.maxHp,
           maxHp: config.maxHp,
-          moveRange: config.moveRange,
+          movePoints: config.movePoints,
+          maxMovePoints: config.movePoints,
           attack: config.attack,
+          attackPoints: config.attackPoints,
+          maxAttackPoints: config.attackPoints,
           attackRange: config.attackRange,
         };
       });
@@ -47,9 +52,16 @@ export const useUnitsStore = create<UnitsState>()(
     moveUnit: (id, x, y) =>
       set(state => {
         const unit = state.units[id];
+        if (!unit) return;
+
+        const dist = Math.abs(unit.x - x) + Math.abs(unit.y - y);
+
+        if (dist > unit.movePoints) return;
+
         if (unit) {
           unit.x = x;
           unit.y = y;
+          unit.movePoints -= dist;
         }
       }),
 
@@ -66,9 +78,29 @@ export const useUnitsStore = create<UnitsState>()(
       });
     },
 
+    changeAttackPoints: (id: string) => {
+      set(state => {
+        const unit = state.units[id];
+
+        if (unit?.attackPoints <= 0) return;
+        unit.attackPoints--;
+        if (unit.attackPoints <= 0) {
+          unit.movePoints = 0;
+        }
+      });
+    },
+
     getUnitAt: (x, y) => {
       const units = Object.values(get().units);
       return units.find(unit => unit.x === x && unit.y === y) || null;
     },
+
+    resetUnitsForNewTurn: () =>
+      set(state => {
+        Object.values(state.units).forEach(unit => {
+          unit.movePoints = unit.maxMovePoints;
+          unit.attackPoints = unit.maxAttackPoints;
+        });
+      }),
   })),
 );

@@ -7,28 +7,44 @@ import {
   UNITS_NAME,
 } from '@shared/config';
 import { useSelectionSelectors } from '@features/selection';
+import { nextTurn, useGameLoopSelectors } from '@features/game-loop';
+import { useMovementStore } from '@features/pathfinding';
 import styles from './styles.module.css';
 
 export const GameControls = () => {
-  const { selection, terrainSelection, unitsSelection, buildingsSelection } =
-    useSelectionSelectors();
+  const {
+    selection,
+    terrainSelection,
+    unitsSelection,
+    buildingsSelection,
+    clearSelection,
+  } = useSelectionSelectors();
 
-  const { getSelectedCell } = terrainSelection;
-  const { getSelectedUnit } = unitsSelection;
-  const { getSelectedBuilding } = buildingsSelection;
+  const { currentTurn } = useGameLoopSelectors();
+  const { clearMovement } = useMovementStore();
 
-  const unit = getSelectedUnit();
-  const building = getSelectedBuilding();
-  const cell = getSelectedCell();
+  const cell = terrainSelection.getSelectedCell();
+  const unit = unitsSelection.getSelectedUnit();
+  const building = buildingsSelection.getSelectedBuilding();
+
+  const onNextTurn = () => {
+    nextTurn();
+    clearSelection();
+    clearMovement();
+  };
 
   return (
     <section className={styles.GameControls}>
       <h1>Simple Wars</h1>
       <div className={styles.Info}>
         <section className={styles.Section}>
-          <div>Текущий ход: 1</div>
+          <div>Текущий ход: {currentTurn}</div>
           <div>Поле: {GRID_SIZE + ' на ' + GRID_SIZE}</div>
           <div>Ширина: {CANVAS_SIZE + ' пикселей'}</div>
+
+          <button className={styles.Button} onClick={onNextTurn}>
+            Следующий ход
+          </button>
         </section>
 
         {cell && (
@@ -55,7 +71,12 @@ export const GameControls = () => {
             <div>
               HP: {unit.hp} / {unit.maxHp}
             </div>
-            <div>Дальность хода: {unit.moveRange}</div>
+            <div>
+              Ходы: {unit.movePoints} / {unit.maxMovePoints}
+            </div>
+            <div>
+              Очков атаки: {unit.attackPoints} / {unit.maxAttackPoints}
+            </div>
             <div>Радиус атаки: {unit.attackRange}</div>
             <div>Урон: {unit.attack}</div>
           </section>

@@ -26,28 +26,29 @@ export const useMovementStore = create<MovementState>()(
 
     calculateMovement: unitId => {
       const unit = useUnitsStore.getState().units[unitId];
-      const grid = useMapStore.getState().grid;
+      if (!unit) return;
 
+      const grid = useMapStore.getState().grid;
       const pfGrid = createMovementPFGrid(grid);
 
       const reachable = getReachableCells(
         pfGrid,
         unit.x,
         unit.y,
-        unit.moveRange,
+        unit.movePoints,
       );
 
-      const enemies = getAttackableTargets(
-        { x: unit.x, y: unit.y },
-        unit.attackRange,
-      );
+      const attackable =
+        unit.attackPoints > 0
+          ? getAttackableTargets(
+              { x: unit.x, y: unit.y },
+              unit.attackRange,
+            ).map(enemy => ({ x: enemy.x, y: enemy.y }))
+          : null;
 
       set(state => {
         state.reachableCells = reachable;
-        state.attackableTargets = enemies.map(enemy => ({
-          x: enemy.x,
-          y: enemy.y,
-        }));
+        state.attackableTargets = attackable;
       });
     },
 

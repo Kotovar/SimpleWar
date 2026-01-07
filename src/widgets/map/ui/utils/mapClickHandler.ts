@@ -62,18 +62,23 @@ export const handleClickWithPlayerUnitSelected = (
   const isAttackable = isTargetInAttackRadius(attackableTargets, gridX, gridY);
   const hasTarget = unitAtTarget || buildingAtTarget;
 
-  if (isReachable) {
+  if (isReachable && selectedUnit.movePoints > 0) {
     moveUnit(selectedUnit.id, gridX, gridY);
     clearSelection();
     clearMovement();
     return true;
   }
 
-  if (isAttackable && hasTarget) {
+  if (isAttackable && hasTarget && selectedUnit.attackPoints > 0) {
     const targetId = unitAtTarget?.id ?? buildingAtTarget!.id;
     attack(selectedUnit.id, targetId);
     clearSelection();
     clearMovement();
+    return true;
+  }
+
+  if (selectedUnit.movePoints === 0) {
+    clearSelection();
     return true;
   }
 

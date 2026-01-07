@@ -9,26 +9,31 @@ export type Unit = {
   y: number;
   hp: number;
   maxHp: number;
-  moveRange: number;
+  movePoints: number;
+  maxMovePoints: number;
   attack: number;
+  attackPoints: number;
+  maxAttackPoints: number;
   owner: Owner;
   attackRange: number;
 };
 
 export const UNITS_CONFIG: Record<
   UnitType,
-  Pick<Unit, 'maxHp' | 'attack' | 'moveRange' | 'attackRange'>
+  Pick<Unit, 'maxHp' | 'attack' | 'attackPoints' | 'movePoints' | 'attackRange'>
 > = {
   swordsman: {
     maxHp: 100,
     attack: 20,
-    moveRange: 3,
+    movePoints: 3,
+    attackPoints: 1,
     attackRange: 1,
   },
   archer: {
     maxHp: 40,
     attack: 25,
-    moveRange: 3,
+    movePoints: 3,
+    attackPoints: 1,
     attackRange: 2,
   },
 };
