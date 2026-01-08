@@ -8,7 +8,8 @@ import styles from './styles.module.css';
 
 export const Game = () => {
   const startGame = useStartGame();
-  const { activePlayer } = useGameLoopSelectors();
+
+  const { activePlayer, phase } = useGameLoopSelectors();
 
   useEffect(() => {
     if (activePlayer === 'ai') {
@@ -17,8 +18,10 @@ export const Game = () => {
   }, [activePlayer]);
 
   useEffect(() => {
-    startGame();
-  }, [startGame]);
+    if (phase === 'inProgress') {
+      startGame(true);
+    }
+  }, [phase, startGame]);
 
   return (
     <main className={styles.Main}>

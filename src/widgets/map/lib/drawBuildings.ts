@@ -1,23 +1,4 @@
-import { Owner } from '@shared/config';
-
-type BuildingPalette = {
-  wall: string;
-  roof: string;
-  door: string;
-};
-
-const PALETTES: Record<Owner, BuildingPalette> = {
-  player: {
-    wall: '#8b8b8b',
-    roof: '#355724ff',
-    door: '#2b8200ff',
-  },
-  enemy: {
-    wall: '#8b8b8b',
-    roof: '#bc1f1fff',
-    door: '#ea0404ff',
-  },
-};
+import { Owner, BUILDINGS_PALETTES } from '@shared/config';
 
 export const drawBase = (
   ctx: CanvasRenderingContext2D,
@@ -26,7 +7,7 @@ export const drawBase = (
   cellSize: number,
   owner: Owner,
 ) => {
-  const palette = PALETTES[owner];
+  const palette = BUILDINGS_PALETTES[owner];
   const baseX = cellX * cellSize;
   const baseY = cellY * cellSize;
 

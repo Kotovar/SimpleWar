@@ -1,44 +1,32 @@
-import { useRef } from 'react';
-import clsx from 'clsx';
 import type { MouseEvent } from 'react';
-import { CANVAS_SIZE, CELL_SIZE, GRID_SIZE } from '@shared/config';
 import { useUnitsSelectors, useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
+import { useSettingsSelectors } from '@entities/settings';
 import { useSelectionSelectors } from '@features/selection';
 import { attack } from '@features/combat';
-import { useGameLoopSelectors } from '@features/game-loop';
 import { useMovementSelectors } from '@features/pathfinding';
 import {
   getGridCoordsFromEvent,
   handleClickWithoutSelectedUnit,
   handleClickWithPlayerUnitSelected,
 } from './utils';
-import { useRenderFunctions } from './utils/useRenderFunctions';
-
+import { StartGameCanvas } from './StartGameCanvas';
+import { CanvasLayers } from './CanvasLayers';
 import styles from './styles.module.css';
 
-const CANVAS_SIZES = {
-  width: CANVAS_SIZE,
-  height: CANVAS_SIZE,
-};
-
 export const Map = () => {
-  const terrainRef = useRef<HTMLCanvasElement>(null);
-  const unitsRef = useRef<HTMLCanvasElement>(null);
-  const movementRef = useRef<HTMLCanvasElement>(null);
-  const highlightRef = useRef<HTMLCanvasElement>(null);
-
   const { moveUnit } = useUnitsSelectors();
-  const { activePlayer } = useGameLoopSelectors();
 
   const {
     terrainSelection,
     unitsSelection,
     buildingsSelection,
-    selection,
     clearSelection,
     isClickOnCurrentSelection,
   } = useSelectionSelectors();
+
+  const { canvasWidth, canvasHeight, gridColumns, gridRows, cellSize } =
+    useSettingsSelectors();
 
   const {
     reachableCells,
@@ -51,26 +39,24 @@ export const Map = () => {
   const { selectUnit, getSelectedUnit } = unitsSelection;
   const { selectBuilding, getSelectedBuilding } = buildingsSelection;
 
-  useRenderFunctions({
-    selection,
-    reachableCells,
-    terrainRef,
-    unitsRef,
-    movementRef,
-    highlightRef,
-  });
+  const CANVAS_SIZES = {
+    width: canvasWidth,
+    height: canvasHeight,
+  };
 
-  const handleCanvasClick = (event: MouseEvent<HTMLCanvasElement>) => {
-    const canvas = highlightRef.current;
+  const handleCanvasClick = (
+    event: MouseEvent<HTMLCanvasElement>,
+    canvas: HTMLCanvasElement | null,
+  ) => {
     if (!canvas) return;
 
     const { x: gridX, y: gridY } = getGridCoordsFromEvent(
       event,
       canvas,
-      CELL_SIZE,
+      cellSize,
     );
 
-    if (gridX < 0 || gridX >= GRID_SIZE || gridY < 0 || gridY >= GRID_SIZE) {
+    if (gridX < 0 || gridX >= gridColumns || gridY < 0 || gridY >= gridRows) {
       return;
     }
 
@@ -136,36 +122,11 @@ export const Map = () => {
   return (
     <div
       className={styles.CanvasWrapper}
-      style={{ width: CANVAS_SIZE, height: CANVAS_SIZE }}
+      style={{ width: CANVAS_SIZES.width, height: CANVAS_SIZES.height }}
     >
-      <canvas
-        className={clsx(styles.CanvasLayer, styles.Terrain, {
-          [styles.Pointer]: true,
-          [styles.Move]: selection?.kind === 'unit',
-          [styles.Building]: selection?.kind === 'building',
-        })}
-        ref={terrainRef}
-        {...CANVAS_SIZES}
-      />
+      <CanvasLayers handleClick={handleCanvasClick} />
 
-      <canvas
-        className={clsx(styles.CanvasLayer, styles.Unit)}
-        ref={unitsRef}
-        {...CANVAS_SIZES}
-      />
-
-      <canvas
-        className={clsx(styles.CanvasLayer, styles.Movement)}
-        ref={movementRef}
-        {...CANVAS_SIZES}
-      />
-
-      <canvas
-        className={clsx(styles.CanvasLayer, styles.Highlight)}
-        ref={highlightRef}
-        onClick={activePlayer === 'player' ? handleCanvasClick : undefined}
-        {...CANVAS_SIZES}
-      />
+      <StartGameCanvas />
     </div>
   );
 };

@@ -1,0 +1,92 @@
+.Dialog {
+  border: 2px solid oklab(40% 0.01 -0.1);
+  border-radius: 16px;
+  background-color: oklab(20% 0 0);
+  color: oklab(90% 0 0);
+  padding: 0;
+  max-width: 90vw;
+  width: 420px;
+  box-shadow: 0 20px 50px oklab(0% 0 0 / 0.8);
+  animation: fadeIn 0.25s ease-out;
+
+  &::backdrop {
+    background-color: oklab(0% 0 0 / 0.8);
+    backdrop-filter: blur(5px);
+    animation: backdropFade 0.3s ease-out;
+  }
+}
+
+.Content {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: center;
+}
+
+.Title {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin: 0;
+  color: oklab(86% 0 0.18);
+}
+
+.Message {
+  margin: 0;
+  font-size: 1.1em;
+  line-height: 1.5;
+  color: oklab(85% 0 0);
+}
+
+.Buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.ConfirmButton {
+  background-color: oklab(59% 0.18 0.07);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 1em;
+  cursor: pointer;
+
+  &:hover {
+    background-color: oklab(54% 0.18 0.076);
+  }
+}
+
+.CancelButton {
+  background-color: oklab(40% 0 0);
+  color: white;
+  border: 1px solid oklab(50% 0 0);
+  border-radius: 8px;
+  padding: 10px 24px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: oklab(50% -0.08 0.05);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    scale: 0.95;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes backdropFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

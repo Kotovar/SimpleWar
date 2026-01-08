@@ -15,14 +15,14 @@ type UnitsState = {
   moveUnit: (id: string, x: number, y: number) => void;
   getUnitAt: (x?: number, y?: number) => Unit | null;
   damageUnit: (id: string, damage: number) => void;
-  resetUnitsForNewTurn: () => void;
   changeAttackPoints: (id: string) => void;
+  resetUnitsForNewTurn: () => void;
+  resetStore: () => void;
 };
 
 export const useUnitsStore = create<UnitsState>()(
   immer((set, get) => ({
     units: {},
-    selectedUnitId: null,
 
     spawnUnit: (type: UnitType, x: number, y: number, owner: Owner) => {
       const id = `${type}_${crypto.randomUUID()}`;
@@ -83,14 +83,6 @@ export const useUnitsStore = create<UnitsState>()(
       return units.find(unit => unit.x === x && unit.y === y) || null;
     },
 
-    resetUnitsForNewTurn: () =>
-      set(state => {
-        Object.values(state.units).forEach(unit => {
-          unit.movePoints = unit.maxMovePoints;
-          unit.attackPoints = unit.maxAttackPoints;
-        });
-      }),
-
     changeAttackPoints: (id: string) => {
       set(state => {
         const unit = state.units[id];
@@ -100,6 +92,20 @@ export const useUnitsStore = create<UnitsState>()(
         if (unit.attackPoints <= 0) {
           unit.movePoints = 0;
         }
+      });
+    },
+
+    resetUnitsForNewTurn: () =>
+      set(state => {
+        Object.values(state.units).forEach(unit => {
+          unit.movePoints = unit.maxMovePoints;
+          unit.attackPoints = unit.maxAttackPoints;
+        });
+      }),
+
+    resetStore: () => {
+      set(state => {
+        state.units = {};
       });
     },
   })),

@@ -14,14 +14,14 @@ type BuildingsState = {
   ) => string | null;
   damageBuilding: (id: string, damage: number) => void;
   getBuildingAt: (x?: number, y?: number) => Building | null;
-  resetBuildingsForNewTurn: () => void;
   changeAttackPoints: (id: string) => void;
+  resetBuildingsForNewTurn: () => void;
+  resetStore: () => void;
 };
 
 export const useBuildingsStore = create<BuildingsState>()(
   immer((set, get) => ({
     buildings: {},
-    selectedBuildingId: null,
 
     spawnBuilding: (type, x, y, owner) => {
       const id = `building_${crypto.randomUUID()}`;
@@ -38,7 +38,7 @@ export const useBuildingsStore = create<BuildingsState>()(
           maxHp: config.maxHp,
           attack: config.attack ?? 0,
           attackRange: config.attackRange ?? 0,
-          attackPoints: config.attackPoints ?? 0, // ← вот так безопаснее
+          attackPoints: config.attackPoints ?? 0,
           maxAttackPoints: config.attackPoints ?? 0,
         };
       });
@@ -67,6 +67,17 @@ export const useBuildingsStore = create<BuildingsState>()(
       );
     },
 
+    changeAttackPoints: (id: string) => {
+      set(state => {
+        const building = state.buildings[id];
+        if (!building) return;
+
+        if (building.attackPoints !== undefined && building.attackPoints > 0) {
+          building.attackPoints--;
+        }
+      });
+    },
+
     resetBuildingsForNewTurn: () =>
       set(state => {
         Object.values(state.buildings).forEach(building => {
@@ -79,14 +90,9 @@ export const useBuildingsStore = create<BuildingsState>()(
         });
       }),
 
-    changeAttackPoints: (id: string) => {
+    resetStore: () => {
       set(state => {
-        const building = state.buildings[id];
-        if (!building) return;
-
-        if (building.attackPoints !== undefined && building.attackPoints > 0) {
-          building.attackPoints--;
-        }
+        state.buildings = {};
       });
     },
   })),

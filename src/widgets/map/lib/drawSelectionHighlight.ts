@@ -1,4 +1,4 @@
-const SELECTION_OUTLINE = '#00ff77ff';
+import { SELECTION } from '@shared/config';
 
 export const drawSelectionHighlight = (
   ctx: CanvasRenderingContext2D,
@@ -9,7 +9,7 @@ export const drawSelectionHighlight = (
   const baseX = cellX * cellSize;
   const baseY = cellY * cellSize;
 
-  ctx.strokeStyle = SELECTION_OUTLINE;
+  ctx.strokeStyle = SELECTION.colorOutline;
   ctx.beginPath();
   ctx.arc(
     baseX + cellSize / 2,

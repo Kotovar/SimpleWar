@@ -5,31 +5,39 @@ import { generateMap } from './generateMap';
 
 type MapState = {
   grid: Cell[][];
-  size: number;
+  width: number;
+  height: number;
 
-  initMap: (size: number, seed?: number) => void;
+  initMap: (width: number, height: number, seed?: number) => void;
   getCell: (x: number, y: number) => Cell | null;
   setCell: (x: number, y: number, newCell: Partial<Cell>) => void;
+  resetStore: () => void;
 };
 
 export const useMapStore = create<MapState>()(
   immer((set, get) => ({
     grid: [],
-    size: 0,
+    width: 0,
+    height: 0,
 
-    initMap: (size, seed?: number) =>
+    initMap: (width, height, seed) =>
       set(state => {
-        state.grid = generateMap(size, seed);
-        state.size = size;
+        if (width <= 0 || height <= 0) {
+          console.warn('Invalid map size:', width, height);
+          return;
+        }
+        state.grid = generateMap(width, height, seed);
+        state.width = width;
+        state.height = height;
       }),
 
     getCell: (x, y) => {
       const state = get();
-      if (x < 0 || x >= state.size || y < 0 || y >= state.size) {
+      if (x < 0 || x >= state.width || y < 0 || y >= state.height) {
         return null;
       }
 
-      return state.grid[y][x];
+      return state.grid[y]?.[x] ?? null;
     },
 
     setCell: (x: number, y: number, newCell: Partial<Cell>) =>
@@ -37,5 +45,13 @@ export const useMapStore = create<MapState>()(
         if (!state.grid[y] || !state.grid[y][x]) return;
         state.grid[y][x] = { ...state.grid[y][x], ...newCell };
       }),
+
+    resetStore: () => {
+      set(state => {
+        state.grid = [];
+        state.width = 0;
+        state.height = 0;
+      });
+    },
   })),
 );

@@ -1,19 +1,61 @@
 import { createNoise2D } from 'simplex-noise';
 import type { Cell, CellType } from '@shared/config';
 
-export const generateMap = (size: number, seed?: number): Cell[][] => {
+/**
+ * Общее количество золотых клеток, которое пытается разместить генератор.
+ */
+const TOTAL_GOLD = 20;
+
+/**
+ * Генерирует процедурную карту игрового мира на основе шума Simplex.
+ *
+ * Карта состоит из клеток разных типов: вода, трава, лес, горы и золото.
+ * Основной рельеф (вода/земля/лес/горы) формируется с помощью двухслойного шума Simplex:
+ *   - крупномасштабный шум определяет основные биомы,
+ *   - мелкий шум добавляет детали.
+ *
+ * Золото размещается отдельным этапом после генерации ландшафта.
+ * Оно редкое (всего {@link TOTAL_GOLD} штук) и распределяется небольшими кластерами
+ * вокруг 5 заранее заданных центров:
+ *   - верхний левый угол
+ *   - нижний правый угол
+ *   - центр карты
+ *   - нижний левый угол
+ *   - верхний правый угол
+ *
+ * Если в каком-то кластере не хватает подходящих клеток, золото просто не размещается
+ * (общее количество может быть чуть меньше заданного).
+ *
+ * @param width  Ширина карты в клетках
+ * @param height Высота карты в клетках
+ * @param seed   Опциональное зерно для воспроизводимости генерации.
+ *               Если не указано — используется случайное значение.
+ *
+ * @returns Двумерный массив клеток {@link Cell} размером height × width
+ *
+ * @example
+ * const map = generateMap(100, 80, 12345);
+ * // map[0][0] — клетка в левом верхнем углу
+ */
+export const generateMap = (
+  width: number,
+  height: number,
+  seed?: number,
+): Cell[][] => {
   const grid: Cell[][] = [];
 
   const noise2D = createNoise2D(() => seed ?? Math.random());
 
-  const featureScale = size / 2;
-  const detailScale = size / 3;
+  const avgSize = (width + height) / 2;
+  const featureScale = avgSize / 3;
+  const detailScale = avgSize / 3;
 
-  for (let y = 0; y < size; y++) {
+  for (let y = 0; y < height; y++) {
     grid[y] = [];
-    for (let x = 0; x < size; x++) {
+    for (let x = 0; x < width; x++) {
       const mainValue = noise2D(x / featureScale, y / featureScale);
-      const detailValue = noise2D(x / detailScale, y / detailScale) * 0.3;
+      const detailValue =
+        noise2D((x + 1000) / detailScale, (y + 1000) / detailScale) * 0.3;
 
       const totalValue = mainValue + detailValue;
 
@@ -26,11 +68,8 @@ export const generateMap = (size: number, seed?: number): Cell[][] => {
       } else if (totalValue > 0.75) {
         type = 'mountain';
         isWalkable = false;
-      } else if (totalValue > 0.65) {
+      } else if (totalValue > 0.55) {
         type = 'forest';
-        isWalkable = false;
-      } else if (totalValue > 0.6) {
-        type = 'gold';
         isWalkable = false;
       } else {
         type = 'grass';
@@ -43,6 +82,55 @@ export const generateMap = (size: number, seed?: number): Cell[][] => {
         type,
         isWalkable,
       };
+    }
+  }
+
+  // --- Новый этап: размещение редкого золота ---
+
+  let remainingGold = TOTAL_GOLD;
+
+  const centers = [
+    { x: Math.floor(width * 0.25), y: Math.floor(height * 0.25) },
+    { x: Math.floor(width * 0.75), y: Math.floor(height * 0.75) },
+    { x: Math.floor(width * 0.5), y: Math.floor(height * 0.5) },
+    { x: Math.floor(width * 0.25), y: Math.floor(height * 0.75) },
+    { x: Math.floor(width * 0.75), y: Math.floor(height * 0.25) },
+  ];
+
+  const goldPerCluster = Math.floor(TOTAL_GOLD / centers.length);
+  const clusterRadius = Math.floor(Math.min(width, height) / 5);
+
+  for (const center of centers) {
+    if (remainingGold <= 0) break;
+
+    let placedInCluster = 0;
+    const targetInCluster = Math.min(
+      goldPerCluster + (remainingGold % centers.length),
+      remainingGold,
+    );
+
+    for (
+      let attempt = 0;
+      attempt < 50 && placedInCluster < targetInCluster;
+      attempt++
+    ) {
+      const dx =
+        Math.floor(Math.random() * (clusterRadius * 2 + 1)) - clusterRadius;
+      const dy =
+        Math.floor(Math.random() * (clusterRadius * 2 + 1)) - clusterRadius;
+
+      const x = center.x + dx;
+      const y = center.y + dy;
+
+      if (x >= 0 && x < width && y >= 0 && y < height) {
+        const cell = grid[y][x];
+        if (cell.type === 'grass') {
+          cell.type = 'gold';
+          cell.isWalkable = false;
+          placedInCluster++;
+          remainingGold--;
+        }
+      }
     }
   }
 

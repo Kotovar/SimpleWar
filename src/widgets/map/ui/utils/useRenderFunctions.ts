@@ -1,5 +1,6 @@
 import { RefObject, useCallback, useEffect } from 'react';
 import type { Position } from '@shared/config';
+import { useSettingsSelectors } from '@entities/settings';
 import { useBuildingsSelectors } from '@entities/buildings';
 import { useUnitsSelectors } from '@entities/units';
 import { useMapSelectors } from '@entities/maps';
@@ -35,37 +36,42 @@ export const useRenderFunctions = ({
   const { buildings } = useBuildingsSelectors();
   const { units } = useUnitsSelectors();
   const { attackableTargets } = useMovementSelectors();
+  const { cellSize, gridColumns } = useSettingsSelectors();
 
   const renderTerrain = useCallback(
     (ctx: CanvasRenderingContext2D) => {
-      withClear(ctx, () => renderTerrainLayer(ctx, grid));
+      withClear(ctx, () =>
+        renderTerrainLayer(ctx, grid, cellSize, gridColumns),
+      );
     },
-    [grid],
+    [cellSize, grid, gridColumns],
   );
 
   const renderEntities = useCallback(
     (ctx: CanvasRenderingContext2D) => {
-      withClear(ctx, () => renderEntitiesLayer(ctx, buildings, units));
+      withClear(ctx, () =>
+        renderEntitiesLayer(ctx, buildings, units, cellSize),
+      );
     },
-    [buildings, units],
+    [buildings, cellSize, units],
   );
 
   const renderMovement = useCallback(
     (ctx: CanvasRenderingContext2D) => {
       withClear(ctx, () =>
-        renderMovementLayer(ctx, reachableCells, attackableTargets),
+        renderMovementLayer(ctx, reachableCells, attackableTargets, cellSize),
       );
     },
-    [attackableTargets, reachableCells],
+    [attackableTargets, cellSize, reachableCells],
   );
 
   const renderSelection = useCallback(
     (ctx: CanvasRenderingContext2D) => {
       withClear(ctx, () =>
-        renderSelectionLayer(ctx, buildings, units, selection),
+        renderSelectionLayer(ctx, buildings, units, selection, cellSize),
       );
     },
-    [buildings, selection, units],
+    [buildings, cellSize, selection, units],
   );
 
   useEffect(() => {

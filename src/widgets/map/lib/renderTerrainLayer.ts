@@ -1,26 +1,25 @@
-import { Cell, CELL_SIZE, GRID_SIZE } from '@shared/config';
+import { generateNoise } from '@shared/lib';
+import type { Cell } from '@shared/config';
 import { drawBackgroundAndGrid } from './drawGrid';
 import { drawForest, drawGoldOre, drawMountains } from './drawTerrain';
 
-const generateNoise = (gridSize: number, amplitude: number) => {
-  return Array.from({ length: gridSize }, () =>
-    Array.from({ length: gridSize }, () => (Math.random() - 0.5) * amplitude),
-  );
-};
+const TERRAIN_NOISE_AMPLITUDE = 4;
 
 export const renderTerrainLayer = (
   ctx: CanvasRenderingContext2D,
   grid: Cell[][],
+  cellSize: number,
+  gridColumns: number,
 ) => {
-  const noise = generateNoise(GRID_SIZE, 4);
+  const noise = generateNoise(gridColumns, TERRAIN_NOISE_AMPLITUDE);
 
-  drawBackgroundAndGrid(ctx, GRID_SIZE, noise, grid);
+  drawBackgroundAndGrid(ctx, gridColumns, noise, grid, cellSize);
 
   grid.forEach((row, y) =>
     row.forEach((cell, x) => {
-      if (cell.type === 'mountain') drawMountains(ctx, x, y, CELL_SIZE);
-      if (cell.type === 'forest') drawForest(ctx, x, y, CELL_SIZE);
-      if (cell.type === 'gold') drawGoldOre(ctx, x, y, CELL_SIZE);
+      if (cell.type === 'mountain') drawMountains(ctx, x, y, cellSize);
+      if (cell.type === 'forest') drawForest(ctx, x, y, cellSize);
+      if (cell.type === 'gold') drawGoldOre(ctx, x, y, cellSize);
     }),
   );
 };

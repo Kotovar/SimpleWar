@@ -1,19 +1,4 @@
-const FOREST_TREE_SHADOW = 'rgba(0,0,0,0.25)';
-const FOREST_TREE_TRUNK = '#5a3e1b';
-const FOREST_TREE_CROWN = '#2f7d46';
-
-const ORE_SHADOW = 'rgba(0,0,0,0.25)';
-const ORE_GOLD_DARK = '#c9a227';
-const ORE_GOLD_LIGHT = '#f5d76e';
-
-const MOUNTAIN_SHADOW = 'rgba(0,0,0,0.25)';
-const MOUNTAIN_DARK = '#6e6e6e';
-const MOUNTAIN_LIGHT = '#9a9a9a';
-const MOUNTAIN_SNOW = '#eaeaea';
-
-const SELECTED_TERRAIN = '#6766b090';
-
-const GRID_LINE_THICKNESS = 1;
+import { TERRAIN } from '@shared/config';
 
 export const drawForest = (
   ctx: CanvasRenderingContext2D,
@@ -26,7 +11,7 @@ export const drawForest = (
 
   const drawTree = (x: number, y: number) => {
     // тень
-    ctx.fillStyle = FOREST_TREE_SHADOW;
+    ctx.fillStyle = TERRAIN.colorShadow;
     ctx.fillRect(
       x + 0.06 * cellSize,
       y + 0.63 * cellSize,
@@ -35,7 +20,7 @@ export const drawForest = (
     );
 
     // ствол
-    ctx.fillStyle = FOREST_TREE_TRUNK;
+    ctx.fillStyle = TERRAIN.colorForestTrunk;
     ctx.fillRect(
       x + 0.14 * cellSize,
       y + 0.34 * cellSize,
@@ -44,7 +29,7 @@ export const drawForest = (
     );
 
     // крона
-    ctx.fillStyle = FOREST_TREE_CROWN;
+    ctx.fillStyle = TERRAIN.colorForestCrown;
     ctx.fillRect(
       x + 0.03 * cellSize,
       y + 0.17 * cellSize,
@@ -75,7 +60,7 @@ export const drawGoldOre = (
   const baseY = cellY * cellSize;
 
   // тень
-  ctx.fillStyle = ORE_SHADOW;
+  ctx.fillStyle = TERRAIN.colorShadow;
   ctx.fillRect(
     baseX + 0.32 * cellSize,
     baseY + 0.68 * cellSize,
@@ -84,7 +69,7 @@ export const drawGoldOre = (
   );
 
   // основной камень
-  ctx.fillStyle = ORE_GOLD_DARK;
+  ctx.fillStyle = TERRAIN.colorOreDark;
   ctx.fillRect(
     baseX + 0.34 * cellSize,
     baseY + 0.48 * cellSize,
@@ -101,7 +86,7 @@ export const drawGoldOre = (
   );
 
   // блик
-  ctx.fillStyle = ORE_GOLD_LIGHT;
+  ctx.fillStyle = TERRAIN.colorOreLight;
   ctx.fillRect(
     baseX + 0.42 * cellSize,
     baseY + 0.52 * cellSize,
@@ -120,7 +105,7 @@ export const drawMountains = (
   const baseY = cellY * cellSize;
 
   // тень
-  ctx.fillStyle = MOUNTAIN_SHADOW;
+  ctx.fillStyle = TERRAIN.colorShadow;
   ctx.fillRect(
     baseX + 0.18 * cellSize,
     baseY + 0.7 * cellSize,
@@ -130,7 +115,7 @@ export const drawMountains = (
 
   const drawPeak = (x: number, width: number, height: number) => {
     // тёмная грань
-    ctx.fillStyle = MOUNTAIN_DARK;
+    ctx.fillStyle = TERRAIN.colorMountainDark;
     ctx.beginPath();
     ctx.moveTo(x, baseY + 0.7 * cellSize);
     ctx.lineTo(x + width / 2, baseY + 0.7 * cellSize - height);
@@ -139,7 +124,7 @@ export const drawMountains = (
     ctx.fill();
 
     // светлая грань
-    ctx.fillStyle = MOUNTAIN_LIGHT;
+    ctx.fillStyle = TERRAIN.colorMountainLight;
     ctx.beginPath();
     ctx.moveTo(x + width * 0.15, baseY + 0.7 * cellSize);
     ctx.lineTo(x + width / 2, baseY + 0.7 * cellSize - height * 0.85);
@@ -148,7 +133,7 @@ export const drawMountains = (
     ctx.fill();
 
     // снег на вершине
-    ctx.fillStyle = MOUNTAIN_SNOW;
+    ctx.fillStyle = TERRAIN.colorMountainSnow;
     ctx.beginPath();
     ctx.moveTo(x + width * 0.4, baseY + 0.7 * cellSize - height * 0.35);
     ctx.lineTo(x + width / 2, baseY + 0.7 * cellSize - height * 0.55);
@@ -172,14 +157,14 @@ export const drawTerrainHighlight = (
   const baseX = cellX * cellSize;
   const baseY = cellY * cellSize;
 
-  ctx.strokeStyle = SELECTED_TERRAIN;
-  ctx.lineWidth = GRID_LINE_THICKNESS * 2;
+  ctx.strokeStyle = TERRAIN.colorSelectedTerrain;
+  ctx.lineWidth = TERRAIN.lineThickness * 2;
   ctx.beginPath();
   ctx.strokeRect(
-    baseX + GRID_LINE_THICKNESS * 3,
-    baseY + GRID_LINE_THICKNESS * 3,
-    cellSize - GRID_LINE_THICKNESS * 6,
-    cellSize - GRID_LINE_THICKNESS * 6,
+    baseX + TERRAIN.lineThickness * 3,
+    baseY + TERRAIN.lineThickness * 3,
+    cellSize - TERRAIN.lineThickness * 6,
+    cellSize - TERRAIN.lineThickness * 6,
   );
   ctx.stroke();
 };

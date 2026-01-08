@@ -1,6 +1,4 @@
-const SELECTED_MOVEMENT = '#00ff4871';
-const SELECTED_ENEMY = '#ff000041';
-const GRID_LINE_THICKNESS = 2;
+import { SELECTED } from '@shared/config';
 
 export const drawMovement = (
   ctx: CanvasRenderingContext2D,
@@ -12,13 +10,13 @@ export const drawMovement = (
   const baseX = cellX * cellSize;
   const baseY = cellY * cellSize;
 
-  ctx.fillStyle = type === 'free' ? SELECTED_MOVEMENT : SELECTED_ENEMY;
+  ctx.fillStyle = type === 'free' ? SELECTED.move : SELECTED.enemyInTarget;
   ctx.beginPath();
   ctx.fillRect(
-    baseX + GRID_LINE_THICKNESS,
-    baseY + GRID_LINE_THICKNESS,
-    cellSize - GRID_LINE_THICKNESS,
-    cellSize - GRID_LINE_THICKNESS,
+    baseX + SELECTED.lineThickness,
+    baseY + SELECTED.lineThickness,
+    cellSize - SELECTED.lineThickness,
+    cellSize - SELECTED.lineThickness,
   );
   ctx.stroke();
 };

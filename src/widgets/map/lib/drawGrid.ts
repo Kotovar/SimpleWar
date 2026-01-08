@@ -1,10 +1,5 @@
-import { CANVAS_SIZE, Cell, CELL_SIZE } from '@shared/config';
-
-const GRID_LINE_THICKNESS = 1;
-const GRID_LINE_COLOR = 'rgba(0, 0, 0, 0.04)';
-
-const GRASS_BASE = { r: 46, g: 160, b: 55 };
-const WATER_BASE = { r: 40, g: 110, b: 180 };
+import { Cell, GRID } from '@shared/config';
+import { useSettingsStore } from '@entities/settings';
 
 const drawCellBackground = (
   ctx: CanvasRenderingContext2D,
@@ -28,28 +23,32 @@ export const drawBackgroundAndGrid = (
   gridSize: number,
   noise: number[][],
   grid: Cell[][],
+  cellSize: number,
 ) => {
   grid.forEach((row, y) =>
     row.forEach((cell, x) => {
-      if (cell.type === 'water') {
-        drawCellBackground(ctx, x, y, CELL_SIZE, WATER_BASE, noise[y][x]);
-      } else {
-        drawCellBackground(ctx, x, y, CELL_SIZE, GRASS_BASE, noise[y][x]);
-      }
+      drawCellBackground(
+        ctx,
+        x,
+        y,
+        cellSize,
+        cell.type === 'water' ? GRID.colorWater : GRID.colorGrass,
+        noise[y][x],
+      );
     }),
   );
 
   // сетка поверх
-  ctx.strokeStyle = GRID_LINE_COLOR;
-  ctx.lineWidth = GRID_LINE_THICKNESS;
+  ctx.strokeStyle = GRID.lineColor;
+  ctx.lineWidth = GRID.lineThickness;
 
   ctx.beginPath();
   for (let i = 0; i <= gridSize; i++) {
-    const p = i * CELL_SIZE;
+    const p = i * cellSize;
     ctx.moveTo(p, 0);
-    ctx.lineTo(p, CANVAS_SIZE);
+    ctx.lineTo(p, useSettingsStore.getState().canvasWidth);
     ctx.moveTo(0, p);
-    ctx.lineTo(CANVAS_SIZE, p);
+    ctx.lineTo(useSettingsStore.getState().canvasHeight, p);
   }
   ctx.stroke();
 };

@@ -1,38 +1,199 @@
 .GameControls {
+  display: flex;
+  flex-direction: column;
+
+  gap: 16px;
+}
+
+.Title {
   text-align: center;
-  border: 3px solid rgb(60, 139, 172);
+
+  color: oklab(15% 0 0);
+}
+
+.Wrapper {
+  display: flex;
+  flex-direction: column;
+
+  gap: 16px;
+
+  color: oklab(15% 0 0);
+}
+
+.Section {
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  gap: 8px;
+}
+
+.Label {
+  font-weight: bold;
+  margin-block: 8px;
+}
+
+.ButtonGroup {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.ToggleButton {
+  background-color: transparent;
+  border: 1px solid oklab(26.8% 0.0344 -0.04034);
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+
+  &:hover {
+    background-color: oklab(45.8% 0.01 -0.2 / 0.2);
+  }
+
+  &.Active {
+    background-color: oklab(46% 0.0144 -0.2);
+    color: white;
+  }
+}
+
+.PrimaryButton {
+  background-color: oklab(64% -0.15 0.1);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 1.1em;
+  cursor: pointer;
+  align-self: center;
+
+  &:hover {
+    background-color: oklab(55% -0.12 0.08);
+  }
+}
+
+.Resources {
+  margin-block: 16px;
+  font-size: 1.1em;
+}
+
+.Gold {
+  color: oklab(88.7% -0.017 0.18);
+  font-weight: bold;
+}
+
+.Wood {
+  color: oklab(63% 0.1 0.12);
+  font-weight: bold;
+}
+
+.Income {
+  color: oklab(62.7% 0 0);
+  font-size: 0.9em;
+}
+
+.ButtonRow {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.EndTurnButton {
+  background-color: oklab(62% -0.14 0.1);
+  color: oklab(100% 0 0);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 1.1em;
+  cursor: pointer;
+  align-self: center;
+
+  &:hover:not(:disabled) {
+    background-color: oklab(51% -0.12 0.08);
+    color: oklab(100% 0 0);
+  }
+}
+
+.DangerButton {
+  background-color: oklab(59% 0.18 0.07);
+  color: oklab(100% 0 0);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+
+  &:hover {
+    background-color: oklab(54% 0.18 0.076);
+  }
+}
+
+.GameOverTitle {
+  font-size: 2em;
+  font-weight: bold;
+  margin-bottom: 16px;
+  color: oklab(86% 0 0.18);
+}
+
+.Hint {
+  color: oklab(73.8% 0 0);
+  font-style: italic;
+  text-align: center;
+  margin-top: 16px;
 }
 
 .IsWalkable {
-  color: green;
+  color: oklab(62% -0.14 0.1);
 }
 
 .IsNotWalkable {
-  color: red;
+  color: oklab(59% 0.18 0.07);
 }
 
-.Info {
+.EntityInfo {
+  background-color: oklab(18% 0 0 / 0.4);
+  border: 1px solid oklab(40% 0.01 -0.1);
+  border-radius: 16px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.Section {
-  border-block: 2px solid rgb(60, 139, 172);
-
+.EntityHeader {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1.3em;
+  font-weight: bold;
+  color: oklab(86% 0 0.18);
 }
 
-.Button {
-  align-self: anchor-center;
-  background-color: transparent;
-  border: 1px solid #2d1e3c;
-  border-radius: 8px;
+.EntityIcon {
+  font-size: 1.4em;
+}
 
-  &:hover:not(:disabled) {
-    background-color: rgb(59, 59, 204);
-    color: white;
-  }
+.EntityDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 1em;
+  color: oklab(100% 0 0);
+}
+
+.HP {
+  color: oklab(64% -0.15 0.1);
+  font-weight: bold;
+}
+
+.MovePoints {
+  color: oklab(91.6% -0.04 0.19);
+  font-weight: bold;
+}
+
+.AttackPoints {
+  color: oklab(59% 0.18 0.07);
+  font-weight: bold;
 }

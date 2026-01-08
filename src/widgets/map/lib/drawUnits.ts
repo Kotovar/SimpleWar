@@ -1,32 +1,4 @@
-import type { Owner } from '@shared/config';
-
-type UnitPalette = {
-  body: string;
-  bodyArcher: string;
-  head: string;
-  sword: string;
-  arrowShaft: string;
-  accent: string;
-};
-
-const PALETTES: Record<Owner, UnitPalette> = {
-  player: {
-    body: '#0b1eb0ff',
-    bodyArcher: '#2e42daff',
-    head: '#d2b48c',
-    sword: '#cfcfcf',
-    arrowShaft: '#DEB887',
-    accent: '#3a7afe',
-  },
-  enemy: {
-    body: '#922424ff',
-    bodyArcher: '#ef6413ff',
-    head: '#cfa08a',
-    sword: '#cfcfcf',
-    arrowShaft: '#DEB887',
-    accent: '#b22222',
-  },
-};
+import { UNIT_PALETTES, type Owner } from '@shared/config';
 
 export const drawSwordsman = (
   ctx: CanvasRenderingContext2D,
@@ -35,7 +7,7 @@ export const drawSwordsman = (
   cellSize: number,
   owner: Owner,
 ) => {
-  const palette = PALETTES[owner];
+  const palette = UNIT_PALETTES[owner];
   const baseX = cellX * cellSize;
   const baseY = cellY * cellSize;
 
@@ -97,7 +69,7 @@ export const drawArcher = (
   cellSize: number,
   owner: Owner,
 ) => {
-  const palette = PALETTES[owner];
+  const palette = UNIT_PALETTES[owner];
   const baseX = cellX * cellSize;
   const baseY = cellY * cellSize;
 
