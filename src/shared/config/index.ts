@@ -1,4 +1,4 @@
-export * from './sizes';
+export * from './map';
 export * from './units';
 export * from './buildings';
 export * from './common';

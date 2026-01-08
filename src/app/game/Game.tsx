@@ -19,7 +19,7 @@ export const Game = () => {
 
   useEffect(() => {
     if (phase === 'inProgress') {
-      startGame(true);
+      startGame();
     }
   }, [phase, startGame]);
 

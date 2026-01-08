@@ -20,3 +20,5 @@ export const MAP_PRESET_LABELS: Record<
   large: { canvas: 'Большая', grid: 'Большое' },
   extra: { canvas: 'Огромная', grid: 'Огромное' },
 };
+
+export const TEMP_START_SEED = 0.14;

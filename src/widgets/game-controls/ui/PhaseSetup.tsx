@@ -1,3 +1,4 @@
+import type { ChangeEvent } from 'react';
 import clsx from 'clsx';
 import { MAP_PRESET_LABELS, MAP_PRESETS } from '@shared/config';
 import { useSettingsSelectors } from '@entities/settings';
@@ -5,10 +6,26 @@ import { useGameLoopSelectors } from '@features/game-loop';
 import styles from './styles.module.css';
 
 export const PhaseSetup = () => {
-  const { canvasWidth, gridRows, setCanvasSize, setGridSize } =
-    useSettingsSelectors();
+  const {
+    canvasWidth,
+    gridRows,
+    mapGenerationMode,
+    customSeed,
+    setCanvasSize,
+    setGridSize,
+    setCustomSeed,
+    setMapGenerationMode,
+  } = useSettingsSelectors();
 
   const { startGame } = useGameLoopSelectors();
+
+  const handleSeedChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value);
+
+    if (!isNaN(value)) {
+      setCustomSeed(value);
+    }
+  };
 
   return (
     <div className={styles.Wrapper}>
@@ -127,6 +144,50 @@ export const PhaseSetup = () => {
             {MAP_PRESET_LABELS.extra.grid}
           </button>
         </div>
+      </section>
+
+      <section className={styles.Section}>
+        <div className={styles.Label}>Генерация карты</div>
+        <div className={styles.ButtonGroup}>
+          <button
+            className={clsx(styles.ToggleButton, {
+              [styles.Active]: mapGenerationMode === 'random',
+            })}
+            onClick={() => setMapGenerationMode('random')}
+          >
+            Случайная
+          </button>
+          <button
+            className={clsx(styles.ToggleButton, {
+              [styles.Active]: mapGenerationMode === 'fixed',
+            })}
+            onClick={() => setMapGenerationMode('fixed')}
+          >
+            Фиксированный сид
+          </button>
+        </div>
+
+        {mapGenerationMode === 'fixed' && (
+          <div className={styles.SeedInputWrapper}>
+            <label className={styles.SeedLabel}>
+              Сид (0.0 – 1.0):
+              <input
+                type='number'
+                step='0.0001'
+                min='0'
+                max='1'
+                value={customSeed}
+                onChange={handleSeedChange}
+                className={styles.SeedInput}
+                name='seed'
+              />
+            </label>
+
+            <p className={styles.SeedWarning}>
+              Внимание: карта может быть непроходимой!
+            </p>
+          </div>
+        )}
       </section>
 
       <section className={styles.Section}>
