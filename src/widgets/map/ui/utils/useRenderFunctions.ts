@@ -1,6 +1,10 @@
 import { RefObject, useCallback, useEffect } from 'react';
 import type { Position } from '@shared/config';
+import { useBuildingsSelectors } from '@entities/buildings';
+import { useUnitsSelectors } from '@entities/units';
+import { useMapSelectors } from '@entities/maps';
 import type { Selection } from '@features/selection';
+import { useMovementSelectors } from '@features/pathfinding';
 import {
   renderEntitiesLayer,
   renderMovementLayer,
@@ -8,13 +12,7 @@ import {
   renderTerrainLayer,
   withClear,
 } from '@widgets/map/lib';
-import { getCtx } from '@widgets/map/ui/utils/getCtx';
-import {
-  useBuildingsSelectors,
-  useMapSelectors,
-  useMovementSelectors,
-  useUnitsSelectors,
-} from '@widgets/map/model';
+import { getCtx } from '@widgets/map/ui/utils';
 
 type Props = {
   selection: Selection;

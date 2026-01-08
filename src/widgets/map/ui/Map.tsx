@@ -2,18 +2,19 @@ import { useRef } from 'react';
 import clsx from 'clsx';
 import type { MouseEvent } from 'react';
 import { CANVAS_SIZE, CELL_SIZE, GRID_SIZE } from '@shared/config';
-import { useUnitsStore } from '@entities/units';
+import { useUnitsSelectors, useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useSelectionSelectors } from '@features/selection';
-import { useUnitsSelectors, useMovementSelectors } from '@widgets/map/model';
+import { attack } from '@features/combat';
+import { useGameLoopSelectors } from '@features/game-loop';
+import { useMovementSelectors } from '@features/pathfinding';
 import {
   getGridCoordsFromEvent,
   handleClickWithoutSelectedUnit,
   handleClickWithPlayerUnitSelected,
 } from './utils';
 import { useRenderFunctions } from './utils/useRenderFunctions';
-import { attack } from '@features/combat';
-import { useGameLoopSelectors } from '@features/game-loop';
+
 import styles from './styles.module.css';
 
 const CANVAS_SIZES = {
