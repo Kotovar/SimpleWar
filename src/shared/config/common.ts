@@ -1,4 +1,4 @@
-export type Owner = 'player' | 'enemy';
+export type Owner = 'player' | 'ai';
 
 export type CellType = 'grass' | 'mountain' | 'water' | 'forest' | 'gold';
 

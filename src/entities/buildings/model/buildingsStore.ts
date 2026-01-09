@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { BUILDINGS_CONFIG } from '@shared/config';
-import type { Owner, BuildingType, Building } from '@shared/config';
+import type { Owner, BuildingType, Building, Player } from '@shared/config';
 
 type BuildingsState = {
   buildings: Record<string, Building>;
@@ -15,6 +15,7 @@ type BuildingsState = {
   damageBuilding: (id: string, damage: number) => void;
   getBuildingAt: (x?: number, y?: number) => Building | null;
   changeAttackPoints: (id: string) => void;
+  checkBaseDestroyed: () => Player | null;
   resetBuildingsForNewTurn: () => void;
   resetStore: () => void;
 };
@@ -76,6 +77,21 @@ export const useBuildingsStore = create<BuildingsState>()(
           building.attackPoints--;
         }
       });
+    },
+
+    checkBaseDestroyed: () => {
+      const { buildings } = get();
+      const playerBase = Object.values(buildings).find(
+        base => base.type === 'base' && base.owner === 'player',
+      );
+      const aiBase = Object.values(buildings).find(
+        base => base.type === 'base' && base.owner === 'ai',
+      );
+
+      if (!playerBase) return 'ai';
+      if (!aiBase) return 'player';
+
+      return null;
     },
 
     resetBuildingsForNewTurn: () =>

@@ -1,5 +1,6 @@
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
+import { gameEvents } from '@shared/lib';
 
 export const attack = (attackerId: string, targetId: string) => {
   const unitsStore = useUnitsStore.getState();
@@ -27,6 +28,16 @@ export const attack = (attackerId: string, targetId: string) => {
     unitsStore.damageUnit(targetId, damage);
   } else if (targetBuilding) {
     buildingsStore.damageBuilding(targetId, damage);
+
+    const owner = targetBuilding.owner;
+    const wasDestroyedBy = buildingsStore.checkBaseDestroyed();
+
+    if (wasDestroyedBy) {
+      gameEvents.emit({
+        type: 'BASE_DESTROYED',
+        owner,
+      });
+    }
   }
 
   if (attackerUnit) {

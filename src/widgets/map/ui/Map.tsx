@@ -73,10 +73,7 @@ export const Map = () => {
     }
 
     // 2. Если выбрана вражеская сущность (юнит ИЛИ здание) — любой клик снимает выделение
-    if (
-      selectedUnit?.owner === 'enemy' ||
-      selectedBuilding?.owner === 'enemy'
-    ) {
+    if (selectedUnit?.owner === 'ai' || selectedBuilding?.owner === 'ai') {
       clearSelection();
       clearMovement();
       return;

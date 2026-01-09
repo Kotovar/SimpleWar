@@ -20,5 +20,5 @@ export const BUILDINGS_CONFIG: Record<
   BuildingType,
   Pick<Building, 'maxHp' | 'attack' | 'attackPoints' | 'attackRange'>
 > = {
-  base: { maxHp: 1000 },
+  base: { maxHp: 100 },
 };

@@ -8,6 +8,7 @@ export const useGameLoopSelectors = () => {
   const setPhase = useGameLoopStore(state => state.setPhase);
   const endTurn = useGameLoopStore(state => state.endTurn);
   const resetGame = useGameLoopStore(state => state.resetGame);
+  const declareWinner = useGameLoopStore(state => state.declareWinner);
 
   return {
     currentTurn,
@@ -17,5 +18,6 @@ export const useGameLoopSelectors = () => {
     setPhase,
     endTurn,
     resetGame,
+    declareWinner,
   };
 };

@@ -52,13 +52,13 @@ export const useStartGame = () => {
     prepareStartArea(enemyStart.x, enemyStart.y);
 
     spawnBuilding('base', playerStart.x, playerStart.y, 'player');
-    spawnBuilding('base', enemyStart.x, enemyStart.y, 'enemy');
+    spawnBuilding('base', enemyStart.x, enemyStart.y, 'ai');
 
     // TODO: убрать после запуска игры - пока для теста
     spawnUnit('swordsman', 2, 1, 'player');
     spawnUnit('archer', gridColumns - 7, gridRows - 2, 'player');
-    spawnUnit('swordsman', gridColumns - 3, gridRows - 2, 'enemy');
-    spawnUnit('archer', gridColumns - 3, gridRows - 1, 'enemy');
+    spawnUnit('swordsman', gridColumns - 3, gridRows - 2, 'ai');
+    spawnUnit('archer', gridColumns - 3, gridRows - 1, 'ai');
   }, [
     customSeed,
     gridColumns,

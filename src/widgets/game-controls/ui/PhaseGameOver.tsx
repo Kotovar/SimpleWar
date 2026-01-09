@@ -1,8 +1,15 @@
-import { useGameLoopSelectors } from '@features/game-loop';
+import { useGameLoopSelectors, resetGame } from '@features/game-loop';
+import { useSelectionSelectors } from '@features/selection';
 import styles from './styles.module.css';
 
 export const PhaseGameOver = () => {
-  const { activePlayer, currentTurn, startGame } = useGameLoopSelectors();
+  const { activePlayer, currentTurn } = useGameLoopSelectors();
+  const { clearSelection } = useSelectionSelectors();
+
+  const onResetGame = () => {
+    clearSelection();
+    resetGame();
+  };
 
   return (
     <section className={styles.Section}>
@@ -11,7 +18,7 @@ export const PhaseGameOver = () => {
       </div>
       <div>Игра завершена за {currentTurn} ходов</div>
 
-      <button className={styles.PrimaryButton} onClick={startGame}>
+      <button className={styles.PrimaryButton} onClick={onResetGame}>
         Начать новую игру
       </button>
     </section>

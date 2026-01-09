@@ -31,7 +31,7 @@ export const BUILDINGS_PALETTES: Record<Owner, BuildingPalette> = {
     roof: 'hsla(100, 42%, 24%, 1.00)',
     door: 'hsla(100, 100%, 26%, 1.00)',
   },
-  enemy: {
+  ai: {
     wall: 'hsla(0, 0%, 55%, 1.00)',
     roof: 'rgba(189, 31, 31, 1)',
     door: 'hsla(0, 97%, 47%, 1.00)',
@@ -47,7 +47,7 @@ export const UNIT_PALETTES: Record<Owner, UnitPalette> = {
     arrowShaft: 'hsla(34, 57%, 70%, 1.00)',
     accent: 'hsla(220, 99%, 61%, 1.00)',
   },
-  enemy: {
+  ai: {
     body: 'hsla(0, 60%, 36%, 1.00)',
     bodyArcher: 'hsla(22, 87%, 51%, 1.00)',
     head: 'hsla(19, 42%, 68%, 1.00)',

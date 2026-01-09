@@ -13,7 +13,7 @@ export const BUILDINGS_NAME = {
 
 export const OWNER_NAME = {
   player: 'Игрок',
-  enemy: 'Противник',
+  ai: 'Противник',
 } satisfies Record<Owner, string>;
 
 export const TERRAIN_NAME = {

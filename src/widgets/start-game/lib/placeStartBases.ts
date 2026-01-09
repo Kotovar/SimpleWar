@@ -45,5 +45,5 @@ export const setBaseComputer = (grid: Cell[][], size: number) => {
   const baseX = size - 2;
   const baseY = size - 2;
 
-  spawnBuilding('base', baseY, baseX, 'enemy');
+  spawnBuilding('base', baseY, baseX, 'ai');
 };
