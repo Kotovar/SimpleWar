@@ -1,6 +1,6 @@
 import type { Building, Unit } from '@shared/config';
 import { drawBase } from './drawBuildings';
-import { drawArcher, drawSwordsman } from './drawUnits';
+import { drawArcher, drawSwordsman, drawWorker } from './drawUnits';
 import { drawHpBar } from './drawHpBar';
 
 export const renderEntitiesLayer = (
@@ -30,6 +30,11 @@ export const renderEntitiesLayer = (
 
     if (type === 'archer') {
       drawArcher(ctx, x, y, cellSize, owner);
+      drawHpBar(ctx, x, y, cellSize, hpRatio);
+    }
+
+    if (type === 'worker') {
+      drawWorker(ctx, x, y, cellSize, owner);
       drawHpBar(ctx, x, y, cellSize, hpRatio);
     }
   });

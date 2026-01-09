@@ -2,7 +2,6 @@ import clsx from 'clsx';
 import { useRef } from 'react';
 import type { MouseEvent } from 'react';
 import { useSettingsSelectors } from '@entities/settings';
-import { useMovementSelectors } from '@features/pathfinding';
 import { useSelectionSelectors } from '@features/selection';
 import { useRenderFunctions } from './utils';
 import styles from './styles.module.css';
@@ -22,7 +21,6 @@ export const CanvasLayers = ({ handleClick }: Props) => {
   const highlightRef = useRef<HTMLCanvasElement>(null);
 
   const { canvasWidth, canvasHeight } = useSettingsSelectors();
-  const { reachableCells } = useMovementSelectors();
   const { selection } = useSelectionSelectors();
   const { activePlayer, phase } = useGameLoopSelectors();
 
@@ -33,7 +31,6 @@ export const CanvasLayers = ({ handleClick }: Props) => {
 
   useRenderFunctions({
     selection,
-    reachableCells,
     terrainRef,
     unitsRef,
     movementRef,

@@ -14,6 +14,7 @@ type BuildingPalette = {
   wall: string;
   roof: string;
   door: string;
+  window: string;
 };
 
 type UnitPalette = {
@@ -30,11 +31,13 @@ export const BUILDINGS_PALETTES: Record<Owner, BuildingPalette> = {
     wall: 'hsla(0, 0%, 55%, 1.00)',
     roof: 'hsla(100, 42%, 24%, 1.00)',
     door: 'hsla(100, 100%, 26%, 1.00)',
+    window: 'hsl(102, 8%, 26%)',
   },
   ai: {
     wall: 'hsla(0, 0%, 55%, 1.00)',
     roof: 'rgba(189, 31, 31, 1)',
     door: 'hsla(0, 97%, 47%, 1.00)',
+    window: 'hsl(102, 8%, 26%)',
   },
 };
 
@@ -65,10 +68,11 @@ export const GRID = {
 };
 
 export const SELECTED = {
-  move: 'hsla(137, 100%, 50%, 0.44)',
-  enemyInTarget: 'hsla(0, 100%, 50%, 0.26)',
+  free: 'hsla(137, 100%, 50%, 0.44)',
+  enemy: 'hsla(0, 100%, 50%, 0.26)',
+  produce: 'hsla(233, 97%, 41%, 0.26)',
   lineThickness: 2,
-};
+} as const;
 
 export const SELECTION = {
   colorOutline: 'hsla(148, 100%, 50%, 1.00)',

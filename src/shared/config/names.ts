@@ -1,11 +1,12 @@
 import type { BuildingType } from './buildings';
 import type { CellType, Owner } from './common';
-import type { UnitType } from './units';
+import type { MilitaryType, CivilType } from './units';
 
 export const UNITS_NAME = {
-  swordsman: 'Meчник',
+  swordsman: 'Мечник',
   archer: 'Лучник',
-} satisfies Record<UnitType, string>;
+  worker: 'Рабочий',
+} satisfies Record<MilitaryType | CivilType, string>;
 
 export const BUILDINGS_NAME = {
   base: 'Ратуша',

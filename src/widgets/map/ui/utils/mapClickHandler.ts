@@ -68,7 +68,12 @@ export const handleClickWithPlayerUnitSelected = (
     return true;
   }
 
-  if (isAttackable && hasTarget && selectedUnit.attackPoints > 0) {
+  if (
+    isAttackable &&
+    hasTarget &&
+    selectedUnit.role !== 'civil' &&
+    selectedUnit.attackPoints > 0
+  ) {
     const targetId = unitAtTarget?.id ?? buildingAtTarget!.id;
     attack(selectedUnit.id, targetId);
     clearSelection();

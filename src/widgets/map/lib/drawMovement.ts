@@ -5,12 +5,12 @@ export const drawMovement = (
   cellX: number,
   cellY: number,
   cellSize: number,
-  type: 'free' | 'enemy',
+  type: 'free' | 'enemy' | 'produce',
 ) => {
   const baseX = cellX * cellSize;
   const baseY = cellY * cellSize;
 
-  ctx.fillStyle = type === 'free' ? SELECTED.move : SELECTED.enemyInTarget;
+  ctx.fillStyle = SELECTED[type];
   ctx.beginPath();
   ctx.fillRect(
     baseX + SELECTED.lineThickness,

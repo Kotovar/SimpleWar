@@ -151,14 +151,18 @@ export const PhaseInProgress = () => {
                     {unit.movePoints} / {unit.maxMovePoints}
                   </span>
                 </div>
-                <div>
-                  Атаки:{' '}
-                  <span className={styles.AttackPoints}>
-                    {unit.attackPoints} / {unit.maxAttackPoints}
-                  </span>
-                </div>
-                <div>Радиус атаки: {unit.attackRange}</div>
-                <div>Урон: {unit.attack}</div>
+                {unit.role !== 'civil' && (
+                  <>
+                    <div>
+                      Атаки:{' '}
+                      <span className={styles.AttackPoints}>
+                        {unit.attackPoints} / {unit.maxAttackPoints}
+                      </span>
+                    </div>
+                    <div>Радиус атаки: {unit.attackRange}</div>
+                    <div>Урон: {unit.attack}</div>
+                  </>
+                )}
               </>
             )}
           </div>

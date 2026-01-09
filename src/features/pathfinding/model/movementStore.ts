@@ -12,6 +12,7 @@ import {
 interface MovementState {
   reachableCells: Position[] | null;
   attackableTargets: Position[] | null;
+  buildableCells: Position[] | null;
   currentPath: Position[] | null;
 
   calculateMovement: (unitId: string) => void;
@@ -22,6 +23,7 @@ export const useMovementStore = create<MovementState>()(
   immer(set => ({
     reachableCells: null,
     attackableTargets: null,
+    buildableCells: null,
     currentPath: null,
 
     calculateMovement: unitId => {
@@ -39,7 +41,7 @@ export const useMovementStore = create<MovementState>()(
       );
 
       const attackable =
-        unit.attackPoints > 0
+        unit.role === 'military' && unit.attackPoints > 0
           ? getAttackableTargets(
               { x: unit.x, y: unit.y },
               unit.attackRange,

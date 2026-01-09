@@ -5,6 +5,7 @@ export const renderMovementLayer = (
   ctx: CanvasRenderingContext2D,
   reachableCells: Position[] | null,
   attackableEnemies: Position[] | null,
+  buildableCells: Position[] | null,
   cellSize: number,
 ) => {
   if (reachableCells) {
@@ -16,6 +17,12 @@ export const renderMovementLayer = (
   if (attackableEnemies) {
     attackableEnemies.forEach(({ x, y }) => {
       drawMovement(ctx, x, y, cellSize, 'enemy');
+    });
+  }
+
+  if (buildableCells) {
+    buildableCells.forEach(({ x, y }) => {
+      drawMovement(ctx, x, y, cellSize, 'produce');
     });
   }
 };

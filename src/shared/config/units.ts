@@ -1,26 +1,48 @@
 import type { Owner } from './common';
 
-export type UnitType = 'swordsman' | 'archer';
+export type MilitaryType = 'swordsman' | 'archer';
+export type CivilType = 'worker';
+export type UnitRole = 'military' | 'civil';
 
-export type Unit = {
+type BaseUnit = {
   id: string;
-  type: UnitType;
+  type: MilitaryType | CivilType;
+  role: UnitRole;
   x: number;
   y: number;
   hp: number;
   maxHp: number;
   movePoints: number;
   maxMovePoints: number;
-  attack: number;
-  attackPoints: number;
-  maxAttackPoints: number;
   owner: Owner;
-  attackRange: number;
 };
 
-export const UNITS_CONFIG: Record<
-  UnitType,
-  Pick<Unit, 'maxHp' | 'attack' | 'attackPoints' | 'movePoints' | 'attackRange'>
+export type MilitaryUnit = {
+  role: 'military';
+  attack: number;
+  attackPoints: number;
+  attackRange: number;
+  maxAttackPoints: number;
+} & BaseUnit;
+
+export type CivilUnit = {
+  role: 'civil';
+  canBuild: boolean;
+} & BaseUnit;
+
+export type Unit = MilitaryUnit | CivilUnit;
+
+export const MILITARY_UNITS_CONFIG: Record<
+  MilitaryType,
+  Pick<
+    MilitaryUnit,
+    | 'maxHp'
+    | 'attack'
+    | 'attackPoints'
+    | 'movePoints'
+    | 'attackRange'
+    | 'maxAttackPoints'
+  >
 > = {
   swordsman: {
     maxHp: 100,
@@ -28,6 +50,7 @@ export const UNITS_CONFIG: Record<
     movePoints: 3,
     attackPoints: 1,
     attackRange: 1,
+    maxAttackPoints: 1,
   },
   archer: {
     maxHp: 40,
@@ -35,5 +58,17 @@ export const UNITS_CONFIG: Record<
     movePoints: 3,
     attackPoints: 1,
     attackRange: 2,
+    maxAttackPoints: 1,
+  },
+};
+
+export const CIVIL_UNITS_CONFIG: Record<
+  CivilType,
+  Pick<CivilUnit, 'maxHp' | 'movePoints' | 'canBuild'>
+> = {
+  worker: {
+    maxHp: 20,
+    movePoints: 3,
+    canBuild: true,
   },
 };

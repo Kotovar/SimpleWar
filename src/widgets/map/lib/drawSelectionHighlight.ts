@@ -14,7 +14,7 @@ export const drawSelectionHighlight = (
   ctx.arc(
     baseX + cellSize / 2,
     baseY + cellSize / 2,
-    cellSize / 2.5,
+    cellSize / 2.1,
     0,
     2 * Math.PI,
   );

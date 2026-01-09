@@ -1,5 +1,4 @@
 import { RefObject, useCallback, useEffect } from 'react';
-import type { Position } from '@shared/config';
 import { useSettingsSelectors } from '@entities/settings';
 import { useBuildingsSelectors } from '@entities/buildings';
 import { useUnitsSelectors } from '@entities/units';
@@ -17,7 +16,6 @@ import { getCtx } from '@widgets/map/ui/utils';
 
 type Props = {
   selection: Selection;
-  reachableCells: Position[] | null;
   terrainRef: RefObject<HTMLCanvasElement | null>;
   unitsRef: RefObject<HTMLCanvasElement | null>;
   movementRef: RefObject<HTMLCanvasElement | null>;
@@ -26,7 +24,6 @@ type Props = {
 
 export const useRenderFunctions = ({
   selection,
-  reachableCells,
   terrainRef,
   unitsRef,
   movementRef,
@@ -35,7 +32,8 @@ export const useRenderFunctions = ({
   const { grid } = useMapSelectors();
   const { buildings } = useBuildingsSelectors();
   const { units } = useUnitsSelectors();
-  const { attackableTargets } = useMovementSelectors();
+  const { attackableTargets, buildableCells, reachableCells } =
+    useMovementSelectors();
   const { cellSize, gridColumns } = useSettingsSelectors();
 
   const renderTerrain = useCallback(
@@ -59,10 +57,16 @@ export const useRenderFunctions = ({
   const renderMovement = useCallback(
     (ctx: CanvasRenderingContext2D) => {
       withClear(ctx, () =>
-        renderMovementLayer(ctx, reachableCells, attackableTargets, cellSize),
+        renderMovementLayer(
+          ctx,
+          reachableCells,
+          attackableTargets,
+          buildableCells,
+          cellSize,
+        ),
       );
     },
-    [attackableTargets, cellSize, reachableCells],
+    [attackableTargets, buildableCells, cellSize, reachableCells],
   );
 
   const renderSelection = useCallback(

@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { UNITS_CONFIG } from '@shared/config';
-import type { Owner, Unit, UnitType } from '@shared/config';
+import { CIVIL_UNITS_CONFIG, MILITARY_UNITS_CONFIG } from '@shared/config';
+import type { Owner, Unit, MilitaryType, CivilType } from '@shared/config';
 
 type UnitsState = {
   units: Record<string, Unit>;
 
   spawnUnit: (
-    type: UnitType,
+    type: MilitaryType | CivilType,
     x: number,
     y: number,
     owner: Owner,
@@ -24,26 +24,46 @@ export const useUnitsStore = create<UnitsState>()(
   immer((set, get) => ({
     units: {},
 
-    spawnUnit: (type: UnitType, x: number, y: number, owner: Owner) => {
+    spawnUnit: (type, x, y, owner) => {
       const id = `${type}_${crypto.randomUUID()}`;
-      const config = UNITS_CONFIG[type];
 
       set(state => {
-        state.units[id] = {
-          id,
-          type,
-          x,
-          y,
-          owner,
-          hp: config.maxHp,
-          maxHp: config.maxHp,
-          movePoints: config.movePoints,
-          maxMovePoints: config.movePoints,
-          attack: config.attack,
-          attackPoints: config.attackPoints,
-          maxAttackPoints: config.attackPoints,
-          attackRange: config.attackRange,
-        };
+        if (type in MILITARY_UNITS_CONFIG) {
+          const config = MILITARY_UNITS_CONFIG[type as MilitaryType];
+
+          state.units[id] = {
+            id,
+            type,
+            x,
+            y,
+            owner,
+            hp: config.maxHp,
+            maxHp: config.maxHp,
+            movePoints: config.movePoints,
+            maxMovePoints: config.movePoints,
+            attack: config.attack,
+            attackPoints: config.maxAttackPoints,
+            maxAttackPoints: config.maxAttackPoints,
+            attackRange: config.attackRange,
+            role: 'military',
+          };
+        } else if (type in CIVIL_UNITS_CONFIG) {
+          const config = CIVIL_UNITS_CONFIG[type as CivilType];
+
+          state.units[id] = {
+            id,
+            type,
+            x,
+            y,
+            owner,
+            hp: config.maxHp,
+            maxHp: config.maxHp,
+            movePoints: config.movePoints,
+            maxMovePoints: config.movePoints,
+            canBuild: config.canBuild,
+            role: 'civil',
+          };
+        }
       });
 
       return id;
@@ -68,6 +88,9 @@ export const useUnitsStore = create<UnitsState>()(
     damageUnit: (id: string, damage: number) => {
       set(state => {
         const unit = state.units[id];
+
+        if (!unit) return;
+
         const resultHP = unit.hp - damage;
 
         if (resultHP > 0) {
@@ -86,11 +109,14 @@ export const useUnitsStore = create<UnitsState>()(
     changeAttackPoints: (id: string) => {
       set(state => {
         const unit = state.units[id];
+        if (!unit || unit.role === 'civil') return;
 
-        if (unit?.attackPoints <= 0) return;
-        unit.attackPoints--;
-        if (unit.attackPoints <= 0) {
-          unit.movePoints = 0;
+        if (unit.attackPoints > 0) {
+          unit.attackPoints--;
+
+          if (unit.attackPoints === 0) {
+            unit.movePoints = 0;
+          }
         }
       });
     },
@@ -99,7 +125,10 @@ export const useUnitsStore = create<UnitsState>()(
       set(state => {
         Object.values(state.units).forEach(unit => {
           unit.movePoints = unit.maxMovePoints;
-          unit.attackPoints = unit.maxAttackPoints;
+
+          if (unit.role !== 'civil') {
+            unit.attackPoints = unit.maxAttackPoints;
+          }
         });
       }),
 

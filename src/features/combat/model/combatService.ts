@@ -10,19 +10,17 @@ export const attack = (attackerId: string, targetId: string) => {
   const attackerBuilding = buildingsStore.buildings[attackerId];
   const attacker = attackerUnit ?? attackerBuilding;
 
-  if (!attacker) return;
+  if (!attacker || attacker.role !== 'military') return;
+  if (attacker.attackPoints <= 0) return;
 
   const targetUnit = unitsStore.units[targetId];
   const targetBuilding = buildingsStore.buildings[targetId];
   const target = targetUnit ?? targetBuilding;
 
   if (!target) return;
-
   if (attacker.owner === target.owner) return;
 
   const damage = attacker.attack;
-
-  if ('attackPoints' in attacker && attacker.attackPoints <= 0) return;
 
   if (targetUnit) {
     unitsStore.damageUnit(targetId, damage);
