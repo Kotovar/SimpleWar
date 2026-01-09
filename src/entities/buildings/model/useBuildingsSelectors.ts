@@ -8,6 +8,9 @@ export const useBuildingsSelectors = () => {
     state => state.resetBuildingsForNewTurn,
   );
   const resetStore = useBuildingsStore(state => state.resetStore);
+  const getEconomicBuildings = useBuildingsStore(
+    state => state.getEconomicBuildings,
+  );
 
   return {
     buildings,
@@ -15,5 +18,6 @@ export const useBuildingsSelectors = () => {
     spawnBuilding,
     resetBuildingsForNewTurn,
     resetStore,
+    getEconomicBuildings,
   };
 };

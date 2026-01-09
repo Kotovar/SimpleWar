@@ -3,7 +3,7 @@ import { immer } from 'zustand/middleware/immer';
 import { BUILDINGS_CONFIG } from '@shared/config';
 import type { Owner, BuildingType, Building, Player } from '@shared/config';
 
-type BuildingsState = {
+export type BuildingsState = {
   buildings: Record<string, Building>;
 
   spawnBuilding: (
@@ -14,6 +14,7 @@ type BuildingsState = {
   ) => string | null;
   damageBuilding: (id: string, damage: number) => void;
   getBuildingAt: (x?: number, y?: number) => Building | null;
+  getEconomicBuildings: (owner: Player) => Building[];
   changeAttackPoints: (id: string) => void;
   checkBaseDestroyed: () => Player | null;
   resetBuildingsForNewTurn: () => void;
@@ -35,6 +36,7 @@ export const useBuildingsStore = create<BuildingsState>()(
           x,
           y,
           owner,
+          income: config.income,
           hp: config.maxHp,
           maxHp: config.maxHp,
           attack: config.attack ?? 0,
@@ -65,6 +67,12 @@ export const useBuildingsStore = create<BuildingsState>()(
         Object.values(get().buildings).find(
           building => building.x === x && building.y === y,
         ) || null
+      );
+    },
+
+    getEconomicBuildings: (owner: Player) => {
+      return Object.values(get().buildings).filter(
+        building => building.owner === owner && building.income !== undefined,
       );
     },
 

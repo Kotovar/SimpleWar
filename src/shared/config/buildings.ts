@@ -1,6 +1,11 @@
 import type { Owner } from './common';
 
-export type BuildingType = 'base';
+export type BuildingType = 'base' | 'mine';
+
+export type Income = {
+  gold?: number;
+  wood?: number;
+};
 
 export type Building = {
   id: string;
@@ -10,6 +15,7 @@ export type Building = {
   hp: number;
   maxHp: number;
   owner: Owner;
+  income?: Income;
   attack?: number;
   attackPoints?: number;
   maxAttackPoints?: number;
@@ -18,7 +24,8 @@ export type Building = {
 
 export const BUILDINGS_CONFIG: Record<
   BuildingType,
-  Pick<Building, 'maxHp' | 'attack' | 'attackPoints' | 'attackRange'>
+  Pick<Building, 'maxHp' | 'attack' | 'attackPoints' | 'attackRange' | 'income'>
 > = {
-  base: { maxHp: 100 },
+  base: { maxHp: 300 },
+  mine: { maxHp: 100, income: { gold: 50 } },
 };

@@ -6,16 +6,18 @@ import {
   TERRAIN_NAME,
   UNITS_NAME,
 } from '@shared/config';
-import { useGameLoopSelectors, nextTurn, resetGame } from '@features/game-loop';
+import { useEconomySelectors } from '@entities/economies';
+import { useBuildingsSelectors } from '@entities/buildings';
+import {
+  useGameLoopSelectors,
+  nextTurn,
+  resetGame,
+  calculateIncome,
+} from '@features/game-loop';
+
 import { useSelectionSelectors } from '@features/selection';
 import { useMovementStore } from '@features/pathfinding';
 import styles from './styles.module.css';
-
-// Заглушки
-const gold = 500;
-const goldIncome = 50;
-const wood = 300;
-const woodIncome = 30;
 
 export const PhaseInProgress = () => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -28,6 +30,8 @@ export const PhaseInProgress = () => {
     clearSelection,
   } = useSelectionSelectors();
   const { clearMovement } = useMovementStore();
+  const { resources } = useEconomySelectors();
+  const { getEconomicBuildings } = useBuildingsSelectors();
 
   const cell = terrainSelection.getSelectedCell();
   const unit = unitsSelection.getSelectedUnit();
@@ -46,6 +50,8 @@ export const PhaseInProgress = () => {
     resetGame();
   };
 
+  const income = calculateIncome(getEconomicBuildings('player'));
+
   return (
     <>
       <section className={styles.Section}>
@@ -54,12 +60,13 @@ export const PhaseInProgress = () => {
 
         <div className={styles.Resources}>
           <div>
-            <span className={styles.Gold}>Золото:</span> {gold}{' '}
-            <span className={styles.Income}>(+{goldIncome}/ход)</span>
+            <span className={styles.Gold}>Золото:</span> {resources.player.gold}{' '}
+            <span className={styles.Income}>(+{income.gold}/ход)</span>
           </div>
           <div>
-            <span className={styles.Wood}>Древесина:</span> {wood}{' '}
-            <span className={styles.Income}>(+{woodIncome}/ход)</span>
+            <span className={styles.Wood}>Древесина:</span>{' '}
+            {resources.player.wood}{' '}
+            <span className={styles.Income}>(+{income.wood}/ход)</span>
           </div>
         </div>
 
