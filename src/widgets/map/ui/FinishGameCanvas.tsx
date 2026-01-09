@@ -1,13 +1,14 @@
+import clsx from 'clsx';
 import { useEffect, useRef } from 'react';
-import { GAME_TITLE, START_CANVAS } from '@shared/config';
+import { START_CANVAS } from '@shared/config';
 import { useSettingsSelectors } from '@entities/settings';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { getCtx } from './utils';
 import styles from './styles.module.css';
 
-export const StartGameCanvas = () => {
+export const FinishGameCanvas = () => {
   const uiOverlayRef = useRef<HTMLCanvasElement>(null);
-  const { phase } = useGameLoopSelectors();
+  const { phase, activePlayer } = useGameLoopSelectors();
   const { canvasWidth, canvasHeight } = useSettingsSelectors();
 
   useEffect(() => {
@@ -16,7 +17,7 @@ export const StartGameCanvas = () => {
 
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-    if (phase === 'setup') {
+    if (phase === 'gameOver') {
       ctx.fillStyle = START_CANVAS.backgroundColor;
       ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
@@ -25,7 +26,7 @@ export const StartGameCanvas = () => {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(
-        GAME_TITLE,
+        activePlayer === 'player' ? 'Победа!' : 'Поражение...',
         canvasWidth / 2,
         canvasHeight / 2 - START_CANVAS.marginTop,
       );
@@ -33,21 +34,21 @@ export const StartGameCanvas = () => {
       ctx.font = '24px Arial';
       ctx.fillStyle = START_CANVAS.hintColor;
       ctx.fillText(
-        'Нажмите "Начать игру" для старта',
+        'Нажмите "Начать новую игру" для старта новой игры',
         canvasWidth / 2,
         canvasHeight / 2 + START_CANVAS.marginBottom,
       );
     }
-  }, [canvasHeight, canvasWidth, phase]);
+  }, [activePlayer, canvasHeight, canvasWidth, phase]);
 
   return (
     <>
-      {phase === 'setup' ? (
+      {phase === 'gameOver' ? (
         <canvas
           ref={uiOverlayRef}
           width={canvasWidth}
           height={canvasHeight}
-          className={styles.CanvasLayer}
+          className={clsx(styles.CanvasLayer, styles.FinishCanvas)}
         />
       ) : null}
     </>
