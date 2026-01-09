@@ -18,8 +18,11 @@ export const useSettingsSelectors = () => {
   const cellSize = useMemo(() => {
     if (gridColumns === 0 || gridRows === 0) return 0;
 
-    return Math.min(canvasWidth / gridColumns, canvasHeight / gridRows);
+    return Math.floor(
+      Math.min(canvasWidth / gridColumns, canvasHeight / gridRows),
+    );
   }, [canvasWidth, canvasHeight, gridColumns, gridRows]);
+
   return {
     canvasHeight,
     canvasWidth,

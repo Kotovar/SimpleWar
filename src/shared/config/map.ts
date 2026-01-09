@@ -1,13 +1,7 @@
 export const MAP_PRESETS = {
-  small: { canvas: { w: 600, h: 600 }, grid: { cols: 16, rows: 16 } },
-  medium: {
-    canvas: { w: 750, h: 750 },
-    grid: { cols: 24, rows: 24 },
-  },
-  large: {
-    canvas: { w: 900, h: 900 },
-    grid: { cols: 32, rows: 32 },
-  },
+  small: { canvas: { w: 600, h: 600 }, grid: { cols: 15, rows: 15 } },
+  medium: { canvas: { w: 720, h: 720 }, grid: { cols: 24, rows: 24 } },
+  large: { canvas: { w: 840, h: 840 }, grid: { cols: 30, rows: 30 } },
   extra: { canvas: { w: 1200, h: 1200 }, grid: { cols: 40, rows: 40 } },
 };
 
@@ -21,4 +15,4 @@ export const MAP_PRESET_LABELS: Record<
   extra: { canvas: 'Огромная', grid: 'Огромное' },
 };
 
-export const TEMP_START_SEED = 0.14;
+export const TEMP_START_SEED = 0.15;
