@@ -47,6 +47,7 @@ export const PhaseInProgress = () => {
     setShowResetConfirm(false);
 
     clearSelection();
+    clearMovement();
     resetGame();
   };
 
