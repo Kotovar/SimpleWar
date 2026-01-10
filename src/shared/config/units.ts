@@ -1,3 +1,4 @@
+import { BuildingType } from './buildings';
 import type { Owner } from './common';
 
 export type MilitaryType = 'swordsman' | 'archer';
@@ -28,6 +29,7 @@ export type MilitaryUnit = {
 export type CivilUnit = {
   role: 'civil';
   canBuild: boolean;
+  buildableBuildings: BuildingType[];
 } & BaseUnit;
 
 export type Unit = MilitaryUnit | CivilUnit;
@@ -64,11 +66,12 @@ export const MILITARY_UNITS_CONFIG: Record<
 
 export const CIVIL_UNITS_CONFIG: Record<
   CivilType,
-  Pick<CivilUnit, 'maxHp' | 'movePoints' | 'canBuild'>
+  Pick<CivilUnit, 'maxHp' | 'movePoints' | 'canBuild' | 'buildableBuildings'>
 > = {
   worker: {
     maxHp: 20,
     movePoints: 3,
     canBuild: true,
+    buildableBuildings: ['mine', 'sawmill'],
   },
 };

@@ -1,0 +1,19 @@
+.Resources {
+  margin-block: 16px;
+  font-size: 1.1em;
+}
+
+.Gold {
+  color: oklab(88.7% -0.017 0.18);
+  font-weight: bold;
+}
+
+.Wood {
+  color: oklab(63% 0.1 0.12);
+  font-weight: bold;
+}
+
+.Income {
+  color: oklab(62.7% 0 0);
+  font-size: 0.9em;
+}

@@ -39,6 +39,7 @@ export const useBuildingsStore = create<BuildingsState>()(
           income: config.income,
           hp: config.maxHp,
           maxHp: config.maxHp,
+          cost: config.cost,
           attack: config.attack ?? 0,
           attackRange: config.attackRange ?? 0,
           attackPoints: config.attackPoints ?? 0,

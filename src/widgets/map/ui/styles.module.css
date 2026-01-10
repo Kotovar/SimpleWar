@@ -1,6 +1,7 @@
 .CanvasWrapper {
   position: relative;
   border: 3px solid rgb(60, 139, 172);
+  margin-inline: auto;
 }
 
 .CanvasLayer {

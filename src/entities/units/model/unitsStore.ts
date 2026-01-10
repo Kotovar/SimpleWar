@@ -61,6 +61,7 @@ export const useUnitsStore = create<UnitsState>()(
             movePoints: config.movePoints,
             maxMovePoints: config.movePoints,
             canBuild: config.canBuild,
+            buildableBuildings: config.buildableBuildings,
             role: 'civil',
           };
         }

@@ -7,6 +7,11 @@ export type Income = {
   wood?: number;
 };
 
+type BuildingCost = {
+  gold: number;
+  wood: number;
+};
+
 export type Building = {
   id: string;
   type: BuildingType;
@@ -15,6 +20,7 @@ export type Building = {
   hp: number;
   maxHp: number;
   owner: Owner;
+  cost: BuildingCost;
   income?: Income;
   attack?: number;
   attackPoints?: number;
@@ -24,9 +30,12 @@ export type Building = {
 
 export const BUILDINGS_CONFIG: Record<
   BuildingType,
-  Pick<Building, 'maxHp' | 'attack' | 'attackPoints' | 'attackRange' | 'income'>
+  Pick<
+    Building,
+    'maxHp' | 'attack' | 'attackPoints' | 'attackRange' | 'income' | 'cost'
+  >
 > = {
-  base: { maxHp: 300 },
-  mine: { maxHp: 100, income: { gold: 50 } },
-  sawmill: { maxHp: 100, income: { wood: 50 } },
+  base: { maxHp: 300, cost: { gold: 0, wood: 0 } },
+  mine: { maxHp: 100, income: { gold: 50 }, cost: { gold: 120, wood: 0 } },
+  sawmill: { maxHp: 100, income: { wood: 50 }, cost: { gold: 80, wood: 100 } },
 };

@@ -1,0 +1,54 @@
+.EntityInfo {
+  background-color: oklab(18% 0 0 / 0.4);
+  border: 1px solid oklab(40% 0.01 -0.1);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.EntityHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1.3em;
+  font-weight: bold;
+  color: oklab(86% 0 0.18);
+}
+
+.EntityIcon {
+  font-size: 1.4em;
+}
+
+.EntityDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 1em;
+  color: oklab(100% 0 0);
+}
+
+.HP {
+  color: oklab(64% -0.15 0.1);
+  font-weight: bold;
+}
+
+.MovePoints {
+  color: oklab(91.6% -0.04 0.19);
+  font-weight: bold;
+}
+
+.AttackPoints {
+  color: oklab(59% 0.18 0.07);
+  font-weight: bold;
+}
+
+.IsWalkable {
+  color: oklab(62% -0.14 0.1);
+}
+
+.IsNotWalkable {
+  color: oklab(59% 0.18 0.07);
+}
