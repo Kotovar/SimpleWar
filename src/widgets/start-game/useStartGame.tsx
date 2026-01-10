@@ -3,12 +3,14 @@ import { useBuildingsSelectors } from '@entities/buildings';
 import { prepareStartArea, useMapStore } from '@entities/maps';
 import { useUnitsSelectors } from '@entities/units';
 import { useSettingsSelectors } from '@entities/settings';
+import { useEconomySelectors } from '@entities/economies';
 import { pathExists } from '@features/pathfinding';
 
 const MAX_RETRIES = 10;
 
 export const useStartGame = () => {
   const { spawnUnit } = useUnitsSelectors();
+  const { addUnits } = useEconomySelectors();
   const { spawnBuilding } = useBuildingsSelectors();
   const { gridColumns, gridRows, mapGenerationMode, customSeed } =
     useSettingsSelectors();
@@ -61,7 +63,12 @@ export const useStartGame = () => {
     spawnUnit('swordsman', gridColumns - 3, gridRows - 2, 'ai');
     spawnUnit('archer', gridColumns - 3, gridRows - 1, 'ai');
     spawnUnit('worker', gridColumns - 2, gridRows - 1, 'ai');
+
+    // TODO: убрать после реализации логики спавна юнитов
+    addUnits('player', 6);
+    addUnits('ai', 6);
   }, [
+    addUnits,
     customSeed,
     gridColumns,
     gridRows,

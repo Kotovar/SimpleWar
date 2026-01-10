@@ -1,7 +1,13 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { CIVIL_UNITS_CONFIG, MILITARY_UNITS_CONFIG } from '@shared/config';
-import type { Owner, Unit, MilitaryType, CivilType } from '@shared/config';
+import type {
+  Owner,
+  Unit,
+  MilitaryType,
+  CivilType,
+  Player,
+} from '@shared/config';
 
 type UnitsState = {
   units: Record<string, Unit>;
@@ -14,6 +20,7 @@ type UnitsState = {
   ) => string | null;
   moveUnit: (id: string, x: number, y: number) => void;
   getUnitAt: (x?: number, y?: number) => Unit | null;
+  getUnits: (owner: Player) => Unit[];
   damageUnit: (id: string, damage: number) => void;
   changeAttackPoints: (id: string) => void;
   changeBuildPoints: (id: string) => void;
@@ -75,6 +82,9 @@ export const useUnitsStore = create<UnitsState>()(
       return id;
     },
 
+    getUnits: owner =>
+      Object.values(get().units).filter(unit => unit.owner === owner),
+
     moveUnit: (id, x, y) =>
       set(state => {
         const unit = state.units[id];
@@ -91,7 +101,7 @@ export const useUnitsStore = create<UnitsState>()(
         }
       }),
 
-    damageUnit: (id: string, damage: number) => {
+    damageUnit: (id, damage) => {
       set(state => {
         const unit = state.units[id];
 

@@ -7,14 +7,14 @@ import { calculateIncome, useGameLoopStore } from '@features/game-loop';
 
 export const nextTurn = () => {
   const { activePlayer } = useGameLoopStore.getState();
-  const buildingsStore = useBuildingsStore.getState();
-  const economyStore = useEconomyStore.getState();
+  const { getEconomicBuildings } = useBuildingsStore.getState();
+  const { addResources } = useEconomyStore.getState();
 
-  const economicBuildings = buildingsStore.getEconomicBuildings(activePlayer);
+  const economicBuildings = getEconomicBuildings(activePlayer);
 
   const income = calculateIncome(economicBuildings);
 
-  economyStore.addResources(activePlayer, income);
+  addResources(activePlayer, income);
 
   useUnitsStore.getState().resetUnitsForNewTurn();
   useBuildingsStore.getState().resetBuildingsForNewTurn();
