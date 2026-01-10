@@ -4,6 +4,7 @@ import { useMapStore } from '@entities/maps';
 import { useSettingsStore } from '@entities/settings';
 import { useEconomyStore } from '@entities/economies';
 import { calculateIncome, useGameLoopStore } from '@features/game-loop';
+// import { useMovementStore } from '@features/pathfinding';
 
 export const nextTurn = () => {
   const { activePlayer } = useGameLoopStore.getState();
@@ -28,4 +29,5 @@ export const resetGame = () => {
   useMapStore.getState().resetStore();
   useSettingsStore.getState().resetStore();
   useEconomyStore.getState().resetStore();
+  // useMovementStore.getState().resetStore();
 };

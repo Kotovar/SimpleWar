@@ -2,9 +2,20 @@ import { createNoise2D } from 'simplex-noise';
 import type { Cell, CellType } from '@shared/config';
 
 /**
- * Общее количество золотых клеток, которое пытается разместить генератор.
+ * Базовое количество золота на клетку.
+ * Примерно 1 золотая клетка на каждые 50 обычных клеток.
  */
-const TOTAL_GOLD = 20;
+const GOLD_DENSITY = 50;
+
+/**
+ * Минимальное количество золота даже на самой маленькой карте
+ */
+const MIN_GOLD = 8;
+
+/**
+ * Максимальное количество золота
+ */
+const MAX_GOLD = 20;
 
 /**
  * Генерирует процедурную карту игрового мира на основе шума Simplex.
@@ -85,9 +96,14 @@ export const generateMap = (
     }
   }
 
-  // --- Новый этап: размещение редкого золота ---
+  // --- Этап: размещение золота ---
 
-  let remainingGold = TOTAL_GOLD;
+  const totalCells = width * height;
+
+  let remainingGold = Math.max(
+    MIN_GOLD,
+    Math.min(MAX_GOLD, Math.floor(totalCells / GOLD_DENSITY)),
+  );
 
   const centers = [
     { x: Math.floor(width * 0.25), y: Math.floor(height * 0.25) },
@@ -97,7 +113,7 @@ export const generateMap = (
     { x: Math.floor(width * 0.75), y: Math.floor(height * 0.25) },
   ];
 
-  const goldPerCluster = Math.floor(TOTAL_GOLD / centers.length);
+  const goldPerCluster = Math.floor(remainingGold / centers.length);
   const clusterRadius = Math.floor(Math.min(width, height) / 5);
 
   for (const center of centers) {

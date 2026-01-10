@@ -1,6 +1,6 @@
 import type { Owner } from './common';
 
-export type BuildingType = 'base' | 'mine';
+export type BuildingType = 'base' | 'mine' | 'sawmill';
 
 export type Income = {
   gold?: number;
@@ -28,4 +28,5 @@ export const BUILDINGS_CONFIG: Record<
 > = {
   base: { maxHp: 300 },
   mine: { maxHp: 100, income: { gold: 50 } },
+  sawmill: { maxHp: 100, income: { wood: 50 } },
 };

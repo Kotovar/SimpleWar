@@ -7,7 +7,7 @@ import {
   getReachableCells,
   createMovementPFGrid,
   getAttackableTargets,
-} from '@features/pathfinding/lib';
+} from '@features/pathfinding';
 
 interface MovementState {
   reachableCells: Position[] | null;
@@ -17,6 +17,8 @@ interface MovementState {
 
   calculateMovement: (unitId: string) => void;
   clearMovement: () => void;
+
+  resetStore: () => void;
 }
 
 export const useMovementStore = create<MovementState>()(
@@ -59,5 +61,14 @@ export const useMovementStore = create<MovementState>()(
         reachableCells: null,
         attackableTargets: null,
       }),
+
+    resetStore: () => {
+      set(state => {
+        state.reachableCells = null;
+        state.attackableTargets = null;
+        state.buildableCells = null;
+        state.currentPath = null;
+      });
+    },
   })),
 );

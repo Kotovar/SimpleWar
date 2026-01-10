@@ -1,5 +1,5 @@
-import { useGameLoopStore } from '@features/game-loop';
+import { nextTurn } from '@features/game-loop';
 
 export const runAITurn = async () => {
-  useGameLoopStore.getState().endTurn();
+  nextTurn();
 };

@@ -1,5 +1,5 @@
 import type { Building, Unit } from '@shared/config';
-import { drawBase } from './drawBuildings';
+import { drawBase, drawGoldMine, drawSawmill } from './drawBuildings';
 import { drawArcher, drawSwordsman, drawWorker } from './drawUnits';
 import { drawHpBar } from './drawHpBar';
 
@@ -15,8 +15,17 @@ export const renderEntitiesLayer = (
 
     if (type === 'base') {
       drawBase(ctx, x, y, cellSize, owner);
-      drawHpBar(ctx, x, y, cellSize, hpRatio);
     }
+
+    if (type === 'mine') {
+      drawGoldMine(ctx, x, y, cellSize, owner);
+    }
+
+    if (type === 'sawmill') {
+      drawSawmill(ctx, x, y, cellSize, owner);
+    }
+
+    drawHpBar(ctx, x, y, cellSize, hpRatio);
   });
 
   Object.values(units).forEach(unit => {
@@ -25,17 +34,16 @@ export const renderEntitiesLayer = (
 
     if (type === 'swordsman') {
       drawSwordsman(ctx, x, y, cellSize, owner);
-      drawHpBar(ctx, x, y, cellSize, hpRatio);
     }
 
     if (type === 'archer') {
       drawArcher(ctx, x, y, cellSize, owner);
-      drawHpBar(ctx, x, y, cellSize, hpRatio);
     }
 
     if (type === 'worker') {
       drawWorker(ctx, x, y, cellSize, owner);
-      drawHpBar(ctx, x, y, cellSize, hpRatio);
     }
+
+    drawHpBar(ctx, x, y, cellSize, hpRatio);
   });
 };

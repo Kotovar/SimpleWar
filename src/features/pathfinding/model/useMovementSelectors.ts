@@ -1,4 +1,4 @@
-import { useMovementStore } from '@features/pathfinding';
+import { useMovementStore } from './movementStore';
 
 export const useMovementSelectors = () => {
   const reachableCells = useMovementStore(state => state.reachableCells);

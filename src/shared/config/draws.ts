@@ -1,21 +1,27 @@
 import type { Owner } from './common';
 
-export const HP_BAR = {
-  widthRatio: 0.44, // Ширина HP-бара относительно клетки
-  heightRatio: 0.06, // Высота HP-бара
-  yOffsetRatio: 0.12, // Отступ сверху клетки
-  lineWidth: 1, // Цвет фона (пустое здоровье)
-  colorRed: 'hsla(0, 100%, 50%, 1.00)', // Цвет фона (пустое здоровье)
-  colorGreen: 'hsla(120, 100%, 50%, 1.00)', // Цвет заполнения (оставшееся здоровье)
-  colorBorder: 'hsla(0, 0%, 0%, 1.00)', // Цвет обводки
-};
-
-type BuildingPalette = {
-  wall: string;
-  roof: string;
-  door: string;
+type BuildingBase = {
   window: string;
 };
+
+type TownHallPalette = {
+  wall: string;
+  door: string;
+} & BuildingBase;
+
+type MinePalette = {
+  wood: string;
+  shadow: string;
+  gold: string;
+  accent: string;
+};
+
+type SawmillPalette = {
+  wood: string;
+  roof: string;
+  accent: string;
+  smoke: string;
+} & BuildingBase;
 
 type UnitPalette = {
   body: string;
@@ -26,18 +32,58 @@ type UnitPalette = {
   accent: string;
 };
 
-export const BUILDINGS_PALETTES: Record<Owner, BuildingPalette> = {
+export const HP_BAR = {
+  widthRatio: 0.44, // Ширина HP-бара относительно клетки
+  heightRatio: 0.06, // Высота HP-бара
+  yOffsetRatio: 0.12, // Отступ сверху клетки
+  lineWidth: 1, // Цвет фона (пустое здоровье)
+  colorRed: 'hsla(0, 100%, 50%, 1.00)', // Цвет фона (пустое здоровье)
+  colorGreen: 'hsla(120, 100%, 50%, 1.00)', // Цвет заполнения (оставшееся здоровье)
+  colorBorder: 'hsla(0, 0%, 0%, 1.00)', // Цвет обводки
+};
+
+export const BUILDING_TOWNHALL_PALETTES: Record<Owner, TownHallPalette> = {
   player: {
     wall: 'hsla(0, 0%, 55%, 1.00)',
-    roof: 'hsla(100, 42%, 24%, 1.00)',
     door: 'hsla(100, 100%, 26%, 1.00)',
     window: 'hsl(102, 8%, 26%)',
   },
   ai: {
     wall: 'hsla(0, 0%, 55%, 1.00)',
-    roof: 'rgba(189, 31, 31, 1)',
     door: 'hsla(0, 97%, 47%, 1.00)',
     window: 'hsl(102, 8%, 26%)',
+  },
+};
+
+export const BUILDING_MINE_PALETTES: Record<Owner, MinePalette> = {
+  player: {
+    wood: '#8B4513',
+    gold: '#DAA520',
+    shadow: '#333333',
+    accent: 'hsla(100, 100%, 26%, 1.00)',
+  },
+  ai: {
+    wood: '#8B4513',
+    gold: '#DAA520',
+    shadow: '#333333',
+    accent: 'hsla(0, 97%, 47%, 1.00)',
+  },
+};
+
+export const BUILDING_SAWMILL_PALETTES: Record<Owner, SawmillPalette> = {
+  player: {
+    wood: '#8B4513',
+    roof: '#A0522D',
+    smoke: '#888888',
+    accent: 'hsla(100, 100%, 26%, 1.00)',
+    window: '#333',
+  },
+  ai: {
+    wood: '#8B4513',
+    roof: '#A0522D',
+    smoke: '#888888',
+    accent: 'hsla(0, 97%, 47%, 1.00)',
+    window: '#333',
   },
 };
 

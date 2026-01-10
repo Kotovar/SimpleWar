@@ -20,6 +20,7 @@ interface SelectionState {
   clearSelection: () => void;
 
   isClickOnCurrentSelection: (x: number, y: number) => boolean;
+  resetStore: () => void;
 }
 
 export const useSelectionStore = create<SelectionState>()(
@@ -73,6 +74,12 @@ export const useSelectionStore = create<SelectionState>()(
           return building?.id === selection.id;
         }
       }
+    },
+
+    resetStore: () => {
+      set(state => {
+        state.selection = null;
+      });
     },
   })),
 );
