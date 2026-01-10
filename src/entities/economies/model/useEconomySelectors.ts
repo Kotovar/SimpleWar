@@ -4,6 +4,7 @@ export const useEconomySelectors = () => {
   const resources = useEconomyStore(state => state.resources);
   const unitLimit = useEconomyStore(state => state.unitLimit);
   const addResources = useEconomyStore(state => state.addResources);
+  const removeResources = useEconomyStore(state => state.addResources);
   const addUnits = useEconomyStore(state => state.addUnits);
   const changeUnitLimit = useEconomyStore(state => state.changeUnitLimit);
   const removeUnits = useEconomyStore(state => state.removeUnits);
@@ -13,6 +14,7 @@ export const useEconomySelectors = () => {
     resources,
     unitLimit,
     addResources,
+    removeResources,
     addUnits,
     changeUnitLimit,
     removeUnits,

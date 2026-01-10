@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   BUILDINGS_CONFIG,
   BUILDINGS_NAME,
@@ -10,11 +9,15 @@ import {
 import { useEconomySelectors } from '@entities/economies';
 import { useMovementStore } from '@features/pathfinding';
 import styles from './WorkerBuildOptions.styles.module.css';
+import { useBuildingsSelectors } from '@entities/buildings';
 
 export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
   const { resources } = useEconomySelectors();
-  const [selectedBuildType, setSelectedBuildType] =
-    useState<BuildingType | null>(null);
+  const {
+    selectedBuildingForSpawn,
+    selectBuildingForSpawn,
+    clearSelectedBuildingForSpawn,
+  } = useBuildingsSelectors();
 
   const {
     calculateMovement,
@@ -29,23 +32,21 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
   if (buildableTypes.length === 0) return null;
 
   const onClick = (
-    name: string,
     buildingType: BuildingType,
     requiredField: CellType = 'grass',
   ) => {
+    if (unit.buildPoints <= 0) return;
     resetHighlightedCells();
 
-    if (selectedBuildType === buildingType) {
-      setSelectedBuildType(null);
+    if (selectedBuildingForSpawn === buildingType) {
+      clearSelectedBuildingForSpawn();
       calculateMovement(unit.id);
-      console.log(`Отменён режим постройки: ${name}`);
     } else {
-      setSelectedBuildType(buildingType);
+      selectBuildingForSpawn(buildingType);
 
       if (requiredField) {
         calculateBuildableCells(unit.id, requiredField);
       }
-      console.log(`Выбрана постройка: ${name} (${buildingType})`);
     }
   };
 
@@ -69,7 +70,7 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
               key={buildingType}
               className={styles.BuildButton}
               disabled={!canAfford}
-              onClick={() => onClick(name, buildingType, requiredField)}
+              onClick={() => onClick(buildingType, requiredField)}
             >
               {name}
               <small>

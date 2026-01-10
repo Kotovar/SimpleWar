@@ -5,6 +5,7 @@ export const useUnitsSelectors = () => {
   const moveUnit = useUnitsStore(state => state.moveUnit);
   const getUnitAt = useUnitsStore(state => state.getUnitAt);
   const changeAttackPoints = useUnitsStore(state => state.changeAttackPoints);
+  const changeBuildPoints = useUnitsStore(state => state.changeBuildPoints);
   const spawnUnit = useUnitsStore(state => state.spawnUnit);
   const resetStore = useUnitsStore(state => state.resetStore);
   const resetUnitsForNewTurn = useUnitsStore(
@@ -16,6 +17,7 @@ export const useUnitsSelectors = () => {
     moveUnit,
     getUnitAt,
     changeAttackPoints,
+    changeBuildPoints,
     spawnUnit,
     resetStore,
     resetUnitsForNewTurn,

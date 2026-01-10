@@ -1,4 +1,4 @@
-import type { Building, Position, Unit } from '@shared/config';
+import type { Building, Owner, Position, Unit } from '@shared/config';
 
 const isTargetInReachableCells = (
   reachableCells: Position[] | null,
@@ -11,6 +11,12 @@ const isTargetInAttackRadius = (
   gridX: number,
   gridY: number,
 ) => attackableTargets?.some(cell => cell.x === gridX && cell.y === gridY);
+
+const isTargetInBuildableCells = (
+  buildableTargets: Position[] | null,
+  gridX: number,
+  gridY: number,
+) => buildableTargets?.some(cell => cell.x === gridX && cell.y === gridY);
 
 export const handleClickWithoutSelectedUnit = (
   unit: Unit | null,
@@ -52,14 +58,20 @@ export const handleClickWithPlayerUnitSelected = (
   buildingAtTarget: Building | null,
   reachableCells: Position[] | null,
   attackableTargets: Position[] | null,
+  buildableCells: Position[] | null,
   moveUnit: (unitId: string, x: number, y: number) => void,
   attack: (attackerId: string, targetId: string) => void,
+  build: (selectedUnitId: string, x: number, y: number, owner: Owner) => void,
   clearSelection: () => void,
   clearMovement: () => void,
 ) => {
   const isReachable = isTargetInReachableCells(reachableCells, gridX, gridY);
   const isAttackable = isTargetInAttackRadius(attackableTargets, gridX, gridY);
+  const isBuildable = isTargetInBuildableCells(buildableCells, gridX, gridY);
   const hasTarget = unitAtTarget || buildingAtTarget;
+
+  const isWorker =
+    selectedUnit.type === 'worker' && selectedUnit.role === 'civil';
 
   if (isReachable && selectedUnit.movePoints > 0) {
     moveUnit(selectedUnit.id, gridX, gridY);
@@ -78,11 +90,15 @@ export const handleClickWithPlayerUnitSelected = (
     attack(selectedUnit.id, targetId);
     clearSelection();
     clearMovement();
+
     return true;
   }
 
-  if (selectedUnit.movePoints === 0) {
+  if (isWorker && isBuildable) {
+    build(selectedUnit.id, gridX, gridY, 'player');
     clearSelection();
+    clearMovement();
+
     return true;
   }
 

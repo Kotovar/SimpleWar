@@ -16,6 +16,7 @@ type UnitsState = {
   getUnitAt: (x?: number, y?: number) => Unit | null;
   damageUnit: (id: string, damage: number) => void;
   changeAttackPoints: (id: string) => void;
+  changeBuildPoints: (id: string) => void;
   resetUnitsForNewTurn: () => void;
   resetStore: () => void;
 };
@@ -45,6 +46,7 @@ export const useUnitsStore = create<UnitsState>()(
             attackPoints: config.maxAttackPoints,
             maxAttackPoints: config.maxAttackPoints,
             attackRange: config.attackRange,
+            requiresLimit: config.requiresLimit,
             role: 'military',
           };
         } else if (type in CIVIL_UNITS_CONFIG) {
@@ -60,8 +62,11 @@ export const useUnitsStore = create<UnitsState>()(
             maxHp: config.maxHp,
             movePoints: config.movePoints,
             maxMovePoints: config.movePoints,
+            buildPoints: config.buildPoints,
+            maxBuildPoints: config.maxBuildPoints,
             canBuild: config.canBuild,
             buildableBuildings: config.buildableBuildings,
+            requiresLimit: config.requiresLimit,
             role: 'civil',
           };
         }
@@ -107,7 +112,7 @@ export const useUnitsStore = create<UnitsState>()(
       return units.find(unit => unit.x === x && unit.y === y) || null;
     },
 
-    changeAttackPoints: (id: string) => {
+    changeAttackPoints: id => {
       set(state => {
         const unit = state.units[id];
         if (!unit || unit.role === 'civil') return;
@@ -122,6 +127,21 @@ export const useUnitsStore = create<UnitsState>()(
       });
     },
 
+    changeBuildPoints: (id: string) => {
+      set(state => {
+        const unit = state.units[id];
+        if (!unit || unit.role !== 'civil') return;
+
+        if (unit.buildPoints > 0) {
+          unit.buildPoints--;
+
+          if (unit.buildPoints === 0) {
+            unit.movePoints = 0;
+          }
+        }
+      });
+    },
+
     resetUnitsForNewTurn: () =>
       set(state => {
         Object.values(state.units).forEach(unit => {
@@ -129,6 +149,10 @@ export const useUnitsStore = create<UnitsState>()(
 
           if (unit.role !== 'civil') {
             unit.attackPoints = unit.maxAttackPoints;
+          }
+
+          if (unit.role === 'civil') {
+            unit.buildPoints = unit.maxBuildPoints;
           }
         });
       }),

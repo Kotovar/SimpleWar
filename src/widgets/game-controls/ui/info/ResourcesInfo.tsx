@@ -4,7 +4,7 @@ import { calculateIncome } from '@features/game-loop';
 import styles from './ResourcesInfo.styles.module.css';
 
 export const ResourcesInfo = () => {
-  const { resources } = useEconomySelectors();
+  const { resources, unitLimit } = useEconomySelectors();
   const { getEconomicBuildings } = useBuildingsSelectors();
   const income = calculateIncome(getEconomicBuildings('player'));
 
@@ -17,6 +17,10 @@ export const ResourcesInfo = () => {
       <div>
         <span className={styles.Wood}>Древесина:</span> {resources.player.wood}{' '}
         <span className={styles.Income}>(+{income.wood}/ход)</span>
+      </div>
+      <div>
+        <span className={styles.Limit}>Лимит юнитов:</span>{' '}
+        {`${unitLimit.player.current} из ${unitLimit.player.max}`}{' '}
       </div>
     </div>
   );

@@ -45,6 +45,11 @@
   font-weight: bold;
 }
 
+.BuildPoints {
+  color: oklab(48.476% 0.00729 -0.22002);
+  font-weight: bold;
+}
+
 .IsWalkable {
   color: oklab(62% -0.14 0.1);
 }

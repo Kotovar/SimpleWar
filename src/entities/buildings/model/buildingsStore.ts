@@ -5,6 +5,7 @@ import type { Owner, BuildingType, Building, Player } from '@shared/config';
 
 export type BuildingsState = {
   buildings: Record<string, Building>;
+  selectedBuildingForSpawn: BuildingType | null;
 
   spawnBuilding: (
     type: BuildingType,
@@ -17,6 +18,8 @@ export type BuildingsState = {
   getEconomicBuildings: (owner: Player) => Building[];
   changeAttackPoints: (id: string) => void;
   checkBaseDestroyed: () => Player | null;
+  selectBuildingForSpawn: (buildingType: BuildingType) => void;
+  clearSelectedBuildingForSpawn: () => void;
   resetBuildingsForNewTurn: () => void;
   resetStore: () => void;
 };
@@ -24,6 +27,7 @@ export type BuildingsState = {
 export const useBuildingsStore = create<BuildingsState>()(
   immer((set, get) => ({
     buildings: {},
+    selectedBuildingForSpawn: null,
 
     spawnBuilding: (type, x, y, owner) => {
       const id = `building_${crypto.randomUUID()}`;
@@ -103,6 +107,18 @@ export const useBuildingsStore = create<BuildingsState>()(
       return null;
     },
 
+    selectBuildingForSpawn: buildingType => {
+      set(state => {
+        state.selectedBuildingForSpawn = buildingType;
+      });
+    },
+
+    clearSelectedBuildingForSpawn: () => {
+      set(state => {
+        state.selectedBuildingForSpawn = null;
+      });
+    },
+
     resetBuildingsForNewTurn: () =>
       set(state => {
         Object.values(state.buildings).forEach(building => {
@@ -112,12 +128,14 @@ export const useBuildingsStore = create<BuildingsState>()(
           ) {
             building.attackPoints = building.maxAttackPoints;
           }
+          state.selectedBuildingForSpawn = null;
         });
       }),
 
     resetStore: () => {
       set(state => {
         state.buildings = {};
+        state.selectedBuildingForSpawn = null;
       });
     },
   })),

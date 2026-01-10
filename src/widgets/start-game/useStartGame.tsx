@@ -52,16 +52,12 @@ export const useStartGame = () => {
     prepareStartArea(enemyStart.x, enemyStart.y);
 
     spawnBuilding('base', playerStart.x, playerStart.y, 'player');
-    spawnBuilding('mine', 0, 0, 'player');
-    spawnBuilding('sawmill', 1, 0, 'player');
     spawnBuilding('base', enemyStart.x, enemyStart.y, 'ai');
-    spawnBuilding('mine', gridColumns - 1, gridRows - 2, 'ai');
-    spawnBuilding('sawmill', gridColumns - 1, gridRows - 1, 'ai');
 
     // TODO: убрать после запуска игры - пока для теста
     spawnUnit('swordsman', 2, 1, 'player');
     spawnUnit('worker', 2, 2, 'player');
-    spawnUnit('archer', gridColumns - 7, gridRows - 2, 'player');
+    spawnUnit('archer', gridColumns - 1, gridRows - 2, 'player');
     spawnUnit('swordsman', gridColumns - 3, gridRows - 2, 'ai');
     spawnUnit('archer', gridColumns - 3, gridRows - 1, 'ai');
     spawnUnit('worker', gridColumns - 2, gridRows - 1, 'ai');

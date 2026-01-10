@@ -16,6 +16,7 @@ type BaseUnit = {
   movePoints: number;
   maxMovePoints: number;
   owner: Owner;
+  requiresLimit: number;
 };
 
 export type MilitaryUnit = {
@@ -30,6 +31,8 @@ export type CivilUnit = {
   role: 'civil';
   canBuild: boolean;
   buildableBuildings: BuildingType[];
+  buildPoints: number;
+  maxBuildPoints: number;
 } & BaseUnit;
 
 export type Unit = MilitaryUnit | CivilUnit;
@@ -44,6 +47,7 @@ export const MILITARY_UNITS_CONFIG: Record<
     | 'movePoints'
     | 'attackRange'
     | 'maxAttackPoints'
+    | 'requiresLimit'
   >
 > = {
   swordsman: {
@@ -53,6 +57,7 @@ export const MILITARY_UNITS_CONFIG: Record<
     attackPoints: 1,
     attackRange: 1,
     maxAttackPoints: 1,
+    requiresLimit: 2,
   },
   archer: {
     maxHp: 40,
@@ -61,17 +66,30 @@ export const MILITARY_UNITS_CONFIG: Record<
     attackPoints: 1,
     attackRange: 2,
     maxAttackPoints: 1,
+    requiresLimit: 3,
   },
 };
 
 export const CIVIL_UNITS_CONFIG: Record<
   CivilType,
-  Pick<CivilUnit, 'maxHp' | 'movePoints' | 'canBuild' | 'buildableBuildings'>
+  Pick<
+    CivilUnit,
+    | 'maxHp'
+    | 'movePoints'
+    | 'canBuild'
+    | 'buildableBuildings'
+    | 'buildPoints'
+    | 'maxBuildPoints'
+    | 'requiresLimit'
+  >
 > = {
   worker: {
     maxHp: 20,
     movePoints: 3,
+    buildPoints: 1,
+    maxBuildPoints: 1,
     canBuild: true,
     buildableBuildings: ['mine', 'sawmill'],
+    requiresLimit: 1,
   },
 };

@@ -4,6 +4,7 @@ import { useBuildingsStore } from '@entities/buildings';
 import { useSettingsSelectors } from '@entities/settings';
 import { useSelectionSelectors } from '@features/selection';
 import { attack } from '@features/combat';
+import { build } from '@features/build';
 import { useMovementSelectors } from '@features/pathfinding';
 import {
   getGridCoordsFromEvent,
@@ -32,6 +33,7 @@ export const Map = () => {
   const {
     reachableCells,
     attackableTargets,
+    buildableCells,
     calculateMovement,
     resetStore: clearMovement,
   } = useMovementSelectors();
@@ -107,8 +109,10 @@ export const Map = () => {
         building,
         reachableCells,
         attackableTargets,
+        buildableCells,
         moveUnit,
         attack,
+        build,
         clearSelection,
         clearMovement,
       );

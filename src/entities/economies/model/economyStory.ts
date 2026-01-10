@@ -8,6 +8,7 @@ type EconomyState = {
   unitLimit: Record<Player, UnitLimit>;
 
   addResources: (owner: Player, income: Partial<Resources>) => void;
+  removeResources: (owner: Player, income: Partial<Resources>) => void;
   addUnits: (owner: Player, count: number) => void;
   changeUnitLimit: (
     owner: Player,
@@ -29,6 +30,15 @@ export const useEconomyStore = create<EconomyState>()(
 
         if (income.gold) resource.gold += income.gold;
         if (income.wood) resource.wood += income.wood;
+      });
+    },
+
+    removeResources: (owner, income) => {
+      set(state => {
+        const resource = state.resources[owner];
+
+        if (income.gold) resource.gold -= income.gold;
+        if (income.wood) resource.wood -= income.wood;
       });
     },
 

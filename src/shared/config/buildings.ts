@@ -45,13 +45,13 @@ export const BUILDINGS_CONFIG: Record<
   base: { maxHp: 300, cost: { gold: 0, wood: 0 } },
   mine: {
     maxHp: 100,
-    income: { gold: 50 },
+    income: { gold: 20 },
     cost: { gold: 120, wood: 0 },
     requiredField: 'gold',
   },
   sawmill: {
     maxHp: 100,
-    income: { wood: 50 },
+    income: { wood: 10 },
     cost: { gold: 80, wood: 100 },
     requiredField: 'forest',
   },
