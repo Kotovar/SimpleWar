@@ -22,7 +22,7 @@ export const PhaseInProgress = () => {
     buildingsSelection,
     clearSelection,
   } = useSelectionSelectors();
-  const { clearMovement } = useMovementStore();
+  const { resetStore: clearMovement } = useMovementStore();
 
   const cell = terrainSelection.getSelectedCell();
   const unit = unitsSelection.getSelectedUnit();

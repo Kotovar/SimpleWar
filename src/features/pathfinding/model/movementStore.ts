@@ -1,12 +1,13 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import type { Position } from '@shared/config';
+import type { Cell, Position } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useMapStore } from '@entities/maps';
 import {
   getReachableCells,
   createMovementPFGrid,
   getAttackableTargets,
+  getCellsAround,
 } from '@features/pathfinding';
 
 interface MovementState {
@@ -16,7 +17,7 @@ interface MovementState {
   currentPath: Position[] | null;
 
   calculateMovement: (unitId: string) => void;
-  clearMovement: () => void;
+  calculateBuildableCells: (unitId: string, cellType: Cell['type']) => void;
 
   resetStore: () => void;
 }
@@ -56,11 +57,19 @@ export const useMovementStore = create<MovementState>()(
       });
     },
 
-    clearMovement: () =>
-      set({
-        reachableCells: null,
-        attackableTargets: null,
-      }),
+    calculateBuildableCells: (unitId, cellType) => {
+      const unit = useUnitsStore.getState().units[unitId];
+
+      if (!unit) return;
+
+      const grid = useMapStore.getState().grid;
+
+      const buildable = getCellsAround(grid, unit.x, unit.y, cellType);
+
+      set(state => {
+        state.buildableCells = buildable;
+      });
+    },
 
     resetStore: () => {
       set(state => {

@@ -42,7 +42,6 @@ export const SelectedEntityInfo = ({ cell, unit, building }: Props) => {
       </div>
 
       <div className={styles.EntityDetails}>
-        {/* Координаты, тип, проходимость и т.д. */}
         {cell && (
           <>
             <div>

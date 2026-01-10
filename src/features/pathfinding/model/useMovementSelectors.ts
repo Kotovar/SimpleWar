@@ -5,13 +5,17 @@ export const useMovementSelectors = () => {
   const attackableTargets = useMovementStore(state => state.attackableTargets);
   const buildableCells = useMovementStore(state => state.buildableCells);
   const calculateMovement = useMovementStore(state => state.calculateMovement);
-  const clearMovement = useMovementStore(state => state.clearMovement);
+  const resetStore = useMovementStore(state => state.resetStore);
+  const calculateBuildableCells = useMovementStore(
+    state => state.calculateBuildableCells,
+  );
 
   return {
     reachableCells,
     attackableTargets,
     buildableCells,
     calculateMovement,
-    clearMovement,
+    resetStore,
+    calculateBuildableCells,
   };
 };

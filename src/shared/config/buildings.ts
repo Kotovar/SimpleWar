@@ -1,4 +1,4 @@
-import type { Owner } from './common';
+import type { CellType, Owner } from './common';
 
 export type BuildingType = 'base' | 'mine' | 'sawmill';
 
@@ -21,6 +21,7 @@ export type Building = {
   maxHp: number;
   owner: Owner;
   cost: BuildingCost;
+  requiredField?: CellType;
   income?: Income;
   attack?: number;
   attackPoints?: number;
@@ -32,10 +33,26 @@ export const BUILDINGS_CONFIG: Record<
   BuildingType,
   Pick<
     Building,
-    'maxHp' | 'attack' | 'attackPoints' | 'attackRange' | 'income' | 'cost'
+    | 'maxHp'
+    | 'attack'
+    | 'attackPoints'
+    | 'attackRange'
+    | 'income'
+    | 'cost'
+    | 'requiredField'
   >
 > = {
   base: { maxHp: 300, cost: { gold: 0, wood: 0 } },
-  mine: { maxHp: 100, income: { gold: 50 }, cost: { gold: 120, wood: 0 } },
-  sawmill: { maxHp: 100, income: { wood: 50 }, cost: { gold: 80, wood: 100 } },
+  mine: {
+    maxHp: 100,
+    income: { gold: 50 },
+    cost: { gold: 120, wood: 0 },
+    requiredField: 'gold',
+  },
+  sawmill: {
+    maxHp: 100,
+    income: { wood: 50 },
+    cost: { gold: 80, wood: 100 },
+    requiredField: 'forest',
+  },
 };

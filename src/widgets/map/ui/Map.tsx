@@ -33,7 +33,7 @@ export const Map = () => {
     reachableCells,
     attackableTargets,
     calculateMovement,
-    clearMovement,
+    resetStore: clearMovement,
   } = useMovementSelectors();
 
   const { selectCell } = terrainSelection;
