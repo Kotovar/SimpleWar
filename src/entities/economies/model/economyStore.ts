@@ -15,6 +15,7 @@ type EconomyState = {
   removeResources: (owner: Player, income: Partial<Resources>) => void;
   addUnits: (owner: Player, unitCost: number) => void;
   changePopulationSupply: (owner: Player, delta: number) => void;
+  setPopulationSupply: (owner: Player, supply: number) => void;
   removeUnits: (owner: Player, count: number) => void;
   resetStore: () => void;
 };
@@ -53,11 +54,20 @@ export const useEconomyStore = create<EconomyState>()(
       });
     },
 
-    changePopulationSupply: (owner: Player, delta: number) => {
+    // TODO: Изменить метод на 1 единственный
+
+    changePopulationSupply: (owner, delta) => {
       set(state => {
         const cap = state.populationCap[owner];
-        cap.supply += delta;
-        cap.max = Math.min(MAX_POPULATION_LIMIT, cap.supply);
+        cap.max = Math.min(MAX_POPULATION_LIMIT, cap.max + delta);
+      });
+    },
+
+    setPopulationSupply: (owner, supply) => {
+      set(state => {
+        const cap = state.populationCap[owner];
+
+        cap.max = Math.min(MAX_POPULATION_LIMIT, supply);
       });
     },
 

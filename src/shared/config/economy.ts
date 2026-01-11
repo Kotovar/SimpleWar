@@ -5,7 +5,6 @@ type Resource = 'gold' | 'wood';
 export type Resources = Record<Resource, number>;
 
 export type PopulationCap = {
-  supply: number;
   max: number;
   occupied: number;
 };
@@ -18,6 +17,6 @@ export const START_RESOURCES: Record<Player, Resources> = {
 };
 
 export const START_POPULATION_CAP: Record<Player, PopulationCap> = {
-  player: { supply: 0, max: 10, occupied: 0 },
-  ai: { supply: 0, max: 10, occupied: 0 },
+  player: { max: 10, occupied: 0 },
+  ai: { max: 10, occupied: 0 },
 };

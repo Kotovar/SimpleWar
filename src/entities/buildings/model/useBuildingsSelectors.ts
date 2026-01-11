@@ -20,6 +20,7 @@ export const useBuildingsSelectors = () => {
   const getEconomicBuildings = useBuildingsStore(
     state => state.getEconomicBuildings,
   );
+  const getLimitBuildings = useBuildingsStore(state => state.getLimitBuildings);
 
   return {
     buildings,
@@ -30,6 +31,7 @@ export const useBuildingsSelectors = () => {
     resetBuildingsForNewTurn,
     resetStore,
     getEconomicBuildings,
+    getLimitBuildings,
     clearSelectedBuildingForSpawn,
   };
 };

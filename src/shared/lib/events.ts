@@ -1,6 +1,8 @@
-import type { Player } from '@shared/config';
+import type { Building, Player } from '@shared/config';
 
-export type GameEvent = { type: 'BASE_DESTROYED'; owner: Player };
+export type GameEvent =
+  | { type: 'BASE_DESTROYED'; owner: Player }
+  | { type: 'BUILDING_DESTROYED'; building: Building; owner: Player };
 
 type EventHandler = (event: GameEvent) => void;
 

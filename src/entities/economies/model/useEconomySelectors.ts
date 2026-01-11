@@ -9,6 +9,9 @@ export const useEconomySelectors = () => {
   const changePopulationSupply = useEconomyStore(
     state => state.changePopulationSupply,
   );
+  const setPopulationSupply = useEconomyStore(
+    state => state.setPopulationSupply,
+  );
   const removeUnits = useEconomyStore(state => state.removeUnits);
   const resetStore = useEconomyStore(state => state.resetStore);
 
@@ -19,6 +22,7 @@ export const useEconomySelectors = () => {
     removeResources,
     addUnits,
     changePopulationSupply,
+    setPopulationSupply,
     removeUnits,
     resetStore,
   };

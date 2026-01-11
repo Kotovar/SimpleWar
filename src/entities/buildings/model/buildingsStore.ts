@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { BUILDINGS_CONFIG } from '@shared/config';
+import { gameEvents } from '@shared/lib';
 import type { Owner, BuildingType, Building, Player } from '@shared/config';
 
 export type BuildingsState = {
@@ -16,6 +17,7 @@ export type BuildingsState = {
   damageBuilding: (id: string, damage: number) => void;
   getBuildingAt: (x?: number, y?: number) => Building | null;
   getEconomicBuildings: (owner: Player) => Building[];
+  getLimitBuildings: (owner: Player) => Building[];
   changeAttackPoints: (id: string) => void;
   checkBaseDestroyed: () => Player | null;
   selectBuildingForSpawn: (buildingType: BuildingType) => void;
@@ -64,6 +66,12 @@ export const useBuildingsStore = create<BuildingsState>()(
           building.hp = resultHP;
         } else {
           delete state.buildings[id];
+
+          gameEvents.emit({
+            type: 'BUILDING_DESTROYED',
+            building: building,
+            owner: building.owner,
+          });
         }
       });
     },
@@ -76,9 +84,16 @@ export const useBuildingsStore = create<BuildingsState>()(
       );
     },
 
-    getEconomicBuildings: (owner: Player) => {
+    getEconomicBuildings: owner => {
       return Object.values(get().buildings).filter(
         building => building.owner === owner && building.income !== undefined,
+      );
+    },
+
+    getLimitBuildings: owner => {
+      return Object.values(get().buildings).filter(
+        building =>
+          building.owner === owner && building.populationSupply !== undefined,
       );
     },
 
