@@ -3,15 +3,21 @@ import type { Player } from './gameLoop';
 type Resource = 'gold' | 'wood';
 
 export type Resources = Record<Resource, number>;
-export type UnitLimit = Record<'current' | 'max', number>;
 
-export const MAX_LIMIT = 30;
+export type PopulationCap = {
+  supply: number;
+  max: number;
+  occupied: number;
+};
+
+export const MAX_POPULATION_LIMIT = 30;
+
 export const START_RESOURCES: Record<Player, Resources> = {
   player: { gold: 300, wood: 200 },
   ai: { gold: 300, wood: 200 },
 };
 
-export const START_LIMITS: Record<Player, UnitLimit> = {
-  player: { current: 0, max: 10 },
-  ai: { current: 0, max: 10 },
+export const START_POPULATION_CAP: Record<Player, PopulationCap> = {
+  player: { supply: 0, max: 10, occupied: 0 },
+  ai: { supply: 0, max: 10, occupied: 0 },
 };

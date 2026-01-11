@@ -3,6 +3,7 @@ import {
   BUILDING_TOWNHALL_PALETTES,
   BUILDING_MINE_PALETTES,
   BUILDING_SAWMILL_PALETTES,
+  BUILDING_FARM_PALETTES,
 } from '@shared/config';
 
 export const drawBase = (
@@ -169,4 +170,45 @@ export const drawSawmill = (
   // Дверь
   ctx.fillStyle = palette.accent;
   ctx.fillRect(baseX + 0.48 * s, baseY + 0.7 * s, 0.1 * s, 0.18 * s);
+};
+
+export const drawFarm = (
+  ctx: CanvasRenderingContext2D,
+  cellX: number,
+  cellY: number,
+  cellSize: number,
+  owner: Owner,
+  scale: number = 1.18,
+) => {
+  const palette = BUILDING_FARM_PALETTES[owner];
+
+  const baseX = cellX * cellSize + (cellSize * (1 - scale)) / 2;
+  const baseY = cellY * cellSize + (cellSize * (1 - scale)) / 2;
+  const s = cellSize * scale;
+
+  // Структура
+  ctx.fillStyle = palette.wood;
+  ctx.fillRect(baseX + 0.25 * s, baseY + 0.32 * s, 0.5 * s, 0.4 * s);
+
+  // Крыша
+  ctx.fillStyle = palette.roof;
+  ctx.beginPath();
+  ctx.moveTo(baseX + 0.15 * s, baseY + 0.32 * s);
+  ctx.lineTo(baseX + 0.5 * s, baseY + 0.1 * s);
+  ctx.lineTo(baseX + 0.85 * s, baseY + 0.32 * s);
+  ctx.closePath();
+  ctx.fill();
+
+  // Дверь
+  ctx.fillStyle = palette.door;
+  ctx.fillRect(baseX + 0.42 * s, baseY + 0.52 * s, 0.16 * s, 0.2 * s);
+
+  // Окно
+  ctx.fillStyle = palette.window;
+  ctx.fillRect(baseX + 0.32 * s, baseY + 0.42 * s, 0.08 * s, 0.1 * s);
+
+  // Сноп сена
+  ctx.fillStyle = palette.hay;
+  ctx.fillRect(baseX + 0.72 * s, baseY + 0.65 * s, 0.16 * s, 0.14 * s);
+  ctx.fillRect(baseX + 0.76 * s, baseY + 0.6 * s, 0.12 * s, 0.1 * s);
 };

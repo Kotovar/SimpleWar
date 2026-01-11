@@ -1,2 +1,2 @@
-export * from './economyStory';
+export * from './economyStore';
 export * from './useEconomySelectors';

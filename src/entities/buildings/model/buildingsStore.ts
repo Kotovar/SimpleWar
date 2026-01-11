@@ -48,6 +48,7 @@ export const useBuildingsStore = create<BuildingsState>()(
           attackRange: config.attackRange ?? 0,
           attackPoints: config.attackPoints ?? 0,
           maxAttackPoints: config.attackPoints ?? 0,
+          populationSupply: config.populationSupply ?? 0,
         };
       });
 

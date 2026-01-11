@@ -23,6 +23,13 @@ type SawmillPalette = {
   smoke: string;
 } & BuildingBase;
 
+type FarmPalette = {
+  wood: string;
+  roof: string;
+  door: string;
+  hay: string;
+} & BuildingBase;
+
 type UnitPalette = {
   body: string;
   bodyArcher: string;
@@ -84,6 +91,23 @@ export const BUILDING_SAWMILL_PALETTES: Record<Owner, SawmillPalette> = {
     smoke: '#888888',
     accent: 'hsla(0, 97%, 47%, 1.00)',
     window: '#333',
+  },
+};
+
+export const BUILDING_FARM_PALETTES: Record<Owner, FarmPalette> = {
+  player: {
+    wood: '#8B4513',
+    door: 'hsla(100, 100%, 26%, 1.00)',
+    window: 'hsl(102, 8%, 26%)',
+    roof: '#DAA520',
+    hay: '#E8C39E',
+  },
+  ai: {
+    wood: '#8B4513',
+    door: 'hsla(0, 97%, 47%, 1.00)',
+    window: 'hsl(102, 8%, 26%)',
+    roof: '#DAA520',
+    hay: '#E8C39E',
   },
 };
 

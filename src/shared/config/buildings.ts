@@ -1,6 +1,6 @@
 import type { CellType, Owner } from './common';
 
-export type BuildingType = 'base' | 'mine' | 'sawmill';
+export type BuildingType = 'base' | 'mine' | 'sawmill' | 'farm';
 
 export type Income = {
   gold?: number;
@@ -27,6 +27,7 @@ export type Building = {
   attackPoints?: number;
   maxAttackPoints?: number;
   attackRange?: number;
+  populationSupply?: number;
 };
 
 export const BUILDINGS_CONFIG: Record<
@@ -40,9 +41,10 @@ export const BUILDINGS_CONFIG: Record<
     | 'income'
     | 'cost'
     | 'requiredField'
+    | 'populationSupply'
   >
 > = {
-  base: { maxHp: 300, cost: { gold: 0, wood: 0 } },
+  base: { maxHp: 300, cost: { gold: 0, wood: 0 }, populationSupply: 10 },
   mine: {
     maxHp: 100,
     income: { gold: 20 },
@@ -50,9 +52,15 @@ export const BUILDINGS_CONFIG: Record<
     requiredField: 'gold',
   },
   sawmill: {
-    maxHp: 100,
+    maxHp: 70,
     income: { wood: 10 },
     cost: { gold: 80, wood: 100 },
     requiredField: 'forest',
+  },
+  farm: {
+    maxHp: 50,
+    cost: { gold: 100, wood: 100 },
+    requiredField: 'grass',
+    populationSupply: 3,
   },
 };

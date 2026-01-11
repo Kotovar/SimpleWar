@@ -89,7 +89,7 @@ export const CIVIL_UNITS_CONFIG: Record<
     buildPoints: 1,
     maxBuildPoints: 1,
     canBuild: true,
-    buildableBuildings: ['mine', 'sawmill'],
+    buildableBuildings: ['mine', 'sawmill', 'farm'],
     requiresLimit: 1,
   },
 };

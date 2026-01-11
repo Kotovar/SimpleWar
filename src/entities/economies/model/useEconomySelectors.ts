@@ -1,22 +1,24 @@
-import { useEconomyStore } from './economyStory';
+import { useEconomyStore } from './economyStore';
 
 export const useEconomySelectors = () => {
   const resources = useEconomyStore(state => state.resources);
-  const unitLimit = useEconomyStore(state => state.unitLimit);
+  const populationCap = useEconomyStore(state => state.populationCap);
   const addResources = useEconomyStore(state => state.addResources);
   const removeResources = useEconomyStore(state => state.addResources);
   const addUnits = useEconomyStore(state => state.addUnits);
-  const changeUnitLimit = useEconomyStore(state => state.changeUnitLimit);
+  const changePopulationSupply = useEconomyStore(
+    state => state.changePopulationSupply,
+  );
   const removeUnits = useEconomyStore(state => state.removeUnits);
   const resetStore = useEconomyStore(state => state.resetStore);
 
   return {
     resources,
-    unitLimit,
+    populationCap,
     addResources,
     removeResources,
     addUnits,
-    changeUnitLimit,
+    changePopulationSupply,
     removeUnits,
     resetStore,
   };

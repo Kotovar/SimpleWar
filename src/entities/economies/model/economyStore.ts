@@ -1,20 +1,20 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { MAX_LIMIT, START_LIMITS, START_RESOURCES } from '@shared/config';
-import type { Player, Resources, UnitLimit } from '@shared/config';
+import {
+  MAX_POPULATION_LIMIT,
+  START_POPULATION_CAP,
+  START_RESOURCES,
+} from '@shared/config';
+import type { Player, Resources, PopulationCap } from '@shared/config';
 
 type EconomyState = {
   resources: Record<Player, Resources>;
-  unitLimit: Record<Player, UnitLimit>;
+  populationCap: Record<Player, PopulationCap>;
 
   addResources: (owner: Player, income: Partial<Resources>) => void;
   removeResources: (owner: Player, income: Partial<Resources>) => void;
-  addUnits: (owner: Player, count: number) => void;
-  changeUnitLimit: (
-    owner: Player,
-    deltaMax: number,
-    deltaCurrent?: number,
-  ) => void;
+  addUnits: (owner: Player, unitCost: number) => void;
+  changePopulationSupply: (owner: Player, delta: number) => void;
   removeUnits: (owner: Player, count: number) => void;
   resetStore: () => void;
 };
@@ -22,7 +22,7 @@ type EconomyState = {
 export const useEconomyStore = create<EconomyState>()(
   immer(set => ({
     resources: START_RESOURCES,
-    unitLimit: START_LIMITS,
+    populationCap: START_POPULATION_CAP,
 
     addResources: (owner, income) => {
       set(state => {
@@ -42,39 +42,36 @@ export const useEconomyStore = create<EconomyState>()(
       });
     },
 
-    addUnits: (owner, count) => {
+    addUnits: (owner, unitCost) => {
       set(state => {
-        const limit = state.unitLimit[owner];
-        if (limit.current + count <= limit.max) {
-          limit.current += count;
-        } else {
-          throw new Error('Превышен лимит юнитов');
+        const cap = state.populationCap[owner];
+        const newOccupied = cap.occupied + unitCost;
+
+        if (newOccupied <= cap.max) {
+          cap.occupied = newOccupied;
         }
       });
     },
 
-    changeUnitLimit: (owner, deltaMax, deltaCurrent = 0) => {
+    changePopulationSupply: (owner: Player, delta: number) => {
       set(state => {
-        const limit = state.unitLimit[owner];
-        limit.max = Math.min(MAX_LIMIT, limit.max + deltaMax);
-        limit.current = Math.max(
-          0,
-          Math.min(limit.max, limit.current + deltaCurrent),
-        );
+        const cap = state.populationCap[owner];
+        cap.supply += delta;
+        cap.max = Math.min(MAX_POPULATION_LIMIT, cap.supply);
       });
     },
 
     removeUnits: (owner, count) => {
       set(state => {
-        const limit = state.unitLimit[owner];
-        limit.current = Math.max(0, limit.current - count);
+        const cap = state.populationCap[owner];
+        cap.occupied = Math.max(0, cap.occupied - count);
       });
     },
 
     resetStore: () => {
       set(state => {
         state.resources = START_RESOURCES;
-        state.unitLimit = START_LIMITS;
+        state.populationCap = START_POPULATION_CAP;
       });
     },
   })),
