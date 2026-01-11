@@ -55,8 +55,8 @@ export const useStartGame = () => {
 
     spawnBuilding('base', playerStart.x, playerStart.y, 'player');
     spawnBuilding('base', enemyStart.x, enemyStart.y, 'ai');
-    spawnBuilding('farm', enemyStart.x, enemyStart.y - 2, 'ai');
-    spawnBuilding('farm', enemyStart.x - 1, enemyStart.y - 2, 'ai');
+    spawnBuilding('farm', enemyStart.x, enemyStart.y - 2, 'player');
+    spawnBuilding('farm', enemyStart.x - 1, enemyStart.y - 2, 'player');
 
     // TODO: убрать после запуска игры - пока для теста
     spawnUnit('swordsman', 2, 1, 'player');

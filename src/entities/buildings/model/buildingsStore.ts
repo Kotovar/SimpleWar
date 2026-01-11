@@ -35,45 +35,63 @@ export const useBuildingsStore = create<BuildingsState>()(
       const id = `building_${crypto.randomUUID()}`;
       const config = BUILDINGS_CONFIG[type];
 
+      const building: Building = {
+        id,
+        type,
+        x,
+        y,
+        owner,
+        income: config.income,
+        hp: config.maxHp,
+        maxHp: config.maxHp,
+        cost: config.cost,
+        attack: config.attack ?? 0,
+        attackRange: config.attackRange ?? 0,
+        attackPoints: config.attackPoints ?? 0,
+        maxAttackPoints: config.attackPoints ?? 0,
+        populationSupply: config.populationSupply ?? 0,
+      };
+
       set(state => {
-        state.buildings[id] = {
-          id,
-          type,
-          x,
-          y,
-          owner,
-          income: config.income,
-          hp: config.maxHp,
-          maxHp: config.maxHp,
-          cost: config.cost,
-          attack: config.attack ?? 0,
-          attackRange: config.attackRange ?? 0,
-          attackPoints: config.attackPoints ?? 0,
-          maxAttackPoints: config.attackPoints ?? 0,
-          populationSupply: config.populationSupply ?? 0,
-        };
+        state.buildings[id] = building;
+      });
+
+      gameEvents.emit({
+        type: 'BUILDING_SPAWNED',
+        building,
+        owner,
       });
 
       return id;
     },
 
     damageBuilding: (id: string, damage: number) => {
+      const buildingBefore = get().buildings[id];
+      if (!buildingBefore) return;
+
+      let destroyed = false;
+
       set(state => {
         const building = state.buildings[id];
+        if (!building) return;
+
         const resultHP = building.hp - damage;
 
         if (resultHP > 0) {
           building.hp = resultHP;
         } else {
+          destroyed = true;
           delete state.buildings[id];
-
-          gameEvents.emit({
-            type: 'BUILDING_DESTROYED',
-            building: building,
-            owner: building.owner,
-          });
         }
       });
+
+      if (destroyed) {
+        gameEvents.emit({
+          type: 'BUILDING_DESTROYED',
+          building: buildingBefore,
+          owner: buildingBefore.owner,
+        });
+      }
     },
 
     getBuildingAt: (x, y) => {

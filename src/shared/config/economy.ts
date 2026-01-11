@@ -17,6 +17,6 @@ export const START_RESOURCES: Record<Player, Resources> = {
 };
 
 export const START_POPULATION_CAP: Record<Player, PopulationCap> = {
-  player: { max: 10, occupied: 0 },
-  ai: { max: 10, occupied: 0 },
+  player: { max: 0, occupied: 0 },
+  ai: { max: 0, occupied: 0 },
 };

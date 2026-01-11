@@ -12,8 +12,7 @@ export const build = (
   const { spawnBuilding, selectedBuildingForSpawn } =
     useBuildingsStore.getState();
 
-  const { removeResources, changePopulationSupply } =
-    useEconomyStore.getState();
+  const { removeResources } = useEconomyStore.getState();
 
   const { changeBuildPoints, units } = useUnitsStore.getState();
 
@@ -22,17 +21,11 @@ export const build = (
   const config = BUILDINGS_CONFIG[selectedBuildingForSpawn];
 
   const buildCosts = config.cost;
-  const populationSupply = config.populationSupply ?? 0;
 
   const worker = units[selectedUnitId];
   if (!worker || !('buildPoints' in worker)) return;
 
   spawnBuilding(selectedBuildingForSpawn, x, y, owner);
-
-  if (populationSupply > 0) {
-    changePopulationSupply(owner, populationSupply);
-  }
-
   changeBuildPoints(selectedUnitId);
   removeResources('player', buildCosts);
 };
