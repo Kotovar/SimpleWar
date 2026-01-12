@@ -1,22 +1,18 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import type {
-  Owner,
-  Unit,
-  MilitaryType,
-  CivilType,
-  Player,
-} from '@shared/config';
+import type { Owner, Unit, Player, UnitType } from '@shared/config';
 import { createUnit } from './createUnit';
 
 type UnitsState = {
   units: Record<string, Unit>;
+  selectedUnitForSpawn: UnitType | null;
 
   spawnUnit: (
-    type: MilitaryType | CivilType,
+    type: UnitType,
     x: number,
     y: number,
     owner: Owner,
+    initialSpawn?: boolean,
   ) => string | null;
   moveUnit: (id: string, x: number, y: number) => void;
   getUnitAt: (x?: number, y?: number) => Unit | null;
@@ -24,6 +20,8 @@ type UnitsState = {
   damageUnit: (id: string, damage: number) => void;
   changeAttackPoints: (id: string) => void;
   changeBuildPoints: (id: string) => void;
+  selectUnitForSpawn: (unitType: UnitType) => void;
+  clearSelectedUnitForSpawn: () => void;
   resetUnitsForNewTurn: () => void;
   resetStore: () => void;
 };
@@ -31,9 +29,10 @@ type UnitsState = {
 export const useUnitsStore = create<UnitsState>()(
   immer((set, get) => ({
     units: {},
+    selectedUnitForSpawn: null,
 
-    spawnUnit: (type, x, y, owner) => {
-      const unit = createUnit(type, x, y, owner);
+    spawnUnit: (type, x, y, owner, initialSpawn = false) => {
+      const unit = createUnit(type, x, y, owner, initialSpawn);
       if (!unit) return null;
 
       set(state => {
@@ -110,6 +109,18 @@ export const useUnitsStore = create<UnitsState>()(
             unit.movePoints = 0;
           }
         }
+      });
+    },
+
+    selectUnitForSpawn: unitType => {
+      set(state => {
+        state.selectedUnitForSpawn = unitType;
+      });
+    },
+
+    clearSelectedUnitForSpawn: () => {
+      set(state => {
+        state.selectedUnitForSpawn = null;
       });
     },
 

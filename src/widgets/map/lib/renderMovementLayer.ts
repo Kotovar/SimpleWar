@@ -6,6 +6,7 @@ export const renderMovementLayer = (
   reachableCells: Position[] | null,
   attackableEnemies: Position[] | null,
   buildableCells: Position[] | null,
+  spawnableCells: Position[] | null,
   cellSize: number,
 ) => {
   if (reachableCells) {
@@ -22,6 +23,12 @@ export const renderMovementLayer = (
 
   if (buildableCells) {
     buildableCells.forEach(({ x, y }) => {
+      drawMovement(ctx, x, y, cellSize, 'produce');
+    });
+  }
+
+  if (spawnableCells) {
+    spawnableCells.forEach(({ x, y }) => {
       drawMovement(ctx, x, y, cellSize, 'produce');
     });
   }

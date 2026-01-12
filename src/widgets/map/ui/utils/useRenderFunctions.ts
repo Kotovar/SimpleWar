@@ -4,7 +4,10 @@ import { useBuildingsSelectors } from '@entities/buildings';
 import { useUnitsSelectors } from '@entities/units';
 import { useMapSelectors } from '@entities/maps';
 import type { Selection } from '@features/selection';
-import { useMovementSelectors } from '@features/pathfinding';
+import {
+  useHighlightSelectors,
+  useMovementSelectors,
+} from '@features/pathfinding';
 import {
   renderEntitiesLayer,
   renderMovementLayer,
@@ -34,6 +37,7 @@ export const useRenderFunctions = ({
   const { units } = useUnitsSelectors();
   const { attackableTargets, buildableCells, reachableCells } =
     useMovementSelectors();
+  const { spawnableCells } = useHighlightSelectors();
   const { cellSize, gridColumns } = useSettingsSelectors();
 
   const renderTerrain = useCallback(
@@ -62,11 +66,18 @@ export const useRenderFunctions = ({
           reachableCells,
           attackableTargets,
           buildableCells,
+          spawnableCells,
           cellSize,
         ),
       );
     },
-    [attackableTargets, buildableCells, cellSize, reachableCells],
+    [
+      attackableTargets,
+      buildableCells,
+      cellSize,
+      reachableCells,
+      spawnableCells,
+    ],
   );
 
   const renderSelection = useCallback(

@@ -60,7 +60,7 @@ export const useStartGame = () => {
 
     // TODO: убрать после запуска игры - пока для теста
     spawnUnit('swordsman', 2, 1, 'player');
-    spawnUnit('worker', 2, 2, 'player');
+    spawnUnit('worker', 2, 2, 'player', true);
     spawnUnit('archer', gridColumns - 1, gridRows - 2, 'player');
     spawnUnit('swordsman', gridColumns - 3, gridRows - 2, 'ai');
     spawnUnit('archer', gridColumns - 3, gridRows - 1, 'ai');

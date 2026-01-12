@@ -1,22 +1,22 @@
-.BuildSection {
+.UnitSection {
   margin-top: 16px;
   padding-top: 12px;
   border-top: 1px solid #444;
 }
 
-.BuildHeader {
+.UnitHeader {
   margin: 0 0 8px;
   font-size: 1.1em;
   color: #ccc;
 }
 
-.BuildButtons {
+.UnitButtons {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.BuildButton {
+.UnitButton {
   padding: 8px 12px;
   background: #2a4a2a;
   border: 1px solid #4a7a4a;

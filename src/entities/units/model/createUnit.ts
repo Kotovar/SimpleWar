@@ -11,6 +11,7 @@ export const createUnit = (
   x: number,
   y: number,
   owner: Owner,
+  initialSpawn: boolean,
 ): Unit | null => {
   const id = `unit_${crypto.randomUUID()}`;
 
@@ -25,6 +26,7 @@ export const createUnit = (
       x,
       y,
       owner,
+      movePoints: initialSpawn ? config.maxMovePoints : config.movePoints,
       hp: config.maxHp,
       role: 'military',
     };
@@ -40,6 +42,8 @@ export const createUnit = (
       x,
       y,
       owner,
+      movePoints: initialSpawn ? config.maxMovePoints : config.movePoints,
+      buildPoints: initialSpawn ? config.maxBuildPoints : config.buildPoints,
       hp: config.maxHp,
       role: 'civil',
     };

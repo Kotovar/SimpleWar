@@ -1,22 +1,10 @@
 import type { Building, Owner, Position, Unit } from '@shared/config';
 
-const isTargetInReachableCells = (
-  reachableCells: Position[] | null,
+const isTargetInHighlightedCells = (
+  highlightedCells: Position[] | null,
   gridX: number,
   gridY: number,
-) => reachableCells?.some(cell => cell.x === gridX && cell.y === gridY);
-
-const isTargetInAttackRadius = (
-  attackableTargets: Position[] | null,
-  gridX: number,
-  gridY: number,
-) => attackableTargets?.some(cell => cell.x === gridX && cell.y === gridY);
-
-const isTargetInBuildableCells = (
-  buildableTargets: Position[] | null,
-  gridX: number,
-  gridY: number,
-) => buildableTargets?.some(cell => cell.x === gridX && cell.y === gridY);
+) => highlightedCells?.some(cell => cell.x === gridX && cell.y === gridY);
 
 export const handleClickWithoutSelectedUnit = (
   unit: Unit | null,
@@ -65,9 +53,13 @@ export const handleClickWithPlayerUnitSelected = (
   clearSelection: () => void,
   clearMovement: () => void,
 ) => {
-  const isReachable = isTargetInReachableCells(reachableCells, gridX, gridY);
-  const isAttackable = isTargetInAttackRadius(attackableTargets, gridX, gridY);
-  const isBuildable = isTargetInBuildableCells(buildableCells, gridX, gridY);
+  const isReachable = isTargetInHighlightedCells(reachableCells, gridX, gridY);
+  const isAttackable = isTargetInHighlightedCells(
+    attackableTargets,
+    gridX,
+    gridY,
+  );
+  const isBuildable = isTargetInHighlightedCells(buildableCells, gridX, gridY);
   const hasTarget = unitAtTarget || buildingAtTarget;
 
   const isWorker =
@@ -99,6 +91,38 @@ export const handleClickWithPlayerUnitSelected = (
     clearSelection();
     clearMovement();
 
+    return true;
+  }
+
+  return false;
+};
+
+export const handleClickWithPlayerBuildingSelected = (
+  selectedBuilding: Building,
+  gridX: number,
+  gridY: number,
+  spawnableCells: Position[] | null,
+  spawn: (
+    selectedBuildingId: string,
+    x: number,
+    y: number,
+    owner: Owner,
+  ) => void,
+  clearSelection: () => void,
+  clearHighlight: () => void,
+) => {
+  const isSpawnable = isTargetInHighlightedCells(spawnableCells, gridX, gridY);
+  const isSpawner =
+    selectedBuilding.role === 'production' && selectedBuilding.canSpawn;
+
+  if (!isSpawner || !isSpawnable) {
+    return false;
+  }
+
+  if (selectedBuilding.spawnPoints > 0) {
+    spawn(selectedBuilding.id, gridX, gridY, 'player');
+    clearSelection();
+    clearHighlight();
     return true;
   }
 

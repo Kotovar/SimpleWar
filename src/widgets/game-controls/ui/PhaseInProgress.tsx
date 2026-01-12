@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { ConfirmDialog } from '@shared/ui';
 import { nextTurn, resetGame } from '@features/game-loop';
 import { useSelectionSelectors } from '@features/selection';
-import { useMovementStore } from '@features/pathfinding';
+import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import {
   ResourcesInfo,
   TurnControls,
   TurnInfo,
   SelectedEntityInfo,
   WorkerBuildOptions,
+  UnitOptions,
 } from './info';
 import styles from './styles.module.css';
 
@@ -23,6 +24,7 @@ export const PhaseInProgress = () => {
     clearSelection,
   } = useSelectionSelectors();
   const { resetStore: clearMovement } = useMovementStore();
+  const { resetStore: clearHighlight } = useHighlightStore();
 
   const cell = terrainSelection.getSelectedCell();
   const unit = unitsSelection.getSelectedUnit();
@@ -32,6 +34,7 @@ export const PhaseInProgress = () => {
     nextTurn();
     clearSelection();
     clearMovement();
+    clearHighlight();
   };
 
   const onResetGame = () => {
@@ -39,6 +42,7 @@ export const PhaseInProgress = () => {
 
     clearSelection();
     clearMovement();
+    clearHighlight();
     resetGame();
   };
 
@@ -57,6 +61,7 @@ export const PhaseInProgress = () => {
         <>
           <SelectedEntityInfo cell={cell} unit={unit} building={building} />
           {unit && <WorkerBuildOptions unit={unit} />}
+          {building && <UnitOptions building={building} />}
         </>
       )}
 

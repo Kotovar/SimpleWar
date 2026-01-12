@@ -75,7 +75,7 @@ export const PRODUCTION_BUILDINGS_CONFIG: Record<
     cost: { gold: 0, wood: 0 },
     canSpawn: true,
     spawningUnits: ['worker'],
-    spawnPoints: 0,
+    spawnPoints: 1,
     maxSpawnPoints: 1,
     populationSupply: 10,
   },

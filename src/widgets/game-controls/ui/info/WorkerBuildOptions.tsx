@@ -3,7 +3,6 @@ import {
   BUILDINGS_NAME,
   BuildingType,
   CellType,
-  CIVIL_UNITS_CONFIG,
   Unit,
 } from '@shared/config';
 import { useEconomySelectors } from '@entities/economies';
@@ -25,10 +24,12 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
     resetStore: resetHighlightedCells,
   } = useMovementStore();
 
+  const isPlayerUnit = unit.owner === 'player';
   const isWorker = unit.type === 'worker' && unit.role === 'civil';
-  if (!isWorker) return null;
 
-  const buildableTypes = CIVIL_UNITS_CONFIG.worker.buildableBuildings;
+  if (!isPlayerUnit || !isWorker) return null;
+
+  const buildableTypes = unit.buildableBuildings;
   if (buildableTypes.length === 0) return null;
 
   const onClick = (

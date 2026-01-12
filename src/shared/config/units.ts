@@ -86,3 +86,8 @@ export const CIVIL_UNITS_CONFIG: Record<
     cost: { gold: 50, wood: 50 },
   },
 };
+
+export const UNITS_CONFIG = {
+  ...MILITARY_UNITS_CONFIG,
+  ...CIVIL_UNITS_CONFIG,
+};

@@ -5,10 +5,15 @@ import { useSettingsSelectors } from '@entities/settings';
 import { useSelectionSelectors } from '@features/selection';
 import { attack } from '@features/combat';
 import { build } from '@features/build';
-import { useMovementSelectors } from '@features/pathfinding';
+import { spawn } from '@features/spawn';
+import {
+  useMovementSelectors,
+  useHighlightSelectors,
+} from '@features/pathfinding';
 import {
   getGridCoordsFromEvent,
   handleClickWithoutSelectedUnit,
+  handleClickWithPlayerBuildingSelected,
   handleClickWithPlayerUnitSelected,
 } from './utils';
 import { StartGameCanvas } from './StartGameCanvas';
@@ -37,6 +42,9 @@ export const Map = () => {
     calculateMovement,
     resetStore: clearMovement,
   } = useMovementSelectors();
+
+  const { spawnableCells, resetStore: clearHighlight } =
+    useHighlightSelectors();
 
   const { selectCell } = terrainSelection;
   const { selectUnit, getSelectedUnit } = unitsSelection;
@@ -72,6 +80,7 @@ export const Map = () => {
     if (isClickOnCurrentSelection(gridX, gridY)) {
       clearSelection();
       clearMovement();
+      clearHighlight();
       return;
     }
 
@@ -99,7 +108,7 @@ export const Map = () => {
       return;
     }
 
-    // 4. Выбрана своя сущность
+    // 4. Выбран свой юнит
     if (selectedUnit && selectedUnit.owner === 'player') {
       handleClickWithPlayerUnitSelected(
         selectedUnit,
@@ -115,6 +124,21 @@ export const Map = () => {
         build,
         clearSelection,
         clearMovement,
+      );
+
+      return;
+    }
+
+    // 5. Выбрано своё здание
+    if (selectedBuilding && selectedBuilding.owner === 'player') {
+      handleClickWithPlayerBuildingSelected(
+        selectedBuilding,
+        gridX,
+        gridY,
+        spawnableCells,
+        spawn,
+        clearSelection,
+        clearHighlight,
       );
 
       return;

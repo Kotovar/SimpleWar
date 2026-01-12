@@ -106,6 +106,21 @@ export const SelectedEntityInfo = ({ cell, unit, building }: Props) => {
             )}
           </>
         )}
+
+        {building && (
+          <>
+            {building.role === 'production' && (
+              <>
+                <div>
+                  Очки производства:{' '}
+                  <span className={styles.BuildPoints}>
+                    {building.spawnPoints} / {building.maxSpawnPoints}
+                  </span>
+                </div>
+              </>
+            )}
+          </>
+        )}
       </div>
     </section>
   );
