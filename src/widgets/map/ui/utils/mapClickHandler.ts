@@ -51,6 +51,7 @@ export const handleClickWithPlayerUnitSelected = (
   attack: (attackerId: string, targetId: string) => void,
   build: (selectedUnitId: string, x: number, y: number, owner: Owner) => void,
   clearSelection: () => void,
+  clearHighlight: () => void,
   clearMovement: () => void,
 ) => {
   const isReachable = isTargetInHighlightedCells(reachableCells, gridX, gridY);
@@ -69,6 +70,7 @@ export const handleClickWithPlayerUnitSelected = (
     moveUnit(selectedUnit.id, gridX, gridY);
     clearSelection();
     clearMovement();
+    clearHighlight();
     return true;
   }
 
@@ -82,6 +84,7 @@ export const handleClickWithPlayerUnitSelected = (
     attack(selectedUnit.id, targetId);
     clearSelection();
     clearMovement();
+    clearHighlight();
 
     return true;
   }
@@ -90,6 +93,7 @@ export const handleClickWithPlayerUnitSelected = (
     build(selectedUnit.id, gridX, gridY, 'player');
     clearSelection();
     clearMovement();
+    clearHighlight();
 
     return true;
   }
@@ -110,6 +114,7 @@ export const handleClickWithPlayerBuildingSelected = (
   ) => void,
   clearSelection: () => void,
   clearHighlight: () => void,
+  clearMovement: () => void,
 ) => {
   const isSpawnable = isTargetInHighlightedCells(spawnableCells, gridX, gridY);
   const isSpawner =
@@ -123,6 +128,7 @@ export const handleClickWithPlayerBuildingSelected = (
     spawn(selectedBuilding.id, gridX, gridY, 'player');
     clearSelection();
     clearHighlight();
+    clearMovement();
     return true;
   }
 

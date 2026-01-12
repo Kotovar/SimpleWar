@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import { gameEvents } from '@shared/lib';
 import type { Owner, Unit, Player, UnitType } from '@shared/config';
 import { createUnit } from './createUnit';
 
@@ -39,6 +40,8 @@ export const useUnitsStore = create<UnitsState>()(
         state.units[unit.id] = unit;
       });
 
+      gameEvents.emit({ type: 'UNIT_SPAWNED', unit, owner });
+
       return unit.id;
     },
 
@@ -62,9 +65,13 @@ export const useUnitsStore = create<UnitsState>()(
       }),
 
     damageUnit: (id, damage) => {
+      const unitBefore = get().units[id];
+      if (!unitBefore) return;
+
+      let destroyed = false;
+
       set(state => {
         const unit = state.units[id];
-
         if (!unit) return;
 
         const resultHP = unit.hp - damage;
@@ -72,9 +79,18 @@ export const useUnitsStore = create<UnitsState>()(
         if (resultHP > 0) {
           unit.hp = resultHP;
         } else {
+          destroyed = true;
           delete state.units[id];
         }
       });
+
+      if (destroyed) {
+        gameEvents.emit({
+          type: 'UNIT_DESTROYED',
+          unit: unitBefore,
+          owner: unitBefore.owner,
+        });
+      }
     },
 
     getUnitAt: (x, y) => {

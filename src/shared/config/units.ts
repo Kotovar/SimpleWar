@@ -81,7 +81,7 @@ export const CIVIL_UNITS_CONFIG: Record<
     buildPoints: 0,
     maxBuildPoints: 1,
     canBuild: true,
-    buildableBuildings: ['mine', 'sawmill', 'farm'],
+    buildableBuildings: ['mine', 'sawmill', 'farm', 'barracks'],
     requiresLimit: 1,
     cost: { gold: 50, wood: 50 },
   },

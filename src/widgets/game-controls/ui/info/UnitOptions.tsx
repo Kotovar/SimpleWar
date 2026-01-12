@@ -5,17 +5,19 @@ import {
   type CellType,
   type UnitType,
 } from '@shared/config';
+import { canSpawnUnit } from '@shared/lib';
 import { useUnitsSelectors } from '@entities/units';
 import { useEconomySelectors } from '@entities/economies';
 import { useHighlightStore } from '@features/pathfinding';
 import styles from './UnitOptions.styles.module.css';
+import { getUnitInfoText } from '@shared/lib/getUnitInfoText';
 
 type Props = {
   building: Building;
 };
 
 export const UnitOptions = ({ building }: Props) => {
-  const { resources } = useEconomySelectors();
+  const { resources, populationCap } = useEconomySelectors();
 
   const {
     selectedUnitForSpawn,
@@ -33,17 +35,14 @@ export const UnitOptions = ({ building }: Props) => {
   const spawningTypes = building.spawningUnits;
   if (spawningTypes.length === 0) return null;
 
-  const onClick = (
-    spawningTypes: UnitType,
-    requiredField: CellType = 'grass',
-  ) => {
+  const onClick = (spawnType: UnitType, requiredField: CellType = 'grass') => {
     if (building.spawnPoints <= 0) return;
     resetHighlightedCells();
 
-    if (selectedUnitForSpawn === spawningTypes) {
+    if (selectedUnitForSpawn === spawnType) {
       clearSelectedUnitForSpawn();
     } else {
-      selectUnitForSpawn(spawningTypes);
+      selectUnitForSpawn(spawnType);
 
       if (requiredField) {
         calculateSpawnableCells(building.id, requiredField);
@@ -57,26 +56,40 @@ export const UnitOptions = ({ building }: Props) => {
 
       <div className={styles.UnitButtons}>
         {spawningTypes.map(spawnType => {
-          const config = UNITS_CONFIG[spawnType];
-          const cost = config.cost;
-          const requiredField = 'grass';
+          const { cost, requiresLimit } = UNITS_CONFIG[spawnType];
           const name = UNITS_NAME[spawnType];
 
-          const canAfford =
-            resources.player.gold >= cost.gold &&
-            resources.player.wood >= cost.wood;
+          const check = canSpawnUnit(
+            spawnType,
+            resources.player,
+            populationCap.player,
+            building.spawnPoints,
+          );
+
+          const infoText = getUnitInfoText(spawnType);
 
           return (
             <button
-              key={spawnType}
               className={styles.UnitButton}
-              disabled={!canAfford}
-              onClick={() => onClick(spawnType, requiredField)}
+              disabled={!check.canSpawn}
+              onClick={() => onClick(spawnType, 'grass')}
+              title={check.message}
             >
               {name}
-              <small>
-                {cost.gold} зол. : {cost.wood} дер.
+
+              <small className={styles.Cost}>🪙{cost.gold} золота</small>
+
+              {cost.wood === 0 ? null : (
+                <small className={styles.Cost}>🌳{cost.wood} дерева</small>
+              )}
+
+              <small className={styles.PopCost}>
+                ⚡{requiresLimit} {requiresLimit === 1 ? 'слот' : 'слота'}{' '}
+                населения
               </small>
+              {infoText && (
+                <small className={styles.InfoText}>{infoText}</small>
+              )}
             </button>
           );
         })}

@@ -5,10 +5,11 @@ import {
   CellType,
   Unit,
 } from '@shared/config';
+import { canSpawnBuilding, getBuildingInfoText } from '@shared/lib';
 import { useEconomySelectors } from '@entities/economies';
+import { useBuildingsSelectors } from '@entities/buildings';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import styles from './WorkerBuildOptions.styles.module.css';
-import { useBuildingsSelectors } from '@entities/buildings';
 
 export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
   const { resources } = useEconomySelectors();
@@ -18,9 +19,9 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
     clearSelectedBuildingForSpawn,
   } = useBuildingsSelectors();
 
-  const { calculateMovement } = useMovementStore();
+  const { calculateMovement, resetStore: clearMovement } = useMovementStore();
 
-  const { calculateBuildableCells, resetStore: resetHighlightedCells } =
+  const { calculateBuildableCells, resetStore: clearHighlight } =
     useHighlightStore();
 
   const isPlayerUnit = unit.owner === 'player';
@@ -36,7 +37,8 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
     requiredField: CellType = 'grass',
   ) => {
     if (unit.buildPoints <= 0) return;
-    resetHighlightedCells();
+    clearHighlight();
+    clearMovement();
 
     if (selectedBuildingForSpawn === buildingType) {
       clearSelectedBuildingForSpawn();
@@ -56,26 +58,33 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
 
       <div className={styles.BuildButtons}>
         {buildableTypes.map(buildingType => {
-          const config = BUILDINGS_CONFIG[buildingType];
-          const cost = config.cost;
-          const requiredField = config.requiredField;
+          const { cost, requiredField } = BUILDINGS_CONFIG[buildingType];
           const name = BUILDINGS_NAME[buildingType];
 
-          const canAfford =
-            resources.player.gold >= cost.gold &&
-            resources.player.wood >= cost.wood;
+          const check = canSpawnBuilding(
+            buildingType,
+            resources.player,
+            unit.buildPoints,
+          );
+
+          const infoText = getBuildingInfoText(buildingType);
 
           return (
             <button
               key={buildingType}
               className={styles.BuildButton}
-              disabled={!canAfford}
+              disabled={!check.canSpawn}
               onClick={() => onClick(buildingType, requiredField)}
+              title={check.message}
             >
               {name}
-              <small>
-                {cost.gold} зол. : {cost.wood} дер.
-              </small>
+              <small className={styles.Cost}>🪙{cost.gold} золота</small>
+              {cost.wood === 0 ? null : (
+                <small className={styles.Cost}>🌳{cost.wood} дерева</small>
+              )}
+              {infoText && (
+                <small className={styles.InfoText}>{infoText}</small>
+              )}
             </button>
           );
         })}

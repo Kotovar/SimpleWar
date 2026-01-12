@@ -36,6 +36,13 @@
     border-color: #444;
     color: #777;
     cursor: not-allowed;
+
+    .Cost,
+    .PopCost,
+    .InfoText {
+      opacity: 0.5;
+      color: #999;
+    }
   }
 
   small {
@@ -44,4 +51,24 @@
     opacity: 0.8;
     margin-top: 2px;
   }
+}
+
+.Cost {
+  color: #ffcc00;
+  font-size: 0.85em;
+  opacity: 0.9;
+}
+
+.PopCost {
+  color: #88ffaa;
+  font-weight: bold;
+  margin-top: 2px;
+}
+
+small.InfoText {
+  font-size: 0.8em;
+  color: #aaffcc;
+  opacity: 0.85;
+  font-style: italic;
+  margin-top: 8px;
 }

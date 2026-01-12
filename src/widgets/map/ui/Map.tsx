@@ -91,6 +91,7 @@ export const Map = () => {
     if (selectedUnit?.owner === 'ai' || selectedBuilding?.owner === 'ai') {
       clearSelection();
       clearMovement();
+      clearHighlight();
       return;
     }
 
@@ -126,6 +127,7 @@ export const Map = () => {
         attack,
         build,
         clearSelection,
+        clearHighlight,
         clearMovement,
       );
 
@@ -142,6 +144,7 @@ export const Map = () => {
         spawn,
         clearSelection,
         clearHighlight,
+        clearMovement,
       );
 
       return;

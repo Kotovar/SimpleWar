@@ -13,9 +13,9 @@ type EconomyState = {
 
   addResources: (owner: Player, income: Partial<Resources>) => void;
   removeResources: (owner: Player, income: Partial<Resources>) => void;
-  addUnits: (owner: Player, unitCost: number) => void;
+  addUnit: (owner: Player, unitCost: number) => void;
   setPopulationSupply: (owner: Player, supply: number) => void;
-  removeUnits: (owner: Player, count: number) => void;
+  removeUnit: (owner: Player, count: number) => void;
   resetStore: () => void;
 };
 
@@ -42,7 +42,7 @@ export const useEconomyStore = create<EconomyState>()(
       });
     },
 
-    addUnits: (owner, unitCost) => {
+    addUnit: (owner, unitCost) => {
       set(state => {
         const cap = state.populationCap[owner];
         const newOccupied = cap.occupied + unitCost;
@@ -60,7 +60,7 @@ export const useEconomyStore = create<EconomyState>()(
       });
     },
 
-    removeUnits: (owner, count) => {
+    removeUnit: (owner, count) => {
       set(state => {
         const cap = state.populationCap[owner];
         cap.occupied = Math.max(0, cap.occupied - count);

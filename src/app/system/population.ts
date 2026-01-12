@@ -11,20 +11,32 @@ export const initPopulationSystem = () => {
 
   gameEvents.subscribe(event => {
     if (
-      event.type !== 'BUILDING_SPAWNED' &&
-      event.type !== 'BUILDING_DESTROYED'
+      event.type === 'BUILDING_SPAWNED' ||
+      event.type === 'BUILDING_DESTROYED'
     ) {
-      return;
+      const { owner } = event;
+
+      const { getLimitBuildings } = useBuildingsStore.getState();
+      const { setPopulationSupply } = useEconomyStore.getState();
+
+      const limitBuildings = getLimitBuildings(owner);
+      const supply = calculateMaxPopulation(limitBuildings);
+
+      setPopulationSupply(owner, supply);
     }
 
-    const { owner } = event;
+    if (event.type === 'UNIT_SPAWNED') {
+      const { addUnit } = useEconomyStore.getState();
+      const { owner, unit } = event;
+      const unitCost = unit.requiresLimit ?? 1;
+      addUnit(owner, unitCost);
+    }
 
-    const { getLimitBuildings } = useBuildingsStore.getState();
-    const { setPopulationSupply } = useEconomyStore.getState();
-
-    const limitBuildings = getLimitBuildings(owner);
-    const supply = calculateMaxPopulation(limitBuildings);
-
-    setPopulationSupply(owner, supply);
+    if (event.type === 'UNIT_DESTROYED') {
+      const { removeUnit } = useEconomyStore.getState();
+      const { owner, unit } = event;
+      const unitCost = unit.requiresLimit ?? 1;
+      removeUnit(owner, unitCost);
+    }
   });
 };
