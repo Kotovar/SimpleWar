@@ -6,7 +6,7 @@ import {
   Unit,
 } from '@shared/config';
 import { useEconomySelectors } from '@entities/economies';
-import { useMovementStore } from '@features/pathfinding';
+import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import styles from './WorkerBuildOptions.styles.module.css';
 import { useBuildingsSelectors } from '@entities/buildings';
 
@@ -18,11 +18,10 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
     clearSelectedBuildingForSpawn,
   } = useBuildingsSelectors();
 
-  const {
-    calculateMovement,
-    calculateBuildableCells,
-    resetStore: resetHighlightedCells,
-  } = useMovementStore();
+  const { calculateMovement } = useMovementStore();
+
+  const { calculateBuildableCells, resetStore: resetHighlightedCells } =
+    useHighlightStore();
 
   const isPlayerUnit = unit.owner === 'player';
   const isWorker = unit.type === 'worker' && unit.role === 'civil';

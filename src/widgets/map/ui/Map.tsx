@@ -38,13 +38,16 @@ export const Map = () => {
   const {
     reachableCells,
     attackableTargets,
-    buildableCells,
+
     calculateMovement,
     resetStore: clearMovement,
   } = useMovementSelectors();
 
-  const { spawnableCells, resetStore: clearHighlight } =
-    useHighlightSelectors();
+  const {
+    spawnableCells,
+    buildableCells,
+    resetStore: clearHighlight,
+  } = useHighlightSelectors();
 
   const { selectCell } = terrainSelection;
   const { selectUnit, getSelectedUnit } = unitsSelection;

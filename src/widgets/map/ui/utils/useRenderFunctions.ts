@@ -35,9 +35,8 @@ export const useRenderFunctions = ({
   const { grid } = useMapSelectors();
   const { buildings } = useBuildingsSelectors();
   const { units } = useUnitsSelectors();
-  const { attackableTargets, buildableCells, reachableCells } =
-    useMovementSelectors();
-  const { spawnableCells } = useHighlightSelectors();
+  const { attackableTargets, reachableCells } = useMovementSelectors();
+  const { spawnableCells, buildableCells } = useHighlightSelectors();
   const { cellSize, gridColumns } = useSettingsSelectors();
 
   const renderTerrain = useCallback(

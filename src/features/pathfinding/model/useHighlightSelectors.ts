@@ -5,11 +5,17 @@ export const useHighlightSelectors = () => {
   const calculateSpawnableCells = useHighlightStore(
     state => state.calculateSpawnableCells,
   );
+  const buildableCells = useHighlightStore(state => state.buildableCells);
   const resetStore = useHighlightStore(state => state.resetStore);
+  const calculateBuildableCells = useHighlightStore(
+    state => state.calculateBuildableCells,
+  );
 
   return {
     spawnableCells,
+    buildableCells,
     calculateSpawnableCells,
+    calculateBuildableCells,
     resetStore,
   };
 };
