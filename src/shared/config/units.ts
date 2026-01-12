@@ -1,9 +1,13 @@
-import { BuildingType } from './buildings';
+import type { BuildingType } from './buildings';
 import type { Owner } from './common';
+import type { Cost } from './economy';
 
 export type MilitaryType = 'swordsman' | 'archer';
 export type CivilType = 'worker';
+export type UnitType = MilitaryType | CivilType;
 export type UnitRole = 'military' | 'civil';
+
+type ConfigOmit = 'role' | 'type' | 'x' | 'y' | 'id' | 'owner' | 'hp';
 
 type BaseUnit = {
   id: string;
@@ -17,6 +21,7 @@ type BaseUnit = {
   maxMovePoints: number;
   owner: Owner;
   requiresLimit: number;
+  cost: Cost;
 };
 
 export type MilitaryUnit = {
@@ -39,57 +44,45 @@ export type Unit = MilitaryUnit | CivilUnit;
 
 export const MILITARY_UNITS_CONFIG: Record<
   MilitaryType,
-  Pick<
-    MilitaryUnit,
-    | 'maxHp'
-    | 'attack'
-    | 'attackPoints'
-    | 'movePoints'
-    | 'attackRange'
-    | 'maxAttackPoints'
-    | 'requiresLimit'
-  >
+  Omit<MilitaryUnit, ConfigOmit>
 > = {
   swordsman: {
     maxHp: 100,
     attack: 20,
-    movePoints: 3,
-    attackPoints: 1,
+    movePoints: 0,
+    maxMovePoints: 3,
+    attackPoints: 0,
     attackRange: 1,
     maxAttackPoints: 1,
     requiresLimit: 2,
+    cost: { gold: 100, wood: 0 },
   },
   archer: {
     maxHp: 40,
     attack: 25,
-    movePoints: 3,
-    attackPoints: 1,
+    movePoints: 0,
+    maxMovePoints: 3,
+    attackPoints: 0,
     attackRange: 2,
     maxAttackPoints: 1,
     requiresLimit: 3,
+    cost: { gold: 150, wood: 100 },
   },
 };
 
 export const CIVIL_UNITS_CONFIG: Record<
   CivilType,
-  Pick<
-    CivilUnit,
-    | 'maxHp'
-    | 'movePoints'
-    | 'canBuild'
-    | 'buildableBuildings'
-    | 'buildPoints'
-    | 'maxBuildPoints'
-    | 'requiresLimit'
-  >
+  Omit<CivilUnit, ConfigOmit>
 > = {
   worker: {
     maxHp: 20,
-    movePoints: 3,
-    buildPoints: 1,
+    movePoints: 0,
+    maxMovePoints: 4,
+    buildPoints: 0,
     maxBuildPoints: 1,
     canBuild: true,
     buildableBuildings: ['mine', 'sawmill', 'farm'],
     requiresLimit: 1,
+    cost: { gold: 50, wood: 50 },
   },
 };

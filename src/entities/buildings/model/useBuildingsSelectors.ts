@@ -21,6 +21,10 @@ export const useBuildingsSelectors = () => {
     state => state.getEconomicBuildings,
   );
   const getLimitBuildings = useBuildingsStore(state => state.getLimitBuildings);
+  const changeAttackPoints = useBuildingsStore(
+    state => state.changeAttackPoints,
+  );
+  const changeSpawnPoints = useBuildingsStore(state => state.changeSpawnPoints);
 
   return {
     buildings,
@@ -33,5 +37,7 @@ export const useBuildingsSelectors = () => {
     getEconomicBuildings,
     getLimitBuildings,
     clearSelectedBuildingForSpawn,
+    changeAttackPoints,
+    changeSpawnPoints,
   };
 };

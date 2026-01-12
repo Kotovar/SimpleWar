@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { CIVIL_UNITS_CONFIG, MILITARY_UNITS_CONFIG } from '@shared/config';
 import type {
   Owner,
   Unit,
@@ -8,6 +7,7 @@ import type {
   CivilType,
   Player,
 } from '@shared/config';
+import { createUnit } from './createUnit';
 
 type UnitsState = {
   units: Record<string, Unit>;
@@ -33,53 +33,14 @@ export const useUnitsStore = create<UnitsState>()(
     units: {},
 
     spawnUnit: (type, x, y, owner) => {
-      const id = `${type}_${crypto.randomUUID()}`;
+      const unit = createUnit(type, x, y, owner);
+      if (!unit) return null;
 
       set(state => {
-        if (type in MILITARY_UNITS_CONFIG) {
-          const config = MILITARY_UNITS_CONFIG[type as MilitaryType];
-
-          state.units[id] = {
-            id,
-            type,
-            x,
-            y,
-            owner,
-            hp: config.maxHp,
-            maxHp: config.maxHp,
-            movePoints: config.movePoints,
-            maxMovePoints: config.movePoints,
-            attack: config.attack,
-            attackPoints: config.maxAttackPoints,
-            maxAttackPoints: config.maxAttackPoints,
-            attackRange: config.attackRange,
-            requiresLimit: config.requiresLimit,
-            role: 'military',
-          };
-        } else if (type in CIVIL_UNITS_CONFIG) {
-          const config = CIVIL_UNITS_CONFIG[type as CivilType];
-
-          state.units[id] = {
-            id,
-            type,
-            x,
-            y,
-            owner,
-            hp: config.maxHp,
-            maxHp: config.maxHp,
-            movePoints: config.movePoints,
-            maxMovePoints: config.movePoints,
-            buildPoints: config.buildPoints,
-            maxBuildPoints: config.maxBuildPoints,
-            canBuild: config.canBuild,
-            buildableBuildings: config.buildableBuildings,
-            requiresLimit: config.requiresLimit,
-            role: 'civil',
-          };
-        }
+        state.units[unit.id] = unit;
       });
 
-      return id;
+      return unit.id;
     },
 
     getUnits: owner =>

@@ -20,3 +20,8 @@ export const START_POPULATION_CAP: Record<Player, PopulationCap> = {
   player: { max: 0, occupied: 0 },
   ai: { max: 0, occupied: 0 },
 };
+
+export type Cost = {
+  gold: number;
+  wood: number;
+};

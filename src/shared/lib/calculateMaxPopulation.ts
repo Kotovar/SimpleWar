@@ -1,6 +1,8 @@
-import type { Building } from '@shared/config';
+import type { ProductionBuilding, SupplyBuilding } from '@shared/config';
 
-export const calculateMaxPopulation = (buildings: Building[]): number =>
+export const calculateMaxPopulation = (
+  buildings: (ProductionBuilding | SupplyBuilding)[],
+): number =>
   buildings.reduce(
     (acc, building) => acc + (building.populationSupply ?? 0),
     0,

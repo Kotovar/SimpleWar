@@ -1,6 +1,6 @@
-import type { Building, Resources } from '@shared/config';
+import type { ResourceBuilding, Resources } from '@shared/config';
 
-export const calculateIncome = (buildings: Building[]): Resources => {
+export const calculateIncome = (buildings: ResourceBuilding[]): Resources => {
   return buildings.reduce(
     (acc, building) => {
       if (!building.income) return acc;

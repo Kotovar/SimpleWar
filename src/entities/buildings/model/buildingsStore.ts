@@ -1,8 +1,16 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { BUILDINGS_CONFIG } from '@shared/config';
 import { gameEvents } from '@shared/lib';
-import type { Owner, BuildingType, Building, Player } from '@shared/config';
+import type {
+  Owner,
+  BuildingType,
+  Building,
+  Player,
+  ResourceBuilding,
+  ProductionBuilding,
+  SupplyBuilding,
+} from '@shared/config';
+import { createBuilding } from './createBuilding';
 
 export type BuildingsState = {
   buildings: Record<string, Building>;
@@ -16,9 +24,11 @@ export type BuildingsState = {
   ) => string | null;
   damageBuilding: (id: string, damage: number) => void;
   getBuildingAt: (x?: number, y?: number) => Building | null;
-  getEconomicBuildings: (owner: Player) => Building[];
-  getLimitBuildings: (owner: Player) => Building[];
+  getEconomicBuildings: (owner: Player) => ResourceBuilding[];
+  getLimitBuildings: (owner: Player) => (ProductionBuilding | SupplyBuilding)[];
+  getProductionBuildings: (owner: Player) => ProductionBuilding[];
   changeAttackPoints: (id: string) => void;
+  changeSpawnPoints: (id: string) => void;
   checkBaseDestroyed: () => Player | null;
   selectBuildingForSpawn: (buildingType: BuildingType) => void;
   clearSelectedBuildingForSpawn: () => void;
@@ -32,37 +42,16 @@ export const useBuildingsStore = create<BuildingsState>()(
     selectedBuildingForSpawn: null,
 
     spawnBuilding: (type, x, y, owner) => {
-      const id = `building_${crypto.randomUUID()}`;
-      const config = BUILDINGS_CONFIG[type];
-
-      const building: Building = {
-        id,
-        type,
-        x,
-        y,
-        owner,
-        income: config.income,
-        hp: config.maxHp,
-        maxHp: config.maxHp,
-        cost: config.cost,
-        attack: config.attack ?? 0,
-        attackRange: config.attackRange ?? 0,
-        attackPoints: config.attackPoints ?? 0,
-        maxAttackPoints: config.attackPoints ?? 0,
-        populationSupply: config.populationSupply ?? 0,
-      };
+      const building = createBuilding(type, x, y, owner);
+      if (!building) return null;
 
       set(state => {
-        state.buildings[id] = building;
+        state.buildings[building.id] = building;
       });
 
-      gameEvents.emit({
-        type: 'BUILDING_SPAWNED',
-        building,
-        owner,
-      });
+      gameEvents.emit({ type: 'BUILDING_SPAWNED', building, owner });
 
-      return id;
+      return building.id;
     },
 
     damageBuilding: (id: string, damage: number) => {
@@ -104,24 +93,45 @@ export const useBuildingsStore = create<BuildingsState>()(
 
     getEconomicBuildings: owner => {
       return Object.values(get().buildings).filter(
-        building => building.owner === owner && building.income !== undefined,
+        (building): building is ResourceBuilding =>
+          building.owner === owner && building.role === 'resource',
       );
     },
 
     getLimitBuildings: owner => {
       return Object.values(get().buildings).filter(
-        building =>
-          building.owner === owner && building.populationSupply !== undefined,
+        (building): building is ProductionBuilding | SupplyBuilding =>
+          building.owner === owner &&
+          'populationSupply' in building &&
+          building.populationSupply !== undefined,
       );
     },
 
-    changeAttackPoints: (id: string) => {
+    getProductionBuildings: owner => {
+      return Object.values(get().buildings).filter(
+        (building): building is ProductionBuilding =>
+          building.owner === owner && building.role === 'production',
+      );
+    },
+
+    changeAttackPoints: id => {
       set(state => {
         const building = state.buildings[id];
-        if (!building) return;
+        if (!building || !('attackPoints' in building)) return;
 
-        if (building.attackPoints !== undefined && building.attackPoints > 0) {
+        if (building.attackPoints > 0) {
           building.attackPoints--;
+        }
+      });
+    },
+
+    changeSpawnPoints: id => {
+      set(state => {
+        const building = state.buildings[id];
+        if (building.role !== 'production') return;
+
+        if (building.spawnPoints > 0) {
+          building.spawnPoints--;
         }
       });
     },
@@ -156,13 +166,13 @@ export const useBuildingsStore = create<BuildingsState>()(
     resetBuildingsForNewTurn: () =>
       set(state => {
         Object.values(state.buildings).forEach(building => {
-          if (
-            building.maxAttackPoints !== undefined &&
-            building.maxAttackPoints > 0
-          ) {
+          if ('maxAttackPoints' in building && building.maxAttackPoints > 0) {
             building.attackPoints = building.maxAttackPoints;
           }
-          state.selectedBuildingForSpawn = null;
+
+          if (building.role === 'production' && building.maxSpawnPoints > 0) {
+            building.spawnPoints = building.maxSpawnPoints;
+          }
         });
       }),
 
