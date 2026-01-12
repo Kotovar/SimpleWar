@@ -13,6 +13,7 @@ export const BUILDINGS_NAME = {
   mine: 'Золотой рудник',
   sawmill: 'Лесопилка',
   farm: 'Ферма',
+  barracks: 'Казармы',
 } satisfies Record<BuildingType, string>;
 
 export const OWNER_NAME = {

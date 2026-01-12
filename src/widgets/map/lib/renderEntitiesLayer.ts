@@ -1,5 +1,11 @@
 import type { Building, Unit } from '@shared/config';
-import { drawBase, drawFarm, drawGoldMine, drawSawmill } from './drawBuildings';
+import {
+  drawBarracks,
+  drawBase,
+  drawFarm,
+  drawGoldMine,
+  drawSawmill,
+} from './drawBuildings';
 import { drawArcher, drawSwordsman, drawWorker } from './drawUnits';
 import { drawHpBar } from './drawHpBar';
 
@@ -27,6 +33,10 @@ export const renderEntitiesLayer = (
 
     if (type === 'farm') {
       drawFarm(ctx, x, y, cellSize, owner);
+    }
+
+    if (type === 'barracks') {
+      drawBarracks(ctx, x, y, cellSize, owner);
     }
 
     drawHpBar(ctx, x, y, cellSize, hpRatio);

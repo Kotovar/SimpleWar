@@ -30,6 +30,13 @@ type FarmPalette = {
   hay: string;
 } & BuildingBase;
 
+type BarracksPalette = {
+  wall: string;
+  accent: string;
+  door: string;
+  staff: string;
+} & BuildingBase;
+
 type UnitPalette = {
   body: string;
   bodyArcher: string;
@@ -108,6 +115,23 @@ export const BUILDING_FARM_PALETTES: Record<Owner, FarmPalette> = {
     window: 'hsl(102, 8%, 26%)',
     roof: '#DAA520',
     hay: '#E8C39E',
+  },
+};
+
+export const BUILDING_BARRACKS_PALETTES: Record<Owner, BarracksPalette> = {
+  player: {
+    wall: 'hsla(0, 0%, 55%, 1.00)',
+    door: 'hsla(100, 100%, 26%, 1.00)',
+    accent: 'hsla(100, 100%, 26%, 1.00)',
+    window: 'hsl(102, 8%, 26%)',
+    staff: '#3d2b1f',
+  },
+  ai: {
+    wall: 'hsla(0, 0%, 55%, 1.00)',
+    door: 'hsla(0, 97%, 47%, 1.00)',
+    accent: 'hsla(0, 97%, 47%, 1.00)',
+    window: 'hsl(102, 8%, 26%)',
+    staff: '#3d2b1f',
   },
 };
 

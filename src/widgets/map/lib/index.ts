@@ -10,3 +10,4 @@ export * from './renderSelectionLayer';
 export * from './renderTerrainLayer';
 export * from './renderMovementLayer';
 export * from './withClear';
+export * from './getBuildingBase';
