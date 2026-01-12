@@ -94,7 +94,8 @@ export const useBuildingsStore = create<BuildingsState>()(
     getEconomicBuildings: owner => {
       return Object.values(get().buildings).filter(
         (building): building is ResourceBuilding =>
-          building.owner === owner && building.role === 'resource',
+          (building.owner === owner && building.role === 'resource') ||
+          (building.owner === owner && building.income !== undefined),
       );
     },
 

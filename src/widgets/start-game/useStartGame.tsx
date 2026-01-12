@@ -53,18 +53,9 @@ export const useStartGame = () => {
 
     spawnBuilding('base', playerStart.x, playerStart.y, 'player');
     spawnBuilding('base', enemyStart.x, enemyStart.y, 'ai');
-    spawnBuilding('barracks', 0, 0, 'player');
-    spawnBuilding('barracks', 1, 0, 'ai');
 
-    // TODO: убрать после запуска игры - пока для теста
-    spawnUnit('swordsman', 2, 1, 'player');
-    spawnUnit('worker', 2, 2, 'player', true);
-    spawnUnit('archer', gridColumns - 1, gridRows - 2, 'player');
-    spawnUnit('swordsman', gridColumns - 3, gridRows - 2, 'ai');
-    spawnUnit('archer', gridColumns - 3, gridRows - 1, 'ai');
-    spawnUnit('worker', gridColumns - 2, gridRows - 1, 'ai');
-
-    // TODO: убрать после реализации логики спавна юнитов
+    spawnUnit('worker', 2, 1, 'player', true);
+    spawnUnit('worker', gridColumns - 3, gridRows - 2, 'ai');
   }, [
     customSeed,
     gridColumns,

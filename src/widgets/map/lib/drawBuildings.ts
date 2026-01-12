@@ -5,6 +5,7 @@ import {
   BUILDING_SAWMILL_PALETTES,
   BUILDING_FARM_PALETTES,
   BUILDING_BARRACKS_PALETTES,
+  BUILDING_TOWER_PALETTES,
 } from '@shared/config';
 import { getBuildingBase } from './getBuildingBase';
 
@@ -424,5 +425,103 @@ export const drawBarracks = (
     baseY + 0.46 * unit,
     0.06 * unit,
     0.08 * unit,
+  );
+};
+
+export const drawTower = (
+  ctx: CanvasRenderingContext2D,
+  cellX: number,
+  cellY: number,
+  cellSize: number,
+  owner: Owner,
+  scale: number = 1.0,
+) => {
+  const palette = BUILDING_TOWER_PALETTES[owner];
+  const { baseX, baseY, unit } = getBuildingBase(cellX, cellY, cellSize, scale);
+
+  // Основание
+  ctx.fillStyle = palette.wall;
+  ctx.fillRect(
+    baseX + 0.22 * unit,
+    baseY + 0.55 * unit,
+    0.56 * unit,
+    0.4 * unit,
+  );
+
+  // Основная высокая часть башни
+  ctx.fillStyle = palette.wall;
+  ctx.fillRect(
+    baseX + 0.28 * unit,
+    baseY + 0.15 * unit,
+    0.44 * unit,
+    0.58 * unit,
+  );
+
+  // Зубцы
+  ctx.fillStyle = palette.wall;
+  const toothWidth = 0.07 * unit;
+  const toothHeight = 0.07 * unit;
+  const toothGap = 0.07 * unit;
+
+  let toothX = baseX + 0.26 * unit;
+  const rightEdge = baseX + (0.28 + 0.49) * unit;
+
+  while (toothX + toothWidth <= rightEdge) {
+    ctx.fillRect(toothX, baseY + 0.08 * unit, toothWidth, toothHeight);
+    toothX += toothWidth + toothGap;
+  }
+
+  // Бойницы
+  ctx.fillStyle = palette.window;
+
+  // нижний ярус
+  ctx.fillRect(
+    baseX + 0.34 * unit,
+    baseY + 0.38 * unit,
+    0.05 * unit,
+    0.12 * unit,
+  );
+  ctx.fillRect(
+    baseX + 0.61 * unit,
+    baseY + 0.38 * unit,
+    0.05 * unit,
+    0.12 * unit,
+  );
+
+  // средний ярус
+  ctx.fillRect(
+    baseX + 0.34 * unit,
+    baseY + 0.22 * unit,
+    0.05 * unit,
+    0.1 * unit,
+  );
+  ctx.fillRect(
+    baseX + 0.61 * unit,
+    baseY + 0.22 * unit,
+    0.05 * unit,
+    0.1 * unit,
+  );
+
+  // верхний ярус
+  ctx.fillRect(
+    baseX + 0.36 * unit,
+    baseY + 0.12 * unit,
+    0.04 * unit,
+    0.08 * unit,
+  );
+  ctx.fillRect(
+    baseX + 0.6 * unit,
+    baseY + 0.12 * unit,
+    0.04 * unit,
+    0.08 * unit,
+  );
+
+  //  Дверь
+  ctx.fillStyle = palette.door;
+  ctx.fillRect(
+    baseX + 0.42 * unit,
+    baseY + 0.62 * unit,
+    0.16 * unit,
+    0.22 * unit,
   );
 };

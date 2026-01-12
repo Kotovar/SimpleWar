@@ -5,6 +5,7 @@ import {
   drawFarm,
   drawGoldMine,
   drawSawmill,
+  drawTower,
 } from './drawBuildings';
 import { drawArcher, drawSwordsman, drawWorker } from './drawUnits';
 import { drawHpBar } from './drawHpBar';
@@ -37,6 +38,10 @@ export const renderEntitiesLayer = (
 
     if (type === 'barracks') {
       drawBarracks(ctx, x, y, cellSize, owner);
+    }
+
+    if (type === 'tower') {
+      drawTower(ctx, x, y, cellSize, owner);
     }
 
     drawHpBar(ctx, x, y, cellSize, hpRatio);

@@ -115,6 +115,7 @@ export const handleClickWithPlayerBuildingSelected = (
   clearSelection: () => void,
   clearHighlight: () => void,
   clearMovement: () => void,
+  clearSelectedBuildingForSpawn: () => void,
 ) => {
   const isSpawnable = isTargetInHighlightedCells(spawnableCells, gridX, gridY);
   const isSpawner =
@@ -129,6 +130,7 @@ export const handleClickWithPlayerBuildingSelected = (
     clearSelection();
     clearHighlight();
     clearMovement();
+    clearSelectedBuildingForSpawn();
     return true;
   }
 

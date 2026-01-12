@@ -47,26 +47,26 @@ export const MILITARY_UNITS_CONFIG: Record<
   Omit<MilitaryUnit, ConfigOmit>
 > = {
   swordsman: {
-    maxHp: 100,
-    attack: 20,
+    maxHp: 110,
+    attack: 18,
     movePoints: 0,
     maxMovePoints: 3,
     attackPoints: 0,
     attackRange: 1,
     maxAttackPoints: 1,
     requiresLimit: 2,
-    cost: { gold: 100, wood: 0 },
+    cost: { gold: 90, wood: 0 },
   },
   archer: {
-    maxHp: 40,
-    attack: 25,
+    maxHp: 55,
+    attack: 22,
     movePoints: 0,
     maxMovePoints: 3,
     attackPoints: 0,
-    attackRange: 2,
+    attackRange: 3,
     maxAttackPoints: 1,
-    requiresLimit: 3,
-    cost: { gold: 150, wood: 100 },
+    requiresLimit: 2,
+    cost: { gold: 110, wood: 120 },
   },
 };
 
@@ -75,15 +75,15 @@ export const CIVIL_UNITS_CONFIG: Record<
   Omit<CivilUnit, ConfigOmit>
 > = {
   worker: {
-    maxHp: 20,
+    maxHp: 25,
     movePoints: 0,
     maxMovePoints: 4,
     buildPoints: 0,
     maxBuildPoints: 1,
     canBuild: true,
-    buildableBuildings: ['mine', 'sawmill', 'farm', 'barracks'],
+    buildableBuildings: ['mine', 'sawmill', 'farm', 'barracks', 'tower'],
     requiresLimit: 1,
-    cost: { gold: 50, wood: 50 },
+    cost: { gold: 40, wood: 40 },
   },
 };
 

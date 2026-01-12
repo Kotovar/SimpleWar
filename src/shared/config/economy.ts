@@ -12,8 +12,8 @@ export type PopulationCap = {
 export const MAX_POPULATION_LIMIT = 30;
 
 export const START_RESOURCES: Record<Player, Resources> = {
-  player: { gold: 300, wood: 200 },
-  ai: { gold: 300, wood: 200 },
+  player: { gold: 200, wood: 120 },
+  ai: { gold: 200, wood: 120 },
 };
 
 export const START_POPULATION_CAP: Record<Player, PopulationCap> = {

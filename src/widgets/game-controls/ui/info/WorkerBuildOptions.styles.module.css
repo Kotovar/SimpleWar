@@ -13,13 +13,12 @@
 
 .BuildButtons {
   display: flex;
-  /* flex-direction: column; */
   gap: 8px;
   padding: 10px 12px;
 
   flex-direction: row;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .BuildButton {
@@ -31,7 +30,7 @@
   cursor: pointer;
   font-size: 0.95em;
   text-align: left;
-  min-width: 200px;
+  min-width: 220px;
 
   &:hover:not(:disabled) {
     background: #3a5a3a;

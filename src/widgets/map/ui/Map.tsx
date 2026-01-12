@@ -1,6 +1,6 @@
 import type { MouseEvent } from 'react';
 import { useUnitsSelectors, useUnitsStore } from '@entities/units';
-import { useBuildingsStore } from '@entities/buildings';
+import { useBuildingsSelectors, useBuildingsStore } from '@entities/buildings';
 import { useSettingsSelectors } from '@entities/settings';
 import { useSelectionSelectors } from '@features/selection';
 import { attack } from '@features/combat';
@@ -52,6 +52,8 @@ export const Map = () => {
   const { selectCell } = terrainSelection;
   const { selectUnit, getSelectedUnit } = unitsSelection;
   const { selectBuilding, getSelectedBuilding } = buildingsSelection;
+
+  const { clearSelectedBuildingForSpawn } = useBuildingsSelectors();
 
   const CANVAS_SIZES = {
     width: canvasWidth,
@@ -145,6 +147,7 @@ export const Map = () => {
         clearSelection,
         clearHighlight,
         clearMovement,
+        clearSelectedBuildingForSpawn,
       );
 
       return;

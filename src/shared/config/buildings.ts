@@ -29,6 +29,7 @@ type BaseBuilding = {
   owner: Owner;
   cost: Cost;
   requiredField?: CellType;
+  income?: Income;
 };
 
 export type ProductionBuilding = BaseBuilding & {
@@ -71,7 +72,8 @@ export const PRODUCTION_BUILDINGS_CONFIG: Record<
   Omit<ProductionBuilding, ConfigOmit>
 > = {
   base: {
-    maxHp: 300,
+    maxHp: 700,
+    income: { gold: 3 },
     cost: { gold: 0, wood: 0 },
     canSpawn: true,
     spawningUnits: ['worker'],
@@ -81,7 +83,7 @@ export const PRODUCTION_BUILDINGS_CONFIG: Record<
   },
   barracks: {
     maxHp: 150,
-    cost: { gold: 100, wood: 100 },
+    cost: { gold: 80, wood: 140 },
     requiredField: 'grass',
     canSpawn: true,
     spawningUnits: ['swordsman', 'archer'],
@@ -95,16 +97,16 @@ export const RESOURCE_BUILDINGS_CONFIG: Record<
   Omit<ResourceBuilding, ConfigOmit>
 > = {
   mine: {
-    maxHp: 100,
-    income: { gold: 20 },
+    maxHp: 130,
+    income: { gold: 15 },
     cost: { gold: 120, wood: 0 },
     requiredField: 'gold',
     canSpawn: false,
   },
   sawmill: {
-    maxHp: 70,
-    income: { wood: 10 },
-    cost: { gold: 80, wood: 100 },
+    maxHp: 90,
+    income: { wood: 15 },
+    cost: { gold: 60, wood: 80 },
     requiredField: 'forest',
     canSpawn: false,
   },
@@ -115,10 +117,9 @@ export const SUPPLY_BUILDINGS_CONFIG: Record<
   Omit<SupplyBuilding, ConfigOmit>
 > = {
   farm: {
-    maxHp: 50,
-    cost: { gold: 100, wood: 100 },
-    requiredField: 'grass',
-    populationSupply: 3,
+    maxHp: 70,
+    cost: { gold: 60, wood: 160 },
+    populationSupply: 5,
     canSpawn: false,
   },
 };
@@ -128,13 +129,13 @@ export const COMBAT_BUILDINGS_CONFIG: Record<
   Omit<CombatBuilding, ConfigOmit>
 > = {
   tower: {
-    maxHp: 110,
-    cost: { gold: 200, wood: 200 },
+    maxHp: 180,
+    attack: 20,
+    attackRange: 3,
+    cost: { gold: 150, wood: 200 },
     requiredField: 'grass',
-    attack: 15,
     attackPoints: 0,
     maxAttackPoints: 1,
-    attackRange: 2,
   },
 };
 

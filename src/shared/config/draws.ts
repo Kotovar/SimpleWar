@@ -37,6 +37,11 @@ type BarracksPalette = {
   staff: string;
 } & BuildingBase;
 
+type TowerPalette = {
+  wall: string;
+  door: string;
+} & BuildingBase;
+
 type UnitPalette = {
   body: string;
   bodyArcher: string;
@@ -132,6 +137,19 @@ export const BUILDING_BARRACKS_PALETTES: Record<Owner, BarracksPalette> = {
     accent: 'hsla(0, 97%, 47%, 1.00)',
     window: 'hsl(102, 8%, 26%)',
     staff: '#3d2b1f',
+  },
+};
+
+export const BUILDING_TOWER_PALETTES: Record<Owner, TowerPalette> = {
+  player: {
+    wall: 'hsla(0, 0%, 55%, 1.00)',
+    door: 'hsla(100, 100%, 26%, 1.00)',
+    window: 'hsl(102, 8%, 26%)',
+  },
+  ai: {
+    wall: 'hsla(0, 0%, 55%, 1.00)',
+    door: 'hsla(0, 97%, 47%, 1.00)',
+    window: 'hsl(102, 8%, 26%)',
   },
 };
 

@@ -81,7 +81,7 @@ export const createBuilding = (
       attack: config.attack,
       attackRange: config.attackRange,
       attackPoints: config.attackPoints,
-      maxAttackPoints: config.attackPoints,
+      maxAttackPoints: config.maxAttackPoints,
       role: 'combat',
     };
   }

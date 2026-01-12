@@ -119,6 +119,19 @@ export const SelectedEntityInfo = ({ cell, unit, building }: Props) => {
                 </div>
               </>
             )}
+
+            {building.role === 'combat' && (
+              <>
+                <div>
+                  Атаки:{' '}
+                  <span className={styles.AttackPoints}>
+                    {building.attackPoints} / {building.maxAttackPoints}
+                  </span>
+                </div>
+                <div>Радиус атаки: {building.attackRange}</div>
+                <div>Урон: {building.attack}</div>
+              </>
+            )}
           </>
         )}
       </div>

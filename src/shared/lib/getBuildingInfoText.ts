@@ -22,6 +22,12 @@ export const getBuildingInfoText = (buildingType: BuildingType): string => {
         ? `+${BUILDINGS_CONFIG[buildingType].populationSupply} к лимиту юнитов`
         : '';
 
+    case 'tower':
+      return BUILDINGS_CONFIG[buildingType].attack &&
+        BUILDINGS_CONFIG[buildingType].attackRange
+        ? `Наносит ${BUILDINGS_CONFIG[buildingType].attack} урона на расстоянии ${BUILDINGS_CONFIG[buildingType].attackRange}`
+        : '';
+
     case 'barracks':
       if (!BUILDINGS_CONFIG[buildingType].spawningUnits.length) return '';
       return `Производит: ${BUILDINGS_CONFIG[buildingType].spawningUnits
