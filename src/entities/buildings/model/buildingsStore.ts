@@ -175,6 +175,7 @@ export const useBuildingsStore = create<BuildingsState>()(
             building.spawnPoints = building.maxSpawnPoints;
           }
         });
+        state.selectedBuildingForSpawn = null;
       }),
 
     resetStore: () => {
