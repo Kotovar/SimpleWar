@@ -13,6 +13,8 @@ Canvas; сборка Vite (пакет `rolldown-vite`). Описание игр�
   читай файлы напрямую: индексатор может пропускать `src/features/build`.
 - Для документации по библиотекам используй Context7: `resolve-library-id`,
   затем `query-docs`.
+- При написании unit-тестов по заданным файлам/папкам прочитай проектный скил
+  [simplewar-unit-tests](skills/simplewar-unit-tests/SKILL.md).
 - После изменений кода: `npm run type-check`, `npm run lint`, `npm run build`;
   после изменений структуры также `npm run fsd-check`. Тестового скрипта нет.
 - При изменении механик обновляй соответствующий файл в `docs`.
