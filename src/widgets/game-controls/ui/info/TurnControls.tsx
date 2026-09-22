@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useGameLoopSelectors } from '@features/game-loop';
 import styles from './TurnControls.styles.module.css';
 
@@ -8,6 +9,29 @@ type Props = {
 
 export const TurnControls = ({ onNextTurn, onReset }: Props) => {
   const { activePlayer } = useGameLoopSelectors();
+  const menu = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    const close = (event: Event) => {
+      const element = menu.current;
+      if (!element?.open) return;
+      if (event.type === 'pointerdown' && event.target instanceof Node) {
+        if (element.contains(event.target)) return;
+      }
+      element.open = false;
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') close(event);
+    };
+
+    document.addEventListener('pointerdown', close);
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', close);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, []);
 
   return (
     <div className={styles.ButtonRow}>
@@ -19,11 +43,19 @@ export const TurnControls = ({ onNextTurn, onReset }: Props) => {
         Завершить ход
       </button>
 
-      <details className={styles.Menu}>
+      <details className={styles.Menu} ref={menu}>
         <summary>Меню</summary>
-        <button className={styles.DangerButton} onClick={onReset}>
-          Сбросить игру
-        </button>
+        <div className={styles.Dropdown}>
+          <button
+            className={styles.DangerButton}
+            onClick={() => {
+              if (menu.current) menu.current.open = false;
+              onReset();
+            }}
+          >
+            Сбросить игру
+          </button>
+        </div>
       </details>
     </div>
   );

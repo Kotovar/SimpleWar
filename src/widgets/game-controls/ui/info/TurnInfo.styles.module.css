@@ -5,4 +5,5 @@
   align-items: flex-start;
   white-space: nowrap;
   gap: 4px;
+  color: var(--text-muted);
 }

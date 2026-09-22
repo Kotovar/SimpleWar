@@ -1,7 +1,7 @@
 import type { Cell } from '@shared/config';
 
 // Координатный шум: декор не меняет положение при перерисовке карты.
-const sample = (x: number, y: number, salt: number) => {
+export const sample = (x: number, y: number, salt: number) => {
   let value = Math.imul(x + 1, 374761393) ^ Math.imul(y + 1, 668265263) ^ salt;
   value = Math.imul(value ^ (value >>> 13), 1274126177);
   return ((value ^ (value >>> 16)) >>> 0) / 0x100000000;

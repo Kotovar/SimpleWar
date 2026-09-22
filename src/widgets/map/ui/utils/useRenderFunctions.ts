@@ -3,22 +3,23 @@ import { useSettingsSelectors } from '@entities/settings';
 import { useBuildingsSelectors } from '@entities/buildings';
 import { useUnitsSelectors } from '@entities/units';
 import { useMapSelectors } from '@entities/maps';
+import type { Position } from '@shared/config';
 import type { Selection } from '@features/selection';
 import {
   useHighlightSelectors,
   useMovementSelectors,
 } from '@features/pathfinding';
 import {
-  renderEntitiesLayer,
   renderMovementLayer,
   renderSelectionLayer,
   renderTerrainLayer,
   withClear,
 } from '@widgets/map/lib';
-import { getCtx } from '@widgets/map/ui/utils';
+import { setupCanvas, useEntitiesLayer } from '@widgets/map/ui/utils';
 
 type Props = {
   selection: Selection;
+  hover: Position | null;
   terrainRef: RefObject<HTMLCanvasElement | null>;
   unitsRef: RefObject<HTMLCanvasElement | null>;
   movementRef: RefObject<HTMLCanvasElement | null>;
@@ -27,6 +28,7 @@ type Props = {
 
 export const useRenderFunctions = ({
   selection,
+  hover,
   terrainRef,
   unitsRef,
   movementRef,
@@ -37,7 +39,17 @@ export const useRenderFunctions = ({
   const { units } = useUnitsSelectors();
   const { attackableTargets, reachableCells } = useMovementSelectors();
   const { spawnableCells, buildableCells } = useHighlightSelectors();
-  const { cellSize, gridColumns } = useSettingsSelectors();
+  const { cellSize, gridColumns, canvasWidth, canvasHeight } =
+    useSettingsSelectors();
+
+  useEntitiesLayer({
+    ref: unitsRef,
+    buildings,
+    units,
+    cellSize,
+    width: canvasWidth,
+    height: canvasHeight,
+  });
 
   const renderTerrain = useCallback(
     (ctx: CanvasRenderingContext2D) => {
@@ -46,15 +58,6 @@ export const useRenderFunctions = ({
       );
     },
     [cellSize, grid, gridColumns],
-  );
-
-  const renderEntities = useCallback(
-    (ctx: CanvasRenderingContext2D) => {
-      withClear(ctx, () =>
-        renderEntitiesLayer(ctx, buildings, units, cellSize),
-      );
-    },
-    [buildings, cellSize, units],
   );
 
   const renderMovement = useCallback(
@@ -82,37 +85,30 @@ export const useRenderFunctions = ({
   const renderSelection = useCallback(
     (ctx: CanvasRenderingContext2D) => {
       withClear(ctx, () =>
-        renderSelectionLayer(ctx, buildings, units, selection, cellSize),
+        renderSelectionLayer(ctx, buildings, units, selection, cellSize, hover),
       );
     },
-    [buildings, cellSize, selection, units],
+    [buildings, cellSize, hover, selection, units],
   );
 
   useEffect(() => {
-    const ctx = getCtx(terrainRef);
+    const ctx = setupCanvas(terrainRef, canvasWidth, canvasHeight);
     if (!ctx) return;
 
     renderTerrain(ctx);
-  }, [renderTerrain, terrainRef]);
+  }, [canvasHeight, canvasWidth, renderTerrain, terrainRef]);
 
   useEffect(() => {
-    const ctx = getCtx(unitsRef);
-    if (!ctx) return;
-
-    renderEntities(ctx);
-  }, [renderEntities, unitsRef]);
-
-  useEffect(() => {
-    const ctx = getCtx(movementRef);
+    const ctx = setupCanvas(movementRef, canvasWidth, canvasHeight);
     if (!ctx) return;
 
     renderMovement(ctx);
-  }, [movementRef, renderMovement]);
+  }, [canvasHeight, canvasWidth, movementRef, renderMovement]);
 
   useEffect(() => {
-    const ctx = getCtx(highlightRef);
+    const ctx = setupCanvas(highlightRef, canvasWidth, canvasHeight);
     if (!ctx) return;
 
     renderSelection(ctx);
-  }, [highlightRef, renderSelection]);
+  }, [canvasHeight, canvasWidth, highlightRef, renderSelection]);
 };

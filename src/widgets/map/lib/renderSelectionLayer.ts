@@ -1,6 +1,9 @@
-import { Building, Unit } from '@shared/config';
+import { Building, Position, Unit } from '@shared/config';
 import type { Selection } from '@features/selection';
-import { drawSelectionHighlight } from './drawSelectionHighlight';
+import {
+  drawHoverHighlight,
+  drawSelectionHighlight,
+} from './drawSelectionHighlight';
 import { drawTerrainHighlight } from './drawTerrain';
 
 export const renderSelectionLayer = (
@@ -9,7 +12,10 @@ export const renderSelectionLayer = (
   units: Record<string, Unit>,
   selection: Selection | null,
   cellSize: number,
+  hover?: Position | null,
 ) => {
+  if (hover) drawHoverHighlight(ctx, hover.x, hover.y, cellSize);
+
   if (!selection) return;
 
   if (selection.kind === 'unit') {

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { GAME_TITLE, START_CANVAS } from '@shared/config';
 import { useSettingsSelectors } from '@entities/settings';
 import { useGameLoopSelectors } from '@features/game-loop';
-import { getCtx } from './utils';
+import { setupCanvas } from './utils';
 import styles from './styles.module.css';
 
 export const StartGameCanvas = () => {
@@ -11,7 +11,7 @@ export const StartGameCanvas = () => {
   const { canvasWidth, canvasHeight } = useSettingsSelectors();
 
   useEffect(() => {
-    const ctx = getCtx(uiOverlayRef);
+    const ctx = setupCanvas(uiOverlayRef, canvasWidth, canvasHeight);
     if (!ctx) return;
 
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -43,12 +43,7 @@ export const StartGameCanvas = () => {
   return (
     <>
       {phase === 'setup' ? (
-        <canvas
-          ref={uiOverlayRef}
-          width={canvasWidth}
-          height={canvasHeight}
-          className={styles.CanvasLayer}
-        />
+        <canvas ref={uiOverlayRef} className={styles.CanvasLayer} />
       ) : null}
     </>
   );

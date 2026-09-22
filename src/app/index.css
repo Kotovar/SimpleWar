@@ -1,0 +1,68 @@
+/** Базовые стили и палитра интерфейса. */
+:root {
+  color-scheme: dark;
+
+  --bg: #181d23;
+  --surface: #232a32;
+  --surface-strong: #2c343d;
+  --surface-sunken: #1e242b;
+  --border: #39434e;
+  --border-strong: #4d5a68;
+
+  --text: #e8edf2;
+  --text-muted: #9dabb9;
+  --text-disabled: #6d7883;
+
+  --accent: #6fb5ff;
+  --accent-strong: #3d6fb5;
+  --success: #57a75c;
+  --success-strong: #6fbf73;
+  --danger: #d4614c;
+  --danger-strong: #ff8a72;
+  --gold: #f2c744;
+  --wood: #d08a54;
+  --population: #8fd8a4;
+
+  --radius: 8px;
+  --radius-sm: 6px;
+  --shadow: 0 2px 12px rgb(0 0 0 / 0.35);
+
+  scrollbar-color: var(--border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Arial,
+    sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

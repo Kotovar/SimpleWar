@@ -1,5 +1,5 @@
 import { Cell, GRID } from '@shared/config';
-import { drawGroundDetails } from './drawGroundDetails';
+import { drawGroundDetails, sample } from './drawGroundDetails';
 
 const drawCellBackground = (
   ctx: CanvasRenderingContext2D,
@@ -16,6 +16,51 @@ const drawCellBackground = (
   )`;
 
   ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+};
+
+// Блики на воде: короткие дуги, обрезанные по силуэту водоёма, чтобы не вылезать на берег.
+const drawWaterRipples = (
+  ctx: CanvasRenderingContext2D,
+  grid: Cell[][],
+  water: Path2D,
+  cellSize: number,
+) => {
+  ctx.save();
+  ctx.clip(water);
+  ctx.lineCap = 'round';
+  ctx.lineWidth = cellSize * 0.05;
+
+  grid.forEach((row, y) =>
+    row.forEach((cell, x) => {
+      if (cell.type !== 'water') return;
+      const seed = sample(x, y, 613);
+      if (seed > 0.5) return;
+
+      const left = x * cellSize;
+      const top = y * cellSize;
+      const cx = left + (0.25 + sample(x, y, 271) * 0.5) * cellSize;
+      const cy = top + (0.25 + sample(x, y, 457) * 0.5) * cellSize;
+      const radius = cellSize * (0.16 + seed * 0.22);
+
+      ctx.strokeStyle = 'rgba(226, 240, 255, 0.24)';
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, Math.PI * 1.15, Math.PI * 1.85);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(16, 66, 120, 0.22)';
+      ctx.beginPath();
+      ctx.arc(
+        cx,
+        cy + radius * 0.7,
+        radius * 0.7,
+        Math.PI * 1.2,
+        Math.PI * 1.8,
+      );
+      ctx.stroke();
+    }),
+  );
+
+  ctx.restore();
 };
 
 export const drawBackgroundAndGrid = (
@@ -85,7 +130,11 @@ export const drawBackgroundAndGrid = (
   ctx.fill(water);
   ctx.restore();
 
+  drawWaterRipples(ctx, grid, water, cellSize);
+
   // сетка поверх
+  const width = (grid[0]?.length ?? gridSize) * cellSize;
+  const height = grid.length * cellSize;
   ctx.strokeStyle = GRID.lineColor;
   ctx.lineWidth = GRID.lineThickness;
 
@@ -93,9 +142,9 @@ export const drawBackgroundAndGrid = (
   for (let i = 0; i <= gridSize; i++) {
     const p = i * cellSize;
     ctx.moveTo(p, 0);
-    ctx.lineTo(p, ctx.canvas.height);
+    ctx.lineTo(p, height);
     ctx.moveTo(0, p);
-    ctx.lineTo(ctx.canvas.width, p);
+    ctx.lineTo(width, p);
   }
   ctx.stroke();
 };

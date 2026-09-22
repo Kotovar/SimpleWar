@@ -40,14 +40,34 @@
   z-index: 50;
 }
 
-.Pointer {
-  cursor: pointer;
+.CursorIdle {
+  cursor: default;
 }
 
-.Move {
-  cursor: move;
+.CursorSelect {
+  cursor:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M2.5 1.5v17l4.6-4.6 2.8 6 3.4-1.6-2.8-5.8 6.2-0.4z' fill='%23fff8e6' stroke='%231c2420' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E")
+      3 2,
+    pointer;
 }
 
-.Building {
-  cursor: help;
+.CursorMove {
+  cursor:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpolygon points='12%2C1 16%2C6 13.5%2C6 13.5%2C10.5 18%2C10.5 18%2C8 23%2C12 18%2C16 18%2C13.5 13.5%2C13.5 13.5%2C18 16%2C18 12%2C23 8%2C18 10.5%2C18 10.5%2C13.5 6%2C13.5 6%2C16 1%2C12 6%2C8 6%2C10.5 10.5%2C10.5 10.5%2C6 8%2C6' fill='%23d8ecff' stroke='%231c2420' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E")
+      12 12,
+    move;
+}
+
+.CursorAttack {
+  cursor:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M8.4 16.6 16.6 8.4' stroke='%231c2420' stroke-width='6' stroke-linecap='round'/%3E%3Cpath d='M14.2 14.2 20.6 20.6' stroke='%231c2420' stroke-width='5.4' stroke-linecap='round'/%3E%3Cpath d='M1.6 1.6 15 9 9 15Z' fill='%23edf2df' stroke='%231c2420' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpath d='M8.4 16.6 16.6 8.4' stroke='%23d6b265' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M14.2 14.2 20.6 20.6' stroke='%23b98a51' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E")
+      2 2,
+    crosshair;
+}
+
+.CursorBuild {
+  cursor:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Crect x='10.2' y='7' width='3.8' height='15' rx='1.4' fill='%23c08a52' stroke='%231c2420' stroke-width='1.6'/%3E%3Crect x='3' y='2.4' width='18' height='6.6' rx='1.8' fill='%23d8dee5' stroke='%231c2420' stroke-width='1.6'/%3E%3C/svg%3E")
+      12 12,
+    cell;
 }

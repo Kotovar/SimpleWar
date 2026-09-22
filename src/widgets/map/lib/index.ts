@@ -5,6 +5,7 @@ export * from './drawUnits';
 export * from './drawHpBar';
 export * from './drawMovement';
 export * from './drawSelectionHighlight';
+export * from './drawEffects';
 export * from './renderEntitiesLayer';
 export * from './renderSelectionLayer';
 export * from './renderTerrainLayer';

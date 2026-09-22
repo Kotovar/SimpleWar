@@ -6,30 +6,36 @@
 }
 
 .EndTurnButton {
-  background-color: oklab(62% -0.14 0.1);
-  color: oklab(100% 0 0);
+  background-color: var(--success);
+  color: var(--text);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 10px 16px;
   font-size: 1.1em;
   cursor: pointer;
   align-self: center;
 
   &:hover:not(:disabled) {
-    background-color: oklab(51% -0.12 0.08);
-    color: oklab(100% 0 0);
+    background-color: var(--success-strong);
+  }
+
+  &:disabled {
+    background-color: var(--surface-strong);
+    color: var(--text-disabled);
+    cursor: not-allowed;
   }
 }
 
 .DangerButton {
-  background-color: oklab(59% 0.18 0.07);
-  color: oklab(100% 0 0);
+  background-color: var(--danger);
+  color: var(--text);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 8px 16px;
+  cursor: pointer;
 
   &:hover {
-    background-color: oklab(54% 0.18 0.076);
+    background-color: var(--danger-strong);
   }
 }
 
@@ -37,15 +43,82 @@
   position: relative;
 }
 
+/* Свой маркер: стандартный треугольник details не вписывается в панель. */
 .Menu summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface-sunken);
+  color: var(--text-muted);
   cursor: pointer;
-  padding: 8px;
+  list-style: none;
+  user-select: none;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s;
 }
 
-.Menu .DangerButton {
+.Menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.Menu summary::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.15s;
+}
+
+.Menu summary:hover {
+  background-color: var(--surface-strong);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.Menu[open] summary {
+  background-color: var(--surface-strong);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.Menu[open] summary::after {
+  transform: translateY(1px) rotate(-135deg);
+}
+
+.Dropdown {
   position: absolute;
   right: 0;
-  top: 100%;
+  top: calc(100% + 6px);
   z-index: 100;
+  min-width: 180px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background-color: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.Dropdown .DangerButton {
+  width: 100%;
+  text-align: left;
   white-space: nowrap;
+  background-color: transparent;
+  color: var(--danger-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+
+  &:hover {
+    background-color: var(--danger);
+    color: var(--text);
+  }
 }
