@@ -38,6 +38,8 @@ export type ProductionBuilding = BaseBuilding & {
   spawningUnits: UnitType[];
   spawnPoints: number;
   maxSpawnPoints: number;
+
+  // TODO: убрать отсюда данное поле. Сделано из-за базы, нужно перенести число в стартовые
   populationSupply?: number;
 };
 

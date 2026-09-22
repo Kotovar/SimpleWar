@@ -29,7 +29,9 @@ function walk(dir: string): void {
     } else {
       if (TARGET_EXTENSIONS.includes(path.extname(file))) {
         const content = fs.readFileSync(fullPath, 'utf8');
-        const lines = content.split(/\r?\n/).length;
+        const parts = content.split(/\r?\n/);
+        if (parts.length && parts[parts.length - 1] === '') parts.pop();
+        const lines = parts.length;
 
         if (lines > MAX_LINES) {
           violations.push({ path: fullPath, lines });
