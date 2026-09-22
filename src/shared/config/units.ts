@@ -52,7 +52,7 @@ export const MILITARY_UNITS_CONFIG: Record<
     movePoints: 0,
     maxMovePoints: 3,
     attackPoints: 0,
-    attackRange: 1,
+    attackRange: 10,
     maxAttackPoints: 1,
     requiresLimit: 2,
     cost: { gold: 90, wood: 0 },
