@@ -6,6 +6,12 @@
   overflow: auto;
   overscroll-behavior: contain;
   padding: 8px;
+  user-select: none;
+}
+
+.MapViewport[data-dragging='true'],
+.MapViewport[data-dragging='true'] * {
+  cursor: grabbing;
 }
 
 .CanvasWrapper {

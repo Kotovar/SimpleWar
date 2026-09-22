@@ -1,4 +1,4 @@
-import { useEffect, useRef, type MouseEvent } from 'react';
+import { useEffect, useRef, type MouseEvent, type PointerEvent } from 'react';
 import { CELL_SIZE } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsSelectors, useBuildingsStore } from '@entities/buildings';
@@ -26,7 +26,13 @@ import styles from './styles.module.css';
 
 export const Map = () => {
   const { phase } = useGameLoopSelectors();
-  const drag = useRef<{ x: number; y: number } | null>(null);
+  const drag = useRef<{
+    x: number;
+    y: number;
+    pointerId: number;
+    active: boolean;
+  } | null>(null);
+  const suppressClick = useRef(false);
   const {
     terrainSelection,
     unitsSelection,
@@ -232,6 +238,15 @@ export const Map = () => {
     }
   };
 
+  const finishDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (drag.current?.pointerId !== event.pointerId) return;
+    drag.current = null;
+    delete event.currentTarget.dataset.dragging;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
   return (
     <>
       <div
@@ -240,31 +255,53 @@ export const Map = () => {
         className={styles.MapViewport}
         tabIndex={0}
         role='region'
-        aria-label='Карта. Перетаскивайте средней или правой кнопкой мыши, масштабируйте колесом.'
+        aria-label='Карта. Перетаскивайте любой кнопкой мыши, масштабируйте колесом. Левый клик выбирает клетку или выполняет действие.'
         onContextMenu={event => event.preventDefault()}
-        onPointerDown={event => {
-          if (event.button !== 1 && event.button !== 2) return;
+        onClickCapture={event => {
+          if (!suppressClick.current) return;
+          suppressClick.current = false;
+          event.stopPropagation();
           event.preventDefault();
-          drag.current = { x: event.clientX, y: event.clientY };
-          event.currentTarget.setPointerCapture(event.pointerId);
         }}
-        onPointerMove={event => {
-          if (!drag.current) return;
-          event.currentTarget.scrollLeft += drag.current.x - event.clientX;
-          event.currentTarget.scrollTop += drag.current.y - event.clientY;
-          drag.current = { x: event.clientX, y: event.clientY };
-        }}
-        onPointerUp={event => {
-          drag.current = null;
-          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-            event.currentTarget.releasePointerCapture(event.pointerId);
+        onPointerDown={event => {
+          if (event.pointerType !== 'mouse' || event.button > 2) return;
+          suppressClick.current = false;
+          const active = event.button !== 0;
+          drag.current = {
+            x: event.clientX,
+            y: event.clientY,
+            pointerId: event.pointerId,
+            active,
+          };
+          // Левый клик до начала перетаскивания должен попасть в Canvas.
+          if (active) {
+            event.preventDefault();
+            event.currentTarget.setPointerCapture(event.pointerId);
+            event.currentTarget.dataset.dragging = 'true';
           }
         }}
-        onPointerCancel={() => {
-          drag.current = null;
+        onPointerMove={event => {
+          const current = drag.current;
+          if (!current || current.pointerId !== event.pointerId) return;
+          const dx = current.x - event.clientX;
+          const dy = current.y - event.clientY;
+          if (!current.active) {
+            if (Math.hypot(dx, dy) < 5) return;
+            current.active = true;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            event.currentTarget.dataset.dragging = 'true';
+          }
+          suppressClick.current = true;
+          event.currentTarget.scrollLeft += dx;
+          event.currentTarget.scrollTop += dy;
+          current.x = event.clientX;
+          current.y = event.clientY;
         }}
-        onLostPointerCapture={() => {
-          drag.current = null;
+        onPointerUp={finishDrag}
+        onPointerCancel={finishDrag}
+        onLostPointerCapture={finishDrag}
+        onPointerLeave={event => {
+          if (!drag.current?.active) finishDrag(event);
         }}
       >
         <div
