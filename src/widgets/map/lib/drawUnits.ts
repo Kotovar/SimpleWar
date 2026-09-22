@@ -1,5 +1,5 @@
-import { UNIT_PALETTES, type Owner } from '@shared/config';
-import { getBuildingBase } from './getBuildingBase';
+import { type Owner } from '@shared/config';
+import { beginEntity, rect, shape } from './drawEntity';
 
 export const drawSwordsman = (
   ctx: CanvasRenderingContext2D,
@@ -7,56 +7,21 @@ export const drawSwordsman = (
   cellY: number,
   cellSize: number,
   owner: Owner,
-  scale: number = 1.5,
+  scale: number = 1,
 ) => {
-  const palette = UNIT_PALETTES[owner];
-  const { baseX, baseY, unit } = getBuildingBase(cellX, cellY, cellSize, scale);
-
-  // ноги
-  ctx.fillStyle = palette.body;
-  ctx.fillRect(
-    baseX + 0.45 * unit,
-    baseY + 0.6 * unit,
-    0.04 * unit,
-    0.18 * unit,
-  );
-  ctx.fillRect(
-    baseX + 0.5 * unit,
-    baseY + 0.6 * unit,
-    0.04 * unit,
-    0.18 * unit,
-  );
-  // тело
-  ctx.fillRect(
-    baseX + 0.42 * unit,
-    baseY + 0.42 * unit,
-    0.16 * unit,
-    0.22 * unit,
-  );
-  // голова
-  ctx.fillStyle = palette.head;
-  ctx.fillRect(
-    baseX + 0.44 * unit,
-    baseY + 0.32 * unit,
-    0.12 * unit,
-    0.1 * unit,
-  );
-  // меч — клинок
-  ctx.fillStyle = palette.sword;
-  ctx.fillRect(
-    baseX + 0.6 * unit,
-    baseY + 0.38 * unit,
-    0.04 * unit,
-    0.2 * unit,
-  );
-  // меч — рукоять
-  ctx.fillStyle = palette.accent;
-  ctx.fillRect(
-    baseX + 0.58 * unit,
-    baseY + 0.56 * unit,
-    0.08 * unit,
-    0.04 * unit,
-  );
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
+  rect(ctx, '#48525b', 11, 20, 4, 5);
+  rect(ctx, '#48525b', 17, 20, 4, 5);
+  shape(ctx, '#a9bbc3', [10, 13, 20, 13, 22, 21, 9, 21]);
+  rect(ctx, '#e3bd8b', 12, 8, 7, 6);
+  shape(ctx, '#dbe4df', [10, 10, 11, 6, 19, 6, 21, 10]);
+  // Меч вынесен за силуэт; широкий щит узнаётся и на маленьком масштабе.
+  shape(ctx, '#edf2df', [24, 6, 26, 10, 25, 20, 23, 20, 23, 10]);
+  rect(ctx, '#d6b265', 21, 19, 6, 2);
+  shape(ctx, '#748d99', [5, 14, 12, 14, 13, 21, 9, 25, 5, 21]);
+  ctx.fillStyle = '#e0e2cf';
+  ctx.fillRect(8, 16, 2, 6);
+  ctx.restore();
 };
 
 export const drawArcher = (
@@ -65,75 +30,34 @@ export const drawArcher = (
   cellY: number,
   cellSize: number,
   owner: Owner,
-  scale: number = 1.5,
+  scale: number = 1,
 ) => {
-  const palette = UNIT_PALETTES[owner];
-  const { baseX, baseY, unit } = getBuildingBase(cellX, cellY, cellSize, scale);
-
-  // ноги
-  ctx.fillStyle = palette.bodyArcher;
-  ctx.fillRect(
-    baseX + 0.45 * unit,
-    baseY + 0.6 * unit,
-    0.04 * unit,
-    0.18 * unit,
-  );
-  ctx.fillRect(
-    baseX + 0.5 * unit,
-    baseY + 0.6 * unit,
-    0.04 * unit,
-    0.18 * unit,
-  );
-  // тело
-  ctx.fillRect(
-    baseX + 0.42 * unit,
-    baseY + 0.42 * unit,
-    0.16 * unit,
-    0.22 * unit,
-  );
-  // голова
-  ctx.fillStyle = palette.head;
-  ctx.fillRect(
-    baseX + 0.44 * unit,
-    baseY + 0.32 * unit,
-    0.12 * unit,
-    0.1 * unit,
-  );
-  // стрела — древко
-  ctx.fillStyle = palette.arrowShaft;
-  ctx.fillRect(
-    baseX + 0.62 * unit,
-    baseY + 0.49 * unit,
-    0.2 * unit,
-    0.02 * unit,
-  );
-  // лук — вертикальная дуга
-  ctx.fillStyle = palette.body;
-  ctx.fillRect(
-    baseX + 0.61 * unit,
-    baseY + 0.36 * unit,
-    0.01 * unit,
-    0.28 * unit,
-  );
-  const stringOffsetX = -0.01 * unit;
-  ctx.strokeStyle = palette.accent;
-  ctx.lineWidth = 0.01 * unit;
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
+  rect(ctx, '#5d493b', 10, 20, 4, 5);
+  rect(ctx, '#5d493b', 16, 20, 4, 5);
+  shape(ctx, '#768563', [10, 12, 17, 12, 21, 22, 6, 22]);
+  shape(ctx, '#566b51', [8, 12, 9, 8, 14, 4, 19, 8, 20, 13]);
+  rect(ctx, '#ebc899', 12, 9, 5, 5);
+  // Лук занимает всю высоту фигуры, тетива не сливается с корпусом.
+  ctx.strokeStyle = '#292c30';
+  ctx.lineWidth = 3.8;
   ctx.beginPath();
-  ctx.moveTo(baseX + 0.63 * unit + stringOffsetX, baseY + 0.36 * unit);
-  ctx.quadraticCurveTo(
-    baseX + 0.7 * unit + stringOffsetX,
-    baseY + 0.5 * unit,
-    baseX + 0.63 * unit + stringOffsetX,
-    baseY + 0.64 * unit,
-  );
+  ctx.moveTo(23, 6);
+  ctx.quadraticCurveTo(32, 15, 23, 24);
   ctx.stroke();
-  // стрела — наконечник
-  ctx.fillRect(
-    baseX + 0.83 * unit,
-    baseY + 0.48 * unit,
-    0.02 * unit,
-    0.03 * unit,
-  );
+  ctx.strokeStyle = '#e4b875';
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+  ctx.strokeStyle = '#f6e9c7';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(23, 6);
+  ctx.lineTo(22, 15);
+  ctx.lineTo(23, 24);
+  ctx.moveTo(17, 15);
+  ctx.lineTo(29, 15);
+  ctx.stroke();
+  ctx.restore();
 };
 
 export const drawWorker = (
@@ -142,54 +66,17 @@ export const drawWorker = (
   cellY: number,
   cellSize: number,
   owner: Owner,
-  scale: number = 1.5,
+  scale: number = 1,
 ) => {
-  const palette = UNIT_PALETTES[owner];
-  const { baseX, baseY, unit } = getBuildingBase(cellX, cellY, cellSize, scale);
-
-  // ноги
-  ctx.fillStyle = palette.body;
-  ctx.fillRect(
-    baseX + 0.45 * unit,
-    baseY + 0.6 * unit,
-    0.04 * unit,
-    0.18 * unit,
-  );
-  ctx.fillRect(
-    baseX + 0.5 * unit,
-    baseY + 0.6 * unit,
-    0.04 * unit,
-    0.18 * unit,
-  );
-  // тело
-  ctx.fillRect(
-    baseX + 0.42 * unit,
-    baseY + 0.42 * unit,
-    0.16 * unit,
-    0.22 * unit,
-  );
-  // голова
-  ctx.fillStyle = palette.head;
-  ctx.fillRect(
-    baseX + 0.44 * unit,
-    baseY + 0.32 * unit,
-    0.12 * unit,
-    0.1 * unit,
-  );
-  // молот — рукоять (shaft)
-  ctx.fillStyle = palette.accent;
-  ctx.fillRect(
-    baseX + 0.58 * unit,
-    baseY + 0.38 * unit,
-    0.04 * unit,
-    0.24 * unit,
-  );
-  // молот — головка (head)
-  ctx.fillStyle = palette.sword;
-  ctx.fillRect(
-    baseX + 0.52 * unit,
-    baseY + 0.34 * unit,
-    0.16 * unit,
-    0.06 * unit,
-  );
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
+  rect(ctx, '#58483d', 10, 20, 4, 5);
+  rect(ctx, '#58483d', 17, 20, 4, 5);
+  shape(ctx, '#dab887', [9, 13, 20, 13, 22, 19, 8, 19]);
+  rect(ctx, '#927052', 11, 14, 8, 8);
+  rect(ctx, '#efc99b', 11, 8, 8, 6);
+  shape(ctx, '#dfbb62', [8, 10, 10, 6, 19, 6, 21, 10]);
+  rect(ctx, '#edce7b', 7, 10, 15, 2);
+  rect(ctx, '#bd915c', 24, 11, 2, 13);
+  rect(ctx, '#c3cfd0', 20, 7, 10, 6);
+  ctx.restore();
 };

@@ -1,54 +1,11 @@
 import type { Owner } from './common';
 
-type BuildingBase = {
-  window: string;
-};
-
-type TownHallPalette = {
-  wall: string;
-  door: string;
-} & BuildingBase;
-
-type MinePalette = {
-  wood: string;
-  shadow: string;
-  gold: string;
-  accent: string;
-};
-
-type SawmillPalette = {
-  wood: string;
-  roof: string;
-  accent: string;
-  smoke: string;
-} & BuildingBase;
-
-type FarmPalette = {
-  wood: string;
-  roof: string;
-  door: string;
-  hay: string;
-} & BuildingBase;
-
-type BarracksPalette = {
-  wall: string;
-  accent: string;
-  door: string;
-  staff: string;
-} & BuildingBase;
-
-type TowerPalette = {
-  wall: string;
-  door: string;
-} & BuildingBase;
-
-type UnitPalette = {
-  body: string;
-  bodyArcher: string;
-  head: string;
-  sword: string;
-  arrowShaft: string;
-  accent: string;
+export const TEAM_MARKERS: Record<
+  Owner,
+  { background: string; color: string; symbol: string }
+> = {
+  player: { background: '#233e50', color: '#78ccff', symbol: '●' },
+  ai: { background: '#51302d', color: '#ff9474', symbol: '◆' },
 };
 
 export const HP_BAR = {
@@ -61,121 +18,63 @@ export const HP_BAR = {
   colorBorder: 'hsla(0, 0%, 0%, 1.00)', // Цвет обводки
 };
 
-export const BUILDING_TOWNHALL_PALETTES: Record<Owner, TownHallPalette> = {
-  player: {
-    wall: 'hsla(0, 0%, 55%, 1.00)',
-    door: 'hsla(100, 100%, 26%, 1.00)',
-    window: 'hsl(102, 8%, 26%)',
-  },
-  ai: {
-    wall: 'hsla(0, 0%, 55%, 1.00)',
-    door: 'hsla(0, 97%, 47%, 1.00)',
-    window: 'hsl(102, 8%, 26%)',
-  },
-};
+// Совместимые экспорты прежних палитр: материалы больше не зависят от команды.
+// Список команд берётся только из TEAM_MARKERS.
+const forTeams = <T>(palette: T): Record<Owner, T> =>
+  Object.fromEntries(
+    Object.keys(TEAM_MARKERS).map(owner => [owner, palette]),
+  ) as Record<Owner, T>;
 
-export const BUILDING_MINE_PALETTES: Record<Owner, MinePalette> = {
-  player: {
-    wood: '#8B4513',
-    gold: '#DAA520',
-    shadow: '#333333',
-    accent: 'hsla(100, 100%, 26%, 1.00)',
-  },
-  ai: {
-    wood: '#8B4513',
-    gold: '#DAA520',
-    shadow: '#333333',
-    accent: 'hsla(0, 97%, 47%, 1.00)',
-  },
-};
-
-export const BUILDING_SAWMILL_PALETTES: Record<Owner, SawmillPalette> = {
-  player: {
-    wood: '#8B4513',
-    roof: '#A0522D',
-    smoke: '#888888',
-    accent: 'hsla(100, 100%, 26%, 1.00)',
-    window: '#333',
-  },
-  ai: {
-    wood: '#8B4513',
-    roof: '#A0522D',
-    smoke: '#888888',
-    accent: 'hsla(0, 97%, 47%, 1.00)',
-    window: '#333',
-  },
-};
-
-export const BUILDING_FARM_PALETTES: Record<Owner, FarmPalette> = {
-  player: {
-    wood: '#8B4513',
-    door: 'hsla(100, 100%, 26%, 1.00)',
-    window: 'hsl(102, 8%, 26%)',
-    roof: '#DAA520',
-    hay: '#E8C39E',
-  },
-  ai: {
-    wood: '#8B4513',
-    door: 'hsla(0, 97%, 47%, 1.00)',
-    window: 'hsl(102, 8%, 26%)',
-    roof: '#DAA520',
-    hay: '#E8C39E',
-  },
-};
-
-export const BUILDING_BARRACKS_PALETTES: Record<Owner, BarracksPalette> = {
-  player: {
-    wall: 'hsla(0, 0%, 55%, 1.00)',
-    door: 'hsla(100, 100%, 26%, 1.00)',
-    accent: 'hsla(100, 100%, 26%, 1.00)',
-    window: 'hsl(102, 8%, 26%)',
-    staff: '#3d2b1f',
-  },
-  ai: {
-    wall: 'hsla(0, 0%, 55%, 1.00)',
-    door: 'hsla(0, 97%, 47%, 1.00)',
-    accent: 'hsla(0, 97%, 47%, 1.00)',
-    window: 'hsl(102, 8%, 26%)',
-    staff: '#3d2b1f',
-  },
-};
-
-export const BUILDING_TOWER_PALETTES: Record<Owner, TowerPalette> = {
-  player: {
-    wall: 'hsla(0, 0%, 55%, 1.00)',
-    door: 'hsla(100, 100%, 26%, 1.00)',
-    window: 'hsl(102, 8%, 26%)',
-  },
-  ai: {
-    wall: 'hsla(0, 0%, 55%, 1.00)',
-    door: 'hsla(0, 97%, 47%, 1.00)',
-    window: 'hsl(102, 8%, 26%)',
-  },
-};
-
-export const UNIT_PALETTES: Record<Owner, UnitPalette> = {
-  player: {
-    body: 'hsla(233, 88%, 37%, 1.00)',
-    bodyArcher: 'hsla(233, 70%, 52%, 1.00)',
-    head: 'hsla(34, 44%, 69%, 1.00)',
-    sword: 'hsla(0, 0%, 81%, 1.00)',
-    arrowShaft: 'hsla(34, 57%, 70%, 1.00)',
-    accent: 'hsla(220, 99%, 61%, 1.00)',
-  },
-  ai: {
-    body: 'hsla(0, 60%, 36%, 1.00)',
-    bodyArcher: 'hsla(22, 87%, 51%, 1.00)',
-    head: 'hsla(19, 42%, 68%, 1.00)',
-    sword: 'hsla(0, 0%, 81%, 1.00)',
-    arrowShaft: 'hsla(34, 57%, 70%, 1.00)',
-    accent: 'hsla(0, 68%, 42%, 1.00)',
-  },
-};
+export const BUILDING_TOWNHALL_PALETTES = forTeams({
+  wall: '#dce1d5',
+  door: '#313b42',
+  window: '#536775',
+});
+export const BUILDING_MINE_PALETTES = forTeams({
+  wood: '#b98a51',
+  gold: '#f5cd53',
+  shadow: '#252e33',
+  accent: '#e1b578',
+});
+export const BUILDING_SAWMILL_PALETTES = forTeams({
+  wood: '#b88b58',
+  roof: '#6d7e70',
+  smoke: '#89918e',
+  accent: '#e8bf80',
+  window: '#303a36',
+});
+export const BUILDING_FARM_PALETTES = forTeams({
+  wood: '#e1c996',
+  door: '#68503e',
+  window: '#303a36',
+  roof: '#d6aa47',
+  hay: '#f7d776',
+});
+export const BUILDING_BARRACKS_PALETTES = forTeams({
+  wall: '#bbb6a3',
+  door: '#41434a',
+  accent: '#ddd9c7',
+  window: '#303a36',
+  staff: '#736c59',
+});
+export const BUILDING_TOWER_PALETTES = forTeams({
+  wall: '#dce1d5',
+  door: '#384650',
+  window: '#384650',
+});
+export const UNIT_PALETTES = forTeams({
+  body: '#a9bbc3',
+  bodyArcher: '#768563',
+  head: '#e3bd8b',
+  sword: '#edf2df',
+  arrowShaft: '#e4b875',
+  accent: '#d6b265',
+});
 
 export const GRID = {
   lineThickness: 1,
   lineColor: 'hsla(0, 0%, 0%, 0.04)',
-  colorGrass: { r: 46, g: 160, b: 55 },
+  colorGrass: { r: 91, g: 151, b: 76 },
   colorWater: { r: 40, g: 110, b: 180 },
 };
 
@@ -192,13 +91,14 @@ export const SELECTION = {
 
 export const TERRAIN = {
   colorShadow: 'hsla(0, 0%, 0%, 0.25)',
-  colorForestTrunk: 'hsla(33, 54%, 23%, 1.00)',
-  colorForestCrown: 'hsla(138, 45%, 34%, 1.00)',
-  colorOreDark: 'hsla(46, 68%, 47%, 1.00)',
-  colorOreLight: 'hsla(47, 87%, 70%, 1.00)',
-  colorMountainDark: 'hsla(0, 0%, 43%, 1.00)',
-  colorMountainLight: 'hsla(0, 0%, 60%, 1.00)',
-  colorMountainSnow: 'hsla(0, 0%, 92%, 1.00)',
+  colorForestTrunk: '#b98a51',
+  colorForestCrown: '#416859',
+  colorForestLight: '#80a073',
+  colorOreDark: '#c4943e',
+  colorOreLight: '#f5d879',
+  colorMountainDark: '#687b80',
+  colorMountainLight: '#aebbbd',
+  colorMountainSnow: '#edf0df',
   colorSelectedTerrain: 'hsla(241, 32%, 55%, 0.56)',
   lineThickness: 1,
 };

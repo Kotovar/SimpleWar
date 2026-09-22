@@ -1,13 +1,5 @@
-import {
-  Owner,
-  BUILDING_TOWNHALL_PALETTES,
-  BUILDING_MINE_PALETTES,
-  BUILDING_SAWMILL_PALETTES,
-  BUILDING_FARM_PALETTES,
-  BUILDING_BARRACKS_PALETTES,
-  BUILDING_TOWER_PALETTES,
-} from '@shared/config';
-import { getBuildingBase } from './getBuildingBase';
+import { type Owner } from '@shared/config';
+import { beginEntity, rect, shape } from './drawEntity';
 
 export const drawBase = (
   ctx: CanvasRenderingContext2D,
@@ -15,117 +7,26 @@ export const drawBase = (
   cellY: number,
   cellSize: number,
   owner: Owner,
-  scale: number = 1.1,
+  scale: number = 1,
 ) => {
-  const palette = BUILDING_TOWNHALL_PALETTES[owner];
-  const { baseX, baseY, unit } = getBuildingBase(cellX, cellY, cellSize, scale);
-
-  // Основные стены (серый камень)
-  ctx.fillStyle = palette.wall;
-  ctx.fillRect(
-    baseX + 0.18 * unit,
-    baseY + 0.42 * unit,
-    0.64 * unit,
-    0.35 * unit,
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
+  rect(ctx, '#b6c2c5', 7, 13, 18, 12);
+  // Две широкие зубчатые башни отличают базу от одиночной башни.
+  shape(
+    ctx,
+    '#dce1d5',
+    [4, 25, 4, 7, 7, 7, 7, 10, 10, 10, 10, 7, 13, 7, 13, 25],
   );
-
-  // Зубцы на стенах
-  ctx.fillStyle = palette.wall;
-  const toothWidth = 0.08 * unit;
-  const toothHeight = 0.08 * unit;
-  const toothGap = 0.08 * unit;
-  let toothX = baseX + 0.18 * unit;
-  while (toothX < baseX + 0.82 * unit) {
-    ctx.fillRect(toothX, baseY + 0.34 * unit, toothWidth, toothHeight);
-    toothX += toothWidth + toothGap;
-  }
-
-  // Угловые башни
-  ctx.fillRect(
-    baseX + 0.12 * unit,
-    baseY + 0.35 * unit,
-    0.12 * unit,
-    0.42 * unit,
+  shape(
+    ctx,
+    '#dce1d5',
+    [19, 25, 19, 7, 22, 7, 22, 10, 25, 10, 25, 7, 28, 7, 28, 25],
   );
-  ctx.fillRect(
-    baseX + 0.76 * unit,
-    baseY + 0.35 * unit,
-    0.12 * unit,
-    0.42 * unit,
-  );
-
-  // Зубцы на башнях
-  ctx.fillRect(
-    baseX + 0.07 * unit,
-    baseY + 0.27 * unit,
-    toothWidth,
-    toothHeight,
-  );
-  ctx.fillRect(
-    baseX + 0.16 * unit + toothGap,
-    baseY + 0.27 * unit,
-    toothWidth,
-    toothHeight,
-  );
-  ctx.fillRect(
-    baseX + 0.72 * unit,
-    baseY + 0.27 * unit,
-    toothWidth,
-    toothHeight,
-  );
-  ctx.fillRect(
-    baseX + 0.77 * unit + toothGap,
-    baseY + 0.27 * unit,
-    toothWidth,
-    toothHeight,
-  );
-
-  ctx.fillRect(
-    baseX + 0.52 * unit + toothGap,
-    baseY + 0.27 * unit,
-    toothWidth,
-    toothHeight,
-  );
-
-  ctx.fillRect(
-    baseX + 0.34 * unit + toothGap,
-    baseY + 0.27 * unit,
-    toothWidth,
-    toothHeight,
-  );
-
-  // Окна на основных стенах
-  ctx.fillStyle = palette.window;
-  ctx.fillRect(baseX + 0.3 * unit, baseY + 0.5 * unit, 0.08 * unit, 0.1 * unit);
-  ctx.fillRect(
-    baseX + 0.62 * unit,
-    baseY + 0.5 * unit,
-    0.08 * unit,
-    0.1 * unit,
-  );
-
-  // Окна на башнях
-  ctx.fillRect(
-    baseX + 0.14 * unit,
-    baseY + 0.45 * unit,
-    0.08 * unit,
-    0.12 * unit,
-  );
-  ctx.fillRect(
-    baseX + 0.78 * unit,
-    baseY + 0.45 * unit,
-    0.08 * unit,
-    0.12 * unit,
-  );
-
-  // Большая центральная дверь
-  ctx.fillStyle = palette.door;
-  ctx.fillRect(
-    baseX + 0.42 * unit,
-    baseY + 0.58 * unit,
-    0.16 * unit,
-    0.19 * unit,
-  );
+  shape(ctx, '#313b42', [13, 25, 13, 19, 16, 16, 19, 19, 19, 25]);
+  ctx.fillStyle = '#536775';
+  ctx.fillRect(7, 14, 3, 5);
+  ctx.fillRect(22, 14, 3, 5);
+  ctx.restore();
 };
 
 export const drawGoldMine = (
@@ -134,65 +35,17 @@ export const drawGoldMine = (
   cellY: number,
   cellSize: number,
   owner: Owner,
-  scale: number = 1.6,
+  scale: number = 1,
 ) => {
-  const palette = BUILDING_MINE_PALETTES[owner];
-  const { baseX, baseY, unit } = getBuildingBase(cellX, cellY, cellSize, scale);
-
-  // Тёмный вход
-  ctx.fillStyle = palette.shadow;
-  ctx.fillRect(
-    baseX + 0.35 * unit,
-    baseY + 0.43 * unit,
-    0.3 * unit,
-    0.37 * unit,
-  );
-
-  // Деревянные подпорки
-  ctx.fillStyle = palette.wood;
-  ctx.fillRect(
-    baseX + 0.28 * unit,
-    baseY + 0.4 * unit,
-    0.08 * unit,
-    0.4 * unit,
-  );
-  ctx.fillRect(
-    baseX + 0.64 * unit,
-    baseY + 0.4 * unit,
-    0.08 * unit,
-    0.4 * unit,
-  );
-
-  // Перекладина сверху
-  ctx.fillRect(
-    baseX + 0.3 * unit,
-    baseY + 0.38 * unit,
-    0.4 * unit,
-    0.06 * unit,
-  );
-
-  ctx.fillStyle = palette.accent;
-  ctx.beginPath();
-  ctx.moveTo(baseX + 0.48 * unit, baseY + 0.3 * unit);
-  ctx.lineTo(baseX + 0.65 * unit, baseY + 0.35 * unit);
-  ctx.lineTo(baseX + 0.48 * unit, baseY + 0.4 * unit);
-  ctx.closePath();
-  ctx.fill();
-
-  // Золото
-  ctx.fillStyle = palette.gold;
-  ctx.fillRect(
-    baseX + 0.42 * unit,
-    baseY + 0.68 * unit,
-    0.1 * unit,
-    0.08 * unit,
-  );
-  ctx.fillRect(
-    baseX + 0.48 * unit,
-    baseY + 0.65 * unit,
-    0.08 * unit,
-    0.06 * unit,
-  );
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
+  shape(ctx, '#89918e', [3, 25, 6, 13, 12, 7, 21, 8, 27, 15, 29, 25]);
+  shape(ctx, '#b9bfac', [6, 13, 12, 7, 21, 8, 17, 14]);
+  rect(ctx, '#252e33', 10, 15, 12, 10);
+  rect(ctx, '#b98a51', 8, 14, 3, 11);
+  rect(ctx, '#b98a51', 21, 14, 3, 11);
+  rect(ctx, '#e1b578', 8, 12, 16, 3);
+  shape(ctx, '#f5cd53', [14, 24, 16, 19, 20, 19, 23, 24]);
+  ctx.restore();
 };
 
 export const drawSawmill = (
@@ -201,74 +54,18 @@ export const drawSawmill = (
   cellY: number,
   cellSize: number,
   owner: Owner,
-  scale: number = 1.2,
+  scale: number = 1,
 ) => {
-  const palette = BUILDING_SAWMILL_PALETTES[owner];
-  const { baseX, baseY, unit } = getBuildingBase(cellX, cellY, cellSize, scale);
-
-  // Основание
-  ctx.fillStyle = palette.wood;
-  ctx.fillRect(
-    baseX + 0.16 * unit,
-    baseY + 0.67 * unit,
-    0.68 * unit,
-    0.28 * unit,
-  );
-
-  // Корпус
-  ctx.fillStyle = palette.wood;
-  ctx.fillRect(
-    baseX + 0.22 * unit,
-    baseY + 0.32 * unit,
-    0.56 * unit,
-    0.36 * unit,
-  );
-
-  // Дымоход
-  ctx.fillStyle = palette.wood;
-  ctx.fillRect(
-    baseX + 0.68 * unit,
-    baseY + 0.18 * unit,
-    0.08 * unit,
-    0.18 * unit,
-  );
-
-  ctx.fillStyle = palette.smoke;
-  ctx.globalAlpha = 0.6;
-  ctx.fillRect(
-    baseX + 0.66 * unit,
-    baseY + 0.11 * unit,
-    0.12 * unit,
-    0.06 * unit,
-  );
-  ctx.globalAlpha = 1.0;
-
-  // Крыша
-  ctx.fillStyle = palette.roof;
-  ctx.beginPath();
-  ctx.moveTo(baseX + 0.15 * unit, baseY + 0.32 * unit);
-  ctx.lineTo(baseX + 0.5 * unit, baseY + 0.12 * unit);
-  ctx.lineTo(baseX + 0.85 * unit, baseY + 0.32 * unit);
-  ctx.closePath();
-  ctx.fill();
-
-  // Окно
-  ctx.fillStyle = palette.window;
-  ctx.fillRect(
-    baseX + 0.38 * unit,
-    baseY + 0.42 * unit,
-    0.08 * unit,
-    0.1 * unit,
-  );
-
-  // Дверь
-  ctx.fillStyle = palette.accent;
-  ctx.fillRect(
-    baseX + 0.48 * unit,
-    baseY + 0.7 * unit,
-    0.1 * unit,
-    0.18 * unit,
-  );
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
+  rect(ctx, '#b88b58', 6, 13, 19, 11);
+  shape(ctx, '#6d7e70', [3, 14, 10, 7, 22, 7, 28, 14]);
+  rect(ctx, '#303a36', 10, 16, 7, 8);
+  // Светлые торцы брёвен — крупный опознавательный признак лесопилки.
+  rect(ctx, '#805938', 17, 19, 10, 6);
+  rect(ctx, '#e8bf80', 20, 17, 6, 4);
+  rect(ctx, '#e8bf80', 16, 21, 6, 4);
+  rect(ctx, '#e8bf80', 23, 21, 6, 4);
+  ctx.restore();
 };
 
 export const drawFarm = (
@@ -277,61 +74,22 @@ export const drawFarm = (
   cellY: number,
   cellSize: number,
   owner: Owner,
-  scale: number = 1.18,
+  scale: number = 1,
 ) => {
-  const palette = BUILDING_FARM_PALETTES[owner];
-  const { baseX, baseY, unit } = getBuildingBase(cellX, cellY, cellSize, scale);
-
-  // Структура
-  ctx.fillStyle = palette.wood;
-  ctx.fillRect(
-    baseX + 0.25 * unit,
-    baseY + 0.32 * unit,
-    0.5 * unit,
-    0.4 * unit,
-  );
-
-  // Крыша
-  ctx.fillStyle = palette.roof;
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
+  rect(ctx, '#e1c996', 5, 13, 13, 12);
+  shape(ctx, '#d6aa47', [3, 14, 11, 6, 20, 14]);
+  rect(ctx, '#68503e', 9, 18, 5, 7);
+  rect(ctx, '#725637', 20, 15, 8, 10);
+  ctx.strokeStyle = '#f7d776';
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(baseX + 0.15 * unit, baseY + 0.32 * unit);
-  ctx.lineTo(baseX + 0.5 * unit, baseY + 0.1 * unit);
-  ctx.lineTo(baseX + 0.85 * unit, baseY + 0.32 * unit);
-  ctx.closePath();
-  ctx.fill();
-
-  // Дверь
-  ctx.fillStyle = palette.door;
-  ctx.fillRect(
-    baseX + 0.42 * unit,
-    baseY + 0.52 * unit,
-    0.16 * unit,
-    0.2 * unit,
-  );
-
-  // Окно
-  ctx.fillStyle = palette.window;
-  ctx.fillRect(
-    baseX + 0.32 * unit,
-    baseY + 0.42 * unit,
-    0.08 * unit,
-    0.1 * unit,
-  );
-
-  // Сноп сена
-  ctx.fillStyle = palette.hay;
-  ctx.fillRect(
-    baseX + 0.72 * unit,
-    baseY + 0.65 * unit,
-    0.16 * unit,
-    0.14 * unit,
-  );
-  ctx.fillRect(
-    baseX + 0.76 * unit,
-    baseY + 0.6 * unit,
-    0.12 * unit,
-    0.1 * unit,
-  );
+  ctx.moveTo(22, 17);
+  ctx.lineTo(22, 23);
+  ctx.moveTo(26, 17);
+  ctx.lineTo(26, 23);
+  ctx.stroke();
+  ctx.restore();
 };
 
 export const drawBarracks = (
@@ -340,92 +98,17 @@ export const drawBarracks = (
   cellY: number,
   cellSize: number,
   owner: Owner,
-  scale: number = 1.25,
+  scale: number = 1,
 ) => {
-  const palette = BUILDING_BARRACKS_PALETTES[owner];
-  const { baseX, baseY, unit } = getBuildingBase(cellX, cellY, cellSize, scale);
-
-  // Корпус
-  ctx.fillStyle = palette.wall;
-  ctx.fillRect(
-    baseX + 0.11 * unit,
-    baseY + 0.38 * unit,
-    0.74 * unit,
-    0.42 * unit,
-  );
-
-  // Зубцы
-  ctx.fillStyle = palette.wall;
-  const toothWidth = 0.07 * unit;
-  const toothHeight = 0.07 * unit;
-  const toothGap = 0.07 * unit;
-  let toothX = baseX + 0.15 * unit;
-  while (toothX < baseX + 0.85 * unit - toothWidth) {
-    ctx.fillRect(toothX, baseY + 0.31 * unit, toothWidth, toothHeight);
-    toothX += toothWidth + toothGap;
-  }
-
-  // Двойная дверь
-  ctx.fillStyle = palette.door;
-  ctx.fillRect(
-    baseX + 0.39 * unit,
-    baseY + 0.58 * unit,
-    0.1 * unit,
-    0.22 * unit,
-  );
-  ctx.fillRect(
-    baseX + 0.51 * unit,
-    baseY + 0.58 * unit,
-    0.1 * unit,
-    0.22 * unit,
-  );
-
-  // ─── Флаги и древки ───
-  ctx.strokeStyle = palette.staff;
-  ctx.fillStyle = palette.accent;
-  ctx.lineWidth = 0.01 * unit;
-  ctx.lineCap = 'round';
-
-  // Левое древко + флаг
-  ctx.beginPath();
-  ctx.moveTo(baseX + 0.4 * unit, baseY + 0.38 * unit);
-  ctx.lineTo(baseX + 0.4 * unit, baseY + 0.13 * unit);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(baseX + 0.27 * unit, baseY + 0.24 * unit);
-  ctx.lineTo(baseX + 0.39 * unit, baseY + 0.14 * unit);
-  ctx.lineTo(baseX + 0.39 * unit, baseY + 0.3 * unit);
-  ctx.closePath();
-  ctx.fill();
-
-  // Правое древко + флаг
-  ctx.beginPath();
-  ctx.moveTo(baseX + 0.68 * unit, baseY + 0.38 * unit);
-  ctx.lineTo(baseX + 0.68 * unit, baseY + 0.13 * unit);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(baseX + 0.53 * unit, baseY + 0.24 * unit);
-  ctx.lineTo(baseX + 0.67 * unit, baseY + 0.14 * unit);
-  ctx.lineTo(baseX + 0.67 * unit, baseY + 0.3 * unit);
-  ctx.closePath();
-  ctx.fill();
-
-  // Окна
-  ctx.fillStyle = palette.window;
-  ctx.fillRect(
-    baseX + 0.24 * unit,
-    baseY + 0.46 * unit,
-    0.06 * unit,
-    0.08 * unit,
-  );
-  ctx.fillRect(
-    baseX + 0.7 * unit,
-    baseY + 0.46 * unit,
-    0.06 * unit,
-    0.08 * unit,
-  );
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
+  rect(ctx, '#bbb6a3', 5, 14, 22, 11);
+  shape(ctx, '#98634c', [3, 14, 8, 8, 24, 8, 29, 14]);
+  rect(ctx, '#41434a', 12, 18, 8, 7);
+  // Большой щит над входом вместо мелких флагов.
+  shape(ctx, '#ddd9c7', [12, 10, 20, 10, 20, 14, 16, 18, 12, 14]);
+  ctx.fillStyle = '#736c59';
+  ctx.fillRect(15, 11, 2, 4);
+  ctx.restore();
 };
 
 export const drawTower = (
@@ -434,94 +117,19 @@ export const drawTower = (
   cellY: number,
   cellSize: number,
   owner: Owner,
-  scale: number = 1.0,
+  scale: number = 1,
 ) => {
-  const palette = BUILDING_TOWER_PALETTES[owner];
-  const { baseX, baseY, unit } = getBuildingBase(cellX, cellY, cellSize, scale);
-
-  // Основание
-  ctx.fillStyle = palette.wall;
-  ctx.fillRect(
-    baseX + 0.22 * unit,
-    baseY + 0.55 * unit,
-    0.56 * unit,
-    0.4 * unit,
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
+  shape(ctx, '#aebbbd', [8, 25, 11, 12, 21, 12, 24, 25]);
+  shape(
+    ctx,
+    '#dce1d5',
+    [
+      9, 12, 8, 5, 12, 5, 12, 8, 14, 8, 14, 5, 18, 5, 18, 8, 20, 8, 20, 5, 24,
+      5, 23, 12,
+    ],
   );
-
-  // Основная высокая часть башни
-  ctx.fillStyle = palette.wall;
-  ctx.fillRect(
-    baseX + 0.28 * unit,
-    baseY + 0.15 * unit,
-    0.44 * unit,
-    0.58 * unit,
-  );
-
-  // Зубцы
-  ctx.fillStyle = palette.wall;
-  const toothWidth = 0.07 * unit;
-  const toothHeight = 0.07 * unit;
-  const toothGap = 0.07 * unit;
-
-  let toothX = baseX + 0.26 * unit;
-  const rightEdge = baseX + (0.28 + 0.49) * unit;
-
-  while (toothX + toothWidth <= rightEdge) {
-    ctx.fillRect(toothX, baseY + 0.08 * unit, toothWidth, toothHeight);
-    toothX += toothWidth + toothGap;
-  }
-
-  // Бойницы
-  ctx.fillStyle = palette.window;
-
-  // нижний ярус
-  ctx.fillRect(
-    baseX + 0.34 * unit,
-    baseY + 0.38 * unit,
-    0.05 * unit,
-    0.12 * unit,
-  );
-  ctx.fillRect(
-    baseX + 0.61 * unit,
-    baseY + 0.38 * unit,
-    0.05 * unit,
-    0.12 * unit,
-  );
-
-  // средний ярус
-  ctx.fillRect(
-    baseX + 0.34 * unit,
-    baseY + 0.22 * unit,
-    0.05 * unit,
-    0.1 * unit,
-  );
-  ctx.fillRect(
-    baseX + 0.61 * unit,
-    baseY + 0.22 * unit,
-    0.05 * unit,
-    0.1 * unit,
-  );
-
-  // верхний ярус
-  ctx.fillRect(
-    baseX + 0.36 * unit,
-    baseY + 0.12 * unit,
-    0.04 * unit,
-    0.08 * unit,
-  );
-  ctx.fillRect(
-    baseX + 0.6 * unit,
-    baseY + 0.12 * unit,
-    0.04 * unit,
-    0.08 * unit,
-  );
-
-  //  Дверь
-  ctx.fillStyle = palette.door;
-  ctx.fillRect(
-    baseX + 0.42 * unit,
-    baseY + 0.62 * unit,
-    0.16 * unit,
-    0.22 * unit,
-  );
+  rect(ctx, '#384650', 14, 15, 4, 6);
+  rect(ctx, '#cdd4c8', 8, 23, 16, 2);
+  ctx.restore();
 };
