@@ -9,9 +9,13 @@ import {
 } from './drawBuildings';
 import { drawArcher, drawSwordsman, drawWorker } from './drawUnits';
 import { drawHpBar } from './drawHpBar';
+import { drawActionPips } from './drawActionPips';
 
-/** Смещения в клетках для сущностей, которые сейчас анимируются. */
-export type CellOffsets = Map<string, { dx: number; dy: number }>;
+/** Смещение в клетках и масштаб сущностей, которые сейчас анимируются. */
+export type CellOffsets = Map<
+  string,
+  { dx: number; dy: number; scale?: number }
+>;
 
 const SPENT_ALPHA = 0.45;
 
@@ -39,33 +43,33 @@ export const renderEntitiesLayer = (
   Object.values(buildings).forEach(building => {
     const { id, x, y, type, hp, maxHp, owner } = building;
     const hpRatio = hp / maxHp;
-    const { dx = 0, dy = 0 } = offsets?.get(id) ?? {};
+    const { dx = 0, dy = 0, scale = 1 } = offsets?.get(id) ?? {};
 
     ctx.save();
     if (isSpentBuilding(building)) ctx.globalAlpha = SPENT_ALPHA;
 
     if (type === 'base') {
-      drawBase(ctx, x + dx, y + dy, cellSize, owner);
+      drawBase(ctx, x + dx, y + dy, cellSize, owner, scale);
     }
 
     if (type === 'mine') {
-      drawGoldMine(ctx, x + dx, y + dy, cellSize, owner);
+      drawGoldMine(ctx, x + dx, y + dy, cellSize, owner, scale);
     }
 
     if (type === 'sawmill') {
-      drawSawmill(ctx, x + dx, y + dy, cellSize, owner);
+      drawSawmill(ctx, x + dx, y + dy, cellSize, owner, scale);
     }
 
     if (type === 'farm') {
-      drawFarm(ctx, x + dx, y + dy, cellSize, owner);
+      drawFarm(ctx, x + dx, y + dy, cellSize, owner, scale);
     }
 
     if (type === 'barracks') {
-      drawBarracks(ctx, x + dx, y + dy, cellSize, owner);
+      drawBarracks(ctx, x + dx, y + dy, cellSize, owner, scale);
     }
 
     if (type === 'tower') {
-      drawTower(ctx, x + dx, y + dy, cellSize, owner);
+      drawTower(ctx, x + dx, y + dy, cellSize, owner, scale);
     }
     ctx.restore();
 
@@ -75,25 +79,26 @@ export const renderEntitiesLayer = (
   Object.values(units).forEach(unit => {
     const { id, x, y, type, hp, maxHp, owner } = unit;
     const hpRatio = hp / maxHp;
-    const { dx = 0, dy = 0 } = offsets?.get(id) ?? {};
+    const { dx = 0, dy = 0, scale = 1 } = offsets?.get(id) ?? {};
 
     ctx.save();
     if (isSpentUnit(unit)) ctx.globalAlpha = SPENT_ALPHA;
 
     if (type === 'swordsman') {
-      drawSwordsman(ctx, x + dx, y + dy, cellSize, owner);
+      drawSwordsman(ctx, x + dx, y + dy, cellSize, owner, scale);
     }
 
     if (type === 'archer') {
-      drawArcher(ctx, x + dx, y + dy, cellSize, owner);
+      drawArcher(ctx, x + dx, y + dy, cellSize, owner, scale);
     }
 
     if (type === 'worker') {
-      drawWorker(ctx, x + dx, y + dy, cellSize, owner);
+      drawWorker(ctx, x + dx, y + dy, cellSize, owner, scale);
     }
     ctx.restore();
 
-    // Полоса здоровья остаётся контрастной даже у отходившего юнита.
+    // Полоса здоровья и очки остаются контрастными даже у отходившего юнита.
     drawHpBar(ctx, x + dx, y + dy, cellSize, hpRatio);
+    if (owner === 'player') drawActionPips(ctx, x + dx, y + dy, cellSize, unit);
   });
 };

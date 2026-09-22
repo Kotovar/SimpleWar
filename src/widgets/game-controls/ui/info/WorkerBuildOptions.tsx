@@ -1,3 +1,4 @@
+import { GoldIcon, WoodIcon } from '@shared/ui';
 import {
   BUILDINGS_CONFIG,
   BUILDINGS_NAME,
@@ -79,9 +80,13 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
               title={[check.message, infoText].filter(Boolean).join('. ')}
             >
               <span className={styles.Name}>{name}</span>
-              <small className={styles.Cost}>🪙{cost.gold} золота</small>
+              <small className={styles.Cost}>
+                <GoldIcon /> {cost.gold} золота
+              </small>
               {cost.wood === 0 ? null : (
-                <small className={styles.Cost}>🌳{cost.wood} дерева</small>
+                <small className={styles.Cost}>
+                  <WoodIcon /> {cost.wood} дерева
+                </small>
               )}
               {selectedBuildingForSpawn === buildingType && infoText && (
                 <small className={styles.InfoText}>{infoText}</small>

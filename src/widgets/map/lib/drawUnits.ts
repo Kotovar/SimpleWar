@@ -1,4 +1,4 @@
-import { type Owner } from '@shared/config';
+import { TEAM_MARKERS, type Owner } from '@shared/config';
 import { beginEntity, rect, shape } from './drawEntity';
 
 export const drawSwordsman = (
@@ -18,7 +18,8 @@ export const drawSwordsman = (
   // Меч вынесен за силуэт; широкий щит узнаётся и на маленьком масштабе.
   shape(ctx, '#edf2df', [24, 6, 26, 10, 25, 20, 23, 20, 23, 10]);
   rect(ctx, '#d6b265', 21, 19, 6, 2);
-  shape(ctx, '#748d99', [5, 14, 12, 14, 13, 21, 9, 25, 5, 21]);
+  // Щит красим в цвет стороны: принадлежность видна без подложки.
+  shape(ctx, TEAM_MARKERS[owner].color, [5, 14, 12, 14, 13, 21, 9, 25, 5, 21]);
   ctx.fillStyle = '#e0e2cf';
   ctx.fillRect(8, 16, 2, 6);
   ctx.restore();
@@ -36,7 +37,7 @@ export const drawArcher = (
   rect(ctx, '#5d493b', 10, 20, 4, 5);
   rect(ctx, '#5d493b', 16, 20, 4, 5);
   shape(ctx, '#768563', [10, 12, 17, 12, 21, 22, 6, 22]);
-  shape(ctx, '#566b51', [8, 12, 9, 8, 14, 4, 19, 8, 20, 13]);
+  shape(ctx, TEAM_MARKERS[owner].color, [8, 12, 9, 8, 14, 4, 19, 8, 20, 13]);
   rect(ctx, '#ebc899', 12, 9, 5, 5);
   // Лук занимает всю высоту фигуры, тетива не сливается с корпусом.
   ctx.strokeStyle = '#292c30';
@@ -72,7 +73,7 @@ export const drawWorker = (
   rect(ctx, '#58483d', 10, 20, 4, 5);
   rect(ctx, '#58483d', 17, 20, 4, 5);
   shape(ctx, '#dab887', [9, 13, 20, 13, 22, 19, 8, 19]);
-  rect(ctx, '#927052', 11, 14, 8, 8);
+  rect(ctx, TEAM_MARKERS[owner].color, 11, 14, 8, 8);
   rect(ctx, '#efc99b', 11, 8, 8, 6);
   shape(ctx, '#dfbb62', [8, 10, 10, 6, 19, 6, 21, 10]);
   rect(ctx, '#edce7b', 7, 10, 15, 2);

@@ -9,8 +9,10 @@ import {
   type Effect,
 } from '@widgets/map/lib';
 import { setupCanvas } from './getCtx';
+import { useDevicePixelRatio } from './useDevicePixelRatio';
 
 const MOVE_DURATION = 220;
+const SPAWN_DURATION = 260;
 
 const easeOut = (progress: number) => 1 - (1 - progress) ** 3;
 
@@ -45,8 +47,11 @@ export const useEntitiesLayer = ({
   const moves = useRef(
     new Map<string, { fromX: number; fromY: number; start: number }>(),
   );
+  const spawns = useRef(new Map<string, number>());
+  const pixelRatio = useDevicePixelRatio();
   const effects = useRef<Effect[]>([]);
   const frame = useRef(0);
+  const isFirstRun = useRef(true);
 
   useEffect(() => {
     const ctx = setupCanvas(ref, width, height);
@@ -64,7 +69,12 @@ export const useEntitiesLayer = ({
         hp: entity.hp,
       });
 
-      if (!before) return;
+      // Первый кадр партии только запоминает состав: анимировать нечего.
+      if (!before) {
+        if (!isFirstRun.current) spawns.current.set(entity.id, now);
+
+        return;
+      }
 
       if (before.x !== entity.x || before.y !== entity.y) {
         moves.current.set(entity.id, {
@@ -90,6 +100,7 @@ export const useEntitiesLayer = ({
       tracked.current.delete(id);
       moves.current.delete(id);
 
+      spawns.current.delete(id);
       effects.current.push({
         x: before.x,
         y: before.y,
@@ -98,6 +109,8 @@ export const useEntitiesLayer = ({
         start: now,
       });
     });
+
+    isFirstRun.current = false;
 
     const draw = () => {
       const time = performance.now();
@@ -119,6 +132,18 @@ export const useEntitiesLayer = ({
         });
       });
 
+      spawns.current.forEach((start, id) => {
+        const progress = Math.min(1, (time - start) / SPAWN_DURATION);
+        if (progress >= 1) {
+          spawns.current.delete(id);
+          return;
+        }
+
+        // Появление снизу вверх: здание или юнит «вырастает» на клетке.
+        const current = offsets.get(id) ?? { dx: 0, dy: 0 };
+        offsets.set(id, { ...current, scale: 0.4 + easeOut(progress) * 0.6 });
+      });
+
       effects.current = effects.current.filter(
         effect => time - effect.start < EFFECT_DURATION,
       );
@@ -135,7 +160,11 @@ export const useEntitiesLayer = ({
         );
       });
 
-      if (moves.current.size > 0 || effects.current.length > 0) {
+      if (
+        moves.current.size > 0 ||
+        spawns.current.size > 0 ||
+        effects.current.length > 0
+      ) {
         frame.current = requestAnimationFrame(draw);
       }
     };
@@ -144,5 +173,5 @@ export const useEntitiesLayer = ({
     draw();
 
     return () => cancelAnimationFrame(frame.current);
-  }, [buildings, cellSize, height, ref, units, width]);
+  }, [buildings, cellSize, height, pixelRatio, ref, units, width]);
 };

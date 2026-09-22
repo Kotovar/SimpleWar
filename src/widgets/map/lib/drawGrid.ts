@@ -1,6 +1,20 @@
 import { Cell, GRID } from '@shared/config';
 import { drawGroundDetails, sample } from './drawGroundDetails';
 
+/**
+ * Плотность буфера слоя: масштаб, который задал `setupCanvas`.
+ *
+ * Границы клеток и линии сетки округляем по ней. Иначе при дробном
+ * `cellSize × devicePixelRatio` часть границ попадает на половину пикселя
+ * экрана: через одну они размываются и темнеют, и клетки визуально
+ * собираются в блоки 2×2.
+ */
+const getPixelRatio = (ctx: CanvasRenderingContext2D) =>
+  ctx.getTransform().a || 1;
+
+const snap = (value: number, ratio: number) =>
+  Math.round(value * ratio) / ratio;
+
 const drawCellBackground = (
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -8,14 +22,23 @@ const drawCellBackground = (
   cellSize: number,
   color: { r: number; g: number; b: number },
   variation: number,
+  ratio: number,
 ) => {
-  ctx.fillStyle = `rgb(
-    ${color.r + variation},
-    ${color.g + variation},
-    ${color.b + variation}
-  )`;
+  // Без запасного нуля неверный шум даёт невалидный цвет: клетка остаётся
+  // закрашенной предыдущим цветом или чёрным.
+  const shade = Number.isFinite(variation) ? variation : 0;
 
-  ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+  ctx.fillStyle = `rgb(${color.r + shade}, ${color.g + shade}, ${color.b + shade})`;
+
+  const left = snap(x * cellSize, ratio);
+  const top = snap(y * cellSize, ratio);
+
+  ctx.fillRect(
+    left,
+    top,
+    snap((x + 1) * cellSize, ratio) - left,
+    snap((y + 1) * cellSize, ratio) - top,
+  );
 };
 
 // Блики на воде: короткие дуги, обрезанные по силуэту водоёма, чтобы не вылезать на берег.
@@ -70,9 +93,19 @@ export const drawBackgroundAndGrid = (
   grid: Cell[][],
   cellSize: number,
 ) => {
+  const ratio = getPixelRatio(ctx);
+
   grid.forEach((row, y) =>
     row.forEach((_, x) => {
-      drawCellBackground(ctx, x, y, cellSize, GRID.colorGrass, noise[y][x]);
+      drawCellBackground(
+        ctx,
+        x,
+        y,
+        cellSize,
+        GRID.colorGrass,
+        noise[y]?.[x] ?? 0,
+        ratio,
+      );
     }),
   );
 
@@ -132,19 +165,20 @@ export const drawBackgroundAndGrid = (
 
   drawWaterRipples(ctx, grid, water, cellSize);
 
-  // сетка поверх
+  // Сетка поверх: каждая линия — ровно один пиксель экрана без сглаживания,
+  // поэтому все линии одинаковой толщины на любом масштабе.
   const width = (grid[0]?.length ?? gridSize) * cellSize;
   const height = grid.length * cellSize;
-  ctx.strokeStyle = GRID.lineColor;
-  ctx.lineWidth = GRID.lineThickness;
+  const lineWidth = GRID.lineThickness / ratio;
+  const columns = grid[0]?.length ?? gridSize;
 
-  ctx.beginPath();
-  for (let i = 0; i <= gridSize; i++) {
-    const p = i * cellSize;
-    ctx.moveTo(p, 0);
-    ctx.lineTo(p, height);
-    ctx.moveTo(0, p);
-    ctx.lineTo(width, p);
+  ctx.fillStyle = GRID.lineColor;
+  // Число линий по каждой оси своё: на прямоугольной карте строк и колонок
+  // разное количество.
+  for (let x = 0; x <= columns; x++) {
+    ctx.fillRect(snap(x * cellSize, ratio), 0, lineWidth, height);
   }
-  ctx.stroke();
+  for (let y = 0; y <= grid.length; y++) {
+    ctx.fillRect(0, snap(y * cellSize, ratio), width, lineWidth);
+  }
 };

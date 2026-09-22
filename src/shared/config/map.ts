@@ -1,5 +1,8 @@
 export const CELL_SIZE = 32;
 
+/** Границы масштаба карты: клетка мельче 18 px нечитаема, крупнее 64 px не даёт обзора. */
+export const CELL_SIZE_LIMITS = { min: 18, max: 64, step: 1.15 };
+
 export const MAP_PRESETS = {
   small: { cols: 15, rows: 15 },
   medium: { cols: 24, rows: 24 },

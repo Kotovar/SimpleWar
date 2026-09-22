@@ -7,6 +7,7 @@ import {
   type Cell,
   type Unit,
 } from '@shared/config';
+import { BuildingIcon, TerrainIcon, UnitIcon } from '@shared/ui';
 import styles from './SelectedEntityInfo.styles.module.css';
 
 type Props = {
@@ -23,19 +24,19 @@ export const SelectedEntityInfo = ({ cell, unit, building }: Props) => {
       <div className={styles.EntityHeader}>
         {unit && (
           <>
-            <span className={styles.EntityIcon}>⚔️</span>
+            <UnitIcon size={20} />
             <span>{UNITS_NAME[unit.type]}</span>
           </>
         )}
         {building && (
           <>
-            <span className={styles.EntityIcon}>🏰</span>
+            <BuildingIcon size={20} />
             <span>{BUILDINGS_NAME[building.type]}</span>
           </>
         )}
         {cell && (
           <>
-            <span className={styles.EntityIcon}>🌍</span>
+            <TerrainIcon size={20} />
             <span>Клетка</span>
           </>
         )}

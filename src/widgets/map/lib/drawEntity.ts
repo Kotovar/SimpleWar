@@ -56,6 +56,18 @@ export const rect = (
   ctx.strokeRect(x, y, width, height);
 };
 
+/** Вымпел стороны: цветной флажок на крупных постройках. */
+export const banner = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  color: string,
+  height = 10,
+) => {
+  rect(ctx, '#8d7a63', x - 0.6, y, 1.6, height);
+  shape(ctx, color, [x + 1, y, x + 8, y + 2.5, x + 1, y + 5]);
+};
+
 export const shape = (
   ctx: CanvasRenderingContext2D,
   color: string,

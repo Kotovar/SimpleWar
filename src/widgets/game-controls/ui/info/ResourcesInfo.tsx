@@ -1,6 +1,7 @@
 import { useBuildingsSelectors } from '@entities/buildings';
 import { useEconomySelectors } from '@entities/economies';
 import { calculateIncome } from '@features/game-loop';
+import { GoldIcon, PopulationIcon, WoodIcon } from '@shared/ui';
 import styles from './ResourcesInfo.styles.module.css';
 
 export const ResourcesInfo = () => {
@@ -11,15 +12,17 @@ export const ResourcesInfo = () => {
   return (
     <div className={styles.Resources}>
       <div>
-        <span className={styles.Gold}>Золото:</span> {resources.player.gold}{' '}
+        <GoldIcon /> <span className={styles.Gold}>Золото:</span>{' '}
+        {resources.player.gold}{' '}
         <span className={styles.Income}>(+{income.gold}/ход)</span>
       </div>
       <div>
-        <span className={styles.Wood}>Древесина:</span> {resources.player.wood}{' '}
+        <WoodIcon /> <span className={styles.Wood}>Древесина:</span>{' '}
+        {resources.player.wood}{' '}
         <span className={styles.Income}>(+{income.wood}/ход)</span>
       </div>
       <div>
-        <span className={styles.Limit}>Лимит юнитов:</span>{' '}
+        <PopulationIcon /> <span className={styles.Limit}>Лимит юнитов:</span>{' '}
         {`${populationCap.player.occupied} из ${populationCap.player.max}`}{' '}
       </div>
     </div>

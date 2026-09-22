@@ -1,5 +1,5 @@
-import { type Owner } from '@shared/config';
-import { beginEntity, rect, shape } from './drawEntity';
+import { TEAM_MARKERS, type Owner } from '@shared/config';
+import { banner, beginEntity, rect, shape } from './drawEntity';
 
 export const drawBase = (
   ctx: CanvasRenderingContext2D,
@@ -26,6 +26,7 @@ export const drawBase = (
   ctx.fillStyle = '#536775';
   ctx.fillRect(7, 14, 3, 5);
   ctx.fillRect(22, 14, 3, 5);
+  banner(ctx, 16, 4, TEAM_MARKERS[owner].color, 12);
   ctx.restore();
 };
 
@@ -43,7 +44,7 @@ export const drawGoldMine = (
   rect(ctx, '#252e33', 10, 15, 12, 10);
   rect(ctx, '#b98a51', 8, 14, 3, 11);
   rect(ctx, '#b98a51', 21, 14, 3, 11);
-  rect(ctx, '#e1b578', 8, 12, 16, 3);
+  rect(ctx, TEAM_MARKERS[owner].color, 8, 12, 16, 3);
   shape(ctx, '#f5cd53', [14, 24, 16, 19, 20, 19, 23, 24]);
   ctx.restore();
 };
@@ -58,7 +59,7 @@ export const drawSawmill = (
 ) => {
   beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
   rect(ctx, '#b88b58', 6, 13, 19, 11);
-  shape(ctx, '#6d7e70', [3, 14, 10, 7, 22, 7, 28, 14]);
+  shape(ctx, TEAM_MARKERS[owner].color, [3, 14, 10, 7, 22, 7, 28, 14]);
   rect(ctx, '#303a36', 10, 16, 7, 8);
   // Светлые торцы брёвен — крупный опознавательный признак лесопилки.
   rect(ctx, '#805938', 17, 19, 10, 6);
@@ -89,6 +90,7 @@ export const drawFarm = (
   ctx.moveTo(26, 17);
   ctx.lineTo(26, 23);
   ctx.stroke();
+  banner(ctx, 24, 7, TEAM_MARKERS[owner].color, 8);
   ctx.restore();
 };
 
@@ -105,7 +107,11 @@ export const drawBarracks = (
   shape(ctx, '#98634c', [3, 14, 8, 8, 24, 8, 29, 14]);
   rect(ctx, '#41434a', 12, 18, 8, 7);
   // Большой щит над входом вместо мелких флагов.
-  shape(ctx, '#ddd9c7', [12, 10, 20, 10, 20, 14, 16, 18, 12, 14]);
+  shape(
+    ctx,
+    TEAM_MARKERS[owner].color,
+    [12, 10, 20, 10, 20, 14, 16, 18, 12, 14],
+  );
   ctx.fillStyle = '#736c59';
   ctx.fillRect(15, 11, 2, 4);
   ctx.restore();
@@ -130,6 +136,6 @@ export const drawTower = (
     ],
   );
   rect(ctx, '#384650', 14, 15, 4, 6);
-  rect(ctx, '#cdd4c8', 8, 23, 16, 2);
+  rect(ctx, TEAM_MARKERS[owner].color, 8, 23, 16, 2);
   ctx.restore();
 };

@@ -11,7 +11,11 @@ export const renderTerrainLayer = (
   cellSize: number,
   gridColumns: number,
 ) => {
-  const noise = generateNoise(gridColumns, TERRAIN_NOISE_AMPLITUDE);
+  // Шум покрывает и прямоугольную карту: строк может быть больше, чем колонок.
+  const noise = generateNoise(
+    Math.max(gridColumns, grid.length),
+    TERRAIN_NOISE_AMPLITUDE,
+  );
 
   drawBackgroundAndGrid(ctx, gridColumns, noise, grid, cellSize);
 

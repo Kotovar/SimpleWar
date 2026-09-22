@@ -4,6 +4,7 @@ import { nextTurn, resetGame } from '@features/game-loop';
 import { useSelectionSelectors } from '@features/selection';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import {
+  AiTurnBanner,
   ResourcesInfo,
   TurnControls,
   TurnInfo,
@@ -56,6 +57,8 @@ export const PhaseInProgress = () => {
           onReset={() => setShowResetConfirm(true)}
         />
       </header>
+
+      <AiTurnBanner />
 
       <aside className={styles.ContextPanel} aria-label='Выбранный объект'>
         {(cell || unit || building) && (

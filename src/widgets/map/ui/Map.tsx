@@ -1,4 +1,5 @@
-import { useRef, type MouseEvent } from 'react';
+import { useEffect, useRef, type MouseEvent } from 'react';
+import { CELL_SIZE } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsSelectors, useBuildingsStore } from '@entities/buildings';
 import { useSettingsSelectors } from '@entities/settings';
@@ -34,8 +35,71 @@ export const Map = () => {
     isClickOnCurrentSelection,
   } = useSelectionSelectors();
 
-  const { canvasWidth, canvasHeight, gridColumns, gridRows, cellSize } =
-    useSettingsSelectors();
+  const {
+    canvasWidth,
+    canvasHeight,
+    gridColumns,
+    gridRows,
+    cellSize,
+    zoomBy,
+    resetZoom,
+  } = useSettingsSelectors();
+  const viewport = useRef<HTMLDivElement>(null);
+  const wrapper = useRef<HTMLDivElement>(null);
+
+  // Колесо масштабирует карту, а не прокручивает её, поэтому слушатель не пассивный.
+  useEffect(() => {
+    const element = viewport.current;
+    if (!element) return;
+
+    let frame = 0;
+    let pending: { anchorX: number; anchorY: number; x: number; y: number };
+
+    const onWheel = (event: WheelEvent) => {
+      if (event.deltaY === 0) return;
+      event.preventDefault();
+
+      const box = wrapper.current?.getBoundingClientRect();
+      if (!box) return;
+
+      // Размер клетки берём из самой разметки: при быстрой серии событий
+      // состояние ещё не перерисовано, и значение из него уже неверно.
+      const size = box.width / gridColumns;
+
+      // Клетка под курсором должна остаться под ним и после масштабирования.
+      pending = {
+        anchorX: (event.clientX - box.left) / size,
+        anchorY: (event.clientY - box.top) / size,
+        x: event.clientX,
+        y: event.clientY,
+      };
+
+      zoomBy(event.deltaY < 0 ? 1 : -1);
+
+      // Одна коррекция на кадр по последнему якорю: иначе события одного кадра
+      // сдвинут прокрутку несколько раз подряд.
+      if (frame) return;
+
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+
+        const next = wrapper.current?.getBoundingClientRect();
+        const scroll = viewport.current;
+        if (!next || !scroll) return;
+
+        const nextSize = next.width / gridColumns;
+        scroll.scrollLeft += next.left - pending.x + pending.anchorX * nextSize;
+        scroll.scrollTop += next.top - pending.y + pending.anchorY * nextSize;
+      });
+    };
+
+    element.addEventListener('wheel', onWheel, { passive: false });
+
+    return () => {
+      element.removeEventListener('wheel', onWheel);
+      cancelAnimationFrame(frame);
+    };
+  }, [gridColumns, zoomBy]);
 
   const {
     reachableCells,
@@ -169,46 +233,61 @@ export const Map = () => {
   };
 
   return (
-    <div
-      key={`${phase}-${gridColumns}-${gridRows}`}
-      className={styles.MapViewport}
-      tabIndex={0}
-      role='region'
-      aria-label='Карта. Перетаскивайте средней или правой кнопкой мыши.'
-      onContextMenu={event => event.preventDefault()}
-      onPointerDown={event => {
-        if (event.button !== 1 && event.button !== 2) return;
-        event.preventDefault();
-        drag.current = { x: event.clientX, y: event.clientY };
-        event.currentTarget.setPointerCapture(event.pointerId);
-      }}
-      onPointerMove={event => {
-        if (!drag.current) return;
-        event.currentTarget.scrollLeft += drag.current.x - event.clientX;
-        event.currentTarget.scrollTop += drag.current.y - event.clientY;
-        drag.current = { x: event.clientX, y: event.clientY };
-      }}
-      onPointerUp={event => {
-        drag.current = null;
-        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-          event.currentTarget.releasePointerCapture(event.pointerId);
-        }
-      }}
-      onPointerCancel={() => {
-        drag.current = null;
-      }}
-      onLostPointerCapture={() => {
-        drag.current = null;
-      }}
-    >
+    <>
       <div
-        className={styles.CanvasWrapper}
-        style={{ width: CANVAS_SIZES.width, height: CANVAS_SIZES.height }}
+        key={`${phase}-${gridColumns}-${gridRows}`}
+        ref={viewport}
+        className={styles.MapViewport}
+        tabIndex={0}
+        role='region'
+        aria-label='Карта. Перетаскивайте средней или правой кнопкой мыши, масштабируйте колесом.'
+        onContextMenu={event => event.preventDefault()}
+        onPointerDown={event => {
+          if (event.button !== 1 && event.button !== 2) return;
+          event.preventDefault();
+          drag.current = { x: event.clientX, y: event.clientY };
+          event.currentTarget.setPointerCapture(event.pointerId);
+        }}
+        onPointerMove={event => {
+          if (!drag.current) return;
+          event.currentTarget.scrollLeft += drag.current.x - event.clientX;
+          event.currentTarget.scrollTop += drag.current.y - event.clientY;
+          drag.current = { x: event.clientX, y: event.clientY };
+        }}
+        onPointerUp={event => {
+          drag.current = null;
+          if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+            event.currentTarget.releasePointerCapture(event.pointerId);
+          }
+        }}
+        onPointerCancel={() => {
+          drag.current = null;
+        }}
+        onLostPointerCapture={() => {
+          drag.current = null;
+        }}
       >
-        <StartGameCanvas />
-        <CanvasLayers handleClick={handleCanvasClick} />
-        <FinishGameCanvas />
+        <div
+          ref={wrapper}
+          className={styles.CanvasWrapper}
+          style={{ width: CANVAS_SIZES.width, height: CANVAS_SIZES.height }}
+        >
+          <StartGameCanvas />
+          <CanvasLayers handleClick={handleCanvasClick} />
+          <FinishGameCanvas />
+        </div>
       </div>
-    </div>
+
+      {cellSize !== CELL_SIZE && (
+        <button
+          type='button'
+          className={styles.ZoomReset}
+          onClick={resetZoom}
+          title='Вернуть масштаб 100%'
+        >
+          {Math.round((cellSize / CELL_SIZE) * 100)}%
+        </button>
+      )}
+    </>
   );
 };

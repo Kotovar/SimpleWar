@@ -1,0 +1,66 @@
+.Overlay {
+  grid-area: map;
+  align-self: start;
+  justify-self: center;
+  z-index: 60;
+  margin-top: 16px;
+  pointer-events: none;
+}
+
+.Banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background-color: rgb(24 29 35 / 0.88);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-weight: 600;
+  opacity: 0;
+}
+
+/* Баннер держится заданное время и гаснет сам */
+.Visible {
+  animation: show 1s ease-out;
+}
+
+.Live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.Spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--danger-strong);
+  border-top-color: transparent;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes show {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  12%,
+  75% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}

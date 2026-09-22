@@ -4,3 +4,4 @@ export * from './TurnControls';
 export * from './SelectedEntityInfo';
 export * from './WorkerBuildOptions';
 export * from './UnitOptions';
+export * from './AiTurnBanner';

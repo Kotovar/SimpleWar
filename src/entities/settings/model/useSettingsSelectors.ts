@@ -1,9 +1,9 @@
 import { useSettingsStore } from '@entities/settings';
-import { CELL_SIZE } from '@shared/config';
 
 export const useSettingsSelectors = () => {
   const gridColumns = useSettingsStore(state => state.gridColumns);
   const gridRows = useSettingsStore(state => state.gridRows);
+  const cellSize = useSettingsStore(state => state.cellSize);
   const customSeed = useSettingsStore(state => state.customSeed);
   const mapGenerationMode = useSettingsStore(state => state.mapGenerationMode);
   const setGridSize = useSettingsStore(state => state.setGridSize);
@@ -11,18 +11,22 @@ export const useSettingsSelectors = () => {
     state => state.setMapGenerationMode,
   );
   const setCustomSeed = useSettingsStore(state => state.setCustomSeed);
+  const zoomBy = useSettingsStore(state => state.zoomBy);
+  const resetZoom = useSettingsStore(state => state.resetZoom);
 
   return {
-    canvasHeight: gridRows * CELL_SIZE,
-    canvasWidth: gridColumns * CELL_SIZE,
+    canvasHeight: gridRows * cellSize,
+    canvasWidth: gridColumns * cellSize,
     gridColumns,
     gridRows,
-    cellSize: CELL_SIZE,
+    cellSize,
     customSeed,
     mapGenerationMode,
 
     setGridSize,
     setMapGenerationMode,
     setCustomSeed,
+    zoomBy,
+    resetZoom,
   };
 };
