@@ -15,6 +15,8 @@ Canvas; сборка Vite (пакет `rolldown-vite`). Описание игр�
   затем `query-docs`.
 - При написании unit-тестов по заданным файлам/папкам прочитай проектный скил
   [simplewar-unit-tests](skills/simplewar-unit-tests/SKILL.md).
+- При написании JSDoc на русском для указанных функций прочитай проектный скил
+  [simplewar-jsdoc-ru](skills/simplewar-jsdoc-ru/SKILL.md).
 - После изменений кода: `npm run type-check`, `npm run lint`, `npm run build`;
   `npm test`; после изменений структуры также `npm run fsd-check`.
 - При изменении механик обновляй соответствующий файл в `docs`.
