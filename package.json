@@ -15,6 +15,7 @@
     "fsd-check": "npx steiger ./src",
     "preview": "vite preview",
     "lint-staged": "lint-staged",
+    "lint:length": "node scripts/check-file-length.ts",
     "prepare": "husky"
   },
   "dependencies": {
