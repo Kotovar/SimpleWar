@@ -9,13 +9,15 @@ export const TEAM_MARKERS: Record<
 };
 
 export const HP_BAR = {
-  widthRatio: 0.44, // Ширина HP-бара относительно клетки
-  heightRatio: 0.06, // Высота HP-бара
-  yOffsetRatio: 0.12, // Отступ сверху клетки
-  lineWidth: 1, // Цвет фона (пустое здоровье)
-  colorRed: 'hsla(0, 100%, 50%, 1.00)', // Цвет фона (пустое здоровье)
-  colorGreen: 'hsla(120, 100%, 50%, 1.00)', // Цвет заполнения (оставшееся здоровье)
-  colorBorder: 'hsla(0, 0%, 0%, 1.00)', // Цвет обводки
+  widthRatio: 0.65,
+  heightRatio: 0.085,
+  yOffsetRatio: 0.025,
+  lineWidth: 1,
+  colorRed: '#ee9278',
+  colorAmber: '#e8c76c',
+  colorGreen: '#a4ce83',
+  colorBackground: '#343e3e',
+  colorBorder: '#202c30',
 };
 
 // Совместимые экспорты прежних палитр: материалы больше не зависят от команды.
@@ -79,14 +81,19 @@ export const GRID = {
 };
 
 export const SELECTED = {
-  free: 'hsla(137, 100%, 50%, 0.44)',
-  enemy: 'hsla(0, 100%, 50%, 0.26)',
-  produce: 'hsla(233, 97%, 41%, 0.26)',
+  free: 'rgba(137, 201, 219, 0.16)',
+  enemy: 'rgba(244, 151, 122, 0.12)',
+  produce: 'rgba(234, 196, 110, 0.18)',
+  freeOutline: '#a3d3df',
+  enemyOutline: '#ffac91',
+  produceOutline: '#f0d58d',
   lineThickness: 2,
 } as const;
 
 export const SELECTION = {
-  colorOutline: 'hsla(148, 100%, 50%, 1.00)',
+  colorOutline: '#fff0c4',
+  colorShadow: '#374438',
+  cellFill: 'rgba(255, 240, 196, 0.09)',
 };
 
 export const TERRAIN = {

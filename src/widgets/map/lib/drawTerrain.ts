@@ -1,5 +1,6 @@
 import { TERRAIN } from '@shared/config';
 import { rect, shape } from './drawEntity';
+import { drawSelectionHighlight } from './drawSelectionHighlight';
 
 const beginTerrain = (
   ctx: CanvasRenderingContext2D,
@@ -83,17 +84,5 @@ export const drawTerrainHighlight = (
   cellY: number,
   cellSize: number,
 ) => {
-  const baseX = cellX * cellSize;
-  const baseY = cellY * cellSize;
-
-  ctx.strokeStyle = TERRAIN.colorSelectedTerrain;
-  ctx.lineWidth = TERRAIN.lineThickness * 2;
-  ctx.beginPath();
-  ctx.strokeRect(
-    baseX + TERRAIN.lineThickness * 3,
-    baseY + TERRAIN.lineThickness * 3,
-    cellSize - TERRAIN.lineThickness * 6,
-    cellSize - TERRAIN.lineThickness * 6,
-  );
-  ctx.stroke();
+  drawSelectionHighlight(ctx, cellX, cellY, cellSize, 'cell');
 };

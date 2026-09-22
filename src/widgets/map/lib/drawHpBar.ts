@@ -12,8 +12,8 @@ import { HP_BAR } from '@shared/config';
  * @param cellSize - Размер одной клетки в пикселях
  * @param restHp - Доля оставшегося здоровья (0 — мертв, 1 — полное здоровье)
  * @param options - Опциональные настройки для кастомизации
- * @param options.customYOffsetRatio - Переопределяет вертикальный отступ бара (по умолчанию {@link HP_BAR_Y_OFFSET_RATIO})
- * @param options.customWidthRatio - Переопределяет ширину бара (по умолчанию {@link HP_BAR_WIDTH_RATIO})
+ * @param options.customYOffsetRatio - Переопределяет вертикальный отступ бара (по умолчанию `HP_BAR.yOffsetRatio`)
+ * @param options.customWidthRatio - Переопределяет ширину бара (по умолчанию `HP_BAR.widthRatio`)
  *
  * @example
  * drawHpBar(ctx, unit.x, unit.y, cellSize, unit.hp / unit.maxHp);
@@ -51,14 +51,22 @@ export const drawHpBar = (
   const barX = baseX + (cellSize - barWidth) / 2;
   const barY = baseY + customYOffsetRatio * cellSize;
 
+  const ratio = Number.isFinite(restHp) ? Math.max(0, Math.min(1, restHp)) : 0;
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(barX, barY, barWidth, barHeight, barHeight / 2);
+  ctx.fillStyle = HP_BAR.colorBackground;
+  ctx.fill();
   ctx.strokeStyle = HP_BAR.colorBorder;
   ctx.lineWidth = HP_BAR.lineWidth;
-  ctx.strokeRect(barX, barY, barWidth, barHeight);
-
-  ctx.fillStyle = HP_BAR.colorRed;
-  ctx.fillRect(barX, barY, barWidth, barHeight);
-
-  const fillWidth = barWidth * Math.max(0, Math.min(1, restHp));
-  ctx.fillStyle = HP_BAR.colorGreen;
-  ctx.fillRect(barX, barY, fillWidth, barHeight);
+  ctx.stroke();
+  ctx.clip();
+  ctx.fillStyle =
+    ratio <= 0.3
+      ? HP_BAR.colorRed
+      : ratio <= 0.6
+        ? HP_BAR.colorAmber
+        : HP_BAR.colorGreen;
+  ctx.fillRect(barX, barY, barWidth * ratio, barHeight);
+  ctx.restore();
 };
