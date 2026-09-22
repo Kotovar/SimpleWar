@@ -9,8 +9,12 @@ export const GameControls = () => {
   const { phase } = useGameLoopSelectors();
 
   return (
-    <section className={styles.GameControls}>
-      <h1 className={styles.Title}>{GAME_TITLE}</h1>
+    <section
+      className={
+        phase === 'inProgress' ? styles.GameLayout : styles.GameControls
+      }
+    >
+      {phase !== 'inProgress' && <h1 className={styles.Title}>{GAME_TITLE}</h1>}
 
       {phase === 'setup' && <PhaseSetup />}
       {phase === 'inProgress' && <PhaseInProgress />}

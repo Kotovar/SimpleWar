@@ -1,9 +1,10 @@
-import type { MouseEvent } from 'react';
+import { useRef, type MouseEvent } from 'react';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsSelectors, useBuildingsStore } from '@entities/buildings';
 import { useSettingsSelectors } from '@entities/settings';
 import { useSelectionSelectors } from '@features/selection';
 import { attack } from '@features/combat';
+import { useGameLoopSelectors } from '@features/game-loop';
 import { build } from '@features/build';
 import { spawn } from '@features/spawn';
 import {
@@ -23,6 +24,8 @@ import { CanvasLayers } from './CanvasLayers';
 import styles from './styles.module.css';
 
 export const Map = () => {
+  const { phase } = useGameLoopSelectors();
+  const drag = useRef<{ x: number; y: number } | null>(null);
   const {
     terrainSelection,
     unitsSelection,
@@ -63,7 +66,7 @@ export const Map = () => {
     event: MouseEvent<HTMLCanvasElement>,
     canvas: HTMLCanvasElement | null,
   ) => {
-    if (!canvas) return;
+    if (!canvas || event.button !== 0 || drag.current) return;
 
     const { x: gridX, y: gridY } = getGridCoordsFromEvent(
       event,
@@ -167,12 +170,45 @@ export const Map = () => {
 
   return (
     <div
-      className={styles.CanvasWrapper}
-      style={{ width: CANVAS_SIZES.width, height: CANVAS_SIZES.height }}
+      key={`${phase}-${gridColumns}-${gridRows}`}
+      className={styles.MapViewport}
+      tabIndex={0}
+      role='region'
+      aria-label='Карта. Перетаскивайте средней или правой кнопкой мыши.'
+      onContextMenu={event => event.preventDefault()}
+      onPointerDown={event => {
+        if (event.button !== 1 && event.button !== 2) return;
+        event.preventDefault();
+        drag.current = { x: event.clientX, y: event.clientY };
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }}
+      onPointerMove={event => {
+        if (!drag.current) return;
+        event.currentTarget.scrollLeft += drag.current.x - event.clientX;
+        event.currentTarget.scrollTop += drag.current.y - event.clientY;
+        drag.current = { x: event.clientX, y: event.clientY };
+      }}
+      onPointerUp={event => {
+        drag.current = null;
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+      }}
+      onPointerCancel={() => {
+        drag.current = null;
+      }}
+      onLostPointerCapture={() => {
+        drag.current = null;
+      }}
     >
-      <StartGameCanvas />
-      <CanvasLayers handleClick={handleCanvasClick} />
-      <FinishGameCanvas />
+      <div
+        className={styles.CanvasWrapper}
+        style={{ width: CANVAS_SIZES.width, height: CANVAS_SIZES.height }}
+      >
+        <StartGameCanvas />
+        <CanvasLayers handleClick={handleCanvasClick} />
+        <FinishGameCanvas />
+      </div>
     </div>
   );
 };

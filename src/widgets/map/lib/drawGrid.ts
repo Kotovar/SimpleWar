@@ -1,5 +1,4 @@
 import { Cell, GRID } from '@shared/config';
-import { useSettingsStore } from '@entities/settings';
 
 const drawCellBackground = (
   ctx: CanvasRenderingContext2D,
@@ -46,9 +45,9 @@ export const drawBackgroundAndGrid = (
   for (let i = 0; i <= gridSize; i++) {
     const p = i * cellSize;
     ctx.moveTo(p, 0);
-    ctx.lineTo(p, useSettingsStore.getState().canvasWidth);
+    ctx.lineTo(p, ctx.canvas.height);
     ctx.moveTo(0, p);
-    ctx.lineTo(useSettingsStore.getState().canvasHeight, p);
+    ctx.lineTo(ctx.canvas.width, p);
   }
   ctx.stroke();
 };

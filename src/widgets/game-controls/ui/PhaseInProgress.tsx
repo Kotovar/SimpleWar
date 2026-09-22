@@ -48,28 +48,30 @@ export const PhaseInProgress = () => {
 
   return (
     <>
-      <section className={styles.Section}>
+      <header className={styles.Toolbar}>
         <TurnInfo />
         <ResourcesInfo />
         <TurnControls
           onNextTurn={onNextTurn}
           onReset={() => setShowResetConfirm(true)}
         />
-      </section>
+      </header>
 
-      {(cell || unit || building) && (
-        <>
-          <SelectedEntityInfo cell={cell} unit={unit} building={building} />
-          {unit && <WorkerBuildOptions unit={unit} />}
-          {building && <UnitOptions building={building} />}
-        </>
-      )}
+      <aside className={styles.ContextPanel} aria-label='Выбранный объект'>
+        {(cell || unit || building) && (
+          <>
+            <SelectedEntityInfo cell={cell} unit={unit} building={building} />
+            {unit && <WorkerBuildOptions unit={unit} />}
+            {building && <UnitOptions building={building} />}
+          </>
+        )}
 
-      {selection === null && (
-        <div className={styles.Hint}>
-          Кликните по карте, чтобы выбрать клетку
-        </div>
-      )}
+        {selection === null && (
+          <div className={styles.Hint}>
+            Кликните по карте, чтобы выбрать клетку
+          </div>
+        )}
+      </aside>
 
       <ConfirmDialog
         isOpen={showResetConfirm}

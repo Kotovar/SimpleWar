@@ -75,14 +75,15 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
               className={styles.BuildButton}
               disabled={!check.canSpawn}
               onClick={() => onClick(buildingType, requiredField)}
-              title={check.message}
+              aria-pressed={selectedBuildingForSpawn === buildingType}
+              title={[check.message, infoText].filter(Boolean).join('. ')}
             >
-              {name}
+              <span className={styles.Name}>{name}</span>
               <small className={styles.Cost}>🪙{cost.gold} золота</small>
               {cost.wood === 0 ? null : (
                 <small className={styles.Cost}>🌳{cost.wood} дерева</small>
               )}
-              {infoText && (
+              {selectedBuildingForSpawn === buildingType && infoText && (
                 <small className={styles.InfoText}>{infoText}</small>
               )}
             </button>

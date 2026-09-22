@@ -1,6 +1,7 @@
 .ButtonRow {
   display: flex;
-  gap: 16px;
+  gap: 12px;
+  align-items: center;
   justify-content: center;
 }
 
@@ -9,7 +10,7 @@
   color: oklab(100% 0 0);
   border: none;
   border-radius: 8px;
-  padding: 12px 24px;
+  padding: 10px 16px;
   font-size: 1.1em;
   cursor: pointer;
   align-self: center;
@@ -30,4 +31,21 @@
   &:hover {
     background-color: oklab(54% 0.18 0.076);
   }
+}
+
+.Menu {
+  position: relative;
+}
+
+.Menu summary {
+  cursor: pointer;
+  padding: 8px;
+}
+
+.Menu .DangerButton {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 100;
+  white-space: nowrap;
 }

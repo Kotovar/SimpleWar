@@ -74,9 +74,10 @@ export const UnitOptions = ({ building }: Props) => {
               className={styles.UnitButton}
               disabled={!check.canSpawn}
               onClick={() => onClick(spawnType, 'grass')}
-              title={check.message}
+              aria-pressed={selectedUnitForSpawn === spawnType}
+              title={[check.message, infoText].filter(Boolean).join('. ')}
             >
-              {name}
+              <span className={styles.Name}>{name}</span>
 
               <small className={styles.Cost}>🪙{cost.gold} золота</small>
 
@@ -88,7 +89,7 @@ export const UnitOptions = ({ building }: Props) => {
                 ⚡{requiresLimit} {requiresLimit === 1 ? 'слот' : 'слота'}{' '}
                 населения
               </small>
-              {infoText && (
+              {selectedUnitForSpawn === spawnType && infoText && (
                 <small className={styles.InfoText}>{infoText}</small>
               )}
             </button>

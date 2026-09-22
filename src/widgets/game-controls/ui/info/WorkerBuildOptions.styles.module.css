@@ -1,5 +1,5 @@
 .BuildSection {
-  margin-top: 16px;
+  margin-top: 0;
   padding-top: 12px;
   border-top: 1px solid #444;
 }
@@ -14,10 +14,9 @@
 .BuildButtons {
   display: flex;
   gap: 8px;
-  padding: 10px 12px;
 
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-direction: column;
+
   justify-content: flex-start;
 }
 
@@ -30,7 +29,7 @@
   cursor: pointer;
   font-size: 0.95em;
   text-align: left;
-  min-width: 220px;
+  min-width: 0;
 
   &:hover:not(:disabled) {
     background: #3a5a3a;
@@ -51,7 +50,8 @@
   }
 
   small {
-    display: block;
+    display: inline;
+    margin-right: 8px;
     font-size: 0.8em;
     opacity: 0.8;
     margin-top: 2px;
@@ -70,4 +70,19 @@ small.InfoText {
   opacity: 0.85;
   font-style: italic;
   margin-top: 8px;
+}
+
+.Name {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.BuildButton[aria-pressed='true'] {
+  outline: 2px solid #4a7a4a;
+  outline-offset: -2px;
+}
+
+small.InfoText {
+  display: block;
 }

@@ -1,9 +1,36 @@
+.GameLayout {
+  display: contents;
+}
+
 .GameControls {
   display: flex;
   flex-direction: column;
-
   gap: 16px;
-  margin-inline: auto;
+}
+
+.Toolbar {
+  grid-area: toolbar;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+.ContextPanel {
+  grid-area: panel;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ContextPanel > * {
+  flex-shrink: 0;
 }
 
 .Title {

@@ -28,8 +28,8 @@ export const Game = () => {
   }, [phase]);
 
   return (
-    <main className={styles.Main}>
-      <Map />
+    <main className={phase === 'inProgress' ? styles.Main : styles.Setup}>
+      {phase === 'inProgress' && <Map />}
       <GameControls />
     </main>
   );

@@ -19,9 +19,12 @@ export const TurnControls = ({ onNextTurn, onReset }: Props) => {
         Завершить ход
       </button>
 
-      <button className={styles.DangerButton} onClick={onReset}>
-        Сбросить игру
-      </button>
+      <details className={styles.Menu}>
+        <summary>Меню</summary>
+        <button className={styles.DangerButton} onClick={onReset}>
+          Сбросить игру
+        </button>
+      </details>
     </div>
   );
 };

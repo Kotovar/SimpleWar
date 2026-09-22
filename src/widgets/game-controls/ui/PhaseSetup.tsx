@@ -7,11 +7,9 @@ import styles from './styles.module.css';
 
 export const PhaseSetup = () => {
   const {
-    canvasWidth,
     gridRows,
     mapGenerationMode,
     customSeed,
-    setCanvasSize,
     setGridSize,
     setCustomSeed,
     setMapGenerationMode,
@@ -32,117 +30,19 @@ export const PhaseSetup = () => {
       <section className={styles.Section}>
         <div className={styles.Label}>Размер карты</div>
         <div className={styles.ButtonGroup}>
-          <button
-            className={clsx(styles.ToggleButton, {
-              [styles.Active]: canvasWidth === MAP_PRESETS.small.canvas.w,
-            })}
-            onClick={() =>
-              setCanvasSize(
-                MAP_PRESETS.small.canvas.w,
-                MAP_PRESETS.small.canvas.h,
-              )
-            }
-          >
-            {MAP_PRESET_LABELS.small.canvas}
-          </button>
-          <button
-            className={clsx(styles.ToggleButton, {
-              [styles.Active]: canvasWidth === MAP_PRESETS.medium.canvas.w,
-            })}
-            onClick={() =>
-              setCanvasSize(
-                MAP_PRESETS.medium.canvas.w,
-                MAP_PRESETS.medium.canvas.h,
-              )
-            }
-          >
-            {MAP_PRESET_LABELS.medium.canvas}
-          </button>
-          <button
-            className={clsx(styles.ToggleButton, {
-              [styles.Active]: canvasWidth === MAP_PRESETS.large.canvas.w,
-            })}
-            onClick={() =>
-              setCanvasSize(
-                MAP_PRESETS.large.canvas.w,
-                MAP_PRESETS.large.canvas.h,
-              )
-            }
-          >
-            {MAP_PRESET_LABELS.large.canvas}
-          </button>
-          <button
-            className={clsx(styles.ToggleButton, {
-              [styles.Active]: canvasWidth === MAP_PRESETS.extra.canvas.w,
-            })}
-            onClick={() =>
-              setCanvasSize(
-                MAP_PRESETS.extra.canvas.w,
-                MAP_PRESETS.extra.canvas.h,
-              )
-            }
-          >
-            {MAP_PRESET_LABELS.extra.canvas}
-          </button>
-        </div>
-      </section>
-
-      <section className={styles.Section}>
-        <div className={styles.Label}>Количество клеток</div>
-        <div className={styles.ButtonGroup}>
-          <button
-            className={clsx(styles.ToggleButton, {
-              [styles.Active]: gridRows === MAP_PRESETS.small.grid.rows,
-            })}
-            onClick={() =>
-              setGridSize(
-                MAP_PRESETS.small.grid.cols,
-                MAP_PRESETS.small.grid.rows,
-              )
-            }
-          >
-            {MAP_PRESET_LABELS.small.grid}
-          </button>
-          <button
-            className={clsx(styles.ToggleButton, {
-              [styles.Active]: gridRows === MAP_PRESETS.medium.grid.rows,
-            })}
-            onClick={() =>
-              setGridSize(
-                MAP_PRESETS.medium.grid.cols,
-                MAP_PRESETS.medium.grid.rows,
-              )
-            }
-          >
-            {MAP_PRESET_LABELS.medium.grid}
-          </button>
-          <button
-            className={clsx(styles.ToggleButton, {
-              [styles.Active]: gridRows === MAP_PRESETS.large.grid.rows,
-            })}
-            onClick={() =>
-              setGridSize(
-                MAP_PRESETS.large.grid.cols,
-                MAP_PRESETS.large.grid.rows,
-              )
-            }
-          >
-            {MAP_PRESET_LABELS.large.grid}
-          </button>
-
-          <button
-            className={clsx(styles.ToggleButton, {
-              [styles.Active]: gridRows === MAP_PRESETS.extra.grid.rows,
-            })}
-            onClick={() =>
-              setGridSize(
-                MAP_PRESETS.extra.grid.cols,
-                MAP_PRESETS.extra.grid.rows,
-              )
-            }
-          >
-            {MAP_PRESET_LABELS.extra.grid}
-          </button>
+          {Object.entries(MAP_PRESETS).map(([key, preset]) => (
+            <button
+              key={key}
+              className={clsx(styles.ToggleButton, {
+                [styles.Active]: gridRows === preset.rows,
+              })}
+              aria-pressed={gridRows === preset.rows}
+              onClick={() => setGridSize(preset.cols, preset.rows)}
+            >
+              {MAP_PRESET_LABELS[key as keyof typeof MAP_PRESETS]} (
+              {preset.cols} × {preset.rows})
+            </button>
+          ))}
         </div>
       </section>
 

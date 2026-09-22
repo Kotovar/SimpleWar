@@ -1,7 +1,16 @@
 .Main {
   display: grid;
+  box-sizing: border-box;
+  height: 100vh;
   padding: 8px;
-  gap: 16px;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas: 'toolbar toolbar' 'map panel';
+}
 
-  grid-template-columns: 1fr 1fr;
+.Setup {
+  max-width: 640px;
+  margin: 48px auto;
+  padding: 24px;
 }
