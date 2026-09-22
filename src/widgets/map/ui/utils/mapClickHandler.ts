@@ -23,6 +23,10 @@ export const handleClickWithoutSelectedUnit = (
 
   if (building) {
     selectBuilding(building.id);
+    if (building.owner === 'player' && building.role === 'combat') {
+      // TODO: Поменять название функции
+      calculateMovement(building.id);
+    }
     return true;
   }
 

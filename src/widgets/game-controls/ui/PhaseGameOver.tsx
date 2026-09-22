@@ -4,7 +4,7 @@ import { useHighlightStore, useMovementSelectors } from '@features/pathfinding';
 import styles from './styles.module.css';
 
 export const PhaseGameOver = () => {
-  const { activePlayer, currentTurn } = useGameLoopSelectors();
+  const { winner, currentTurn } = useGameLoopSelectors();
   const { clearSelection } = useSelectionSelectors();
   const { resetStore: clearMovement } = useMovementSelectors();
   const { resetStore: clearHighlight } = useHighlightStore();
@@ -19,7 +19,7 @@ export const PhaseGameOver = () => {
   return (
     <section className={styles.Section}>
       <div className={styles.GameOverTitle}>
-        {activePlayer === 'player' ? 'Победа!' : 'Поражение...'}
+        {winner === 'player' ? 'Победа!' : 'Поражение...'}
       </div>
       <div>Игра завершена за {currentTurn} ходов</div>
 

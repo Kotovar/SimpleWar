@@ -1,1 +1,1 @@
-export * from './useStartGame';
+export * from './initializeGame';

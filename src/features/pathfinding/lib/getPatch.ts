@@ -9,17 +9,18 @@ export const getPath = (
   const { x: startX, y: startY } = firstPosition;
   const { x: endX, y: endY } = lastPosition;
 
-  const wasStartWalkable = pfGrid.isWalkableAt(startX, startY);
-  const wasEndWalkable = pfGrid.isWalkableAt(endX, endY);
+  if (
+    ![startX, startY, endX, endY].every(Number.isInteger) ||
+    !pfGrid.isInside(startX, startY) ||
+    !pfGrid.isInside(endX, endY) ||
+    !pfGrid.isWalkableAt(endX, endY)
+  )
+    return [];
 
-  pfGrid.setWalkableAt(startX, startY, true);
-  pfGrid.setWalkableAt(endX, endY, true);
+  // Pathfinding stores visited nodes on the grid; each search needs a fresh copy.
+  const searchGrid = pfGrid.clone();
+  searchGrid.setWalkableAt(startX, startY, true);
 
   const finder = new PF.AStarFinder();
-  const path = finder.findPath(startX, startY, endX, endY, pfGrid);
-
-  pfGrid.setWalkableAt(startX, startY, wasStartWalkable);
-  pfGrid.setWalkableAt(endX, endY, wasEndWalkable);
-
-  return path;
+  return finder.findPath(startX, startY, endX, endY, searchGrid);
 };

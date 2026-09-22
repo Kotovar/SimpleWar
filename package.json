@@ -9,6 +9,9 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "type-check": "tsc --noEmit --pretty false",
+    "test": "vitest run",
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
+    "test:integration": "vitest run .integration.test.ts",
     "fsd-check": "npx steiger ./src",
     "preview": "vite preview",
     "lint-staged": "lint-staged",
@@ -44,7 +47,8 @@
     "steiger": "^0.5.11",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
-    "vite": "npm:rolldown-vite@7.2.5"
+    "vite": "npm:rolldown-vite@7.2.5",
+    "vitest": "4.1.11"
   },
   "overrides": {
     "vite": "npm:rolldown-vite@7.2.5"

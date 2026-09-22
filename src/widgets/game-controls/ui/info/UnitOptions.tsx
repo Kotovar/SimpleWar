@@ -70,6 +70,7 @@ export const UnitOptions = ({ building }: Props) => {
 
           return (
             <button
+              key={spawnType}
               className={styles.UnitButton}
               disabled={!check.canSpawn}
               onClick={() => onClick(spawnType, 'grass')}

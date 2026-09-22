@@ -52,7 +52,11 @@ export const useSelectionStore = create<SelectionState>()(
         : null;
     },
 
-    clearSelection: () => set({ selection: null }),
+    clearSelection: () => {
+      set({ selection: null });
+      useUnitsStore.getState().clearSelectedUnitForSpawn();
+      useBuildingsStore.getState().clearSelectedBuildingForSpawn();
+    },
 
     isClickOnCurrentSelection: (x: number, y: number) => {
       const selection = get().selection;

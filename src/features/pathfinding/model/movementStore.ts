@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import type { Position } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
+import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
 import {
   getReachableCells,
@@ -25,25 +26,28 @@ export const useMovementStore = create<MovementState>()(
     currentPath: null,
 
     calculateMovement: unitId => {
-      const unit = useUnitsStore.getState().units[unitId];
-      if (!unit) return;
+      const { units } = useUnitsStore.getState();
+      const unit = units[unitId];
+      const entity =
+        unitId in units ? unit : useBuildingsStore.getState().buildings[unitId];
+      if (!entity) return;
 
       const grid = useMapStore.getState().grid;
-      const pfGrid = createMovementPFGrid(grid);
-
-      const reachable = getReachableCells(
-        pfGrid,
-        unit.x,
-        unit.y,
-        unit.movePoints,
-      );
+      const reachable = unit
+        ? getReachableCells(
+            createMovementPFGrid(grid),
+            unit.x,
+            unit.y,
+            unit.movePoints,
+          )
+        : null;
 
       const attackable =
-        unit.role === 'military' && unit.attackPoints > 0
-          ? getAttackableTargets(
-              { x: unit.x, y: unit.y },
-              unit.attackRange,
-            ).map(enemy => ({ x: enemy.x, y: enemy.y }))
+        (entity.role === 'military' || entity.role === 'combat') &&
+        entity.attackPoints > 0
+          ? getAttackableTargets(entity, entity.attackRange, entity.owner).map(
+              enemy => ({ x: enemy.x, y: enemy.y }),
+            )
           : null;
 
       set(state => {

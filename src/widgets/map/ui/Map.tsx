@@ -1,5 +1,5 @@
 import type { MouseEvent } from 'react';
-import { useUnitsSelectors, useUnitsStore } from '@entities/units';
+import { useUnitsStore } from '@entities/units';
 import { useBuildingsSelectors, useBuildingsStore } from '@entities/buildings';
 import { useSettingsSelectors } from '@entities/settings';
 import { useSelectionSelectors } from '@features/selection';
@@ -7,6 +7,7 @@ import { attack } from '@features/combat';
 import { build } from '@features/build';
 import { spawn } from '@features/spawn';
 import {
+  move,
   useMovementSelectors,
   useHighlightSelectors,
 } from '@features/pathfinding';
@@ -22,8 +23,6 @@ import { CanvasLayers } from './CanvasLayers';
 import styles from './styles.module.css';
 
 export const Map = () => {
-  const { moveUnit } = useUnitsSelectors();
-
   const {
     terrainSelection,
     unitsSelection,
@@ -125,7 +124,7 @@ export const Map = () => {
         reachableCells,
         attackableTargets,
         buildableCells,
-        moveUnit,
+        move,
         attack,
         build,
         clearSelection,
@@ -138,6 +137,18 @@ export const Map = () => {
 
     // 5. Выбрано своё здание
     if (selectedBuilding && selectedBuilding.owner === 'player') {
+      const target = unit ?? building;
+      if (
+        selectedBuilding.role === 'combat' &&
+        target &&
+        attackableTargets?.some(cell => cell.x === gridX && cell.y === gridY)
+      ) {
+        attack(selectedBuilding.id, target.id);
+        clearSelection();
+        clearMovement();
+        clearHighlight();
+        return;
+      }
       handleClickWithPlayerBuildingSelected(
         selectedBuilding,
         gridX,

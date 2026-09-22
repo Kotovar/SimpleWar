@@ -1,5 +1,6 @@
 import { createNoise2D } from 'simplex-noise';
 import type { Cell, CellType } from '@shared/config';
+import { createRandom } from './createRandom';
 
 /**
  * Базовое количество золота на клетку.
@@ -53,9 +54,23 @@ export const generateMap = (
   height: number,
   seed?: number,
 ): Cell[][] => {
+  if (
+    !Number.isInteger(width) ||
+    !Number.isInteger(height) ||
+    width <= 0 ||
+    height <= 0
+  ) {
+    throw new RangeError(
+      'Размеры карты должны быть положительными целыми числами.',
+    );
+  }
+  if (seed !== undefined && !Number.isFinite(seed)) {
+    throw new RangeError('Сид должен быть конечным числом.');
+  }
   const grid: Cell[][] = [];
 
-  const noise2D = createNoise2D(() => seed ?? Math.random());
+  const random = createRandom(seed);
+  const noise2D = createNoise2D(random);
 
   const avgSize = (width + height) / 2;
   const featureScale = avgSize / 3;
@@ -130,10 +145,8 @@ export const generateMap = (
       attempt < 50 && placedInCluster < targetInCluster;
       attempt++
     ) {
-      const dx =
-        Math.floor(Math.random() * (clusterRadius * 2 + 1)) - clusterRadius;
-      const dy =
-        Math.floor(Math.random() * (clusterRadius * 2 + 1)) - clusterRadius;
+      const dx = Math.floor(random() * (clusterRadius * 2 + 1)) - clusterRadius;
+      const dy = Math.floor(random() * (clusterRadius * 2 + 1)) - clusterRadius;
 
       const x = center.x + dx;
       const y = center.y + dy;

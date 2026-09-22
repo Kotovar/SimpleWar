@@ -6,7 +6,8 @@ import { useEconomyStore } from '@entities/economies';
 import { calculateIncome, useGameLoopStore } from '@features/game-loop';
 
 export const nextTurn = () => {
-  const { activePlayer } = useGameLoopStore.getState();
+  const { activePlayer, phase } = useGameLoopStore.getState();
+  if (phase !== 'inProgress') return;
   const { getEconomicBuildings } = useBuildingsStore.getState();
   const { addResources } = useEconomyStore.getState();
 

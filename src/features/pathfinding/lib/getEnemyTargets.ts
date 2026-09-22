@@ -10,12 +10,12 @@ type Attackable = {
   kind: 'unit' | 'building';
 };
 
-export const getEnemyTargets = (): Attackable[] => {
+export const getEnemyTargets = (owner: Owner): Attackable[] => {
   const units = useUnitsStore.getState().units;
   const buildings = useBuildingsStore.getState().buildings;
 
   const enemyUnits: Attackable[] = Object.values(units)
-    .filter(unit => unit.owner === 'ai')
+    .filter(unit => unit.owner !== owner)
     .map(unit => ({
       id: unit.id,
       x: unit.x,
@@ -25,7 +25,7 @@ export const getEnemyTargets = (): Attackable[] => {
     }));
 
   const enemyBuildings: Attackable[] = Object.values(buildings)
-    .filter(building => building.owner === 'ai')
+    .filter(building => building.owner !== owner)
     .map(building => ({
       id: building.id,
       x: building.x,

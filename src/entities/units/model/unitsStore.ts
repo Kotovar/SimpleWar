@@ -15,7 +15,7 @@ type UnitsState = {
     owner: Owner,
     initialSpawn?: boolean,
   ) => string | null;
-  moveUnit: (id: string, x: number, y: number) => void;
+  moveUnit: (id: string, x: number, y: number, cost: number) => void;
   getUnitAt: (x?: number, y?: number) => Unit | null;
   getUnits: (owner: Player) => Unit[];
   damageUnit: (id: string, damage: number) => void;
@@ -48,20 +48,17 @@ export const useUnitsStore = create<UnitsState>()(
     getUnits: owner =>
       Object.values(get().units).filter(unit => unit.owner === owner),
 
-    moveUnit: (id, x, y) =>
+    moveUnit: (id, x, y, cost) =>
       set(state => {
         const unit = state.units[id];
         if (!unit) return;
 
-        const dist = Math.abs(unit.x - x) + Math.abs(unit.y - y);
+        if (!Number.isInteger(cost) || cost <= 0 || cost > unit.movePoints)
+          return;
 
-        if (dist > unit.movePoints) return;
-
-        if (unit) {
-          unit.x = x;
-          unit.y = y;
-          unit.movePoints -= dist;
-        }
+        unit.x = x;
+        unit.y = y;
+        unit.movePoints -= cost;
       }),
 
     damageUnit: (id, damage) => {
@@ -158,6 +155,7 @@ export const useUnitsStore = create<UnitsState>()(
     resetStore: () => {
       set(state => {
         state.units = {};
+        state.selectedUnitForSpawn = null;
       });
     },
   })),

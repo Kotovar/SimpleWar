@@ -17,7 +17,7 @@ export const PhaseSetup = () => {
     setMapGenerationMode,
   } = useSettingsSelectors();
 
-  const { startGame } = useGameLoopSelectors();
+  const { startGame, startError } = useGameLoopSelectors();
 
   const handleSeedChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
@@ -184,13 +184,14 @@ export const PhaseSetup = () => {
             </label>
 
             <p className={styles.SeedWarning}>
-              Внимание: карта может быть непроходимой!
+              Непроходимая карта не будет запущена. В таком случае измените сид.
             </p>
           </div>
         )}
       </section>
 
       <section className={styles.Section}>
+        {startError && <p role='alert'>{startError}</p>}
         <button className={styles.PrimaryButton} onClick={startGame}>
           Начать игру
         </button>

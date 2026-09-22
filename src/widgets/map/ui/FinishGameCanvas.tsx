@@ -8,7 +8,7 @@ import styles from './styles.module.css';
 
 export const FinishGameCanvas = () => {
   const uiOverlayRef = useRef<HTMLCanvasElement>(null);
-  const { phase, activePlayer } = useGameLoopSelectors();
+  const { phase, winner } = useGameLoopSelectors();
   const { canvasWidth, canvasHeight } = useSettingsSelectors();
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export const FinishGameCanvas = () => {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(
-        activePlayer === 'player' ? 'Победа!' : 'Поражение...',
+        winner === 'player' ? 'Победа!' : 'Поражение...',
         canvasWidth / 2,
         canvasHeight / 2 - START_CANVAS.marginTop,
       );
@@ -39,7 +39,7 @@ export const FinishGameCanvas = () => {
         canvasHeight / 2 + START_CANVAS.marginBottom,
       );
     }
-  }, [activePlayer, canvasHeight, canvasWidth, phase]);
+  }, [winner, canvasHeight, canvasWidth, phase]);
 
   return (
     <>

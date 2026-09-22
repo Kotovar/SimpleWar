@@ -2,6 +2,8 @@ import { BUILDINGS_CONFIG, type Owner } from '@shared/config';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
 import { useEconomyStore } from '@entities/economies';
+import { useMapStore } from '@entities/maps';
+import { useGameLoopStore } from '@entities/games';
 import { canSpawnBuilding } from '@shared/lib';
 
 export const build = (
@@ -10,6 +12,10 @@ export const build = (
   y: number,
   owner: Owner,
 ) => {
+  const { phase, activePlayer } = useGameLoopStore.getState();
+
+  if (phase !== 'inProgress' || activePlayer !== owner) return;
+
   const { spawnBuilding, selectedBuildingForSpawn } =
     useBuildingsStore.getState();
 
@@ -24,7 +30,26 @@ export const build = (
   const buildCosts = config.cost;
 
   const worker = units[selectedUnitId];
-  if (!worker || !('buildPoints' in worker)) return;
+  if (
+    !worker ||
+    worker.owner !== owner ||
+    worker.role !== 'civil' ||
+    !worker.canBuild ||
+    !worker.buildableBuildings.includes(selectedBuildingForSpawn)
+  )
+    return;
+
+  const cell = useMapStore.getState().getCell(x, y);
+  if (
+    !Number.isInteger(x) ||
+    !Number.isInteger(y) ||
+    !cell ||
+    cell.type !== (config.requiredField ?? 'grass') ||
+    Math.max(Math.abs(worker.x - x), Math.abs(worker.y - y)) !== 1 ||
+    useUnitsStore.getState().getUnitAt(x, y) ||
+    useBuildingsStore.getState().getBuildingAt(x, y)
+  )
+    return;
 
   const check = canSpawnBuilding(
     selectedBuildingForSpawn,
@@ -37,7 +62,7 @@ export const build = (
     return;
   }
 
-  spawnBuilding(selectedBuildingForSpawn, x, y, owner);
+  if (!spawnBuilding(selectedBuildingForSpawn, x, y, owner)) return;
   changeBuildPoints(selectedUnitId);
-  removeResources('player', buildCosts);
+  removeResources(owner, buildCosts);
 };

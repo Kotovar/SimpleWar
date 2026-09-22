@@ -1,15 +1,13 @@
 import { useEffect } from 'react';
 import { initGameLoopEvents, useGameLoopSelectors } from '@features/game-loop';
 import { Map } from '@widgets/map';
-import { useStartGame } from '@widgets/start-game';
+import { initializeGame } from '@widgets/start-game';
 import { GameControls } from '@widgets/game-controls';
 import { initPopulationSystem } from '@app/system';
 import { runAITurn } from '@app/game/ai';
 import styles from './styles.module.css';
 
 export const Game = () => {
-  const startGame = useStartGame();
-
   const { activePlayer, phase } = useGameLoopSelectors();
 
   useEffect(() => {
@@ -18,16 +16,16 @@ export const Game = () => {
   }, []);
 
   useEffect(() => {
-    if (activePlayer === 'ai') {
+    if (activePlayer === 'ai' && phase === 'inProgress') {
       runAITurn();
     }
-  }, [activePlayer]);
+  }, [activePlayer, phase]);
 
   useEffect(() => {
     if (phase === 'inProgress') {
-      startGame();
+      initializeGame();
     }
-  }, [phase, startGame]);
+  }, [phase]);
 
   return (
     <main className={styles.Main}>

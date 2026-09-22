@@ -1,11 +1,12 @@
-import type { Position } from '@shared/config';
+import type { Owner, Position } from '@shared/config';
 import { getEnemyTargets } from './getEnemyTargets';
 
 export const getAttackableTargets = (
   unitPosition: Position,
   attackRange: number,
+  owner: Owner,
 ) => {
-  const targets = getEnemyTargets();
+  const targets = getEnemyTargets(owner);
 
   return targets.filter(target => {
     const dist =
