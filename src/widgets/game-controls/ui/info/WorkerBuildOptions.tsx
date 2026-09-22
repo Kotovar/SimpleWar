@@ -1,4 +1,4 @@
-import { GoldIcon, WoodIcon } from '@shared/ui';
+import { EntityPortrait, GoldIcon, WoodIcon } from '@shared/ui';
 import {
   BUILDINGS_CONFIG,
   BUILDINGS_NAME,
@@ -79,18 +79,21 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
               aria-pressed={selectedBuildingForSpawn === buildingType}
               title={[check.message, infoText].filter(Boolean).join('. ')}
             >
-              <span className={styles.Name}>{name}</span>
-              <small className={styles.Cost}>
-                <GoldIcon /> {cost.gold} золота
-              </small>
-              {cost.wood === 0 ? null : (
+              <EntityPortrait type={buildingType} owner={unit.owner} />
+              <span className={styles.Content}>
+                <span className={styles.Name}>{name}</span>
                 <small className={styles.Cost}>
-                  <WoodIcon /> {cost.wood} дерева
+                  <GoldIcon /> {cost.gold} золота
                 </small>
-              )}
-              {selectedBuildingForSpawn === buildingType && infoText && (
-                <small className={styles.InfoText}>{infoText}</small>
-              )}
+                {cost.wood === 0 ? null : (
+                  <small className={styles.Cost}>
+                    <WoodIcon /> {cost.wood} дерева
+                  </small>
+                )}
+                {selectedBuildingForSpawn === buildingType && infoText && (
+                  <small className={styles.InfoText}>{infoText}</small>
+                )}
+              </span>
             </button>
           );
         })}

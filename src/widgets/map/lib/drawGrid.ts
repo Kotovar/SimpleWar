@@ -103,7 +103,7 @@ export const drawBackgroundAndGrid = (
         y,
         cellSize,
         GRID.colorGrass,
-        noise[y]?.[x] ?? 0,
+        (noise[y]?.[x] ?? 0) * 0.5,
         ratio,
       );
     }),
@@ -126,12 +126,24 @@ export const drawBackgroundAndGrid = (
       const west = isWater(x - 1, y);
 
       if (cell.type === 'water') {
-        water.roundRect(left, top, cellSize, cellSize, [
-          !north && !west ? radius : 0,
-          !north && !east ? radius : 0,
-          !south && !east ? radius : 0,
-          !south && !west ? radius : 0,
-        ]);
+        // Оставляем место берегу внутри Canvas: за границей буфера он обрезается.
+        const edgeInset = cellSize * 0.1;
+        const insetLeft = x === 0 ? edgeInset : 0;
+        const insetTop = y === 0 ? edgeInset : 0;
+        const insetRight = x === row.length - 1 ? edgeInset : 0;
+        const insetBottom = y === grid.length - 1 ? edgeInset : 0;
+        water.roundRect(
+          left + insetLeft,
+          top + insetTop,
+          cellSize - insetLeft - insetRight,
+          cellSize - insetTop - insetBottom,
+          [
+            !north && !west ? radius : 0,
+            !north && !east ? radius : 0,
+            !south && !east ? radius : 0,
+            !south && !west ? radius : 0,
+          ],
+        );
         return;
       }
 
@@ -158,9 +170,23 @@ export const drawBackgroundAndGrid = (
   ctx.save();
   const { r, g, b } = GRID.colorWater;
   ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-  ctx.shadowColor = '#b2c49a';
-  ctx.shadowBlur = cellSize * 0.16;
+  ctx.shadowColor = 'rgba(40, 64, 40, 0.45)';
+  ctx.shadowBlur = cellSize * ratio * 0.24;
   ctx.fill(water);
+  // Тень цельного силуэта даёт берег без обводок внутренних границ клеток.
+  ctx.shadowColor = '#bdba82';
+  ctx.shadowBlur = 0;
+  const shore = cellSize * ratio * 0.055;
+  for (const [dx, dy] of [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1],
+  ]) {
+    ctx.shadowOffsetX = dx * shore;
+    ctx.shadowOffsetY = dy * shore;
+    ctx.fill(water);
+  }
   ctx.restore();
 
   drawWaterRipples(ctx, grid, water, cellSize);

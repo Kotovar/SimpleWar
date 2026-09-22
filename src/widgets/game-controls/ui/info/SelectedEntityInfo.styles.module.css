@@ -1,59 +1,130 @@
 .EntityInfo {
-  background-color: var(--surface-sunken);
+  background: linear-gradient(145deg, #283334, var(--surface-sunken) 70%);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .EntityHeader {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 6px;
-  font-size: 1.3em;
-  font-weight: bold;
-  color: var(--gold);
+  gap: 12px;
 }
 
-.EntityIcon {
-  font-size: 1.4em;
+.EntityName {
+  margin: 0 0 4px;
+  font-size: 1.15rem;
+  line-height: 1.2;
+  color: #f0dfb4;
+}
+
+.Owner {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.Owner[data-owner='player'] {
+  color: #a3d4ed;
+}
+
+.Owner[data-owner='ai'] {
+  color: #ffb19a;
+}
+
+.HealthLabel,
+.EntityDetails > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.HealthLabel {
+  margin-bottom: 5px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.HealthBar {
+  display: block;
+  width: 100%;
+  height: 8px;
+  border: 0;
+  background: #17211f;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.HealthBar::-webkit-meter-bar {
+  background: #17211f;
+  border: 0;
+  border-radius: 4px;
+  height: 8px;
+}
+
+.HealthBar::-webkit-meter-optimum-value {
+  background: #a4ce83;
+}
+
+.HealthBar::-webkit-meter-suboptimum-value {
+  background: #e8c76c;
+}
+
+.HealthBar::-webkit-meter-even-less-good-value {
+  background: #ee9278;
+}
+
+.HealthBar::-moz-meter-bar {
+  background: #a4ce83;
+}
+
+.HealthBar:-moz-meter-sub-optimum::-moz-meter-bar {
+  background: #e8c76c;
+}
+
+.HealthBar:-moz-meter-sub-sub-optimum::-moz-meter-bar {
+  background: #ee9278;
 }
 
 .EntityDetails {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 1em;
+  gap: 7px;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.EntityDetails:empty {
+  display: none;
+}
+
+.EntityDetails dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
   color: var(--text);
 }
 
 .HP {
-  color: var(--success-strong);
-  font-weight: bold;
+  color: #a4ce83;
+  font-variant-numeric: tabular-nums;
 }
 
-.MovePoints {
+.EntityDetails .MovePoints {
   color: var(--accent);
-  font-weight: bold;
 }
 
-.AttackPoints {
+.EntityDetails .AttackPoints,
+.EntityDetails .IsNotWalkable {
   color: var(--danger-strong);
-  font-weight: bold;
 }
 
-.BuildPoints {
+.EntityDetails .BuildPoints,
+.EntityDetails .IsWalkable {
   color: var(--population);
-  font-weight: bold;
-}
-
-.IsWalkable {
-  color: var(--success-strong);
-}
-
-.IsNotWalkable {
-  color: var(--danger-strong);
 }

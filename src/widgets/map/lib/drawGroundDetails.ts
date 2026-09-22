@@ -18,6 +18,20 @@ export const drawGroundDetails = (
   ctx.lineJoin = 'round';
   ctx.lineWidth = 0.8;
 
+  // Крупные мягкие пятна связывают клетки в ландшафт. Вода рисуется поверх.
+  for (let y = 0; y < grid.length; y += 6) {
+    for (let x = 0; x < (grid[y]?.length ?? 0); x += 6) {
+      const cx = (x + sample(x, y, 71) * 6) * 32;
+      const cy = (y + sample(x, y, 89) * 6) * 32;
+      const radius = 32 * 5;
+      const shade = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+      shade.addColorStop(0, 'rgba(210, 192, 112, 0.16)');
+      shade.addColorStop(1, 'rgba(210, 192, 112, 0)');
+      ctx.fillStyle = shade;
+      ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
+    }
+  }
+
   grid.forEach((row, y) =>
     row.forEach((cell, x) => {
       if (cell.type !== 'grass' || sample(x, y, 17) > 0.62) return;

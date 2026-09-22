@@ -1,4 +1,4 @@
-import { GoldIcon, PopulationIcon, WoodIcon } from '@shared/ui';
+import { EntityPortrait, GoldIcon, PopulationIcon, WoodIcon } from '@shared/ui';
 import {
   UNITS_CONFIG,
   UNITS_NAME,
@@ -78,25 +78,28 @@ export const UnitOptions = ({ building }: Props) => {
               aria-pressed={selectedUnitForSpawn === spawnType}
               title={[check.message, infoText].filter(Boolean).join('. ')}
             >
-              <span className={styles.Name}>{name}</span>
+              <EntityPortrait type={spawnType} owner={building.owner} />
+              <span className={styles.Content}>
+                <span className={styles.Name}>{name}</span>
 
-              <small className={styles.Cost}>
-                <GoldIcon /> {cost.gold} золота
-              </small>
-
-              {cost.wood === 0 ? null : (
                 <small className={styles.Cost}>
-                  <WoodIcon /> {cost.wood} дерева
+                  <GoldIcon /> {cost.gold} золота
                 </small>
-              )}
 
-              <small className={styles.PopCost}>
-                <PopulationIcon /> {requiresLimit}{' '}
-                {requiresLimit === 1 ? 'слот' : 'слота'} населения
-              </small>
-              {selectedUnitForSpawn === spawnType && infoText && (
-                <small className={styles.InfoText}>{infoText}</small>
-              )}
+                {cost.wood === 0 ? null : (
+                  <small className={styles.Cost}>
+                    <WoodIcon /> {cost.wood} дерева
+                  </small>
+                )}
+
+                <small className={styles.PopCost}>
+                  <PopulationIcon /> {requiresLimit}{' '}
+                  {requiresLimit === 1 ? 'слот' : 'слота'} населения
+                </small>
+                {selectedUnitForSpawn === spawnType && infoText && (
+                  <small className={styles.InfoText}>{infoText}</small>
+                )}
+              </span>
             </button>
           );
         })}

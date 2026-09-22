@@ -7,7 +7,7 @@ import {
   type Cell,
   type Unit,
 } from '@shared/config';
-import { BuildingIcon, TerrainIcon, UnitIcon } from '@shared/ui';
+import { EntityPortrait, TerrainIcon } from '@shared/ui';
 import styles from './SelectedEntityInfo.styles.module.css';
 
 type Props = {
@@ -18,124 +18,141 @@ type Props = {
 
 export const SelectedEntityInfo = ({ cell, unit, building }: Props) => {
   if (!cell && !unit && !building) return null;
+  const entity = unit || building;
 
   return (
     <section className={styles.EntityInfo}>
       <div className={styles.EntityHeader}>
-        {unit && (
-          <>
-            <UnitIcon size={20} />
-            <span>{UNITS_NAME[unit.type]}</span>
-          </>
+        {entity ? (
+          <EntityPortrait type={entity.type} owner={entity.owner} size={64} />
+        ) : (
+          <TerrainIcon size={32} />
         )}
-        {building && (
-          <>
-            <BuildingIcon size={20} />
-            <span>{BUILDINGS_NAME[building.type]}</span>
-          </>
-        )}
-        {cell && (
-          <>
-            <TerrainIcon size={20} />
-            <span>Клетка</span>
-          </>
-        )}
+        <div>
+          <h3 className={styles.EntityName}>
+            {unit
+              ? UNITS_NAME[unit.type]
+              : building
+                ? BUILDINGS_NAME[building.type]
+                : 'Клетка'}
+          </h3>
+          {entity && (
+            <span className={styles.Owner} data-owner={entity.owner}>
+              Владелец: {OWNER_NAME[entity.owner]}
+            </span>
+          )}
+          {cell && (
+            <span className={styles.Owner}>{TERRAIN_NAME[cell.type]}</span>
+          )}
+        </div>
       </div>
 
-      <div className={styles.EntityDetails}>
+      {entity && (
+        <div>
+          <div className={styles.HealthLabel}>
+            <span>Здоровье</span>
+            <strong className={styles.HP}>
+              {entity.hp} / {entity.maxHp}
+            </strong>
+          </div>
+          <meter
+            className={styles.HealthBar}
+            min={0}
+            max={entity.maxHp}
+            low={entity.maxHp * 0.3}
+            high={entity.maxHp * 0.6}
+            optimum={entity.maxHp}
+            value={entity.hp}
+            aria-label='Здоровье'
+            aria-valuetext={`${entity.hp} из ${entity.maxHp}`}
+          />
+        </div>
+      )}
+
+      <dl className={styles.EntityDetails}>
         {cell && (
           <>
             <div>
-              Координаты: ({cell.x}, {cell.y})
+              <dt>Координаты</dt>
+              <dd>
+                ({cell.x}, {cell.y})
+              </dd>
             </div>
-            <div>Тип: {TERRAIN_NAME[cell.type]}</div>
             <div>
-              Проходимость:{' '}
-              {cell.isWalkable ? (
-                <span className={styles.IsWalkable}>Проходима</span>
-              ) : (
-                <span className={styles.IsNotWalkable}>Непроходима</span>
-              )}
+              <dt>Проходимость</dt>
+              <dd
+                className={
+                  cell.isWalkable ? styles.IsWalkable : styles.IsNotWalkable
+                }
+              >
+                {cell.isWalkable ? 'Проходима' : 'Непроходима'}
+              </dd>
             </div>
           </>
         )}
-
-        {(unit || building) && (
-          <div>Владелец: {OWNER_NAME[(unit || building)!.owner]}</div>
-        )}
-
-        {(unit || building) && (
-          <div>
-            Здоровье:{' '}
-            <span className={styles.HP}>
-              {(unit || building)!.hp} / {(unit || building)!.maxHp}
-            </span>
-          </div>
-        )}
-
         {unit && (
           <>
             <div>
-              Движение:{' '}
-              <span className={styles.MovePoints}>
+              <dt>Движение</dt>
+              <dd className={styles.MovePoints}>
                 {unit.movePoints} / {unit.maxMovePoints}
-              </span>
+              </dd>
             </div>
-
             {unit.role !== 'civil' && (
               <>
                 <div>
-                  Атаки:{' '}
-                  <span className={styles.AttackPoints}>
+                  <dt>Атаки</dt>
+                  <dd className={styles.AttackPoints}>
                     {unit.attackPoints} / {unit.maxAttackPoints}
-                  </span>
+                  </dd>
                 </div>
-                <div>Радиус атаки: {unit.attackRange}</div>
-                <div>Урон: {unit.attack}</div>
+                <div>
+                  <dt>Радиус атаки</dt>
+                  <dd>{unit.attackRange}</dd>
+                </div>
+                <div>
+                  <dt>Урон</dt>
+                  <dd>{unit.attack}</dd>
+                </div>
               </>
             )}
-
             {unit.role === 'civil' && (
-              <>
-                <div>
-                  Очки строительства:{' '}
-                  <span className={styles.BuildPoints}>
-                    {unit.buildPoints} / {unit.maxBuildPoints}
-                  </span>
-                </div>
-              </>
+              <div>
+                <dt>Очки строительства</dt>
+                <dd className={styles.BuildPoints}>
+                  {unit.buildPoints} / {unit.maxBuildPoints}
+                </dd>
+              </div>
             )}
           </>
         )}
-
-        {building && (
+        {building?.role === 'production' && (
+          <div>
+            <dt>Очки производства</dt>
+            <dd className={styles.BuildPoints}>
+              {building.spawnPoints} / {building.maxSpawnPoints}
+            </dd>
+          </div>
+        )}
+        {building?.role === 'combat' && (
           <>
-            {building.role === 'production' && (
-              <>
-                <div>
-                  Очки производства:{' '}
-                  <span className={styles.BuildPoints}>
-                    {building.spawnPoints} / {building.maxSpawnPoints}
-                  </span>
-                </div>
-              </>
-            )}
-
-            {building.role === 'combat' && (
-              <>
-                <div>
-                  Атаки:{' '}
-                  <span className={styles.AttackPoints}>
-                    {building.attackPoints} / {building.maxAttackPoints}
-                  </span>
-                </div>
-                <div>Радиус атаки: {building.attackRange}</div>
-                <div>Урон: {building.attack}</div>
-              </>
-            )}
+            <div>
+              <dt>Атаки</dt>
+              <dd className={styles.AttackPoints}>
+                {building.attackPoints} / {building.maxAttackPoints}
+              </dd>
+            </div>
+            <div>
+              <dt>Радиус атаки</dt>
+              <dd>{building.attackRange}</dd>
+            </div>
+            <div>
+              <dt>Урон</dt>
+              <dd>{building.attack}</dd>
+            </div>
           </>
         )}
-      </div>
+      </dl>
     </section>
   );
 };

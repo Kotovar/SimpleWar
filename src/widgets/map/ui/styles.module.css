@@ -5,11 +5,16 @@
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
+  padding: 8px;
 }
 
 .CanvasWrapper {
   position: relative;
   margin-inline: auto;
+  box-shadow:
+    0 0 0 1px #899379,
+    0 0 0 4px #303c34,
+    0 2px 8px rgb(0 0 0 / 0.35);
 }
 
 .CanvasLayer {

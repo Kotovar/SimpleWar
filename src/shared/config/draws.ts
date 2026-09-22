@@ -75,16 +75,16 @@ export const UNIT_PALETTES = forTeams({
 
 export const GRID = {
   lineThickness: 1,
-  lineColor: 'hsla(0, 0%, 0%, 0.04)',
+  lineColor: 'hsla(0, 0%, 0%, 0.025)',
   colorGrass: { r: 91, g: 151, b: 76 },
   colorWater: { r: 40, g: 110, b: 180 },
 };
 
 export const SELECTED = {
-  free: 'rgba(137, 201, 219, 0.16)',
+  free: 'rgba(153, 218, 233, 0.14)',
   enemy: 'rgba(244, 151, 122, 0.12)',
-  produce: 'rgba(234, 196, 110, 0.18)',
-  freeOutline: '#a3d3df',
+  produce: 'rgba(234, 196, 110, 0.12)',
+  freeOutline: 'rgba(190, 235, 241, 0.4)',
   enemyOutline: '#ffac91',
   produceOutline: '#f0d58d',
   lineThickness: 2,

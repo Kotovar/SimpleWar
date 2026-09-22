@@ -26,14 +26,14 @@ export const drawSelectionHighlight = (
     ]) {
       ctx.moveTo(x, y + dy * 8);
       ctx.lineTo(x, y);
-      ctx.lineTo(x + dx * 3, y);
+      ctx.lineTo(x + dx * 8, y);
     }
   }
   ctx.strokeStyle = SELECTION.colorShadow;
   ctx.lineWidth = kind === 'cell' ? 2.5 : 3.5;
   ctx.stroke();
   ctx.strokeStyle = SELECTION.colorOutline;
-  ctx.lineWidth = kind === 'cell' ? 1 : 1.7;
+  ctx.lineWidth = kind === 'cell' ? 1 : 2;
   ctx.stroke();
   ctx.restore();
 };
