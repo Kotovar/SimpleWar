@@ -19,6 +19,14 @@ Canvas; сборка Vite (пакет `rolldown-vite`). Описание игр�
   [simplewar-jsdoc-ru](skills/simplewar-jsdoc-ru/SKILL.md).
 - Для smoke-симуляций ходов, решений ИИ и статистики карт по сидам прочитай
   [simplewar-simulation-smoke](skills/simplewar-simulation-smoke/SKILL.md).
+- Для историй компонентов и игровых объектов в Storybook прочитай
+  [simplewar-storybook-stories](skills/simplewar-storybook-stories/SKILL.md).
+- Для приёмки сценариев через браузер прочитай
+  [simplewar-browser-acceptance](skills/simplewar-browser-acceptance/SKILL.md).
+- Для воспроизведения бага регрессионным тестом без исправления игры прочитай
+  [simplewar-bug-regression](skills/simplewar-bug-regression/SKILL.md).
+- Для актуализации документации по коду или diff прочитай
+  [simplewar-docs-sync](skills/simplewar-docs-sync/SKILL.md).
 - После изменений кода: `npm run type-check`, `npm run lint`, `npm run build`;
   `npm test`; после изменений структуры также `npm run fsd-check`.
 - При изменении механик обновляй соответствующий файл в `docs`.
