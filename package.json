@@ -17,7 +17,9 @@
     "preview": "vp preview",
     "lint-staged": "lint-staged",
     "lint:length": "node scripts/check-file-length.ts",
-    "prepare": "husky"
+    "prepare": "husky",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@types/pathfinding": "^0.1.0",
@@ -34,6 +36,8 @@
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
     "@feature-sliced/steiger-plugin": "^0.7.0",
+    "@storybook/addon-mcp": "^10.6.0",
+    "@storybook/react-vite": "^10.6.0",
     "@types/node": "^26.6.2",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
@@ -42,6 +46,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.5.1",
     "steiger": "^0.6.0",
+    "storybook": "^10.6.0",
     "typescript": "~5.9.3",
     "vite": "catalog:",
     "vite-plus": "catalog:",
