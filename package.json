@@ -4,16 +4,16 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "format": "prettier --write .",
+    "dev": "vp dev",
+    "build": "tsc -b && vp build",
+    "lint": "vp lint src",
+    "format": "vp fmt .",
     "type-check": "tsc --noEmit --pretty false",
-    "test": "vitest run",
-    "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
-    "test:integration": "vitest run .integration.test.ts",
-    "fsd-check": "npx steiger ./src",
-    "preview": "vite preview",
+    "test": "vp test run",
+    "test:unit": "vp test run --exclude '**/*.integration.test.ts'",
+    "test:integration": "vp test run .integration.test.ts",
+    "fsd-check": "steiger ./src",
+    "preview": "vp preview",
     "lint-staged": "lint-staged",
     "lint:length": "node scripts/check-file-length.ts",
     "prepare": "husky"
@@ -30,25 +30,26 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.1.0",
-    "@commitlint/config-conventional": "^20.0.0",
-    "@eslint/js": "^9.39.1",
-    "@types/node": "^25.0.3",
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "@feature-sliced/steiger-plugin": "^0.7.0",
+    "@types/node": "^26.6.2",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.1",
-    "eslint": "^9.39.1",
-    "eslint-plugin-prettier": "^5.5.4",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.4.24",
-    "globals": "^16.5.0",
+    "@vitejs/plugin-react": "^6.1.1",
     "husky": "^9.1.7",
-    "lint-staged": "^16.2.7",
-    "prettier": "^3.6.2",
-    "steiger": "^0.5.11",
+    "lint-staged": "^17.5.1",
+    "steiger": "^0.6.0",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.46.4",
-    "vite": "^8.3.0",
-    "vitest": "4.1.11"
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.5.1",
+      "onFail": "download"
+    }
   }
 }
