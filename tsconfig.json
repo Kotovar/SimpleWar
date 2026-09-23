@@ -29,5 +29,5 @@
       "@shared/*": ["./src/shared/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", ".storybook/*.ts", ".storybook/*.tsx"]
 }
