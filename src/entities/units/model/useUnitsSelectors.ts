@@ -1,4 +1,4 @@
-import { useUnitsStore } from '@entities/units';
+import { useUnitsStore } from './unitsStore';
 
 export const useUnitsSelectors = () => {
   const units = useUnitsStore(state => state.units);

@@ -1,4 +1,4 @@
-import { useSelectionStore } from '@features/selection';
+import { useSelectionStore } from './selectionStore';
 
 export const useSelectionSelectors = () => {
   const selection = useSelectionStore(state => state.selection);

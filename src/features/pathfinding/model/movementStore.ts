@@ -8,7 +8,7 @@ import {
   getReachableCells,
   createMovementPFGrid,
   getAttackableTargets,
-} from '@features/pathfinding';
+} from '../lib';
 
 interface MovementState {
   reachableCells: Position[] | null;

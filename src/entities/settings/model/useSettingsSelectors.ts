@@ -1,4 +1,4 @@
-import { useSettingsStore } from '@entities/settings';
+import { useSettingsStore } from './settingsStore';
 
 export const useSettingsSelectors = () => {
   const gridColumns = useSettingsStore(state => state.gridColumns);
