@@ -1,5 +1,5 @@
 import { TERRAIN } from '@shared/config';
-import { rect, shape } from './drawEntity';
+import { rect, shape } from '@shared/ui';
 import { drawSelectionHighlight } from './drawSelectionHighlight';
 
 const beginTerrain = (

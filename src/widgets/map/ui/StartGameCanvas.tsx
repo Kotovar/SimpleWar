@@ -1,50 +1,11 @@
-import { useEffect, useRef } from 'react';
-import { GAME_TITLE, START_CANVAS } from '@shared/config';
-import { useSettingsSelectors } from '@entities/settings';
+import { GAME_TITLE } from '@shared/config';
 import { useGameLoopSelectors } from '@features/game-loop';
-import { setupCanvas } from './utils';
-import styles from './styles.module.css';
+import { OverlayCanvas } from './OverlayCanvas';
 
 export const StartGameCanvas = () => {
-  const uiOverlayRef = useRef<HTMLCanvasElement>(null);
   const { phase } = useGameLoopSelectors();
-  const { canvasWidth, canvasHeight } = useSettingsSelectors();
 
-  useEffect(() => {
-    const ctx = setupCanvas(uiOverlayRef, canvasWidth, canvasHeight);
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-    if (phase === 'setup') {
-      ctx.fillStyle = START_CANVAS.backgroundColor;
-      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-      ctx.fillStyle = START_CANVAS.titleColor;
-      ctx.font = 'bold 48px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(
-        GAME_TITLE,
-        canvasWidth / 2,
-        canvasHeight / 2 - START_CANVAS.marginTop,
-      );
-
-      ctx.font = '24px Arial';
-      ctx.fillStyle = START_CANVAS.hintColor;
-      ctx.fillText(
-        'Нажмите "Начать игру" для старта',
-        canvasWidth / 2,
-        canvasHeight / 2 + START_CANVAS.marginBottom,
-      );
-    }
-  }, [canvasHeight, canvasWidth, phase]);
-
-  return (
-    <>
-      {phase === 'setup' ? (
-        <canvas ref={uiOverlayRef} className={styles.CanvasLayer} />
-      ) : null}
-    </>
-  );
+  return phase === 'setup' ? (
+    <OverlayCanvas title={GAME_TITLE} hint='Нажмите "Начать игру" для старта' />
+  ) : null;
 };

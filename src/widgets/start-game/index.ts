@@ -1,1 +1,1 @@
-export * from './initializeGame';
+export * from './lib/initializeGame';

@@ -5,7 +5,7 @@ import type { Cost } from './economy';
 export type MilitaryType = 'swordsman' | 'archer';
 export type CivilType = 'worker';
 export type UnitType = MilitaryType | CivilType;
-export type UnitRole = 'military' | 'civil';
+type UnitRole = 'military' | 'civil';
 
 type ConfigOmit = 'role' | 'type' | 'x' | 'y' | 'id' | 'owner' | 'hp';
 

@@ -12,7 +12,7 @@ import type {
 } from '@shared/config';
 import { createBuilding } from './createBuilding';
 
-export type BuildingsState = {
+type BuildingsState = {
   buildings: Record<string, Building>;
   selectedBuildingForSpawn: BuildingType | null;
 
