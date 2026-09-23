@@ -5,11 +5,11 @@
 
 ## Запуск
 
-- `npm test` — весь набор.
-- `npm run test:unit` — только unit-тесты.
-- `npm run test:integration` — взаимодействие настоящих хранилищ и событий.
-- `npm run test:unit -- src/features/pathfinding/lib/getPatch.test.ts` — один файл.
-- `npm run type-check` — отдельная проверка типов, включая тесты.
+- `pnpm test` — весь набор.
+- `pnpm test:unit` — только unit-тесты.
+- `pnpm test:integration` — взаимодействие настоящих хранилищ и событий.
+- `pnpm test:unit -- src/features/pathfinding/lib/getPatch.test.ts` — один файл.
+- `pnpm type-check` — отдельная проверка типов, включая тесты.
 
 Unit-тесты размещаются рядом с модулем в `*.test.ts`. Интеграционные сценарии
 имеют суффикс `*.integration.test.ts` и исключены из unit-команды.

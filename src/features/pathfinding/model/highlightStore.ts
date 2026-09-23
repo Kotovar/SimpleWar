@@ -3,7 +3,7 @@ import { immer } from 'zustand/middleware/immer';
 import type { Cell, Position } from '@shared/config';
 
 import { useMapStore } from '@entities/maps';
-import { getCellsAround } from '@features/pathfinding';
+import { getCellsAround } from '../lib/getCellsAround';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
 

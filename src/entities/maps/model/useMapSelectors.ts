@@ -1,4 +1,4 @@
-import { useMapStore } from '@entities/maps';
+import { useMapStore } from './mapStore';
 
 export const useMapSelectors = () => {
   const grid = useMapStore(state => state.grid);

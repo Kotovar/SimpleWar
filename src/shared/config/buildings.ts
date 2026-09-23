@@ -10,8 +10,6 @@ export type BuildingType =
   | 'barracks'
   | 'tower';
 
-export type BuildingRole = 'production' | 'resource' | 'supply' | 'combat';
-
 export type Income = {
   gold?: number;
   wood?: number;

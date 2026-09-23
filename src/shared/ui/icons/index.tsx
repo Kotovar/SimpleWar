@@ -62,33 +62,6 @@ export const PopulationIcon = ({ size = 14 }: Props) => (
   </svg>
 );
 
-/** Меч: выбран юнит. */
-export const UnitIcon = ({ size = 16 }: Props) => (
-  <svg {...base(size)}>
-    <path d='M1.6 1.6 10 5.6 5.6 10Z' fill='#edf2df' />
-    <path
-      d='M5 11 11 5'
-      stroke='var(--gold)'
-      strokeWidth='2'
-      strokeLinecap='round'
-    />
-    <path
-      d='M9 9 14.4 14.4'
-      stroke='var(--wood)'
-      strokeWidth='2'
-      strokeLinecap='round'
-    />
-  </svg>
-);
-
-/** Башня: выбрано здание. */
-export const BuildingIcon = ({ size = 16 }: Props) => (
-  <svg {...base(size)}>
-    <path d='M3 14V5h2V3h2v2h2V3h2v2h2v9z' fill='#c8d2da' />
-    <rect x='6.6' y='9' width='2.8' height='5' fill='#3b4650' />
-  </svg>
-);
-
 /** Холм: выбрана клетка. */
 export const TerrainIcon = ({ size = 16 }: Props) => (
   <svg {...base(size)}>

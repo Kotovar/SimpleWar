@@ -1,7 +1,7 @@
 # SimpleWar
 
 Браузерная пошаговая стратегия Simple Wars. React + TypeScript, Zustand/Immer,
-Canvas; сборка Vite (пакет `rolldown-vite`). Описание игры: [docs/README.md](docs/README.md).
+Canvas; сборка Vite+. Описание игры: [docs/README.md](docs/README.md).
 
 - Перед работой прочитай `~/.agents/AGENTS.md`.
 - Слои: `src/app` → `widgets` → `features` → `entities` → `shared`.
@@ -27,8 +27,8 @@ Canvas; сборка Vite (пакет `rolldown-vite`). Описание игр�
   [simplewar-bug-regression](skills/simplewar-bug-regression/SKILL.md).
 - Для актуализации документации по коду или diff прочитай
   [simplewar-docs-sync](skills/simplewar-docs-sync/SKILL.md).
-- После изменений кода: `npm run type-check`, `npm run lint`, `npm run build`;
-  `npm test`; после изменений структуры также `npm run fsd-check`.
+- После изменений кода: `pnpm type-check`, `pnpm lint`, `pnpm build`;
+  `pnpm test`; после изменений структуры также `pnpm fsd-check`.
 - При изменении механик обновляй соответствующий файл в `docs`.
   Отличай реализованное поведение от конфигурации и заготовок.
 - Не меняй посторонние файлы; коммиты и push — только по просьбе.

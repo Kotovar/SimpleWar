@@ -1,8 +1,9 @@
 # Устройство проекта
 
 Клиентское приложение: React 19, TypeScript, Zustand с Immer, Canvas 2D.
-Для карты используются simplex-noise и pathfinding. Сборщик — Vite через
-пакет `rolldown-vite`. Отдельного серверного приложения в репозитории нет.
+Для карты используются simplex-noise и pathfinding. Сборка, тесты, линтинг
+и форматирование запускаются через Vite+. Отдельного серверного приложения
+в репозитории нет.
 
 ## Где искать код
 
@@ -24,18 +25,20 @@
 
 ## Команды из package.json
 
-| Команда              | Назначение                           |
-| -------------------- | ------------------------------------ |
-| `npm run dev`        | Сервер разработки                    |
-| `npm run type-check` | Проверка TypeScript без сборки       |
-| `npm run lint`       | ESLint                               |
-| `npm run build`      | TypeScript и production-сборка       |
-| `npm run fsd-check`  | Проверка структуры через Steiger     |
-| `npm run preview`    | Просмотр готовой сборки              |
-| `npm run format`     | Prettier с перезаписью всего проекта |
+| Команда             | Назначение                        |
+| ------------------- | --------------------------------- |
+| `pnpm dev`          | Сервер разработки                 |
+| `pnpm type-check`   | Проверка TypeScript без сборки    |
+| `pnpm lint`         | Oxlint исходников                 |
+| `pnpm react-doctor` | React Doctor                      |
+| `pnpm build`        | TypeScript и production-сборка    |
+| `pnpm fsd-check`    | Проверка структуры через Steiger  |
+| `pnpm preview`      | Просмотр готовой сборки           |
+| `pnpm format`       | Oxfmt с перезаписью всего проекта |
 
-Тесты: `npm test` — весь набор, `npm run test:unit` — unit,
-`npm run test:integration` — сценарии взаимодействия хранилищ и событий.
+После клонирования: `vp install` или `pnpm install`.
+Тесты: `pnpm test` — весь набор, `pnpm test:unit` — unit,
+`pnpm test:integration` — сценарии взаимодействия хранилищ и событий.
 Состояние партии находится в `entities/games`, запуск — в
 `widgets/start-game/initializeGame.ts`. Для изменений документации достаточно
 проверить ссылки и форматирование только затронутых Markdown-файлов.

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 import { CELL_SIZE, CELL_SIZE_LIMITS } from '@shared/config';
 import { useSettingsStore } from './settingsStore';
 

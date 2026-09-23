@@ -1,4 +1,4 @@
-import { useBuildingsStore } from '@entities/buildings';
+import { useBuildingsStore } from './buildingsStore';
 
 export const useBuildingsSelectors = () => {
   const buildings = useBuildingsStore(state => state.buildings);

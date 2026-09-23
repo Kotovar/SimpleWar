@@ -1,0 +1,7 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  // steiger читает конфиг сам (pnpm fsd-check), импортов на него нет.
+  "entry": ["steiger.config.ts"],
+  // immer — peer-зависимость zustand/middleware/immer, напрямую не импортируется.
+  "ignoreDependencies": ["immer"]
+}

@@ -1,5 +1,5 @@
-npm run lint-staged
+pnpm lint-staged
 
-npm run type-check
+pnpm type-check
 
-npm run fsd-check
+pnpm fsd-check

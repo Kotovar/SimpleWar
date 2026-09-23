@@ -3,7 +3,8 @@ import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
 import { useSettingsStore } from '@entities/settings';
 import { useEconomyStore } from '@entities/economies';
-import { calculateIncome, useGameLoopStore } from '@features/game-loop';
+import { useGameLoopStore } from '../model';
+import { calculateIncome } from './calculateIncome';
 
 export const nextTurn = () => {
   const { activePlayer, phase } = useGameLoopStore.getState();

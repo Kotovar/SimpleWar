@@ -10,11 +10,17 @@ S00d. Механики здесь не меняются — шаги трога�
 ## S00. Обновление зависимостей и переход на Vite+
 
 Зависимости: нет. Кодовые ориентиры: `package.json`, `vite.config.ts`,
-`eslint.config.js`, `tsconfig*.json`, `.husky`, `scripts/check-file-length.ts`.
+`pnpm-workspace.yaml`, `tsconfig*.json`, `.husky`, `scripts/check-file-length.ts`.
 
-- Обновить зависимости до актуальных версий: React, Zustand, Immer, TypeScript,
-  ESLint и остальное. Сборку и раннер вынести в отдельный шаг — сейчас `vite`
-  подключён алиасом `npm:rolldown-vite@7.2.5`, Vitest — 4.1.11.
+Состояние на 23.09.2026: проект переведён на Vite+ 0.2.8 и pnpm 12.5.1;
+ESLint и Prettier заменены на Oxlint и Oxfmt. Текущие скрипты и версии см.
+в [устройстве проекта](../development.md) и `package.json`. Лицензия пакета
+`vite-plus` — MIT. Vitest 4.1.10 закреплён Vite+ 0.2.8; TypeScript 5.9.3
+оставлен до отдельной проверки перехода на 7.x.
+
+- Обновить зависимости до совместимых актуальных версий: React, Zustand, Immer,
+  TypeScript и остальное. До миграции `vite` был подключён алиасом
+  `npm:rolldown-vite@7.2.5`, Vitest — 4.1.11.
 - Vite+ требует Vite 8+ и Vitest 4.1+. Сначала поднять Vite до 8 и убедиться,
   что `dev`, `build`, `test`, `lint`, `type-check`, `fsd-check` зелёные,
   и только затем переходить на Vite+.

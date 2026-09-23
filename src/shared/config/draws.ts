@@ -20,59 +20,6 @@ export const HP_BAR = {
   colorBorder: '#202c30',
 };
 
-// Совместимые экспорты прежних палитр: материалы больше не зависят от команды.
-// Список команд берётся только из TEAM_MARKERS.
-const forTeams = <T>(palette: T): Record<Owner, T> =>
-  Object.fromEntries(
-    Object.keys(TEAM_MARKERS).map(owner => [owner, palette]),
-  ) as Record<Owner, T>;
-
-export const BUILDING_TOWNHALL_PALETTES = forTeams({
-  wall: '#dce1d5',
-  door: '#313b42',
-  window: '#536775',
-});
-export const BUILDING_MINE_PALETTES = forTeams({
-  wood: '#b98a51',
-  gold: '#f5cd53',
-  shadow: '#252e33',
-  accent: '#e1b578',
-});
-export const BUILDING_SAWMILL_PALETTES = forTeams({
-  wood: '#b88b58',
-  roof: '#6d7e70',
-  smoke: '#89918e',
-  accent: '#e8bf80',
-  window: '#303a36',
-});
-export const BUILDING_FARM_PALETTES = forTeams({
-  wood: '#e1c996',
-  door: '#68503e',
-  window: '#303a36',
-  roof: '#d6aa47',
-  hay: '#f7d776',
-});
-export const BUILDING_BARRACKS_PALETTES = forTeams({
-  wall: '#bbb6a3',
-  door: '#41434a',
-  accent: '#ddd9c7',
-  window: '#303a36',
-  staff: '#736c59',
-});
-export const BUILDING_TOWER_PALETTES = forTeams({
-  wall: '#dce1d5',
-  door: '#384650',
-  window: '#384650',
-});
-export const UNIT_PALETTES = forTeams({
-  body: '#a9bbc3',
-  bodyArcher: '#768563',
-  head: '#e3bd8b',
-  sword: '#edf2df',
-  arrowShaft: '#e4b875',
-  accent: '#d6b265',
-});
-
 export const GRID = {
   lineThickness: 1,
   lineColor: 'hsla(0, 0%, 0%, 0.025)',

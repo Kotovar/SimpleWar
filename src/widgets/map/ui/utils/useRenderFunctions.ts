@@ -17,11 +17,9 @@ import {
   renderTerrainLayer,
   withClear,
 } from '@widgets/map/lib';
-import {
-  setupCanvas,
-  useDevicePixelRatio,
-  useEntitiesLayer,
-} from '@widgets/map/ui/utils';
+import { setupCanvas } from './getCtx';
+import { useDevicePixelRatio } from './useDevicePixelRatio';
+import { useEntitiesLayer } from './useEntitiesLayer';
 
 type Props = {
   selection: Selection;
