@@ -38,6 +38,7 @@
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.1.1",
+    "fallow": "^3.28.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.5.1",
     "steiger": "^0.6.0",
