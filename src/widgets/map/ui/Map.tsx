@@ -14,8 +14,6 @@ import {
   useHighlightSelectors,
 } from '@features/pathfinding';
 import { getGridCoordsFromEvent, handleMapCellClick } from './utils';
-import { StartGameCanvas } from './StartGameCanvas';
-import { FinishGameCanvas } from './FinishGameCanvas';
 import { CanvasLayers } from './CanvasLayers';
 import styles from './styles.module.css';
 
@@ -238,9 +236,7 @@ export const Map = () => {
           className={styles.CanvasWrapper}
           style={{ width: CANVAS_SIZES.width, height: CANVAS_SIZES.height }}
         >
-          <StartGameCanvas />
           <CanvasLayers onCellClick={handleCanvasClick} />
-          <FinishGameCanvas />
         </div>
       </div>
 
