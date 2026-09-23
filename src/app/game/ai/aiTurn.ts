@@ -1,5 +1,5 @@
 import { nextTurn } from '@features/game-loop';
 
-export const runAITurn = async () => {
+export const runAITurn = () => {
   nextTurn();
 };
