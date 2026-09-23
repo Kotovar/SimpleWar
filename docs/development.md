@@ -25,15 +25,16 @@
 
 ## Команды из package.json
 
-| Команда           | Назначение                        |
-| ----------------- | --------------------------------- |
-| `pnpm dev`        | Сервер разработки                 |
-| `pnpm type-check` | Проверка TypeScript без сборки    |
-| `pnpm lint`       | Oxlint исходников                 |
-| `pnpm build`      | TypeScript и production-сборка    |
-| `pnpm fsd-check`  | Проверка структуры через Steiger  |
-| `pnpm preview`    | Просмотр готовой сборки           |
-| `pnpm format`     | Oxfmt с перезаписью всего проекта |
+| Команда             | Назначение                        |
+| ------------------- | --------------------------------- |
+| `pnpm dev`          | Сервер разработки                 |
+| `pnpm type-check`   | Проверка TypeScript без сборки    |
+| `pnpm lint`         | Oxlint исходников                 |
+| `pnpm react-doctor` | React Doctor                      |
+| `pnpm build`        | TypeScript и production-сборка    |
+| `pnpm fsd-check`    | Проверка структуры через Steiger  |
+| `pnpm preview`      | Просмотр готовой сборки           |
+| `pnpm format`       | Oxfmt с перезаписью всего проекта |
 
 После клонирования: `vp install` или `pnpm install`.
 Тесты: `pnpm test` — весь набор, `pnpm test:unit` — unit,

@@ -1,7 +1,5 @@
-import type { MouseEvent } from 'react';
-
 export const getGridCoordsFromEvent = (
-  event: MouseEvent<HTMLCanvasElement>,
+  event: Pick<MouseEvent, 'clientX' | 'clientY'>,
   canvas: HTMLCanvasElement,
   cellSize: number,
 ) => {

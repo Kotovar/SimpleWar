@@ -7,6 +7,7 @@
     "dev": "vp dev",
     "build": "tsc -b && vp build",
     "lint": "vp lint src",
+    "react-doctor": "pnpm dlx react-doctor@latest --verbose",
     "format": "vp fmt .",
     "type-check": "tsc --noEmit --pretty false",
     "test": "vp test run",

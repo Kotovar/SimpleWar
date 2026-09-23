@@ -1,142 +1,159 @@
 import type { Building, Owner, Position, Unit } from '@shared/config';
 
+export type MapClickContext = {
+  unit: Unit | null;
+  building: Building | null;
+  selectedUnit: Unit | null;
+  selectedBuilding: Building | null;
+  reachableCells: Position[] | null;
+  attackableTargets: Position[] | null;
+  buildableCells: Position[] | null;
+  spawnableCells: Position[] | null;
+  isClickOnCurrentSelection: (x: number, y: number) => boolean;
+  selectUnit: (id: string) => void;
+  selectBuilding: (id: string) => void;
+  selectCell: (x: number, y: number) => void;
+  calculateMovement: (unitId: string) => void;
+  moveUnit: (unitId: string, x: number, y: number) => void;
+  attack: (attackerId: string, targetId: string) => void;
+  build: (unitId: string, x: number, y: number, owner: Owner) => void;
+  spawn: (buildingId: string, x: number, y: number, owner: Owner) => void;
+  clearSelection: () => void;
+  clearHighlight: () => void;
+  clearMovement: () => void;
+  clearSelectedBuildingForSpawn: () => void;
+};
+
 const isTargetInHighlightedCells = (
   highlightedCells: Position[] | null,
   gridX: number,
   gridY: number,
-) => highlightedCells?.some(cell => cell.x === gridX && cell.y === gridY);
+) => !!highlightedCells?.some(cell => cell.x === gridX && cell.y === gridY);
 
-export const handleClickWithoutSelectedUnit = (
-  unit: Unit | null,
-  building: Building | null,
+const resetSelection = (ctx: MapClickContext) => {
+  ctx.clearSelection();
+  ctx.clearMovement();
+  ctx.clearHighlight();
+};
+
+const handleClickWithoutSelection = (
   gridX: number,
   gridY: number,
-  selectUnit: (id: string) => void,
-  selectBuilding: (id: string) => void,
-  selectCell: (x: number, y: number) => void,
-  calculateMovement: (unitId: string) => void,
-  clearSelection: () => void,
-  clearMovement: () => void,
+  ctx: MapClickContext,
 ) => {
-  clearSelection();
-  clearMovement();
+  const { unit, building } = ctx;
+  ctx.clearSelection();
+  ctx.clearMovement();
 
   if (building) {
-    selectBuilding(building.id);
+    ctx.selectBuilding(building.id);
     if (building.owner === 'player' && building.role === 'combat') {
       // TODO: Поменять название функции
-      calculateMovement(building.id);
+      ctx.calculateMovement(building.id);
     }
-    return true;
+    return;
   }
 
   if (unit) {
-    selectUnit(unit.id);
-    if (unit.owner === 'player') {
-      calculateMovement(unit.id);
-    }
-    return true;
+    ctx.selectUnit(unit.id);
+    if (unit.owner === 'player') ctx.calculateMovement(unit.id);
+    return;
   }
 
-  selectCell(gridX, gridY);
-  return true;
+  ctx.selectCell(gridX, gridY);
 };
 
-export const handleClickWithPlayerUnitSelected = (
+const handleClickWithPlayerUnitSelected = (
   selectedUnit: Unit,
   gridX: number,
   gridY: number,
-  unitAtTarget: Unit | null,
-  buildingAtTarget: Building | null,
-  reachableCells: Position[] | null,
-  attackableTargets: Position[] | null,
-  buildableCells: Position[] | null,
-  moveUnit: (unitId: string, x: number, y: number) => void,
-  attack: (attackerId: string, targetId: string) => void,
-  build: (selectedUnitId: string, x: number, y: number, owner: Owner) => void,
-  clearSelection: () => void,
-  clearHighlight: () => void,
-  clearMovement: () => void,
+  ctx: MapClickContext,
 ) => {
-  const isReachable = isTargetInHighlightedCells(reachableCells, gridX, gridY);
-  const isAttackable = isTargetInHighlightedCells(
-    attackableTargets,
-    gridX,
-    gridY,
-  );
-  const isBuildable = isTargetInHighlightedCells(buildableCells, gridX, gridY);
-  const hasTarget = unitAtTarget || buildingAtTarget;
+  const target = ctx.unit ?? ctx.building;
 
-  const isWorker =
-    selectedUnit.type === 'worker' && selectedUnit.role === 'civil';
-
-  if (isReachable && selectedUnit.movePoints > 0) {
-    moveUnit(selectedUnit.id, gridX, gridY);
-    clearSelection();
-    clearMovement();
-    clearHighlight();
-    return true;
+  if (
+    selectedUnit.movePoints > 0 &&
+    isTargetInHighlightedCells(ctx.reachableCells, gridX, gridY)
+  ) {
+    ctx.moveUnit(selectedUnit.id, gridX, gridY);
+    resetSelection(ctx);
+    return;
   }
 
   if (
-    isAttackable &&
-    hasTarget &&
+    target &&
     selectedUnit.role !== 'civil' &&
-    selectedUnit.attackPoints > 0
+    selectedUnit.attackPoints > 0 &&
+    isTargetInHighlightedCells(ctx.attackableTargets, gridX, gridY)
   ) {
-    const targetId = unitAtTarget?.id ?? buildingAtTarget!.id;
-    attack(selectedUnit.id, targetId);
-    clearSelection();
-    clearMovement();
-    clearHighlight();
-
-    return true;
+    ctx.attack(selectedUnit.id, target.id);
+    resetSelection(ctx);
+    return;
   }
 
-  if (isWorker && isBuildable) {
-    build(selectedUnit.id, gridX, gridY, 'player');
-    clearSelection();
-    clearMovement();
-    clearHighlight();
-
-    return true;
+  if (
+    selectedUnit.type === 'worker' &&
+    selectedUnit.role === 'civil' &&
+    isTargetInHighlightedCells(ctx.buildableCells, gridX, gridY)
+  ) {
+    ctx.build(selectedUnit.id, gridX, gridY, 'player');
+    resetSelection(ctx);
   }
-
-  return false;
 };
 
-export const handleClickWithPlayerBuildingSelected = (
+const handleClickWithPlayerBuildingSelected = (
   selectedBuilding: Building,
   gridX: number,
   gridY: number,
-  spawnableCells: Position[] | null,
-  spawn: (
-    selectedBuildingId: string,
-    x: number,
-    y: number,
-    owner: Owner,
-  ) => void,
-  clearSelection: () => void,
-  clearHighlight: () => void,
-  clearMovement: () => void,
-  clearSelectedBuildingForSpawn: () => void,
+  ctx: MapClickContext,
 ) => {
-  const isSpawnable = isTargetInHighlightedCells(spawnableCells, gridX, gridY);
-  const isSpawner =
-    selectedBuilding.role === 'production' && selectedBuilding.canSpawn;
+  const target = ctx.unit ?? ctx.building;
 
-  if (!isSpawner || !isSpawnable) {
-    return false;
+  if (
+    selectedBuilding.role === 'combat' &&
+    target &&
+    isTargetInHighlightedCells(ctx.attackableTargets, gridX, gridY)
+  ) {
+    ctx.attack(selectedBuilding.id, target.id);
+    resetSelection(ctx);
+    return;
   }
 
-  if (selectedBuilding.spawnPoints > 0) {
-    spawn(selectedBuilding.id, gridX, gridY, 'player');
-    clearSelection();
-    clearHighlight();
-    clearMovement();
-    clearSelectedBuildingForSpawn();
-    return true;
+  if (
+    selectedBuilding.role === 'production' &&
+    selectedBuilding.canSpawn &&
+    selectedBuilding.spawnPoints > 0 &&
+    isTargetInHighlightedCells(ctx.spawnableCells, gridX, gridY)
+  ) {
+    ctx.spawn(selectedBuilding.id, gridX, gridY, 'player');
+    resetSelection(ctx);
+    ctx.clearSelectedBuildingForSpawn();
+  }
+};
+
+export const handleMapCellClick = (
+  gridX: number,
+  gridY: number,
+  ctx: MapClickContext,
+) => {
+  const { selectedUnit, selectedBuilding } = ctx;
+
+  // Повторный клик по выделению или любой клик при выбранной вражеской
+  // сущности снимает выделение.
+  if (
+    ctx.isClickOnCurrentSelection(gridX, gridY) ||
+    selectedUnit?.owner === 'ai' ||
+    selectedBuilding?.owner === 'ai'
+  ) {
+    resetSelection(ctx);
+    return;
   }
 
-  return false;
+  if (selectedUnit) {
+    handleClickWithPlayerUnitSelected(selectedUnit, gridX, gridY, ctx);
+  } else if (selectedBuilding) {
+    handleClickWithPlayerBuildingSelected(selectedBuilding, gridX, gridY, ctx);
+  } else {
+    handleClickWithoutSelection(gridX, gridY, ctx);
+  }
 };

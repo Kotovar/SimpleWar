@@ -2,6 +2,10 @@ catalog:
   vite: npm:@voidzero-dev/vite-plus-core@0.2.8
   vitest: 4.1.10
   vite-plus: 0.2.8
+minimumReleaseAge: 1440
+trustPolicy: no-downgrade
+trustPolicyExclude:
+  - chokidar@4.0.3
 overrides:
   vite: 'catalog:'
   vitest: 'catalog:'

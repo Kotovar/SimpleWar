@@ -23,6 +23,7 @@ export const ConfirmDialog = ({
   onCancel,
 }: Props) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -30,6 +31,7 @@ export const ConfirmDialog = ({
 
     if (isOpen) {
       dialog.showModal();
+      cancelRef.current?.focus();
     } else {
       dialog.close();
     }
@@ -61,7 +63,11 @@ export const ConfirmDialog = ({
           <button className={styles.ConfirmButton} onClick={onConfirm}>
             {confirmText}
           </button>
-          <button className={styles.CancelButton} onClick={onCancel} autoFocus>
+          <button
+            ref={cancelRef}
+            className={styles.CancelButton}
+            onClick={onCancel}
+          >
             {cancelText}
           </button>
         </div>

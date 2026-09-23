@@ -13,12 +13,7 @@ import {
   useMovementSelectors,
   useHighlightSelectors,
 } from '@features/pathfinding';
-import {
-  getGridCoordsFromEvent,
-  handleClickWithoutSelectedUnit,
-  handleClickWithPlayerBuildingSelected,
-  handleClickWithPlayerUnitSelected,
-} from './utils';
+import { getGridCoordsFromEvent, handleMapCellClick } from './utils';
 import { StartGameCanvas } from './StartGameCanvas';
 import { FinishGameCanvas } from './FinishGameCanvas';
 import { CanvasLayers } from './CanvasLayers';
@@ -132,110 +127,44 @@ export const Map = () => {
     height: canvasHeight,
   };
 
-  const handleCanvasClick = (
-    event: MouseEvent<HTMLCanvasElement>,
-    canvas: HTMLCanvasElement | null,
-  ) => {
-    if (!canvas || event.button !== 0 || drag.current) return;
-
-    const { x: gridX, y: gridY } = getGridCoordsFromEvent(
-      event,
-      canvas,
-      cellSize,
-    );
-
+  const handleCellClick = (gridX: number, gridY: number) => {
+    if (drag.current) return;
     if (gridX < 0 || gridX >= gridColumns || gridY < 0 || gridY >= gridRows) {
       return;
     }
 
-    const unit = useUnitsStore.getState().getUnitAt(gridX, gridY);
-    const building = useBuildingsStore.getState().getBuildingAt(gridX, gridY);
-    const selectedUnit = getSelectedUnit();
-    const selectedBuilding = getSelectedBuilding();
+    handleMapCellClick(gridX, gridY, {
+      unit: useUnitsStore.getState().getUnitAt(gridX, gridY),
+      building: useBuildingsStore.getState().getBuildingAt(gridX, gridY),
+      selectedUnit: getSelectedUnit(),
+      selectedBuilding: getSelectedBuilding(),
+      reachableCells,
+      attackableTargets,
+      buildableCells,
+      spawnableCells,
+      isClickOnCurrentSelection,
+      selectUnit,
+      selectBuilding,
+      selectCell,
+      calculateMovement,
+      moveUnit: move,
+      attack,
+      build,
+      spawn,
+      clearSelection,
+      clearHighlight,
+      clearMovement,
+      clearSelectedBuildingForSpawn,
+    });
+  };
 
-    // 1. Клик по уже выбранной сущности (юнит, здание или клетка) — снимаем выделение
-    if (isClickOnCurrentSelection(gridX, gridY)) {
-      clearSelection();
-      clearMovement();
-      clearHighlight();
-      return;
-    }
-
-    // 2. Если выбрана вражеская сущность (юнит ИЛИ здание) — любой клик снимает выделение
-    if (selectedUnit?.owner === 'ai' || selectedBuilding?.owner === 'ai') {
-      clearSelection();
-      clearMovement();
-      clearHighlight();
-      return;
-    }
-
-    // 3. Ничего не выбрано — выбираем новую сущность или клетку
-    if (!selectedUnit && !selectedBuilding) {
-      handleClickWithoutSelectedUnit(
-        unit,
-        building,
-        gridX,
-        gridY,
-        selectUnit,
-        selectBuilding,
-        selectCell,
-        calculateMovement,
-        clearSelection,
-        clearMovement,
-      );
-      return;
-    }
-
-    // 4. Выбран свой юнит
-    if (selectedUnit && selectedUnit.owner === 'player') {
-      handleClickWithPlayerUnitSelected(
-        selectedUnit,
-        gridX,
-        gridY,
-        unit,
-        building,
-        reachableCells,
-        attackableTargets,
-        buildableCells,
-        move,
-        attack,
-        build,
-        clearSelection,
-        clearHighlight,
-        clearMovement,
-      );
-
-      return;
-    }
-
-    // 5. Выбрано своё здание
-    if (selectedBuilding && selectedBuilding.owner === 'player') {
-      const target = unit ?? building;
-      if (
-        selectedBuilding.role === 'combat' &&
-        target &&
-        attackableTargets?.some(cell => cell.x === gridX && cell.y === gridY)
-      ) {
-        attack(selectedBuilding.id, target.id);
-        clearSelection();
-        clearMovement();
-        clearHighlight();
-        return;
-      }
-      handleClickWithPlayerBuildingSelected(
-        selectedBuilding,
-        gridX,
-        gridY,
-        spawnableCells,
-        spawn,
-        clearSelection,
-        clearHighlight,
-        clearMovement,
-        clearSelectedBuildingForSpawn,
-      );
-
-      return;
-    }
+  const handleCanvasClick = (event: MouseEvent<HTMLCanvasElement>) => {
+    const { x, y } = getGridCoordsFromEvent(
+      event,
+      event.currentTarget,
+      cellSize,
+    );
+    handleCellClick(x, y);
   };
 
   const finishDrag = (event: PointerEvent<HTMLDivElement>) => {
@@ -310,7 +239,7 @@ export const Map = () => {
           style={{ width: CANVAS_SIZES.width, height: CANVAS_SIZES.height }}
         >
           <StartGameCanvas />
-          <CanvasLayers handleClick={handleCanvasClick} />
+          <CanvasLayers onCellClick={handleCanvasClick} />
           <FinishGameCanvas />
         </div>
       </div>

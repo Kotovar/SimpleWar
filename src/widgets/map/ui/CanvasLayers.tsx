@@ -13,13 +13,10 @@ import styles from './styles.module.css';
 import { useGameLoopSelectors } from '@features/game-loop';
 
 type Props = {
-  handleClick: (
-    e: MouseEvent<HTMLCanvasElement>,
-    canvas: HTMLCanvasElement | null,
-  ) => void;
+  onCellClick: (event: MouseEvent<HTMLCanvasElement>) => void;
 };
 
-export const CanvasLayers = ({ handleClick }: Props) => {
+export const CanvasLayers = ({ onCellClick }: Props) => {
   const terrainRef = useRef<HTMLCanvasElement>(null);
   const unitsRef = useRef<HTMLCanvasElement>(null);
   const movementRef = useRef<HTMLCanvasElement>(null);
@@ -93,9 +90,7 @@ export const CanvasLayers = ({ handleClick }: Props) => {
       <canvas
         className={clsx(styles.CanvasLayer, styles.Highlight, getCursor())}
         ref={highlightRef}
-        onClick={
-          isInteractive ? e => handleClick(e, highlightRef.current) : undefined
-        }
+        onClick={isInteractive ? onCellClick : undefined}
         onMouseMove={isInteractive ? handleMove : undefined}
         onMouseLeave={() => setHover(null)}
       />
