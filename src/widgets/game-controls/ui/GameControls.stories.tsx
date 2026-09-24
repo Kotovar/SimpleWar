@@ -6,6 +6,7 @@ import { GameControls } from './GameControls';
 const meta = {
   title: 'Interface/Screens',
   component: GameControls,
+  args: { onStartGame: () => useGameLoopStore.getState().startGame() },
   decorators: [
     Story => (
       <main

@@ -1,8 +1,6 @@
 import { gameEvents } from '@shared/lib';
 import { useGameLoopStore } from '@entities/games';
 
-export { useGameLoopStore } from '@entities/games';
-
 let initialized = false;
 
 export const initGameLoopEvents = () => {

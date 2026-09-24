@@ -3,7 +3,7 @@ import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
 import { useSettingsStore } from '@entities/settings';
 import { useEconomyStore } from '@entities/economies';
-import { useGameLoopStore } from '../model';
+import { useGameLoopStore } from '@entities/games';
 import { calculateIncome } from './calculateIncome';
 
 export const nextTurn = () => {

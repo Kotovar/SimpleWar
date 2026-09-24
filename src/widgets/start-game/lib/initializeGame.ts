@@ -1,3 +1,4 @@
+import type { Cell, Position } from '@shared/config';
 import { useBuildingsStore } from '@entities/buildings';
 import { generateMap, prepareStartArea, useMapStore } from '@entities/maps';
 import { useUnitsStore } from '@entities/units';
@@ -5,17 +6,34 @@ import { useSettingsStore } from '@entities/settings';
 import { useGameLoopStore } from '@entities/games';
 import { createMovementPFGrid, getReachableCells } from '@features/pathfinding';
 
+const hasAccessibleResources = (grid: Cell[][], reachable: Position[]) => {
+  const resources = new Set<'gold' | 'forest'>();
+
+  // Рабочий строит на соседней клетке, в том числе по диагонали.
+  for (const { x, y } of reachable) {
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const type = grid[y + dy]?.[x + dx]?.type;
+        if (type === 'gold' || type === 'forest') resources.add(type);
+      }
+    }
+    if (resources.size === 2) return true;
+  }
+
+  return false;
+};
+
 export const initializeGame = () => {
   const { gridColumns, gridRows, mapGenerationMode, customSeed } =
     useSettingsStore.getState();
   const { spawnBuilding, buildings } = useBuildingsStore.getState();
   const { spawnUnit } = useUnitsStore.getState();
-  // Эффект запуска может сработать повторно; созданную партию не пересоздаём.
+  // Повторный вызов не должен пересоздать уже начатую партию.
   if (
-    useGameLoopStore.getState().phase !== 'inProgress' ||
+    useGameLoopStore.getState().phase !== 'setup' ||
     Object.keys(buildings).length
   )
-    return;
+    return false;
 
   const fail = (startError: string) => {
     useMapStore.getState().resetStore();
@@ -29,14 +47,14 @@ export const initializeGame = () => {
     gridRows < 5
   ) {
     fail('Для старта нужна карта не меньше 5 × 5 клеток.');
-    return;
+    return false;
   }
   if (
     mapGenerationMode === 'fixed' &&
     (!Number.isFinite(customSeed) || customSeed < 0 || customSeed > 1)
   ) {
     fail('Укажите сид от 0 до 1.');
-    return;
+    return false;
   }
 
   const playerStart = { x: 1, y: 1 };
@@ -66,33 +84,24 @@ export const initializeGame = () => {
     );
     // Обход не включает стартовую клетку рабочего.
     reachable.push(playerWorker);
-    const accessible = new Set(reachable.map(cell => `${cell.x},${cell.y}`));
-    if (!accessible.has(`${enemyWorker.x},${enemyWorker.y}`)) continue;
-
-    // Строить на ресурсе можно с соседней клетки, в том числе по диагонали.
-    const resources = new Set<string>();
-    for (const row of grid) {
-      for (const cell of row) {
-        if (cell.type !== 'gold' && cell.type !== 'forest') continue;
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dx = -1; dx <= 1; dx++) {
-            if (accessible.has(`${cell.x + dx},${cell.y + dy}`))
-              resources.add(cell.type);
-          }
-        }
-      }
-    }
-    if (!resources.has('gold') || !resources.has('forest')) continue;
+    if (
+      !reachable.some(
+        cell => cell.x === enemyWorker.x && cell.y === enemyWorker.y,
+      )
+    )
+      continue;
+    if (!hasAccessibleResources(grid, reachable)) continue;
 
     // Создаём объекты только после всех проверок карты.
     spawnBuilding('base', playerStart.x, playerStart.y, 'player');
     spawnBuilding('base', enemyStart.x, enemyStart.y, 'ai');
     spawnUnit('worker', playerWorker.x, playerWorker.y, 'player', true);
     spawnUnit('worker', enemyWorker.x, enemyWorker.y, 'ai');
-    return;
+    return true;
   }
 
   fail(
     'Не найдена карта с проходом между базами и доступом к лесу и золоту. Измените сид или повторите случайную генерацию.',
   );
+  return false;
 };

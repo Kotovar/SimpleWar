@@ -9,6 +9,7 @@ import type { Cell, Owner } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useEconomyStore } from '@entities/economies';
+import { useGameLoopStore } from '@entities/games';
 import { useMapStore } from '@entities/maps';
 import { useSelectionStore } from '@features/selection';
 import {
@@ -19,12 +20,7 @@ import {
 import { build } from '@features/build';
 import { spawn } from '@features/spawn';
 import { attack } from '@features/combat';
-import {
-  initGameLoopEvents,
-  nextTurn,
-  resetGame,
-  useGameLoopStore,
-} from '@features/game-loop';
+import { initGameLoopEvents, nextTurn, resetGame } from '@features/game-loop';
 import { initializeGame } from '@widgets/start-game';
 import { useSettingsStore } from '@entities/settings';
 import { createMovementPFGrid, getPath } from '@features/pathfinding';
@@ -211,8 +207,7 @@ describe('game initialization', () => {
     resetGame();
     // На карте 30 × 30 этот сид отрезает базу хребтом, проливом и лесом.
     useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 0.03 });
-    useGameLoopStore.getState().startGame();
-    initializeGame();
+    expect(initializeGame()).toBe(false);
     expect(useGameLoopStore.getState()).toMatchObject({
       phase: 'setup',
       startError: expect.any(String),
@@ -232,8 +227,8 @@ describe('game initialization', () => {
       gridColumns: 5,
       gridRows: 5,
     });
+    expect(initializeGame()).toBe(true);
     useGameLoopStore.getState().startGame();
-    initializeGame();
     expect(useGameLoopStore.getState().phase).toBe('inProgress');
     expect(Object.values(buildings().buildings)).toHaveLength(2);
   });
@@ -241,8 +236,8 @@ describe('game initialization', () => {
   it('starts a connected map once and keeps its objects on repeated initialization', () => {
     resetGame();
     useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 0 });
+    expect(initializeGame()).toBe(true);
     useGameLoopStore.getState().startGame();
-    initializeGame();
     expect(useGameLoopStore.getState().phase).toBe('inProgress');
     const original = units().units;
     expect(Object.values(original)).toHaveLength(2);

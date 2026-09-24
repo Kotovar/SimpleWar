@@ -5,7 +5,11 @@ import { useSettingsSelectors } from '@entities/settings';
 import { useGameLoopSelectors } from '@features/game-loop';
 import styles from './styles.module.css';
 
-export const PhaseSetup = () => {
+type Props = {
+  onStartGame: () => void;
+};
+
+export const PhaseSetup = ({ onStartGame }: Props) => {
   const {
     gridRows,
     mapGenerationMode,
@@ -15,7 +19,7 @@ export const PhaseSetup = () => {
     setMapGenerationMode,
   } = useSettingsSelectors();
 
-  const { startGame, startError } = useGameLoopSelectors();
+  const { startError } = useGameLoopSelectors();
 
   const handleSeedChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
@@ -92,7 +96,7 @@ export const PhaseSetup = () => {
 
       <section className={styles.Section}>
         {startError && <p role='alert'>{startError}</p>}
-        <button className={styles.PrimaryButton} onClick={startGame}>
+        <button className={styles.PrimaryButton} onClick={onStartGame}>
           Начать игру
         </button>
       </section>

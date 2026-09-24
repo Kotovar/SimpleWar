@@ -5,7 +5,11 @@ import { PhaseInProgress } from './PhaseInProgress';
 import { PhaseGameOver } from './PhaseGameOver';
 import styles from './styles.module.css';
 
-export const GameControls = () => {
+type Props = {
+  onStartGame: () => void;
+};
+
+export const GameControls = ({ onStartGame }: Props) => {
   const { phase } = useGameLoopSelectors();
 
   return (
@@ -16,7 +20,7 @@ export const GameControls = () => {
     >
       {phase !== 'inProgress' && <h1 className={styles.Title}>{GAME_TITLE}</h1>}
 
-      {phase === 'setup' && <PhaseSetup />}
+      {phase === 'setup' && <PhaseSetup onStartGame={onStartGame} />}
       {phase === 'inProgress' && <PhaseInProgress />}
       {phase === 'gameOver' && <PhaseGameOver />}
     </section>

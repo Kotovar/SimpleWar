@@ -1,4 +1,4 @@
-import { useGameLoopStore } from './gameLoopStore';
+import { useGameLoopStore } from '@entities/games';
 
 export const useGameLoopSelectors = () => {
   const currentTurn = useGameLoopStore(state => state.currentTurn);
