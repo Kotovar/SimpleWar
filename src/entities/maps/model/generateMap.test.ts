@@ -13,7 +13,57 @@ it.each([0, 0.15, 1])(
   },
 );
 
+it.each([
+  [15, 15],
+  [20, 12],
+  [9, 9],
+])('mirrors the whole map around its centre on %sx%s', (w, h) => {
+  for (const seed of [0, 0.15, 0.42, 0.9]) {
+    const grid = generateMap(w, h, seed);
+
+    expect(grid.flat().some(cell => cell.type === 'gold')).toBe(true);
+    for (const { x, y, type } of grid.flat()) {
+      expect(grid[h - 1 - y][w - 1 - x].type).toBe(type);
+    }
+  }
+});
+
+it('keeps plains without obstacles around both start corners', () => {
+  for (let i = 0; i < 100; i++) {
+    const grid = generateMap(30, 30, i / 100);
+    for (const { x, y, type } of grid.flat()) {
+      if (Math.min(Math.hypot(x, y), Math.hypot(29 - x, 29 - y)) > 3) continue;
+      expect(['grass', 'gold']).toContain(type);
+    }
+  }
+});
+
+it.each([
+  [5, 5],
+  [6, 5],
+])('places at least the minimum gold on a small %sx%s map', (w, h) => {
+  for (let i = 0; i < 100; i++) {
+    const gold = generateMap(w, h, i / 100)
+      .flat()
+      .filter(cell => cell.type === 'gold');
+    expect(gold.length).toBeGreaterThanOrEqual(8);
+  }
+});
+
 it('rejects invalid dimensions before allocating a map', () => {
   expect(() => generateMap(0, 15, 0.15)).toThrow();
   expect(() => generateMap(15.5, 15, 0.15)).toThrow();
+});
+
+it('keeps grass next to every gold cell so a mine can be built', () => {
+  for (let i = 0; i < 200; i++) {
+    const grid = generateMap(20, 15, i / 200);
+    for (const { x, y, type } of grid.flat()) {
+      if (type !== 'gold') continue;
+      const neighbours = [-1, 0, 1].flatMap(dy =>
+        [-1, 0, 1].map(dx => grid[y + dy]?.[x + dx]?.type),
+      );
+      expect(neighbours).toContain('grass');
+    }
+  }
 });

@@ -1,5 +1,5 @@
 import { useBuildingsStore } from '@entities/buildings';
-import { prepareStartArea, useMapStore } from '@entities/maps';
+import { generateMap, prepareStartArea, useMapStore } from '@entities/maps';
 import { useUnitsStore } from '@entities/units';
 import { useSettingsStore } from '@entities/settings';
 import { useGameLoopStore } from '@entities/games';
@@ -50,7 +50,7 @@ export const initializeGame = () => {
 
   for (let attempt = 0; attempt < attempts; attempt++) {
     const seed = mapGenerationMode === 'fixed' ? customSeed : Math.random();
-    useMapStore.getState().initMap(gridColumns, gridRows, seed);
+    useMapStore.getState().setGrid(generateMap(gridColumns, gridRows, seed));
     prepareStartArea(playerStart.x, playerStart.y);
     prepareStartArea(enemyStart.x, enemyStart.y);
 

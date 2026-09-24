@@ -1,4 +1,10 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test';
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  onTestFinished,
+} from 'vite-plus/test';
 import type { Cell, Owner } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
@@ -49,7 +55,7 @@ beforeEach(() => {
       isWalkable: true,
     })),
   );
-  useMapStore.setState({ grid, width: 7, height: 7 });
+  useMapStore.setState({ grid });
   initPopulationSystem();
   initGameLoopEvents();
   buildings().spawnBuilding('base', 0, 0, 'player');
@@ -203,7 +209,8 @@ describe('movement', () => {
 describe('game initialization', () => {
   it('rejects an isolated fixed map without spawning objects', () => {
     resetGame();
-    useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 0.15 });
+    // На карте 30 × 30 этот сид отрезает базу хребтом, проливом и лесом.
+    useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 0.03 });
     useGameLoopStore.getState().startGame();
     initializeGame();
     expect(useGameLoopStore.getState()).toMatchObject({
@@ -213,6 +220,22 @@ describe('game initialization', () => {
     expect(units().units).toEqual({});
     expect(buildings().buildings).toEqual({});
     expect(useMapStore.getState().grid).toEqual([]);
+  });
+
+  it('starts on the minimum 5 × 5 map', () => {
+    const { gridColumns, gridRows } = useSettingsStore.getState();
+    onTestFinished(() => useSettingsStore.setState({ gridColumns, gridRows }));
+    resetGame();
+    useSettingsStore.setState({
+      mapGenerationMode: 'fixed',
+      customSeed: 0.08,
+      gridColumns: 5,
+      gridRows: 5,
+    });
+    useGameLoopStore.getState().startGame();
+    initializeGame();
+    expect(useGameLoopStore.getState().phase).toBe('inProgress');
+    expect(Object.values(buildings().buildings)).toHaveLength(2);
   });
 
   it('starts a connected map once and keeps its objects on repeated initialization', () => {
