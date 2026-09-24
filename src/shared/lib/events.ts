@@ -10,18 +10,21 @@ type GameEvent =
 type EventHandler = (event: GameEvent) => void;
 
 class EventBus {
-  private handlers: EventHandler[] = [];
+  private handlers = new Set<EventHandler>();
 
   subscribe(handler: EventHandler) {
-    this.handlers.push(handler);
+    const subscription = (event: GameEvent) => handler(event);
+    this.handlers.add(subscription);
 
     return () => {
-      this.handlers = this.handlers.filter(h => h !== handler);
+      this.handlers.delete(subscription);
     };
   }
 
   emit(event: GameEvent) {
-    this.handlers.forEach(handler => handler(event));
+    for (const handler of Array.from(this.handlers)) {
+      if (this.handlers.has(handler)) handler(event);
+    }
   }
 }
 

@@ -3,17 +3,14 @@ import { generateMap, prepareStartArea, useMapStore } from '@entities/maps';
 import { useUnitsStore } from '@entities/units';
 import { useSettingsStore } from '@entities/settings';
 import { useGameLoopStore } from '@entities/games';
-import {
-  createMovementPFGrid,
-  getPath,
-  getReachableCells,
-} from '@features/pathfinding';
+import { createMovementPFGrid, getReachableCells } from '@features/pathfinding';
 
 export const initializeGame = () => {
   const { gridColumns, gridRows, mapGenerationMode, customSeed } =
     useSettingsStore.getState();
   const { spawnBuilding, buildings } = useBuildingsStore.getState();
   const { spawnUnit } = useUnitsStore.getState();
+  // Эффект запуска может сработать повторно; созданную партию не пересоздаём.
   if (
     useGameLoopStore.getState().phase !== 'inProgress' ||
     Object.keys(buildings).length
@@ -57,9 +54,9 @@ export const initializeGame = () => {
     const { grid } = useMapStore.getState();
     const pfGrid = createMovementPFGrid(grid);
 
+    // Ратуши ещё не созданы, поэтому закрываем их клетки для проверки пути.
     pfGrid.setWalkableAt(playerStart.x, playerStart.y, false);
     pfGrid.setWalkableAt(enemyStart.x, enemyStart.y, false);
-    if (!getPath(playerWorker, enemyWorker, pfGrid).length) continue;
 
     const reachable = getReachableCells(
       pfGrid,
@@ -67,8 +64,12 @@ export const initializeGame = () => {
       playerWorker.y,
       gridColumns * gridRows,
     );
+    // Обход не включает стартовую клетку рабочего.
     reachable.push(playerWorker);
     const accessible = new Set(reachable.map(cell => `${cell.x},${cell.y}`));
+    if (!accessible.has(`${enemyWorker.x},${enemyWorker.y}`)) continue;
+
+    // Строить на ресурсе можно с соседней клетки, в том числе по диагонали.
     const resources = new Set<string>();
     for (const row of grid) {
       for (const cell of row) {
@@ -83,6 +84,7 @@ export const initializeGame = () => {
     }
     if (!resources.has('gold') || !resources.has('forest')) continue;
 
+    // Создаём объекты только после всех проверок карты.
     spawnBuilding('base', playerStart.x, playerStart.y, 'player');
     spawnBuilding('base', enemyStart.x, enemyStart.y, 'ai');
     spawnUnit('worker', playerWorker.x, playerWorker.y, 'player', true);
