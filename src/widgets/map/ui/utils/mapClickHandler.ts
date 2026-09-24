@@ -121,7 +121,6 @@ const handleClickWithPlayerBuildingSelected = (
 
   if (
     selectedBuilding.role === 'production' &&
-    selectedBuilding.canSpawn &&
     selectedBuilding.spawnPoints > 0 &&
     isTargetInHighlightedCells(ctx.spawnableCells, gridX, gridY)
   ) {

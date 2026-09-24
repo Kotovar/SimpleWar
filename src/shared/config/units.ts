@@ -1,14 +1,20 @@
-import type { BuildingType } from './buildings';
+import type { BuildingType, InstanceKeys } from './buildings';
 import type { Owner } from './common';
 import type { Cost } from './economy';
 
+/** Список военных юнитов. */
 export type MilitaryType = 'swordsman' | 'archer';
+
+/** Список гражданских юнитов. */
 export type CivilType = 'worker';
+
+/** Все типы юнитов. */
 export type UnitType = MilitaryType | CivilType;
+
+/** Роль юнита: военный или гражданский. */
 type UnitRole = 'military' | 'civil';
 
-type ConfigOmit = 'role' | 'type' | 'x' | 'y' | 'id' | 'owner' | 'hp';
-
+/** Базовая форма юнита, общая для всех ролей. */
 type BaseUnit = {
   id: string;
   type: MilitaryType | CivilType;
@@ -24,6 +30,7 @@ type BaseUnit = {
   cost: Cost;
 };
 
+/** Военный юнит */
 export type MilitaryUnit = {
   role: 'military';
   attack: number;
@@ -32,6 +39,7 @@ export type MilitaryUnit = {
   maxAttackPoints: number;
 } & BaseUnit;
 
+/** Гражданский юнит */
 export type CivilUnit = {
   role: 'civil';
   canBuild: boolean;
@@ -40,11 +48,13 @@ export type CivilUnit = {
   maxBuildPoints: number;
 } & BaseUnit;
 
+/** Любой юнит в зависимости от роли. */
 export type Unit = MilitaryUnit | CivilUnit;
 
+/** Статический конфиг боевых юнитов. */
 export const MILITARY_UNITS_CONFIG: Record<
   MilitaryType,
-  Omit<MilitaryUnit, ConfigOmit>
+  Omit<MilitaryUnit, InstanceKeys>
 > = {
   swordsman: {
     maxHp: 110,
@@ -70,9 +80,10 @@ export const MILITARY_UNITS_CONFIG: Record<
   },
 };
 
+/** Статический конфиг гражданских юнитов. */
 export const CIVIL_UNITS_CONFIG: Record<
   CivilType,
-  Omit<CivilUnit, ConfigOmit>
+  Omit<CivilUnit, InstanceKeys>
 > = {
   worker: {
     maxHp: 25,
@@ -87,6 +98,7 @@ export const CIVIL_UNITS_CONFIG: Record<
   },
 };
 
+/** Объединённый конфиг всех юнитов по их типам. */
 export const UNITS_CONFIG = {
   ...MILITARY_UNITS_CONFIG,
   ...CIVIL_UNITS_CONFIG,

@@ -2,12 +2,14 @@ import type { BuildingType } from './buildings';
 import type { CellType, Owner } from './common';
 import type { MilitaryType, CivilType } from './units';
 
+/** Игровые названия юнитов. */
 export const UNITS_NAME = {
   swordsman: 'Мечник',
   archer: 'Лучник',
   worker: 'Рабочий',
 } satisfies Record<MilitaryType | CivilType, string>;
 
+/** Игровые названия зданий. */
 export const BUILDINGS_NAME = {
   base: 'Ратуша',
   mine: 'Золотой рудник',
@@ -17,11 +19,13 @@ export const BUILDINGS_NAME = {
   tower: 'Башня',
 } satisfies Record<BuildingType, string>;
 
+/** Игровые названия сторон. */
 export const OWNER_NAME = {
   player: 'Игрок',
   ai: 'Противник',
 } satisfies Record<Owner, string>;
 
+/** Игровые названия местности. */
 export const TERRAIN_NAME = {
   grass: 'Поле',
   mountain: 'Гора',

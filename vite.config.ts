@@ -116,6 +116,12 @@ export default defineConfig({
           browser: true,
         },
       },
+      {
+        files: ['scripts/**'],
+        env: {
+          node: true,
+        },
+      },
     ],
     options: {
       typeAware: true,

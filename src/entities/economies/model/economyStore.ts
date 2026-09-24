@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import {
   MAX_POPULATION_LIMIT,
-  START_POPULATION_CAP,
+  START_POPULATION_CAPS,
   START_RESOURCES,
 } from '@shared/config';
 import type { Player, Resources, PopulationCap } from '@shared/config';
@@ -22,7 +22,7 @@ type EconomyState = {
 export const useEconomyStore = create<EconomyState>()(
   immer(set => ({
     resources: START_RESOURCES,
-    populationCap: START_POPULATION_CAP,
+    populationCap: START_POPULATION_CAPS,
 
     addResources: (owner, income) => {
       set(state => {
@@ -70,7 +70,7 @@ export const useEconomyStore = create<EconomyState>()(
     resetStore: () => {
       set(state => {
         state.resources = START_RESOURCES;
-        state.populationCap = START_POPULATION_CAP;
+        state.populationCap = START_POPULATION_CAPS;
       });
     },
   })),

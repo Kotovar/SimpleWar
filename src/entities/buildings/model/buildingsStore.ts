@@ -25,7 +25,7 @@ type BuildingsState = {
   damageBuilding: (id: string, damage: number) => void;
   getBuildingAt: (x?: number, y?: number) => Building | null;
   getEconomicBuildings: (owner: Player) => ResourceBuilding[];
-  getLimitBuildings: (owner: Player) => (ProductionBuilding | SupplyBuilding)[];
+  getLimitBuildings: (owner: Player) => SupplyBuilding[];
   getProductionBuildings: (owner: Player) => ProductionBuilding[];
   changeAttackPoints: (id: string) => void;
   changeSpawnPoints: (id: string) => void;
@@ -101,10 +101,8 @@ export const useBuildingsStore = create<BuildingsState>()(
 
     getLimitBuildings: owner => {
       return Object.values(get().buildings).filter(
-        (building): building is ProductionBuilding | SupplyBuilding =>
-          building.owner === owner &&
-          'populationSupply' in building &&
-          building.populationSupply !== undefined,
+        (building): building is SupplyBuilding =>
+          building.owner === owner && building.role === 'supply',
       );
     },
 
