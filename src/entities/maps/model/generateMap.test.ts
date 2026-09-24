@@ -55,6 +55,10 @@ it('rejects invalid dimensions before allocating a map', () => {
   expect(() => generateMap(15.5, 15, 0.15)).toThrow();
 });
 
+it.each([NaN, Infinity, -Infinity])('rejects non-finite seed %s', seed => {
+  expect(() => generateMap(15, 15, seed)).toThrow(RangeError);
+});
+
 it('keeps grass next to every gold cell so a mine can be built', () => {
   for (let i = 0; i < 200; i++) {
     const grid = generateMap(20, 15, i / 200);

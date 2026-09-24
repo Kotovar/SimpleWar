@@ -4,7 +4,7 @@ export const useEconomySelectors = () => {
   const resources = useEconomyStore(state => state.resources);
   const populationCap = useEconomyStore(state => state.populationCap);
   const addResources = useEconomyStore(state => state.addResources);
-  const removeResources = useEconomyStore(state => state.addResources);
+  const removeResources = useEconomyStore(state => state.removeResources);
   const addUnit = useEconomyStore(state => state.addUnit);
 
   const setPopulationSupply = useEconomyStore(

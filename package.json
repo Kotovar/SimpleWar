@@ -19,7 +19,7 @@
     "lint:length": "node scripts/check-file-length.ts",
     "prepare": "husky",
     "storybook": "storybook dev -p 6006",
-    "check": "vp check && pnpm fsd-check && pnpm test"
+    "check": "vp check --fix && pnpm fsd-check && pnpm test"
   },
   "dependencies": {
     "@types/pathfinding": "^0.1.0",
