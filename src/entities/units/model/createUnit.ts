@@ -1,10 +1,16 @@
 import {
   CIVIL_UNITS_CONFIG,
+  InstanceKeys,
   MILITARY_UNITS_CONFIG,
   Owner,
   Unit,
   UnitType,
 } from '@shared/config';
+
+const CONFIGS_BY_ROLE = [
+  ['military', MILITARY_UNITS_CONFIG],
+  ['civil', CIVIL_UNITS_CONFIG],
+] as const;
 
 export const createUnit = (
   type: UnitType,
@@ -13,40 +19,30 @@ export const createUnit = (
   owner: Owner,
   initialSpawn: boolean,
 ): Unit | null => {
-  const id = `unit_${crypto.randomUUID()}`;
+  for (const [role, configs] of CONFIGS_BY_ROLE) {
+    const config = (
+      configs as Partial<Record<UnitType, Omit<Unit, InstanceKeys>>>
+    )[type];
 
-  if (type in MILITARY_UNITS_CONFIG) {
-    const config =
-      MILITARY_UNITS_CONFIG[type as keyof typeof MILITARY_UNITS_CONFIG];
+    if (config) {
+      const unit = {
+        ...config,
+        id: `unit_${crypto.randomUUID()}`,
+        type,
+        x,
+        y,
+        owner,
+        hp: config.maxHp,
+        role,
+      } as Unit;
 
-    return {
-      ...config,
-      id,
-      type,
-      x,
-      y,
-      owner,
-      movePoints: initialSpawn ? config.maxMovePoints : config.movePoints,
-      hp: config.maxHp,
-      role: 'military',
-    };
-  }
+      if (initialSpawn) {
+        unit.movePoints = unit.maxMovePoints;
+        if (unit.role === 'civil') unit.buildPoints = unit.maxBuildPoints;
+      }
 
-  if (type in CIVIL_UNITS_CONFIG) {
-    const config = CIVIL_UNITS_CONFIG[type as keyof typeof CIVIL_UNITS_CONFIG];
-
-    return {
-      ...config,
-      id,
-      type,
-      x,
-      y,
-      owner,
-      movePoints: initialSpawn ? config.maxMovePoints : config.movePoints,
-      buildPoints: initialSpawn ? config.maxBuildPoints : config.buildPoints,
-      hp: config.maxHp,
-      role: 'civil',
-    };
+      return unit;
+    }
   }
 
   return null;
