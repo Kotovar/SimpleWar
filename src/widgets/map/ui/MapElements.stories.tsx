@@ -23,6 +23,7 @@ import {
   renderMovementLayer,
   renderSelectionLayer,
   renderTerrainLayer,
+  TERRAIN_VARIANTS,
 } from '../lib';
 import { setupCanvas, useDevicePixelRatio } from './utils';
 
@@ -122,10 +123,12 @@ const entity = (units: Unit[], buildings: Building[] = []): Draw =>
     renderEntitiesLayer(ctx, place(buildings), place(units), size),
   );
 
-// число вариантов продублировано из drawTerrain, при новых вариантах поправить здесь.
-const VARIANTS = 3;
-const variants = (label: string, draw: typeof drawForest): Tile[] =>
-  Array.from({ length: VARIANTS }, (_, variant) => ({
+const variants = (
+  label: string,
+  draw: typeof drawForest,
+  count: number,
+): Tile[] =>
+  Array.from({ length: count }, (_, variant) => ({
     label: `${label} ${variant + 1}`,
     draw: withGround((ctx, size) => draw(ctx, 0, 0, size, variant)),
   }));
@@ -135,9 +138,21 @@ const TERRAIN: Record<string, Tile[]> = {
     { label: TERRAIN_NAME.grass, draw: ground() },
     { label: TERRAIN_NAME.water, draw: ground('water') },
   ],
-  [TERRAIN_NAME.forest]: variants(TERRAIN_NAME.forest, drawForest),
-  [TERRAIN_NAME.mountain]: variants(TERRAIN_NAME.mountain, drawMountains),
-  [TERRAIN_NAME.gold]: variants(TERRAIN_NAME.gold, drawGoldOre),
+  [TERRAIN_NAME.forest]: variants(
+    TERRAIN_NAME.forest,
+    drawForest,
+    TERRAIN_VARIANTS.forest,
+  ),
+  [TERRAIN_NAME.mountain]: variants(
+    TERRAIN_NAME.mountain,
+    drawMountains,
+    TERRAIN_VARIANTS.mountain,
+  ),
+  [TERRAIN_NAME.gold]: variants(
+    TERRAIN_NAME.gold,
+    drawGoldOre,
+    TERRAIN_VARIANTS.gold,
+  ),
 };
 
 const enemy = unit({ owner: 'ai' });

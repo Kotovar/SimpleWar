@@ -102,7 +102,24 @@ describe('handleMapCellClick', () => {
     handleMapCellClick(2, 1, ctx);
 
     expect(ctx.moveUnit).not.toHaveBeenCalled();
-    expect(ctx.clearSelection).not.toHaveBeenCalled();
+    expect(ctx.clearHighlight).toHaveBeenCalled();
+    expect(ctx.selectCell).toHaveBeenCalledWith(2, 1);
+  });
+
+  it('switches selection from an own unit when the click has no action', () => {
+    const selectedUnit = unitAt('swordsman', 1, 1);
+    const building = buildingAt('barracks', 5, 5);
+    const ctx = makeContext({
+      selectedUnit,
+      building,
+      reachableCells: [{ x: 2, y: 1 }],
+    });
+
+    handleMapCellClick(5, 5, ctx);
+
+    expect(ctx.moveUnit).not.toHaveBeenCalled();
+    expect(ctx.clearHighlight).toHaveBeenCalled();
+    expect(ctx.selectBuilding).toHaveBeenCalledWith(building.id);
   });
 
   it('attacks a target from a selected combat building', () => {
@@ -138,5 +155,20 @@ describe('handleMapCellClick', () => {
     expect(ready.spawn).toHaveBeenCalledWith(building.id, 2, 1, 'player');
     expect(ready.clearSelectedBuildingForSpawn).toHaveBeenCalled();
     expect(empty.spawn).not.toHaveBeenCalled();
+  });
+
+  it('switches selection from an own building to the clicked object', () => {
+    const selectedBuilding = buildingAt('barracks', 1, 1);
+    const unit = unitAt('worker', 4, 4);
+    const onUnit = makeContext({ selectedBuilding, unit });
+    const onCell = makeContext({ selectedBuilding });
+
+    handleMapCellClick(4, 4, onUnit);
+    handleMapCellClick(6, 2, onCell);
+
+    expect(onUnit.clearHighlight).toHaveBeenCalled();
+    expect(onUnit.selectUnit).toHaveBeenCalledWith(unit.id);
+    expect(onCell.selectCell).toHaveBeenCalledWith(6, 2);
+    expect(onCell.spawn).not.toHaveBeenCalled();
   });
 });

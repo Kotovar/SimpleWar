@@ -6,23 +6,36 @@
 }
 
 .EndTurnButton {
-  background-color: var(--success);
-  color: var(--text);
-  border: none;
+  min-width: 170px;
+  background: linear-gradient(180deg, var(--success-strong), var(--success));
+  color: #0f1f12;
+  font-weight: 700;
+  border: 1px solid rgb(255 255 255 / 0.12);
   border-radius: var(--radius);
-  padding: 10px 16px;
-  font-size: 1.1em;
+  padding: 10px 18px;
+  font-size: 1rem;
   cursor: pointer;
   align-self: center;
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.25) inset,
+    0 3px 10px rgb(87 167 92 / 0.25);
+  transition:
+    filter 0.15s,
+    transform 0.1s;
 
   &:hover:not(:disabled) {
-    background-color: var(--success-strong);
+    filter: brightness(1.08);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
   }
 
   &:disabled {
-    background-color: var(--surface-strong);
-    color: var(--text-disabled);
-    cursor: not-allowed;
+    background: var(--surface-strong);
+    border-color: var(--border);
+    color: var(--text-muted);
+    box-shadow: none;
   }
 }
 

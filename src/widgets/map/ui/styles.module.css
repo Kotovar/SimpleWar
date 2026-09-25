@@ -5,8 +5,13 @@
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
-  padding: 8px;
+  padding: 16px;
   user-select: none;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(ellipse at 50% 40%, rgb(70 96 70 / 0.18), transparent 70%),
+    var(--surface-sunken);
 }
 
 .MapViewport[data-dragging='true'],
@@ -18,9 +23,10 @@
   position: relative;
   margin-inline: auto;
   box-shadow:
-    0 0 0 1px #899379,
-    0 0 0 4px #303c34,
-    0 2px 8px rgb(0 0 0 / 0.35);
+    0 0 0 1px #8d9a7a,
+    0 0 0 5px #2c3a31,
+    0 0 0 6px #45574a,
+    0 8px 28px rgb(0 0 0 / 0.5);
 }
 
 .CanvasLayer {
@@ -53,10 +59,10 @@
   align-self: end;
   justify-self: end;
   z-index: 60;
-  margin: 12px;
+  margin: 14px 22px;
   padding: 6px 12px;
   border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
+  border-radius: 999px;
   background-color: rgb(24 29 35 / 0.88);
   color: var(--text);
   font-variant-numeric: tabular-nums;

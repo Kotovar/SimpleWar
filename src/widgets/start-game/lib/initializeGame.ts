@@ -1,5 +1,10 @@
 import { useBuildingsStore } from '@entities/buildings';
-import { prepareStartArea, useMapStore } from '@entities/maps';
+import {
+  isValidSeed,
+  prepareStartArea,
+  randomSeed,
+  useMapStore,
+} from '@entities/maps';
 import { useUnitsStore } from '@entities/units';
 import { useSettingsStore } from '@entities/settings';
 import { useGameLoopStore } from '@entities/games';
@@ -34,11 +39,8 @@ export const initializeGame = () => {
     fail('Для старта нужна карта не меньше 5 × 5 клеток.');
     return;
   }
-  if (
-    mapGenerationMode === 'fixed' &&
-    (!Number.isFinite(customSeed) || customSeed < 0 || customSeed > 1)
-  ) {
-    fail('Укажите сид от 0 до 1.');
+  if (mapGenerationMode === 'fixed' && !isValidSeed(customSeed)) {
+    fail('Укажите сид — целое неотрицательное число.');
     return;
   }
 
@@ -49,7 +51,7 @@ export const initializeGame = () => {
   const attempts = mapGenerationMode === 'fixed' ? 1 : 10;
 
   for (let attempt = 0; attempt < attempts; attempt++) {
-    const seed = mapGenerationMode === 'fixed' ? customSeed : Math.random();
+    const seed = mapGenerationMode === 'fixed' ? customSeed : randomSeed();
     useMapStore.getState().initMap(gridColumns, gridRows, seed);
     prepareStartArea(playerStart.x, playerStart.y);
     prepareStartArea(enemyStart.x, enemyStart.y);

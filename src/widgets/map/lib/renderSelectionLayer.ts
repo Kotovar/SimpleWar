@@ -14,6 +14,8 @@ type Options = {
   path?: number[][] | null;
   /** Цели, доступные выбранной сущности прямо сейчас. */
   attackableTargets?: Position[] | null;
+  /** Фаза пульсации выделения от 0 до 1. */
+  pulse?: number;
 };
 
 export const renderSelectionLayer = (
@@ -22,7 +24,7 @@ export const renderSelectionLayer = (
   units: Record<string, Unit>,
   selection: Selection | null,
   cellSize: number,
-  { hover, path, attackableTargets }: Options = {},
+  { hover, path, attackableTargets, pulse = 0 }: Options = {},
 ) => {
   if (hover) drawHoverHighlight(ctx, hover.x, hover.y, cellSize);
 
@@ -38,7 +40,7 @@ export const renderSelectionLayer = (
       if (unit.role === 'military' && hasTargets) {
         drawAttackRange(ctx, unit.x, unit.y, unit.attackRange, cellSize);
       }
-      drawSelectionHighlight(ctx, unit.x, unit.y, cellSize);
+      drawSelectionHighlight(ctx, unit.x, unit.y, cellSize, 'entity', pulse);
     }
   }
 
@@ -54,12 +56,19 @@ export const renderSelectionLayer = (
           cellSize,
         );
       }
-      drawSelectionHighlight(ctx, building.x, building.y, cellSize);
+      drawSelectionHighlight(
+        ctx,
+        building.x,
+        building.y,
+        cellSize,
+        'entity',
+        pulse,
+      );
     }
   }
 
   if (selection.kind === 'cell') {
-    drawTerrainHighlight(ctx, selection.x, selection.y, cellSize);
+    drawTerrainHighlight(ctx, selection.x, selection.y, cellSize, pulse);
   }
 
   if (path) drawPath(ctx, path, cellSize);

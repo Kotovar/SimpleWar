@@ -17,4 +17,4 @@ export const MAP_PRESET_LABELS: Record<keyof typeof MAP_PRESETS, string> = {
   extra: 'Огромная',
 };
 
-export const TEMP_START_SEED = 0.15;
+export const TEMP_START_SEED = 42;

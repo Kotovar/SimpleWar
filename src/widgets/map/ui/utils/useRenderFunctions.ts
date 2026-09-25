@@ -17,6 +17,7 @@ import {
   renderTerrainLayer,
   withClear,
 } from '@widgets/map/lib';
+import { animatePulse } from './animatePulse';
 import { setupCanvas } from './getCtx';
 import { useDevicePixelRatio } from './useDevicePixelRatio';
 import { useEntitiesLayer } from './useEntitiesLayer';
@@ -71,17 +72,28 @@ export const useRenderFunctions = ({
     return path.length > 1 ? path : null;
   }, [grid, hover, reachableCells, selection, units]);
 
+  // Ключ меняется только при постройке или сносе, а не при каждом уроне
+  // зданию: террейн не перерисовывается без нужды.
+  const builtKey = Object.values(buildings)
+    .map(({ x, y }) => `${x},${y}`)
+    .sort()
+    .join(';');
+  const builtCells = useMemo(
+    () => new Set(builtKey ? builtKey.split(';') : []),
+    [builtKey],
+  );
+
   const renderTerrain = useCallback(
     (ctx: CanvasRenderingContext2D) => {
       withClear(ctx, () =>
-        renderTerrainLayer(ctx, grid, cellSize, gridColumns),
+        renderTerrainLayer(ctx, grid, cellSize, gridColumns, builtCells),
       );
     },
-    [cellSize, grid, gridColumns],
+    [builtCells, cellSize, grid, gridColumns],
   );
 
   const renderMovement = useCallback(
-    (ctx: CanvasRenderingContext2D) => {
+    (ctx: CanvasRenderingContext2D, pulse: number) => {
       withClear(ctx, () =>
         renderMovementLayer(
           ctx,
@@ -90,6 +102,7 @@ export const useRenderFunctions = ({
           buildableCells,
           spawnableCells,
           cellSize,
+          pulse,
         ),
       );
     },
@@ -103,12 +116,13 @@ export const useRenderFunctions = ({
   );
 
   const renderSelection = useCallback(
-    (ctx: CanvasRenderingContext2D) => {
+    (ctx: CanvasRenderingContext2D, pulse: number) => {
       withClear(ctx, () =>
         renderSelectionLayer(ctx, buildings, units, selection, cellSize, {
           hover,
           path: hoverPath,
           attackableTargets,
+          pulse,
         }),
       );
     },
@@ -134,13 +148,30 @@ export const useRenderFunctions = ({
     const ctx = setupCanvas(movementRef, canvasWidth, canvasHeight);
     if (!ctx) return;
 
-    renderMovement(ctx);
-  }, [canvasHeight, canvasWidth, movementRef, pixelRatio, renderMovement]);
+    // Пульсируют только цели атаки: без них слой рисуется один раз.
+    return animatePulse(!!attackableTargets?.length, pulse =>
+      renderMovement(ctx, pulse),
+    );
+  }, [
+    attackableTargets,
+    canvasHeight,
+    canvasWidth,
+    movementRef,
+    pixelRatio,
+    renderMovement,
+  ]);
 
   useEffect(() => {
     const ctx = setupCanvas(highlightRef, canvasWidth, canvasHeight);
     if (!ctx) return;
 
-    renderSelection(ctx);
-  }, [canvasHeight, canvasWidth, highlightRef, pixelRatio, renderSelection]);
+    return animatePulse(!!selection, pulse => renderSelection(ctx, pulse));
+  }, [
+    canvasHeight,
+    canvasWidth,
+    highlightRef,
+    pixelRatio,
+    renderSelection,
+    selection,
+  ]);
 };

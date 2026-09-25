@@ -7,7 +7,7 @@ import {
   type Cell,
   type Unit,
 } from '@shared/config';
-import { EntityPortrait, TerrainIcon } from '@shared/ui';
+import { EntityPortrait, TerrainPortrait } from '@shared/ui';
 import styles from './SelectedEntityInfo.styles.module.css';
 
 type Props = {
@@ -29,7 +29,7 @@ const EntityHeader = ({ cell, unit, building }: Props) => {
       {entity ? (
         <EntityPortrait type={entity.type} owner={entity.owner} size={64} />
       ) : (
-        <TerrainIcon size={32} />
+        cell && <TerrainPortrait cell={cell} size={64} />
       )}
       <div>
         <h3 className={styles.EntityName}>
@@ -154,7 +154,7 @@ export const SelectedEntityInfo = ({ cell, unit, building }: Props) => {
   if (!cell && !entity) return null;
 
   return (
-    <section className={styles.EntityInfo}>
+    <section className={styles.EntityInfo} data-owner={entity?.owner}>
       <EntityHeader cell={cell} unit={unit} building={building} />
       {entity && <EntityHealth entity={entity} />}
       <dl className={styles.EntityDetails}>

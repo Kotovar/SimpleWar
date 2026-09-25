@@ -1,11 +1,27 @@
 .EntityInfo {
-  background: linear-gradient(145deg, #283334, var(--surface-sunken) 70%);
+  --owner: var(--border-strong);
+
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--owner) 10%, var(--surface-strong)),
+    var(--surface-sunken) 65%
+  );
   border: 1px solid var(--border);
+  border-top: 3px solid var(--owner);
   border-radius: var(--radius);
   padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* Цвет стороны совпадает с постаментом на карте. */
+.EntityInfo[data-owner='player'] {
+  --owner: var(--team-player);
+}
+
+.EntityInfo[data-owner='ai'] {
+  --owner: var(--team-ai);
 }
 
 .EntityHeader {
@@ -26,12 +42,13 @@
   font-size: 0.8rem;
 }
 
-.Owner[data-owner='player'] {
-  color: #a3d4ed;
-}
-
-.Owner[data-owner='ai'] {
-  color: #ffb19a;
+.Owner[data-owner] {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  color: var(--owner);
+  background-color: color-mix(in srgb, var(--owner) 14%, transparent);
 }
 
 .HealthLabel,
