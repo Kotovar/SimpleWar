@@ -3,6 +3,12 @@ import {
   type SupplyBuilding,
 } from '@shared/config';
 
+/**
+ * Складывает базовую вместимость и снабжение зданий.
+ *
+ * @param buildings - Здания снабжения владельца.
+ * @returns Вместимость без общего лимита; стор экономики применяет предел.
+ */
 export const calculateMaxPopulation = (buildings: SupplyBuilding[]): number =>
   buildings.reduce(
     (acc, building) => acc + building.populationSupply,

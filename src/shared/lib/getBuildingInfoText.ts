@@ -1,9 +1,14 @@
-import { BUILDINGS_CONFIG, UNITS_NAME, BuildingType } from '@shared/config';
+import {
+  BUILDINGS_CONFIG,
+  UNITS_NAME,
+  type BuildingType,
+} from '@shared/config';
 
 /**
- * Возвращает краткую информацию о здании для отображения в UI .
- * @param buildingType - тип здания
- * @returns строка с описанием или пустая строка, если ничего показывать не нужно
+ * Возвращает описание назначения здания для интерфейса.
+ *
+ * @param buildingType - Тип здания.
+ * @returns Описание или пустую строку, если его нет.
  */
 export const getBuildingInfoText = (buildingType: BuildingType): string => {
   switch (buildingType) {
