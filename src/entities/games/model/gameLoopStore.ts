@@ -133,3 +133,16 @@ export const useGameLoopStore = create<GameLoopStoreState>()(
     };
   }),
 );
+
+/**
+ * Проверяет, может ли участник сейчас отдавать приказы.
+ *
+ * @param actor - Участник, от имени которого выполняется команда.
+ * @returns Причина отказа или `null`, если партия идёт и сейчас его ход.
+ */
+export const getTurnRejection = (actor: ParticipantId) => {
+  const { phase, activePlayer } = useGameLoopStore.getState();
+  if (phase !== 'inProgress') return 'phase' as const;
+  if (activePlayer !== actor) return 'turn' as const;
+  return null;
+};

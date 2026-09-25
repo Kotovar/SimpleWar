@@ -29,11 +29,13 @@ const makeContext = (overrides: Partial<MapClickContext> = {}) =>
     selectBuilding: vi.fn(),
     humanId: 'p1',
     selectCell: vi.fn(),
-    calculateMovement: vi.fn(),
-    moveUnit: vi.fn(),
-    attack: vi.fn(),
-    build: vi.fn(),
-    spawn: vi.fn(),
+    calculateActionHighlights: vi.fn(),
+    buildingTypeToPlace: null,
+    unitTypeToSpawn: null,
+    move: vi.fn(() => ({ ok: true }) as const),
+    attack: vi.fn(() => ({ ok: true }) as const),
+    build: vi.fn(() => ({ ok: true }) as const),
+    spawn: vi.fn(() => ({ ok: true }) as const),
     clearSelection: vi.fn(),
     clearHighlight: vi.fn(),
     clearMovement: vi.fn(),
@@ -49,7 +51,7 @@ describe('handleMapCellClick', () => {
     handleMapCellClick(1, 1, ctx);
 
     expect(ctx.selectUnit).toHaveBeenCalledWith(unit.id);
-    expect(ctx.calculateMovement).toHaveBeenCalledWith(unit.id);
+    expect(ctx.calculateActionHighlights).toHaveBeenCalledWith(unit.id);
   });
 
   it('selects an empty cell when nothing is selected', () => {
@@ -71,7 +73,7 @@ describe('handleMapCellClick', () => {
     handleMapCellClick(1, 1, ctx);
 
     expect(ctx.clearSelection).toHaveBeenCalled();
-    expect(ctx.moveUnit).not.toHaveBeenCalled();
+    expect(ctx.move).not.toHaveBeenCalled();
   });
 
   it('only clears selection when an enemy unit is selected', () => {
@@ -83,7 +85,7 @@ describe('handleMapCellClick', () => {
     handleMapCellClick(2, 1, ctx);
 
     expect(ctx.clearSelection).toHaveBeenCalled();
-    expect(ctx.moveUnit).not.toHaveBeenCalled();
+    expect(ctx.move).not.toHaveBeenCalled();
   });
 
   it('moves the selected unit to a reachable cell', () => {
@@ -92,7 +94,12 @@ describe('handleMapCellClick', () => {
 
     handleMapCellClick(2, 1, ctx);
 
-    expect(ctx.moveUnit).toHaveBeenCalledWith(selectedUnit.id, 2, 1);
+    expect(ctx.move).toHaveBeenCalledWith({
+      actor: 'p1',
+      unitId: selectedUnit.id,
+      x: 2,
+      y: 1,
+    });
     expect(ctx.clearSelection).toHaveBeenCalled();
   });
 
@@ -102,7 +109,7 @@ describe('handleMapCellClick', () => {
 
     handleMapCellClick(2, 1, ctx);
 
-    expect(ctx.moveUnit).not.toHaveBeenCalled();
+    expect(ctx.move).not.toHaveBeenCalled();
     expect(ctx.clearHighlight).toHaveBeenCalled();
     expect(ctx.selectCell).toHaveBeenCalledWith(2, 1);
   });
@@ -118,7 +125,7 @@ describe('handleMapCellClick', () => {
 
     handleMapCellClick(5, 5, ctx);
 
-    expect(ctx.moveUnit).not.toHaveBeenCalled();
+    expect(ctx.move).not.toHaveBeenCalled();
     expect(ctx.clearHighlight).toHaveBeenCalled();
     expect(ctx.selectBuilding).toHaveBeenCalledWith(building.id);
   });
@@ -134,7 +141,11 @@ describe('handleMapCellClick', () => {
 
     handleMapCellClick(3, 1, ctx);
 
-    expect(ctx.attack).toHaveBeenCalledWith(selectedBuilding.id, unit.id);
+    expect(ctx.attack).toHaveBeenCalledWith({
+      actor: 'p1',
+      attackerId: selectedBuilding.id,
+      targetId: unit.id,
+    });
   });
 
   it('spawns from a production building only with spawn points', () => {
@@ -143,17 +154,25 @@ describe('handleMapCellClick', () => {
     const spawnableCells = [{ x: 2, y: 1 }];
     const ready = makeContext({
       selectedBuilding: { ...building, spawnPoints: 1 },
+      unitTypeToSpawn: 'archer',
       spawnableCells,
     });
     const empty = makeContext({
       selectedBuilding: { ...building, spawnPoints: 0 },
+      unitTypeToSpawn: 'archer',
       spawnableCells,
     });
 
     handleMapCellClick(2, 1, ready);
     handleMapCellClick(2, 1, empty);
 
-    expect(ready.spawn).toHaveBeenCalledWith(building.id, 2, 1, 'p1');
+    expect(ready.spawn).toHaveBeenCalledWith({
+      actor: 'p1',
+      buildingId: building.id,
+      unitType: 'archer',
+      x: 2,
+      y: 1,
+    });
     expect(ready.clearSelectedBuildingForSpawn).toHaveBeenCalled();
     expect(empty.spawn).not.toHaveBeenCalled();
   });

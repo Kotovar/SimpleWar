@@ -1,4 +1,16 @@
-import type { Building, Owner, Position, Unit } from '@shared/config';
+import type {
+  Building,
+  BuildingType,
+  CommandResult,
+  Owner,
+  Position,
+  Unit,
+  UnitType,
+} from '@shared/config';
+import type { MoveCommand } from '@features/pathfinding';
+import type { AttackCommand } from '@features/combat';
+import type { BuildCommand } from '@features/build';
+import type { SpawnCommand } from '@features/spawn';
 
 export type MapClickContext = {
   /** Участник, которым управляет интерфейс; его объекты — «свои». */
@@ -15,11 +27,15 @@ export type MapClickContext = {
   selectUnit: (id: string) => void;
   selectBuilding: (id: string) => void;
   selectCell: (x: number, y: number) => void;
-  calculateMovement: (unitId: string) => void;
-  moveUnit: (unitId: string, x: number, y: number) => void;
-  attack: (attackerId: string, targetId: string) => void;
-  build: (unitId: string, x: number, y: number, owner: Owner) => void;
-  spawn: (buildingId: string, x: number, y: number, owner: Owner) => void;
+  calculateActionHighlights: (unitId: string) => void;
+  /** Здание, выбранное рабочему для постройки. */
+  buildingTypeToPlace: BuildingType | null;
+  /** Юнит, выбранный зданию для найма. */
+  unitTypeToSpawn: UnitType | null;
+  move: (command: MoveCommand) => CommandResult;
+  attack: (command: AttackCommand) => CommandResult;
+  build: (command: BuildCommand) => CommandResult;
+  spawn: (command: SpawnCommand) => CommandResult;
   clearSelection: () => void;
   clearHighlight: () => void;
   clearMovement: () => void;
@@ -51,14 +67,14 @@ const handleClickWithoutSelection = (
     ctx.selectBuilding(building.id);
     if (building.owner === ctx.humanId && building.role === 'combat') {
       // TODO: Поменять название функции
-      ctx.calculateMovement(building.id);
+      ctx.calculateActionHighlights(building.id);
     }
     return;
   }
 
   if (unit) {
     ctx.selectUnit(unit.id);
-    if (unit.owner === ctx.humanId) ctx.calculateMovement(unit.id);
+    if (unit.owner === ctx.humanId) ctx.calculateActionHighlights(unit.id);
     return;
   }
 
@@ -77,7 +93,12 @@ const handleClickWithPlayerUnitSelected = (
     selectedUnit.movePoints > 0 &&
     isTargetInHighlightedCells(ctx.reachableCells, gridX, gridY)
   ) {
-    ctx.moveUnit(selectedUnit.id, gridX, gridY);
+    ctx.move({
+      actor: ctx.humanId,
+      unitId: selectedUnit.id,
+      x: gridX,
+      y: gridY,
+    });
     resetSelection(ctx);
     return;
   }
@@ -88,7 +109,11 @@ const handleClickWithPlayerUnitSelected = (
     selectedUnit.attackPoints > 0 &&
     isTargetInHighlightedCells(ctx.attackableTargets, gridX, gridY)
   ) {
-    ctx.attack(selectedUnit.id, target.id);
+    ctx.attack({
+      actor: ctx.humanId,
+      attackerId: selectedUnit.id,
+      targetId: target.id,
+    });
     resetSelection(ctx);
     return;
   }
@@ -96,9 +121,16 @@ const handleClickWithPlayerUnitSelected = (
   if (
     selectedUnit.type === 'worker' &&
     selectedUnit.role === 'civil' &&
+    ctx.buildingTypeToPlace &&
     isTargetInHighlightedCells(ctx.buildableCells, gridX, gridY)
   ) {
-    ctx.build(selectedUnit.id, gridX, gridY, ctx.humanId);
+    ctx.build({
+      actor: ctx.humanId,
+      workerId: selectedUnit.id,
+      buildingType: ctx.buildingTypeToPlace,
+      x: gridX,
+      y: gridY,
+    });
     resetSelection(ctx);
     return;
   }
@@ -120,7 +152,11 @@ const handleClickWithPlayerBuildingSelected = (
     target &&
     isTargetInHighlightedCells(ctx.attackableTargets, gridX, gridY)
   ) {
-    ctx.attack(selectedBuilding.id, target.id);
+    ctx.attack({
+      actor: ctx.humanId,
+      attackerId: selectedBuilding.id,
+      targetId: target.id,
+    });
     resetSelection(ctx);
     return;
   }
@@ -128,9 +164,16 @@ const handleClickWithPlayerBuildingSelected = (
   if (
     selectedBuilding.role === 'production' &&
     selectedBuilding.spawnPoints > 0 &&
+    ctx.unitTypeToSpawn &&
     isTargetInHighlightedCells(ctx.spawnableCells, gridX, gridY)
   ) {
-    ctx.spawn(selectedBuilding.id, gridX, gridY, ctx.humanId);
+    ctx.spawn({
+      actor: ctx.humanId,
+      buildingId: selectedBuilding.id,
+      unitType: ctx.unitTypeToSpawn,
+      x: gridX,
+      y: gridY,
+    });
     resetSelection(ctx);
     ctx.clearSelectedBuildingForSpawn();
     return;

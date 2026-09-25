@@ -1,6 +1,6 @@
 export * from './getEnemyTargets';
 export * from './isCellOccupied';
-export * from './getPatch';
+export * from './getPath';
 export * from './createMovementPFGrid';
 export * from './getReachableCells';
 export * from './getAttackableTargets';

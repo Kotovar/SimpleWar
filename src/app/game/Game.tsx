@@ -22,7 +22,7 @@ export const Game = () => {
 
   useEffect(() => {
     if (activeController === 'ai' && phase === 'inProgress') {
-      runAITurn();
+      runAITurn(activePlayer);
     }
     // activePlayer в зависимостях: ход переходит от одного ИИ к другому.
   }, [activePlayer, activeController, phase]);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import PF from 'pathfinding';
-import { getPath } from './getPatch';
+import { getPath } from './getPath';
 
 describe('getPath', () => {
   it('does not open a blocked destination', () => {

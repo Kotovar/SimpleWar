@@ -104,7 +104,7 @@ export const Map = () => {
     reachableCells,
     attackableTargets,
 
-    calculateMovement,
+    calculateActionHighlights,
     resetStore: clearMovement,
   } = useMovementSelectors();
 
@@ -137,6 +137,9 @@ export const Map = () => {
       building: useBuildingsStore.getState().getBuildingAt(gridX, gridY),
       selectedUnit: getSelectedUnit(),
       selectedBuilding: getSelectedBuilding(),
+      buildingTypeToPlace:
+        useBuildingsStore.getState().selectedBuildingForSpawn,
+      unitTypeToSpawn: useUnitsStore.getState().selectedUnitForSpawn,
       reachableCells,
       attackableTargets,
       buildableCells,
@@ -145,8 +148,8 @@ export const Map = () => {
       selectUnit,
       selectBuilding,
       selectCell,
-      calculateMovement,
-      moveUnit: move,
+      calculateActionHighlights,
+      move,
       attack,
       build,
       spawn,

@@ -29,7 +29,8 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
     clearSelectedBuildingForSpawn,
   } = useBuildingsSelectors();
 
-  const { calculateMovement, resetStore: clearMovement } = useMovementStore();
+  const { calculateActionHighlights, resetStore: clearMovement } =
+    useMovementStore();
 
   const {
     buildableCells,
@@ -56,7 +57,7 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
     if (selectedBuildingForSpawn === buildingType) {
       clearSelectedBuildingForSpawn();
       // После отмены строительства снова показываем клетки для движения.
-      calculateMovement(unit.id);
+      calculateActionHighlights(unit.id);
     } else {
       selectBuildingForSpawn(buildingType);
       calculateBuildableCells(unit.id, requiredField);

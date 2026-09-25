@@ -14,7 +14,7 @@ interface MovementState {
   reachableCells: Position[] | null;
   attackableTargets: Position[] | null;
 
-  calculateMovement: (unitId: string) => void;
+  calculateActionHighlights: (unitId: string) => void;
   resetStore: () => void;
 }
 
@@ -23,8 +23,8 @@ export const useMovementStore = create<MovementState>()(
     reachableCells: null,
     attackableTargets: null,
 
-    // Для юнита считает клетки движения и цели; для боевого здания — только цели.
-    calculateMovement: unitId => {
+    // Для юнита считает клетки движения и цели атаки; для башни — только цели.
+    calculateActionHighlights: unitId => {
       const { units } = useUnitsStore.getState();
       const unit = units[unitId];
       const entity =

@@ -94,7 +94,7 @@ describe('AI turn simulation smoke', () => {
     for (let round = 1; round <= rounds; round++) {
       const playerBefore = captureState();
       expect(playerBefore.activePlayer).toBe('p1');
-      nextTurn();
+      nextTurn('p1');
       const playerAfter = captureState();
       expect(playerAfter.activePlayer).toBe('p2');
       turns.push({
@@ -107,7 +107,7 @@ describe('AI turn simulation smoke', () => {
       });
 
       const aiBefore = captureState();
-      runAITurn();
+      runAITurn('p2');
       const aiAfter = captureState();
       expect(aiAfter.activePlayer).toBe('p1');
       expect(aiAfter.turn).toBe(round + 1);

@@ -73,8 +73,13 @@ describe('construction and recruitment', () => {
     owner => {
       useGameLoopStore.setState({ activePlayer: owner });
       const base = buildings().getProductionBuildings(owner)[0];
-      units().selectUnitForSpawn('worker');
-      spawn(base.id, owner === 'p1' ? 1 : 5, base.y, owner);
+      spawn({
+        actor: owner,
+        buildingId: base.id,
+        unitType: 'worker',
+        x: owner === 'p1' ? 1 : 5,
+        y: base.y,
+      });
       expect(economy().resources[owner]).toEqual({ gold: 160, wood: 80 });
       expect(economy().resources[owner === 'p1' ? 'p2' : 'p1']).toEqual({
         gold: 200,
@@ -88,16 +93,27 @@ describe('construction and recruitment', () => {
     useGameLoopStore.setState({ activePlayer: 'p2' });
     const worker = units().spawnUnit('worker', 4, 4, 'p2', true)!;
     useMapStore.getState().setCell(4, 3, { type: 'forest', isWalkable: false });
-    buildings().selectBuildingForSpawn('sawmill');
-    build(worker, 4, 3, 'p2');
+    build({
+      actor: 'p2',
+      workerId: worker,
+      buildingType: 'sawmill',
+      x: 4,
+      y: 3,
+    });
     expect(buildings().getBuildingAt(4, 3)?.type).toBe('sawmill');
     expect(economy().resources.p2).toEqual({ gold: 140, wood: 40 });
     expect(economy().resources.p1).toEqual({ gold: 200, wood: 120 });
   });
 
-  it('does not recruit a swordsman from a town hall with stale selection', () => {
-    units().selectUnitForSpawn('swordsman');
-    spawn(buildings().getProductionBuildings('p1')[0].id, 1, 0, 'p1');
+  it('does not recruit a swordsman from a town hall', () => {
+    const result = spawn({
+      actor: 'p1',
+      buildingId: buildings().getProductionBuildings('p1')[0].id,
+      unitType: 'swordsman',
+      x: 1,
+      y: 0,
+    });
+    expect(result).toMatchObject({ ok: false, code: 'actionType' });
     expect(Object.values(units().units)).toHaveLength(0);
     expect(economy().resources.p1.gold).toBe(200);
   });
@@ -108,22 +124,27 @@ describe('construction and recruitment', () => {
     { x: -1, y: 0 },
   ])('rejects occupied, remote or out-of-map recruitment: %j', target => {
     units().spawnUnit('worker', 1, 0, 'p1');
-    units().selectUnitForSpawn('worker');
     const before = units().units;
-    spawn(
-      buildings().getProductionBuildings('p1')[0].id,
-      target.x,
-      target.y,
-      'p1',
-    );
+    spawn({
+      actor: 'p1',
+      buildingId: buildings().getProductionBuildings('p1')[0].id,
+      unitType: 'worker',
+      ...target,
+    });
     expect(units().units).toBe(before);
     expect(economy().resources.p1.gold).toBe(200);
   });
 
   it('rejects a mine on grass without charging the worker', () => {
     const worker = units().spawnUnit('worker', 1, 1, 'p1', true)!;
-    buildings().selectBuildingForSpawn('mine');
-    build(worker, 2, 1, 'p1');
+    const result = build({
+      actor: 'p1',
+      workerId: worker,
+      buildingType: 'mine',
+      x: 2,
+      y: 1,
+    });
+    expect(result).toMatchObject({ ok: false, code: 'terrain' });
     expect(buildings().getBuildingAt(2, 1)).toBeNull();
     expect(economy().resources.p1.gold).toBe(200);
     expect(units().units[worker]).toMatchObject({
@@ -138,9 +159,9 @@ describe('combat', () => {
     const tower = buildings().spawnBuilding('tower', 2, 2, 'p1')!;
     buildings().resetBuildingsForNewTurn('p1');
     const target = units().spawnUnit('worker', 4, 2, 'p2')!;
-    attack(tower, target);
+    attack({ actor: 'p1', attackerId: tower, targetId: target });
     expect(units().units[target].hp).toBe(5);
-    attack(tower, target);
+    attack({ actor: 'p1', attackerId: tower, targetId: target });
     expect(units().units[target].hp).toBe(5);
   });
 
@@ -148,7 +169,7 @@ describe('combat', () => {
     const soldier = units().spawnUnit('swordsman', 1, 1, 'p1')!;
     const target = units().spawnUnit('worker', 4, 4, 'p2')!;
     units().resetUnitsForNewTurn('p1');
-    attack(soldier, target);
+    attack({ actor: 'p1', attackerId: soldier, targetId: target });
     expect(units().units[target].hp).toBe(25);
     expect(units().units[soldier]).toMatchObject({ attackPoints: 1 });
   });
@@ -167,7 +188,7 @@ describe('combat', () => {
         owner,
       )!;
       units().resetUnitsForNewTurn(owner);
-      attack(soldier, base.id);
+      attack({ actor: owner, attackerId: soldier, targetId: base.id });
       expect(useGameLoopStore.getState()).toMatchObject({
         phase: 'gameOver',
         winner: owner,
@@ -181,7 +202,7 @@ describe('turn and reset boundaries', () => {
     'does not pay income outside a running game: %s',
     phase => {
       useGameLoopStore.setState({ phase });
-      nextTurn();
+      nextTurn('p1');
       expect(economy().resources.p1.gold).toBe(200);
     },
   );
@@ -213,7 +234,7 @@ describe('three participants', () => {
     const second = units().spawnUnit('worker', 5, 5, 'p2')!;
     const third = units().spawnUnit('worker', 1, 5, 'p3')!;
 
-    nextTurn();
+    nextTurn('p1');
 
     expect(economy().resources).toMatchObject({
       p1: { gold: 203 },
@@ -224,8 +245,8 @@ describe('three participants', () => {
     expect(units().units[second].movePoints).toBe(4);
     expect(units().units[third].movePoints).toBe(0);
 
-    nextTurn();
-    nextTurn();
+    nextTurn('p2');
+    nextTurn('p3');
     expect(useGameLoopStore.getState()).toMatchObject({
       activePlayer: 'p1',
       currentTurn: 2,
@@ -241,7 +262,7 @@ describe('three participants', () => {
     const owners = new Set(getEnemyTargets('p1').map(({ owner }) => owner));
     expect(owners).toEqual(new Set(['p2', 'p3']));
 
-    move(foreign, 1, 4);
+    move({ actor: 'p1', unitId: foreign, x: 1, y: 4 });
     expect(units().units[foreign]).toMatchObject({ x: 1, y: 5 });
   });
 
@@ -266,7 +287,7 @@ describe('three participants', () => {
     const soldier = units().spawnUnit('archer', 0, 4, 'p1')!;
     units().resetUnitsForNewTurn('p1');
 
-    attack(soldier, base.id);
+    attack({ actor: 'p1', attackerId: soldier, targetId: base.id });
 
     expect(useGameLoopStore.getState()).toMatchObject({
       phase: 'inProgress',
@@ -276,8 +297,8 @@ describe('three participants', () => {
     expect(units().units[doomed]).toBeUndefined();
     expect(buildings().getProductionBuildings('p3')).toEqual([]);
 
-    nextTurn();
-    nextTurn();
+    nextTurn('p1');
+    nextTurn('p2');
     expect(useGameLoopStore.getState()).toMatchObject({
       activePlayer: 'p1',
       currentTurn: 2,
@@ -296,14 +317,14 @@ describe('movement', () => {
   it('charges the actual four-cell detour instead of two-cell direct distance', () => {
     const worker = units().spawnUnit('worker', 1, 2, 'p1', true)!;
     useMapStore.getState().setCell(2, 2, { type: 'water', isWalkable: false });
-    move(worker, 3, 2);
+    move({ actor: 'p1', unitId: worker, x: 3, y: 2 });
     expect(units().units[worker]).toMatchObject({ x: 3, y: 2, movePoints: 0 });
   });
 
   it('does not move into an occupied cell', () => {
     const worker = units().spawnUnit('worker', 1, 2, 'p1', true)!;
     units().spawnUnit('worker', 2, 2, 'p2');
-    move(worker, 2, 2);
+    move({ actor: 'p1', unitId: worker, x: 2, y: 2 });
     expect(units().units[worker]).toMatchObject({ x: 1, y: 2, movePoints: 4 });
   });
 });

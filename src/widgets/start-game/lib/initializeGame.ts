@@ -1,5 +1,6 @@
 import {
   DEFAULT_PARTICIPANTS,
+  REJECTION_MESSAGE,
   type Cell,
   type Participant,
   type Position,
@@ -15,6 +16,8 @@ import {
 import { useUnitsStore } from '@entities/units';
 import { useSettingsStore } from '@entities/settings';
 import { useGameLoopStore } from '@entities/games';
+import { useJournalStore } from '@entities/journals';
+import { failure, reject } from '@shared/lib';
 import { createMovementPFGrid, getReachableCells } from '@features/pathfinding';
 
 /**
@@ -59,9 +62,16 @@ export const initializeGame = (participants = DEFAULT_PARTICIPANTS) => {
   )
     return false;
 
-  const fail = (startError: string) => {
+  // Новая партия — новый раздел журнала, в том числе для ошибки старта.
+  useJournalStore.getState().newGame();
+
+  // Ошибка старта идёт общим путём ошибок; startError нужен экрану настроек.
+  const fail = (startError: string, rejection = reject('map', startError)) => {
     useMapStore.getState().resetStore();
     useGameLoopStore.setState({ phase: 'setup', currentTurn: 0, startError });
+    useJournalStore
+      .getState()
+      .reportError({ type: 'start', actor: null }, 0, rejection);
   };
 
   if (participants.length !== 2) {
@@ -91,42 +101,56 @@ export const initializeGame = (participants = DEFAULT_PARTICIPANTS) => {
   // Для заданного сида повторная попытка создала бы ту же карту.
   const attempts = mapGenerationMode === 'fixed' ? 1 : 10;
 
-  for (let attempt = 0; attempt < attempts; attempt++) {
-    const seed = mapGenerationMode === 'fixed' ? customSeed : randomSeed();
-    useMapStore.getState().setGrid(generateMap(gridColumns, gridRows, seed));
-    prepareStartArea(playerStart.x, playerStart.y);
-    prepareStartArea(enemyStart.x, enemyStart.y);
+  const generate = () => {
+    for (let attempt = 0; attempt < attempts; attempt++) {
+      const seed = mapGenerationMode === 'fixed' ? customSeed : randomSeed();
+      useMapStore.getState().setGrid(generateMap(gridColumns, gridRows, seed));
+      prepareStartArea(playerStart.x, playerStart.y);
+      prepareStartArea(enemyStart.x, enemyStart.y);
 
-    const { grid } = useMapStore.getState();
-    const pfGrid = createMovementPFGrid(grid);
+      const { grid } = useMapStore.getState();
+      const pfGrid = createMovementPFGrid(grid);
 
-    // Ратуши ещё не созданы, поэтому закрываем их клетки для проверки пути.
-    pfGrid.setWalkableAt(playerStart.x, playerStart.y, false);
-    pfGrid.setWalkableAt(enemyStart.x, enemyStart.y, false);
+      // Ратуши ещё не созданы, поэтому закрываем их клетки для проверки пути.
+      pfGrid.setWalkableAt(playerStart.x, playerStart.y, false);
+      pfGrid.setWalkableAt(enemyStart.x, enemyStart.y, false);
 
-    // Лимит в число клеток позволяет проверить всю связную область рабочего.
-    const reachable = getReachableCells(
-      pfGrid,
-      playerWorker.x,
-      playerWorker.y,
-      gridColumns * gridRows,
-    );
-    // Обход не включает стартовую клетку рабочего.
-    reachable.push(playerWorker);
-    if (
-      !reachable.some(
-        cell => cell.x === enemyWorker.x && cell.y === enemyWorker.y,
+      // Лимит в число клеток позволяет проверить всю связную область рабочего.
+      const reachable = getReachableCells(
+        pfGrid,
+        playerWorker.x,
+        playerWorker.y,
+        gridColumns * gridRows,
+      );
+      // Обход не включает стартовую клетку рабочего.
+      reachable.push(playerWorker);
+      if (
+        !reachable.some(
+          cell => cell.x === enemyWorker.x && cell.y === enemyWorker.y,
+        )
       )
-    )
-      continue;
-    if (!hasAccessibleResources(grid, reachable)) continue;
+        continue;
+      if (!hasAccessibleResources(grid, reachable)) continue;
 
-    // Создаём объекты только после всех проверок карты.
-    spawnBuilding('base', playerStart.x, playerStart.y, first.id);
-    spawnBuilding('base', enemyStart.x, enemyStart.y, second.id);
-    spawnUnit('worker', playerWorker.x, playerWorker.y, first.id, true);
-    spawnUnit('worker', enemyWorker.x, enemyWorker.y, second.id);
-    return true;
+      // Создаём объекты только после всех проверок карты.
+      spawnBuilding('base', playerStart.x, playerStart.y, first.id);
+      spawnBuilding('base', enemyStart.x, enemyStart.y, second.id);
+      spawnUnit('worker', playerWorker.x, playerWorker.y, first.id, true);
+      spawnUnit('worker', enemyWorker.x, enemyWorker.y, second.id);
+      return true;
+    }
+    return false;
+  };
+
+  try {
+    if (generate()) return true;
+  } catch (error) {
+    // Сбой генерации не должен оставить полусозданную партию.
+    useBuildingsStore.getState().resetStore();
+    useUnitsStore.getState().resetStore();
+    const detail = error instanceof Error ? error.message : String(error);
+    fail(REJECTION_MESSAGE.failure, failure(detail));
+    return false;
   }
 
   fail(

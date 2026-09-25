@@ -6,3 +6,4 @@ export * from './getBuildingInfoText';
 export * from './coordNoise';
 export * from './renderHiDpiCanvas';
 export * from './relations';
+export * from './commandResult';

@@ -70,7 +70,7 @@ describe('attack', () => {
     const attacker = getMilitaryUnit(attackerId);
     const target = getUnit(targetId);
 
-    attack(attackerId, targetId);
+    attack({ actor: 'p1', attackerId, targetId });
 
     expect(getUnit(targetId).hp).toBe(target.hp - attacker.attack);
     expect(getMilitaryUnit(attackerId).attackPoints).toBe(
@@ -86,7 +86,7 @@ describe('attack', () => {
     const target = getUnit(targetId);
     useGameLoopStore.setState({ phase: 'setup' });
 
-    attack(attackerId, targetId);
+    attack({ actor: 'p1', attackerId, targetId });
 
     expect(getUnit(targetId).hp).toBe(target.hp);
     expect(getMilitaryUnit(attackerId).attackPoints).toBe(
@@ -107,7 +107,7 @@ describe('attack', () => {
     const readyAttacker = getMilitaryUnit(attackerId);
     const target = getUnit(targetId);
 
-    attack(attackerId, targetId);
+    attack({ actor: 'p1', attackerId, targetId });
 
     expect(getUnit(targetId).hp).toBe(target.hp);
     expect(getMilitaryUnit(attackerId).attackPoints).toBe(
@@ -122,7 +122,7 @@ describe('attack', () => {
     const attacker = getMilitaryUnit(attackerId);
     const target = getUnit(targetId);
 
-    attack(attackerId, targetId);
+    attack({ actor: 'p2', attackerId, targetId });
 
     expect(getUnit(targetId).hp).toBe(target.hp);
     expect(getMilitaryUnit(attackerId).attackPoints).toBe(
@@ -144,7 +144,7 @@ describe('attack', () => {
     });
     onTestFinished(unsubscribe);
 
-    attack(attackerId, targetId);
+    attack({ actor: 'p1', attackerId, targetId });
 
     expect(useBuildingsStore.getState().buildings[targetId]).toBeUndefined();
     expect(destroyedBaseOwner).toBe('p2');
