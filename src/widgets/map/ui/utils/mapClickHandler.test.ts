@@ -1,5 +1,14 @@
 import { describe, expect, it, vi } from 'vite-plus/test';
-import type { Building, Owner, Unit } from '@shared/config';
+import type {
+  Building,
+  BuildingType,
+  CommandResult,
+  Owner,
+  Position,
+  Unit,
+  UnitType,
+} from '@shared/config';
+import { ok, reject } from '@shared/lib';
 import { createBuilding } from '@entities/buildings';
 import { createUnit } from '@entities/units';
 import { handleMapCellClick, type MapClickContext } from './mapClickHandler';
@@ -14,41 +23,65 @@ const unitAt = (
 const buildingAt = (type: Building['type'], x: number, y: number) =>
   createBuilding(type, x, y, 'p1')!;
 
-const makeContext = (overrides: Partial<MapClickContext> = {}) =>
-  ({
-    unit: null,
-    building: null,
-    selectedUnit: null,
-    selectedBuilding: null,
-    reachableCells: null,
-    attackableTargets: null,
-    buildableCells: null,
-    spawnableCells: null,
-    isClickOnCurrentSelection: vi.fn(() => false),
+type Overrides = {
+  unit?: Unit | null;
+  building?: Building | null;
+  selectedUnit?: Unit | null;
+  selectedBuilding?: Building | null;
+  buildingTypeToPlace?: BuildingType | null;
+  unitTypeToSpawn?: UnitType | null;
+  buildableCells?: Position[];
+  reachableCells?: Position[];
+  attackableTargets?: Position[];
+  spawnableCells?: Position[];
+  isCurrent?: () => boolean;
+};
+
+/** Контекст клика и плоский доступ к его заглушкам для проверок. */
+const makeContext = (o: Overrides = {}) => {
+  const done = (): CommandResult => ok;
+  const mocks = {
     selectUnit: vi.fn(),
     selectBuilding: vi.fn(),
-    humanId: 'p1',
     selectCell: vi.fn(),
     calculateActionHighlights: vi.fn(),
-    buildingTypeToPlace: null,
-    unitTypeToSpawn: null,
-    move: vi.fn(() => ({ ok: true }) as const),
-    attack: vi.fn(() => ({ ok: true }) as const),
-    build: vi.fn(() => ({ ok: true }) as const),
-    spawn: vi.fn(() => ({ ok: true }) as const),
     clearSelection: vi.fn(),
-    clearHighlight: vi.fn(),
     clearMovement: vi.fn(),
-    clearSelectedBuildingForSpawn: vi.fn(),
-    ...overrides,
-  }) satisfies MapClickContext;
+    clearHighlight: vi.fn(),
+    move: vi.fn(done),
+    attack: vi.fn(done),
+    build: vi.fn(done),
+    spawn: vi.fn(done),
+  };
+  const { move, attack, build, spawn, ...ui } = mocks;
+  const ctx: MapClickContext = {
+    humanId: 'p1',
+    clicked: { unit: o.unit ?? null, building: o.building ?? null },
+    selection: {
+      unit: o.selectedUnit ?? null,
+      building: o.selectedBuilding ?? null,
+      buildingTypeToPlace: o.buildingTypeToPlace ?? null,
+      unitTypeToSpawn: o.unitTypeToSpawn ?? null,
+      isCurrent: o.isCurrent ?? (() => false),
+    },
+    highlights: {
+      reachable: o.reachableCells ?? null,
+      attackable: o.attackableTargets ?? null,
+      buildable: o.buildableCells ?? null,
+      spawnable: o.spawnableCells ?? null,
+    },
+    commands: { move, attack, build, spawn },
+    ui,
+  };
+  return { ctx, ...mocks };
+};
 
 describe('handleMapCellClick', () => {
   it('selects an own unit and calculates its movement', () => {
     const unit = unitAt('swordsman', 1, 1);
     const ctx = makeContext({ unit });
 
-    handleMapCellClick(1, 1, ctx);
+    handleMapCellClick(1, 1, ctx.ctx);
 
     expect(ctx.selectUnit).toHaveBeenCalledWith(unit.id);
     expect(ctx.calculateActionHighlights).toHaveBeenCalledWith(unit.id);
@@ -57,9 +90,11 @@ describe('handleMapCellClick', () => {
   it('selects an empty cell when nothing is selected', () => {
     const ctx = makeContext();
 
-    handleMapCellClick(2, 3, ctx);
+    handleMapCellClick(2, 3, ctx.ctx);
 
     expect(ctx.selectCell).toHaveBeenCalledWith(2, 3);
+    // Выбор под курсором сам не снимает подсветку стройки/найма.
+    expect(ctx.clearHighlight).not.toHaveBeenCalled();
   });
 
   it('clears selection on a repeated click without acting', () => {
@@ -67,10 +102,10 @@ describe('handleMapCellClick', () => {
     const ctx = makeContext({
       selectedUnit,
       reachableCells: [{ x: 1, y: 1 }],
-      isClickOnCurrentSelection: vi.fn(() => true),
+      isCurrent: () => true,
     });
 
-    handleMapCellClick(1, 1, ctx);
+    handleMapCellClick(1, 1, ctx.ctx);
 
     expect(ctx.clearSelection).toHaveBeenCalled();
     expect(ctx.move).not.toHaveBeenCalled();
@@ -82,7 +117,7 @@ describe('handleMapCellClick', () => {
       reachableCells: [{ x: 2, y: 1 }],
     });
 
-    handleMapCellClick(2, 1, ctx);
+    handleMapCellClick(2, 1, ctx.ctx);
 
     expect(ctx.clearSelection).toHaveBeenCalled();
     expect(ctx.move).not.toHaveBeenCalled();
@@ -92,7 +127,7 @@ describe('handleMapCellClick', () => {
     const selectedUnit = unitAt('swordsman', 1, 1);
     const ctx = makeContext({ selectedUnit, reachableCells: [{ x: 2, y: 1 }] });
 
-    handleMapCellClick(2, 1, ctx);
+    handleMapCellClick(2, 1, ctx.ctx);
 
     expect(ctx.move).toHaveBeenCalledWith({
       actor: 'p1',
@@ -107,7 +142,7 @@ describe('handleMapCellClick', () => {
     const selectedUnit = { ...unitAt('swordsman', 1, 1), movePoints: 0 };
     const ctx = makeContext({ selectedUnit, reachableCells: [{ x: 2, y: 1 }] });
 
-    handleMapCellClick(2, 1, ctx);
+    handleMapCellClick(2, 1, ctx.ctx);
 
     expect(ctx.move).not.toHaveBeenCalled();
     expect(ctx.clearHighlight).toHaveBeenCalled();
@@ -123,7 +158,7 @@ describe('handleMapCellClick', () => {
       reachableCells: [{ x: 2, y: 1 }],
     });
 
-    handleMapCellClick(5, 5, ctx);
+    handleMapCellClick(5, 5, ctx.ctx);
 
     expect(ctx.move).not.toHaveBeenCalled();
     expect(ctx.clearHighlight).toHaveBeenCalled();
@@ -139,7 +174,7 @@ describe('handleMapCellClick', () => {
       attackableTargets: [{ x: 3, y: 1 }],
     });
 
-    handleMapCellClick(3, 1, ctx);
+    handleMapCellClick(3, 1, ctx.ctx);
 
     expect(ctx.attack).toHaveBeenCalledWith({
       actor: 'p1',
@@ -163,8 +198,8 @@ describe('handleMapCellClick', () => {
       spawnableCells,
     });
 
-    handleMapCellClick(2, 1, ready);
-    handleMapCellClick(2, 1, empty);
+    handleMapCellClick(2, 1, ready.ctx);
+    handleMapCellClick(2, 1, empty.ctx);
 
     expect(ready.spawn).toHaveBeenCalledWith({
       actor: 'p1',
@@ -173,7 +208,7 @@ describe('handleMapCellClick', () => {
       x: 2,
       y: 1,
     });
-    expect(ready.clearSelectedBuildingForSpawn).toHaveBeenCalled();
+    expect(ready.clearSelection).toHaveBeenCalled();
     expect(empty.spawn).not.toHaveBeenCalled();
   });
 
@@ -183,12 +218,79 @@ describe('handleMapCellClick', () => {
     const onUnit = makeContext({ selectedBuilding, unit });
     const onCell = makeContext({ selectedBuilding });
 
-    handleMapCellClick(4, 4, onUnit);
-    handleMapCellClick(6, 2, onCell);
+    handleMapCellClick(4, 4, onUnit.ctx);
+    handleMapCellClick(6, 2, onCell.ctx);
 
     expect(onUnit.clearHighlight).toHaveBeenCalled();
     expect(onUnit.selectUnit).toHaveBeenCalledWith(unit.id);
     expect(onCell.selectCell).toHaveBeenCalledWith(6, 2);
     expect(onCell.spawn).not.toHaveBeenCalled();
+  });
+
+  it('attacks a highlighted enemy with a selected military unit', () => {
+    const archer = unitAt('archer', 1, 1);
+    if (archer.role !== 'military') throw new Error('Нужен военный юнит');
+    const selectedUnit = { ...archer, attackPoints: 1 };
+    const unit = unitAt('worker', 3, 1, 'p2');
+    const m = makeContext({
+      selectedUnit,
+      unit,
+      reachableCells: [{ x: 2, y: 1 }],
+      attackableTargets: [{ x: 3, y: 1 }],
+    });
+
+    handleMapCellClick(3, 1, m.ctx);
+
+    expect(m.attack).toHaveBeenCalledWith({
+      actor: 'p1',
+      attackerId: selectedUnit.id,
+      targetId: unit.id,
+    });
+    expect(m.clearSelection).toHaveBeenCalled();
+  });
+
+  it('builds the chosen building type on a highlighted cell', () => {
+    const selectedUnit = unitAt('worker', 1, 1);
+    const m = makeContext({
+      selectedUnit,
+      buildingTypeToPlace: 'farm',
+      buildableCells: [{ x: 2, y: 2 }],
+    });
+
+    handleMapCellClick(2, 2, m.ctx);
+
+    expect(m.build).toHaveBeenCalledWith({
+      actor: 'p1',
+      workerId: selectedUnit.id,
+      buildingType: 'farm',
+      x: 2,
+      y: 2,
+    });
+  });
+
+  it('does not build without a chosen building type', () => {
+    const m = makeContext({
+      selectedUnit: unitAt('worker', 1, 1),
+      buildableCells: [{ x: 2, y: 2 }],
+    });
+
+    handleMapCellClick(2, 2, m.ctx);
+
+    expect(m.build).not.toHaveBeenCalled();
+    expect(m.selectCell).toHaveBeenCalledWith(2, 2);
+  });
+
+  it('resets the interaction the same way when a command is rejected', () => {
+    const m = makeContext({
+      selectedUnit: unitAt('swordsman', 1, 1),
+      reachableCells: [{ x: 2, y: 1 }],
+    });
+    m.move.mockReturnValue(reject('points'));
+
+    handleMapCellClick(2, 1, m.ctx);
+
+    expect(m.clearSelection).toHaveBeenCalled();
+    expect(m.clearMovement).toHaveBeenCalled();
+    expect(m.clearHighlight).toHaveBeenCalled();
   });
 });

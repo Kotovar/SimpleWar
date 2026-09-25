@@ -1,24 +1,13 @@
 import { useEffect, useRef, type MouseEvent, type PointerEvent } from 'react';
 import { CELL_SIZE } from '@shared/config';
-import { useUnitsStore } from '@entities/units';
-import { useBuildingsSelectors, useBuildingsStore } from '@entities/buildings';
 import { useSettingsSelectors } from '@entities/settings';
-import { useSelectionSelectors } from '@features/selection';
-import { attack } from '@features/combat';
 import { useGameLoopSelectors } from '@features/game-loop';
-import { build } from '@features/build';
-import { spawn } from '@features/spawn';
-import {
-  move,
-  useMovementSelectors,
-  useHighlightSelectors,
-} from '@features/pathfinding';
-import { getGridCoordsFromEvent, handleMapCellClick } from './utils';
+import { getGridCoordsFromEvent, useMapCellClick } from './utils';
 import { CanvasLayers } from './CanvasLayers';
 import styles from './styles.module.css';
 
 export const Map = () => {
-  const { phase, humanId } = useGameLoopSelectors();
+  const { phase } = useGameLoopSelectors();
   const drag = useRef<{
     x: number;
     y: number;
@@ -26,14 +15,6 @@ export const Map = () => {
     active: boolean;
   } | null>(null);
   const suppressClick = useRef(false);
-  const {
-    terrainSelection,
-    unitsSelection,
-    buildingsSelection,
-    clearSelection,
-    isClickOnCurrentSelection,
-  } = useSelectionSelectors();
-
   const {
     canvasWidth,
     canvasHeight,
@@ -100,64 +81,11 @@ export const Map = () => {
     };
   }, [gridColumns, zoomBy]);
 
-  const {
-    reachableCells,
-    attackableTargets,
-
-    calculateActionHighlights,
-    resetStore: clearMovement,
-  } = useMovementSelectors();
-
-  const {
-    spawnableCells,
-    buildableCells,
-    resetStore: clearHighlight,
-  } = useHighlightSelectors();
-
-  const { selectCell } = terrainSelection;
-  const { selectUnit, getSelectedUnit } = unitsSelection;
-  const { selectBuilding, getSelectedBuilding } = buildingsSelection;
-
-  const { clearSelectedBuildingForSpawn } = useBuildingsSelectors();
+  const handleCellClick = useMapCellClick();
 
   const CANVAS_SIZES = {
     width: canvasWidth,
     height: canvasHeight,
-  };
-
-  const handleCellClick = (gridX: number, gridY: number) => {
-    if (drag.current || !humanId) return;
-    if (gridX < 0 || gridX >= gridColumns || gridY < 0 || gridY >= gridRows) {
-      return;
-    }
-
-    handleMapCellClick(gridX, gridY, {
-      humanId,
-      unit: useUnitsStore.getState().getUnitAt(gridX, gridY),
-      building: useBuildingsStore.getState().getBuildingAt(gridX, gridY),
-      selectedUnit: getSelectedUnit(),
-      selectedBuilding: getSelectedBuilding(),
-      buildingTypeToPlace:
-        useBuildingsStore.getState().selectedBuildingForSpawn,
-      unitTypeToSpawn: useUnitsStore.getState().selectedUnitForSpawn,
-      reachableCells,
-      attackableTargets,
-      buildableCells,
-      spawnableCells,
-      isClickOnCurrentSelection,
-      selectUnit,
-      selectBuilding,
-      selectCell,
-      calculateActionHighlights,
-      move,
-      attack,
-      build,
-      spawn,
-      clearSelection,
-      clearHighlight,
-      clearMovement,
-      clearSelectedBuildingForSpawn,
-    });
   };
 
   const handleCanvasClick = (event: MouseEvent<HTMLCanvasElement>) => {
@@ -166,7 +94,7 @@ export const Map = () => {
       event.currentTarget,
       cellSize,
     );
-    handleCellClick(x, y);
+    if (!drag.current) handleCellClick(x, y);
   };
 
   const finishDrag = (event: PointerEvent<HTMLDivElement>) => {
