@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { GRID, type Cell, type CellType } from '@shared/config';
+import { renderHiDpiCanvas } from '@shared/lib';
 import { drawForest } from './drawForest';
 import { drawGoldOre, drawMountains } from './drawTerrain';
 import styles from './styles.module.css';
@@ -67,15 +68,9 @@ export const TerrainPortrait = ({ cell, size = 48 }: Props) => {
 
   useEffect(() => {
     const canvas = ref.current;
-    const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx) return;
+    if (!canvas) return;
 
-    const draw = () => {
-      const ratio = window.devicePixelRatio || 1;
-      // Изменение размера буфера сбрасывает масштаб Canvas перед новой отрисовкой.
-      canvas.width = Math.round(size * ratio);
-      canvas.height = Math.round(size * ratio);
-      ctx.scale(canvas.width / size, canvas.height / size);
+    return renderHiDpiCanvas(canvas, size, ctx => {
       ctx.fillStyle = GROUND[type];
       ctx.fillRect(0, 0, size, size);
 
@@ -93,11 +88,7 @@ export const TerrainPortrait = ({ cell, size = 48 }: Props) => {
       if (type === 'mountain') drawMountains(ctx, x, y, size);
       if (type === 'gold') drawGoldOre(ctx, x, y, size);
       ctx.restore();
-    };
-
-    draw();
-    window.addEventListener('resize', draw);
-    return () => window.removeEventListener('resize', draw);
+    });
   }, [size, type, x, y]);
 
   return (
