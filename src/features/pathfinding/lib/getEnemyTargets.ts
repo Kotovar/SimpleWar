@@ -10,6 +10,12 @@ type Attackable = {
   kind: 'unit' | 'building';
 };
 
+/**
+ * Собирает юнитов и здания противника для поиска целей атаки.
+ *
+ * @param owner - Сторона атакующего.
+ * @returns Цели с ID, координатами, стороной и видом сущности.
+ */
 export const getEnemyTargets = (owner: Owner): Attackable[] => {
   const units = useUnitsStore.getState().units;
   const buildings = useBuildingsStore.getState().buildings;

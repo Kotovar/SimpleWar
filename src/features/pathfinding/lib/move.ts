@@ -4,6 +4,13 @@ import { useGameLoopStore } from '@entities/games';
 import { createMovementPFGrid } from './createMovementPFGrid';
 import { getPath } from './getPatch';
 
+/**
+ * Перемещает юнита по допустимому пути в пределах оставшихся очков движения.
+ *
+ * @param unitId - ID юнита.
+ * @param x - Столбец целевой клетки.
+ * @param y - Строка целевой клетки.
+ */
 export const move = (unitId: string, x: number, y: number) => {
   const { phase, activePlayer } = useGameLoopStore.getState();
   const { units, moveUnit } = useUnitsStore.getState();

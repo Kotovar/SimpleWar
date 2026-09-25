@@ -1,5 +1,11 @@
 import type { Building, Resources } from '@shared/config';
 
+/**
+ * Суммирует доход зданий за один ход.
+ *
+ * @param buildings - Здания, доход которых учитывается.
+ * @returns Количество золота и древесины без изменения входного списка.
+ */
 export const calculateIncome = (buildings: Building[]): Resources => {
   return buildings.reduce(
     (acc, building) => {
