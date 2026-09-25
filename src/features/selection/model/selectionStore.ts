@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
+import { withDevtools } from '@shared/lib';
 import type { Building, Cell, Unit } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
@@ -24,7 +24,7 @@ interface SelectionState {
 }
 
 export const useSelectionStore = create<SelectionState>()(
-  immer((set, get) => ({
+  withDevtools('selection', (set, get) => ({
     selection: null,
 
     selectCell: (x, y) => set({ selection: { kind: 'cell', x, y } }),

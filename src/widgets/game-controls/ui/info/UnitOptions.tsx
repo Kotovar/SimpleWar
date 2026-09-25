@@ -11,6 +11,7 @@ import { useUnitsSelectors } from '@entities/units';
 import { useEconomySelectors } from '@entities/economies';
 import { useHighlightStore } from '@features/pathfinding';
 import { useGameLoopSelectors } from '@features/game-loop';
+import { getPayableResources, useDebugException } from '@entities/settings';
 import styles from './OptionCards.styles.module.css';
 
 type Props = {
@@ -21,6 +22,8 @@ export const UnitOptions = ({ building }: Props) => {
   const { resources, populationCap } = useEconomySelectors();
   const { humanId } = useGameLoopSelectors();
   const { owner } = building;
+  const isFree = useDebugException(owner, 'freeSpawn');
+  const payable = getPayableResources(resources[owner], isFree);
 
   const {
     selectedUnitForSpawn,
@@ -85,7 +88,7 @@ export const UnitOptions = ({ building }: Props) => {
 
           const check = canSpawnUnit(
             spawnType,
-            resources[owner],
+            payable,
             populationCap[owner],
             building.spawnPoints,
           );
@@ -111,20 +114,23 @@ export const UnitOptions = ({ building }: Props) => {
             >
               <EntityPortrait type={spawnType} owner={building.owner} />
               <span className={styles.Content}>
-                <span className={styles.Name}>{name}</span>
+                <span className={styles.Name}>
+                  {name}
+                  {isFree && ' · бесплатно (отладка)'}
+                </span>
                 <span className={styles.Costs}>
                   <span
                     className={styles.Cost}
-                    data-lacking={resources[owner].gold < cost.gold}
+                    data-lacking={payable.gold < cost.gold}
                   >
-                    <GoldIcon /> {cost.gold} золота
+                    <GoldIcon /> {isFree ? 0 : cost.gold} золота
                   </span>
                   {cost.wood === 0 ? null : (
                     <span
                       className={styles.Cost}
-                      data-lacking={resources[owner].wood < cost.wood}
+                      data-lacking={payable.wood < cost.wood}
                     >
-                      <WoodIcon /> {cost.wood} дерева
+                      <WoodIcon /> {isFree ? 0 : cost.wood} дерева
                     </span>
                   )}
                   <span

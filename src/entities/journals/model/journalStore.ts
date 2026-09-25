@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
 import type {
   CommandMeta,
   CommandRejection,
@@ -8,7 +7,7 @@ import type {
   JournalVisibility,
   ParticipantId,
 } from '@shared/config';
-import { failure } from '@shared/lib';
+import { failure, withDevtools } from '@shared/lib';
 
 /** Лимит хранимых записей каждого вида; старые вытесняются. */
 export const JOURNAL_LIMIT = 200;
@@ -74,7 +73,7 @@ const isSameError = (
   JSON.stringify(error.details) === JSON.stringify(meta.details);
 
 export const useJournalStore = create<JournalState>()(
-  immer(set => ({
+  withDevtools('journal', set => ({
     gameId: 1,
     nextId: 1,
     entries: [],

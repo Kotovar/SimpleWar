@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
+import { withDevtools } from '@shared/lib';
 import type { Cell } from '@shared/config';
 
 type MapState = {
@@ -22,7 +22,7 @@ type MapState = {
 };
 
 export const useMapStore = create<MapState>()(
-  immer((set, get) => ({
+  withDevtools('map', (set, get) => ({
     grid: [],
 
     setGrid: grid => set({ grid }),

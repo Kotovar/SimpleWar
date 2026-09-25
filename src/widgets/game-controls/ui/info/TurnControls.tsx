@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useGameLoopSelectors } from '@features/game-loop';
+import { useDebugStore } from '@entities/settings';
 import styles from './TurnControls.styles.module.css';
 
 type Props = {
@@ -10,6 +11,8 @@ type Props = {
 export const TurnControls = ({ onNextTurn, onReset }: Props) => {
   const { activePlayer, humanId } = useGameLoopSelectors();
   const isOwnTurn = activePlayer === humanId;
+  const isDebug = useDebugStore(state => state.enabled);
+  const setDebug = useDebugStore(state => state.setEnabled);
   const menu = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
@@ -47,6 +50,16 @@ export const TurnControls = ({ onNextTurn, onReset }: Props) => {
       <details className={styles.Menu} ref={menu}>
         <summary>Меню</summary>
         <div className={styles.Dropdown}>
+          <button
+            className={styles.MenuButton}
+            aria-pressed={isDebug}
+            onClick={() => {
+              if (menu.current) menu.current.open = false;
+              setDebug(!isDebug);
+            }}
+          >
+            {isDebug ? 'Выключить режим отладки' : 'Режим отладки'}
+          </button>
           <button
             className={styles.DangerButton}
             onClick={() => {

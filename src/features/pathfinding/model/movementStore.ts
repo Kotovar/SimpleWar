@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
+import { withDevtools } from '@shared/lib';
 import type { Position } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
@@ -19,7 +19,7 @@ interface MovementState {
 }
 
 export const useMovementStore = create<MovementState>()(
-  immer(set => ({
+  withDevtools('movement', set => ({
     reachableCells: null,
     attackableTargets: null,
 

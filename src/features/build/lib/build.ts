@@ -1,6 +1,7 @@
 import {
   BUILDINGS_CONFIG,
   type BuildingType,
+  type DebugException,
   type CommandResult,
   type ParticipantId,
 } from '@shared/config';
@@ -11,6 +12,10 @@ import { useEconomyStore } from '@entities/economies';
 import { useMapStore } from '@entities/maps';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand } from '@entities/journals';
+import { getDebugExceptions, getPayableResources } from '@entities/settings';
+
+const isBuildException = (exception: DebugException) =>
+  exception === 'freeBuild' || exception === 'instantBuild';
 
 /** Приказ строительства: кто, каким рабочим, что и где. */
 export type BuildCommand = {
@@ -21,13 +26,10 @@ export type BuildCommand = {
   y: number;
 };
 
-const validateAndBuild = ({
-  actor,
-  workerId,
-  buildingType,
-  x,
-  y,
-}: BuildCommand): CommandResult => {
+const validateAndBuild = (
+  { actor, workerId, buildingType, x, y }: BuildCommand,
+  isFree: boolean,
+): CommandResult => {
   const turnRejection = getTurnRejection(actor);
   if (turnRejection) return reject(turnRejection);
 
@@ -56,9 +58,10 @@ const validateAndBuild = ({
   if (getUnitAt(x, y) || getBuildingAt(x, y)) return reject('occupied');
 
   const { resources, removeResources } = useEconomyStore.getState();
+  // Бесплатность снимает только цену: очки, место и тип проверены как обычно.
   const check = canSpawnBuilding(
     buildingType,
-    resources[actor],
+    getPayableResources(resources[actor], isFree),
     worker.buildPoints,
   );
   if (!check.canSpawn) {
@@ -69,18 +72,21 @@ const validateAndBuild = ({
     return failure(`Здание ${buildingType} не создано`);
   }
   changeBuildPoints(workerId);
-  removeResources(actor, config.cost);
+  if (!isFree) removeResources(actor, config.cost);
   return ok;
 };
 
 /**
  * Строит здание рядом с рабочим и списывает ресурсы действующей стороны.
+ * Включённые исключения отладки участника применяются и пишутся в журнал.
  *
  * @param command - Участник, рабочий, тип здания и клетка.
  * @returns Успех либо причина отказа; при отказе состояние не меняется.
  */
-export const build = (command: BuildCommand) =>
-  runCommand(
+export const build = (command: BuildCommand) => {
+  const debug = getDebugExceptions(command.actor).filter(isBuildException);
+
+  return runCommand(
     {
       type: 'build',
       actor: command.actor,
@@ -89,8 +95,10 @@ export const build = (command: BuildCommand) =>
         buildingType: command.buildingType,
         x: command.x,
         y: command.y,
+        ...(debug.length ? { debug: debug.join(',') } : {}),
       },
     },
     useGameLoopStore.getState().currentTurn,
-    () => validateAndBuild(command),
+    () => validateAndBuild(command, debug.includes('freeBuild')),
   );
+};

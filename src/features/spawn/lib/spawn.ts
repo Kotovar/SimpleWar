@@ -11,6 +11,7 @@ import { useEconomyStore } from '@entities/economies';
 import { useMapStore } from '@entities/maps';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand } from '@entities/journals';
+import { getDebugExceptions, getPayableResources } from '@entities/settings';
 
 /** Приказ найма: кто, в каком здании, кого и на какую клетку. */
 export type SpawnCommand = {
@@ -27,13 +28,10 @@ const SPAWN_REJECTION = {
   spawnPoints: 'points',
 } as const;
 
-const validateAndSpawn = ({
-  actor,
-  buildingId,
-  unitType,
-  x,
-  y,
-}: SpawnCommand): CommandResult => {
+const validateAndSpawn = (
+  { actor, buildingId, unitType, x, y }: SpawnCommand,
+  isFree: boolean,
+): CommandResult => {
   const turnRejection = getTurnRejection(actor);
   if (turnRejection) return reject(turnRejection);
 
@@ -61,9 +59,10 @@ const validateAndSpawn = ({
 
   const { resources, populationCap, removeResources } =
     useEconomyStore.getState();
+  // Бесплатность снимает только цену: население и очки найма проверены как обычно.
   const check = canSpawnUnit(
     unitType,
-    resources[actor],
+    getPayableResources(resources[actor], isFree),
     populationCap[actor],
     building.spawnPoints,
   );
@@ -77,19 +76,21 @@ const validateAndSpawn = ({
     return failure(`Юнит ${unitType} не создан`);
   }
   changeSpawnPoints(buildingId);
-  removeResources(actor, UNITS_CONFIG[unitType].cost);
+  if (!isFree) removeResources(actor, UNITS_CONFIG[unitType].cost);
   return ok;
 };
 
 /**
  * Нанимает юнита рядом со зданием и списывает ресурсы действующей стороны.
  * Стартовые объекты создаются напрямую через хранилище, а не этой командой.
+ * Бесплатный найм отладки снимает только цену и пишется в журнал.
  *
  * @param command - Участник, здание, тип юнита и клетка.
  * @returns Успех либо причина отказа; при отказе состояние не меняется.
  */
-export const spawn = (command: SpawnCommand) =>
-  runCommand(
+export const spawn = (command: SpawnCommand) => {
+  const isFree = getDebugExceptions(command.actor).includes('freeSpawn');
+  return runCommand(
     {
       type: 'spawn',
       actor: command.actor,
@@ -98,8 +99,10 @@ export const spawn = (command: SpawnCommand) =>
         unitType: command.unitType,
         x: command.x,
         y: command.y,
+        ...(isFree ? { debug: 'freeSpawn' } : {}),
       },
     },
     useGameLoopStore.getState().currentTurn,
-    () => validateAndSpawn(command),
+    () => validateAndSpawn(command, isFree),
   );
+};

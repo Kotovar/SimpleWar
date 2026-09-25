@@ -3,7 +3,7 @@ import { ok, reject } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
-import { useSettingsStore } from '@entities/settings';
+import { useDebugStore, useSettingsStore } from '@entities/settings';
 import { useEconomyStore } from '@entities/economies';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand, useJournalStore } from '@entities/journals';
@@ -40,13 +40,14 @@ export const nextTurn = (actor: ParticipantId) =>
     () => validateAndEndTurn(actor),
   );
 
-/** Сбрасывает фазу, объекты, карту, настройки, экономику и журнал партии. */
+/** Сбрасывает фазу, объекты, карту, настройки, отладку, экономику и журнал. */
 export const resetGame = () => {
   useGameLoopStore.getState().resetGame();
   useBuildingsStore.getState().resetStore();
   useUnitsStore.getState().resetStore();
   useMapStore.getState().resetStore();
   useSettingsStore.getState().resetStore();
+  useDebugStore.getState().resetStore();
   useEconomyStore.getState().resetStore();
   useJournalStore.getState().newGame();
 };

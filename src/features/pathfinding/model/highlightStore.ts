@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
+import { withDevtools } from '@shared/lib';
 import type { Cell, Position } from '@shared/config';
 
 import { useMapStore } from '@entities/maps';
@@ -18,7 +18,7 @@ interface HighlightState {
 }
 
 export const useHighlightStore = create<HighlightState>()(
-  immer(set => ({
+  withDevtools('highlight', set => ({
     spawnableCells: null,
     buildableCells: null,
 

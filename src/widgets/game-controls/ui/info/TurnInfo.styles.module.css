@@ -59,3 +59,15 @@
   border-radius: 1px;
   transform: rotate(45deg);
 }
+
+/* Постоянная отметка режима отладки. */
+.Debug {
+  padding: 4px 10px;
+  border: 1px dashed var(--danger-strong);
+  border-radius: 999px;
+  color: var(--danger-strong);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}

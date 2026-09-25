@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
+import { withDevtools } from '@shared/lib';
 import {
   DEFAULT_PARTICIPANTS,
   type Participant,
@@ -45,7 +45,7 @@ export const getAliveParticipants = ({
 };
 
 export const useGameLoopStore = create<GameLoopStoreState>()(
-  immer(set => {
+  withDevtools('gameLoop', set => {
     /** Передаёт ход следующему невыбывшему; обход начала списка завершает круг. */
     const passTurn = (state: GameLoopStoreState) => {
       const { participants } = state;

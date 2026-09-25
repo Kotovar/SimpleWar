@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
+import { withDevtools } from '@shared/lib';
 import {
   MAX_POPULATION_LIMIT,
   START_POPULATION_CAPS,
@@ -20,7 +20,7 @@ type EconomyState = {
 };
 
 export const useEconomyStore = create<EconomyState>()(
-  immer(set => ({
+  withDevtools('economy', set => ({
     resources: START_RESOURCES,
     populationCap: START_POPULATION_CAPS,
 

@@ -11,6 +11,7 @@ import {
   SelectedEntityInfo,
   WorkerBuildOptions,
   UnitOptions,
+  DebugPanel,
 } from './info';
 import styles from './styles.module.css';
 
@@ -100,6 +101,7 @@ export const PhaseInProgress = () => {
       <AiTurnBanner />
 
       <aside className={styles.ContextPanel} aria-label='Выбранный объект'>
+        <DebugPanel />
         {(cell || unit || building) && (
           <>
             <SelectedEntityInfo cell={cell} unit={unit} building={building} />

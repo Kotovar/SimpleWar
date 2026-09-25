@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
-import { gameEvents } from '@shared/lib';
+import { gameEvents, withDevtools } from '@shared/lib';
 import type {
   Owner,
   BuildingType,
@@ -37,7 +36,7 @@ type BuildingsState = {
 };
 
 export const useBuildingsStore = create<BuildingsState>()(
-  immer((set, get) => ({
+  withDevtools('buildings', (set, get) => ({
     buildings: {},
     selectedBuildingForSpawn: null,
 

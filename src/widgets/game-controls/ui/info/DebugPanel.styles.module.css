@@ -1,0 +1,63 @@
+.Panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px dashed var(--danger-strong);
+  border-radius: var(--radius);
+  background-color: var(--surface-sunken);
+}
+
+.Title {
+  margin: 0;
+  color: var(--danger-strong);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.Target {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.Toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* Нативный select в тёмной теме панели; стрелку и список оставляем системными. */
+.Target select {
+  min-width: 150px;
+  padding: 4px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-strong);
+  color: var(--text);
+  font: inherit;
+  color-scheme: dark;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--surface-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 1px;
+  }
+}
+
+/* У кого из участников включено исключение, если не у всех. */
+.Holders {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}

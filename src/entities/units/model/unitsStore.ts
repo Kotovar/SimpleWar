@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
-import { gameEvents } from '@shared/lib';
+import { gameEvents, withDevtools } from '@shared/lib';
 import type { Owner, Unit, UnitType } from '@shared/config';
 import { createUnit } from './createUnit';
 
@@ -29,7 +28,7 @@ type UnitsState = {
 };
 
 export const useUnitsStore = create<UnitsState>()(
-  immer((set, get) => ({
+  withDevtools('units', (set, get) => ({
     units: {},
     selectedUnitForSpawn: null,
 
