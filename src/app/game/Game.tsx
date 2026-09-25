@@ -3,7 +3,7 @@ import { initGameLoopEvents, useGameLoopSelectors } from '@features/game-loop';
 import { Map } from '@widgets/map';
 import { initializeGame } from '@widgets/start-game';
 import { GameControls } from '@widgets/game-controls';
-import { initPopulationSystem } from '@app/system';
+import { initJournalSystem, initPopulationSystem } from '@app/system';
 import { runAITurn } from '@app/game/ai';
 import styles from './styles.module.css';
 
@@ -18,6 +18,7 @@ export const Game = () => {
   useEffect(() => {
     initGameLoopEvents();
     initPopulationSystem();
+    initJournalSystem();
   }, []);
 
   useEffect(() => {

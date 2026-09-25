@@ -82,17 +82,32 @@ describe('useJournalStore', () => {
     expect(journal().entries[0].turn).toBe(5);
   });
 
-  it('показывает участнику только его действия и служебные события', () => {
+  it('показывает участнику только видимые ему записи', () => {
     runCommand({ type: 'move', actor: 'p1' }, 1, () => ({ ok: true }));
     runCommand(
       { type: 'move', actor: 'p2', details: { x: 9, y: 9 } },
       1,
       () => ({ ok: true }),
     );
-    journal().record({ type: 'start', actor: null }, 0);
+    journal().record({
+      type: 'unitDestroyed',
+      actor: 'p2',
+      turn: 1,
+      visibleTo: ['p2', 'p1'],
+    });
+    journal().record({
+      type: 'eliminated',
+      actor: null,
+      turn: 1,
+      visibleTo: 'all',
+    });
 
     const visible = getVisibleRecords(journal().entries, 'p1');
-    expect(visible.map(({ actor }) => actor)).toEqual(['p1', null]);
+    expect(visible.map(({ type }) => type)).toEqual([
+      'move',
+      'unitDestroyed',
+      'eliminated',
+    ]);
     expect(JSON.stringify(visible)).not.toContain('"x":9');
   });
 });

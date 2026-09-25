@@ -5,4 +5,5 @@ export {
   useJournalStore,
   type JournalEntry,
   type JournalError,
+  type JournalEventInput,
 } from './model';

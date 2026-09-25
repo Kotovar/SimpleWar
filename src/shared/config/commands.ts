@@ -9,6 +9,19 @@ export type CommandType =
   | 'spawn'
   | 'endTurn';
 
+/** Последствия действий, которые журнал записывает помимо самих команд. */
+export type GameOutcomeType =
+  | 'unitDestroyed'
+  | 'buildingDestroyed'
+  | 'eliminated'
+  | 'gameOver';
+
+/** Тип записи журнала: команда либо её последствие. */
+export type JournalEventType = CommandType | GameOutcomeType;
+
+/** Кому запись видна в обычном журнале; `all` — служебные события партии. */
+export type JournalVisibility = ParticipantId[] | 'all';
+
 /** Причина отказа команды. */
 export type RejectionCode =
   | 'phase'
