@@ -25,8 +25,10 @@
   --population: #8fd8a4;
 
   /* Цвета сторон совпадают с картой: TEAM_MARKERS в shared/config/draws. */
-  --team-player: #78ccff;
-  --team-ai: #ff9474;
+  --team-p1: #78ccff;
+  --team-p2: #ff9474;
+  --team-p3: #f5d05e;
+  --team-p4: #c79bff;
 
   --radius-lg: 12px;
   --radius: 8px;

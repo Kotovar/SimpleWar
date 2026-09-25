@@ -15,7 +15,7 @@ const buildingCases = [
     config: PRODUCTION_BUILDINGS_CONFIG.base,
     x: 2,
     y: 5,
-    owner: 'player',
+    owner: 'p1',
   },
   {
     type: 'barracks',
@@ -23,7 +23,7 @@ const buildingCases = [
     config: PRODUCTION_BUILDINGS_CONFIG.barracks,
     x: 3,
     y: 6,
-    owner: 'ai',
+    owner: 'p2',
   },
   {
     type: 'mine',
@@ -31,7 +31,7 @@ const buildingCases = [
     config: RESOURCE_BUILDINGS_CONFIG.mine,
     x: 4,
     y: 7,
-    owner: 'player',
+    owner: 'p1',
   },
   {
     type: 'sawmill',
@@ -39,7 +39,7 @@ const buildingCases = [
     config: RESOURCE_BUILDINGS_CONFIG.sawmill,
     x: 5,
     y: 8,
-    owner: 'ai',
+    owner: 'p2',
   },
   {
     type: 'farm',
@@ -47,7 +47,7 @@ const buildingCases = [
     config: SUPPLY_BUILDINGS_CONFIG.farm,
     x: 6,
     y: 9,
-    owner: 'player',
+    owner: 'p1',
   },
   {
     type: 'tower',
@@ -55,7 +55,7 @@ const buildingCases = [
     config: COMBAT_BUILDINGS_CONFIG.tower,
     x: 7,
     y: 10,
-    owner: 'ai',
+    owner: 'p2',
   },
 ] as const;
 
@@ -79,8 +79,6 @@ describe('createBuilding', () => {
   );
 
   it('возвращает null для неизвестного типа', () => {
-    expect(
-      createBuilding('unknown' as BuildingType, 0, 0, 'player'),
-    ).toBeNull();
+    expect(createBuilding('unknown' as BuildingType, 0, 0, 'p1')).toBeNull();
   });
 });

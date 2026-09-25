@@ -8,7 +8,8 @@ type Props = {
 };
 
 export const TurnControls = ({ onNextTurn, onReset }: Props) => {
-  const { activePlayer } = useGameLoopSelectors();
+  const { activePlayer, humanId } = useGameLoopSelectors();
+  const isOwnTurn = activePlayer === humanId;
   const menu = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
@@ -38,9 +39,9 @@ export const TurnControls = ({ onNextTurn, onReset }: Props) => {
       <button
         className={styles.EndTurnButton}
         onClick={onNextTurn}
-        disabled={activePlayer === 'ai'}
+        disabled={!isOwnTurn}
       >
-        {activePlayer === 'ai' ? 'Ход противника…' : 'Завершить ход'}
+        {isOwnTurn ? 'Завершить ход' : 'Ход противника…'}
       </button>
 
       <details className={styles.Menu} ref={menu}>

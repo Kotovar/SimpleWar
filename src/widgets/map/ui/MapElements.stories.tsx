@@ -113,7 +113,7 @@ const withGround =
   };
 
 const unit = (patch: Partial<Unit> = {}, type: Unit['type'] = 'swordsman') =>
-  ({ ...createUnit(type, 0, 0, 'player', true)!, ...patch }) as Unit;
+  ({ ...createUnit(type, 0, 0, 'p1', true)!, ...patch }) as Unit;
 
 const place = <T extends Unit | Building>(items: (T | null)[]) =>
   Object.fromEntries(items.map(item => [item!.id, item!])) as Record<string, T>;
@@ -155,7 +155,7 @@ const TERRAIN: Record<string, Tile[]> = {
   ),
 };
 
-const enemy = unit({ owner: 'ai' });
+const enemy = unit({ owner: 'p2' });
 
 // Середина вспышки: видны и подсветка клетки, и число урона.
 const EFFECT_PROGRESS = 0.15;
@@ -216,7 +216,7 @@ const OVERLAYS: Record<string, Tile[]> = {
         [],
         [
           {
-            ...createBuilding('tower', 0, 0, 'player')!,
+            ...createBuilding('tower', 0, 0, 'p1')!,
             attackPoints: 0,
           } as Building,
         ],
@@ -262,23 +262,23 @@ const GRID = MAP.map((row, y) =>
 );
 
 const archer = {
-  ...createUnit('archer', 4, 3, 'player', true)!,
+  ...createUnit('archer', 4, 3, 'p1', true)!,
   attackPoints: 1,
 };
 
 const UNITS = place<Unit>([
   archer,
-  createUnit('worker', 2, 5, 'player', true),
-  { ...createUnit('swordsman', 6, 2, 'ai', true)!, hp: 4 } as Unit,
-  createUnit('swordsman', 7, 3, 'ai', true),
+  createUnit('worker', 2, 5, 'p1', true),
+  { ...createUnit('swordsman', 6, 2, 'p2', true)!, hp: 4 } as Unit,
+  createUnit('swordsman', 7, 3, 'p2', true),
 ]);
 
 const BUILDINGS = place<Building>([
-  createBuilding('base', 1, 3, 'player'),
-  createBuilding('mine', 9, 1, 'player'),
-  createBuilding('sawmill', 2, 6, 'player'),
-  createBuilding('base', 9, 5, 'ai'),
-  createBuilding('tower', 6, 6, 'ai'),
+  createBuilding('base', 1, 3, 'p1'),
+  createBuilding('mine', 9, 1, 'p1'),
+  createBuilding('sawmill', 2, 6, 'p1'),
+  createBuilding('base', 9, 5, 'p2'),
+  createBuilding('tower', 6, 6, 'p2'),
 ]);
 
 const drawSampleMap: Draw = (ctx, size) => {

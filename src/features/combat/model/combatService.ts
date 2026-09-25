@@ -1,6 +1,6 @@
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
-import { gameEvents } from '@shared/lib';
+import { gameEvents, isHostile } from '@shared/lib';
 import { useGameLoopStore } from '@entities/games';
 
 /**
@@ -33,7 +33,7 @@ export const attack = (attackerId: string, targetId: string) => {
   const target = targetUnit ?? targetBuilding;
 
   if (!target) return;
-  if (attacker.owner === target.owner) return;
+  if (!isHostile(attacker.owner, target.owner)) return;
   const distance =
     Math.abs(attacker.x - target.x) + Math.abs(attacker.y - target.y);
   if (distance > attacker.attackRange) return;

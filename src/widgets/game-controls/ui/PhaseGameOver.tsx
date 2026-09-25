@@ -4,7 +4,15 @@ import { useHighlightStore, useMovementSelectors } from '@features/pathfinding';
 import styles from './styles.module.css';
 
 export const PhaseGameOver = () => {
-  const { winner, currentTurn } = useGameLoopSelectors();
+  const { winner, humanId, participants, eliminated, currentTurn } =
+    useGameLoopSelectors();
+  const isDraw = eliminated.length === participants.length;
+  const title =
+    winner !== null && winner === humanId
+      ? 'Победа!'
+      : isDraw
+        ? 'Ничья'
+        : 'Поражение';
   const { clearSelection } = useSelectionSelectors();
   const { resetStore: clearMovement } = useMovementSelectors();
   const { resetStore: clearHighlight } = useHighlightStore();
@@ -18,8 +26,8 @@ export const PhaseGameOver = () => {
 
   return (
     <section className={styles.Section}>
-      <div className={styles.GameOverTitle} data-winner={winner}>
-        {winner === 'player' ? 'Победа!' : 'Поражение'}
+      <div className={styles.GameOverTitle} data-defeat={title === 'Поражение'}>
+        {title}
       </div>
       <div className={styles.GameOverText}>
         Игра завершена за {currentTurn} ходов

@@ -10,6 +10,7 @@ import { canSpawnUnit } from '@shared/lib';
 import { useUnitsSelectors } from '@entities/units';
 import { useEconomySelectors } from '@entities/economies';
 import { useHighlightStore } from '@features/pathfinding';
+import { useGameLoopSelectors } from '@features/game-loop';
 import styles from './OptionCards.styles.module.css';
 
 type Props = {
@@ -18,6 +19,8 @@ type Props = {
 
 export const UnitOptions = ({ building }: Props) => {
   const { resources, populationCap } = useEconomySelectors();
+  const { humanId } = useGameLoopSelectors();
+  const { owner } = building;
 
   const {
     selectedUnitForSpawn,
@@ -32,8 +35,8 @@ export const UnitOptions = ({ building }: Props) => {
   } = useHighlightStore();
 
   const canSpawn = building.role === 'production';
-  const isPlayerBuilding = building.owner === 'player';
-  if (!canSpawn || !isPlayerBuilding) return null;
+  const isOwnBuilding = building.owner === humanId;
+  if (!canSpawn || !isOwnBuilding) return null;
 
   const spawningTypes = building.spawningUnits;
   if (spawningTypes.length === 0) return null;
@@ -82,12 +85,12 @@ export const UnitOptions = ({ building }: Props) => {
 
           const check = canSpawnUnit(
             spawnType,
-            resources.player,
-            populationCap.player,
+            resources[owner],
+            populationCap[owner],
             building.spawnPoints,
           );
 
-          const { occupied, max } = populationCap.player;
+          const { occupied, max } = populationCap[owner];
           const stats = [
             `${config.maxHp} HP`,
             'attack' in config && `урон ${config.attack}`,
@@ -112,14 +115,14 @@ export const UnitOptions = ({ building }: Props) => {
                 <span className={styles.Costs}>
                   <span
                     className={styles.Cost}
-                    data-lacking={resources.player.gold < cost.gold}
+                    data-lacking={resources[owner].gold < cost.gold}
                   >
                     <GoldIcon /> {cost.gold} золота
                   </span>
                   {cost.wood === 0 ? null : (
                     <span
                       className={styles.Cost}
-                      data-lacking={resources.player.wood < cost.wood}
+                      data-lacking={resources[owner].wood < cost.wood}
                     >
                       <WoodIcon /> {cost.wood} дерева
                     </span>

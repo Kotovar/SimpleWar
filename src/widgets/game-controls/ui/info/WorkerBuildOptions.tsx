@@ -10,6 +10,7 @@ import { canSpawnBuilding, getBuildingInfoText } from '@shared/lib';
 import { useEconomySelectors } from '@entities/economies';
 import { useBuildingsSelectors } from '@entities/buildings';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
+import { useGameLoopSelectors } from '@features/game-loop';
 import styles from './OptionCards.styles.module.css';
 
 /** Где искать подсвеченную клетку для зданий с особым требованием к местности. */
@@ -20,6 +21,8 @@ const PLACE: Partial<Record<CellType, string>> = {
 
 export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
   const { resources } = useEconomySelectors();
+  const { humanId } = useGameLoopSelectors();
+  const { owner } = unit;
   const {
     selectedBuildingForSpawn,
     selectBuildingForSpawn,
@@ -34,10 +37,10 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
     resetStore: clearHighlight,
   } = useHighlightStore();
 
-  const isPlayerUnit = unit.owner === 'player';
+  const isOwnUnit = unit.owner === humanId;
   const isWorker = unit.type === 'worker' && unit.role === 'civil';
 
-  if (!isPlayerUnit || !isWorker) return null;
+  if (!isOwnUnit || !isWorker) return null;
 
   const buildableTypes = unit.buildableBuildings;
   if (buildableTypes.length === 0) return null;
@@ -96,7 +99,7 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
 
           const check = canSpawnBuilding(
             buildingType,
-            resources.player,
+            resources[owner],
             unit.buildPoints,
           );
 
@@ -117,14 +120,14 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
                 <span className={styles.Costs}>
                   <span
                     className={styles.Cost}
-                    data-lacking={resources.player.gold < cost.gold}
+                    data-lacking={resources[owner].gold < cost.gold}
                   >
                     <GoldIcon /> {cost.gold} золота
                   </span>
                   {cost.wood === 0 ? null : (
                     <span
                       className={styles.Cost}
-                      data-lacking={resources.player.wood < cost.wood}
+                      data-lacking={resources[owner].wood < cost.wood}
                     >
                       <WoodIcon /> {cost.wood} дерева
                     </span>

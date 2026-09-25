@@ -1,4 +1,9 @@
-import type { Cell, Position } from '@shared/config';
+import {
+  DEFAULT_PARTICIPANTS,
+  type Cell,
+  type Participant,
+  type Position,
+} from '@shared/config';
 import { useBuildingsStore } from '@entities/buildings';
 import {
   generateMap,
@@ -39,9 +44,10 @@ const hasAccessibleResources = (grid: Cell[][], reachable: Position[]) => {
 /**
  * Подготавливает карту и стартовые объекты перед запуском партии.
  *
+ * @param participants - Участники в порядке ходов; генератор пока строит два старта.
  * @returns `true`, если карта прошла проверки и объекты созданы; иначе `false`.
  */
-export const initializeGame = () => {
+export const initializeGame = (participants = DEFAULT_PARTICIPANTS) => {
   const { gridColumns, gridRows, mapGenerationMode, customSeed } =
     useSettingsStore.getState();
   const { spawnBuilding, buildings } = useBuildingsStore.getState();
@@ -57,6 +63,12 @@ export const initializeGame = () => {
     useMapStore.getState().resetStore();
     useGameLoopStore.setState({ phase: 'setup', currentTurn: 0, startError });
   };
+
+  if (participants.length !== 2) {
+    fail('Пока поддерживается партия только на двух участников.');
+    return false;
+  }
+  const [first, second]: Participant[] = participants;
 
   if (
     !Number.isInteger(gridColumns) ||
@@ -110,10 +122,10 @@ export const initializeGame = () => {
     if (!hasAccessibleResources(grid, reachable)) continue;
 
     // Создаём объекты только после всех проверок карты.
-    spawnBuilding('base', playerStart.x, playerStart.y, 'player');
-    spawnBuilding('base', enemyStart.x, enemyStart.y, 'ai');
-    spawnUnit('worker', playerWorker.x, playerWorker.y, 'player', true);
-    spawnUnit('worker', enemyWorker.x, enemyWorker.y, 'ai');
+    spawnBuilding('base', playerStart.x, playerStart.y, first.id);
+    spawnBuilding('base', enemyStart.x, enemyStart.y, second.id);
+    spawnUnit('worker', playerWorker.x, playerWorker.y, first.id, true);
+    spawnUnit('worker', enemyWorker.x, enemyWorker.y, second.id);
     return true;
   }
 

@@ -48,6 +48,13 @@ export const beginEntity = (
   ctx.beginPath();
   if (team.marker === 'circle') {
     ctx.arc(16, 29.6, 1.8, 0, Math.PI * 2);
+  } else if (team.marker === 'square') {
+    ctx.rect(14.3, 27.9, 3.4, 3.4);
+  } else if (team.marker === 'triangle') {
+    ctx.moveTo(16, 27.6);
+    ctx.lineTo(18.2, 31.4);
+    ctx.lineTo(13.8, 31.4);
+    ctx.closePath();
   } else {
     ctx.moveTo(16, 27.6);
     ctx.lineTo(18, 29.6);

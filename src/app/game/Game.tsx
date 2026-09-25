@@ -8,7 +8,8 @@ import { runAITurn } from '@app/game/ai';
 import styles from './styles.module.css';
 
 export const Game = () => {
-  const { activePlayer, phase, startGame } = useGameLoopSelectors();
+  const { activePlayer, activeController, phase, startGame } =
+    useGameLoopSelectors();
 
   const handleStartGame = () => {
     if (initializeGame()) startGame();
@@ -20,10 +21,11 @@ export const Game = () => {
   }, []);
 
   useEffect(() => {
-    if (activePlayer === 'ai' && phase === 'inProgress') {
+    if (activeController === 'ai' && phase === 'inProgress') {
       runAITurn();
     }
-  }, [activePlayer, phase]);
+    // activePlayer в зависимостях: ход переходит от одного ИИ к другому.
+  }, [activePlayer, activeController, phase]);
 
   return (
     <main className={phase === 'inProgress' ? styles.Main : styles.Setup}>

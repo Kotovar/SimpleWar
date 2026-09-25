@@ -18,7 +18,7 @@ import { CanvasLayers } from './CanvasLayers';
 import styles from './styles.module.css';
 
 export const Map = () => {
-  const { phase } = useGameLoopSelectors();
+  const { phase, humanId } = useGameLoopSelectors();
   const drag = useRef<{
     x: number;
     y: number;
@@ -126,12 +126,13 @@ export const Map = () => {
   };
 
   const handleCellClick = (gridX: number, gridY: number) => {
-    if (drag.current) return;
+    if (drag.current || !humanId) return;
     if (gridX < 0 || gridX >= gridColumns || gridY < 0 || gridY >= gridRows) {
       return;
     }
 
     handleMapCellClick(gridX, gridY, {
+      humanId,
       unit: useUnitsStore.getState().getUnitAt(gridX, gridY),
       building: useBuildingsStore.getState().getBuildingAt(gridX, gridY),
       selectedUnit: getSelectedUnit(),

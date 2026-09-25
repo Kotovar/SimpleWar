@@ -56,7 +56,7 @@ export const Victory: Story = {
   beforeEach: () =>
     useGameLoopStore.setState({
       phase: 'gameOver',
-      winner: 'player',
+      winner: 'p1',
       currentTurn: 27,
     }),
 };
@@ -65,7 +65,7 @@ export const Defeat: Story = {
   beforeEach: () =>
     useGameLoopStore.setState({
       phase: 'gameOver',
-      winner: 'ai',
+      winner: 'p2',
       currentTurn: 14,
     }),
 };

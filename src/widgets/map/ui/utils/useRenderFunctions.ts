@@ -5,6 +5,7 @@ import { useUnitsSelectors } from '@entities/units';
 import { useMapSelectors } from '@entities/maps';
 import type { Position } from '@shared/config';
 import type { Selection } from '@features/selection';
+import { useGameLoopSelectors } from '@features/game-loop';
 import {
   createMovementPFGrid,
   getPath,
@@ -57,12 +58,14 @@ export const useRenderFunctions = ({
   const { cellSize, gridColumns, canvasWidth, canvasHeight } =
     useSettingsSelectors();
   const pixelRatio = useDevicePixelRatio();
+  const { humanId } = useGameLoopSelectors();
 
   useEntitiesLayer({
     ref: unitsRef,
     buildings,
     units,
     cellSize,
+    humanId,
     width: canvasWidth,
     height: canvasHeight,
   });
@@ -75,12 +78,12 @@ export const useRenderFunctions = ({
     const isReachable = reachableCells?.some(
       cell => cell.x === hover.x && cell.y === hover.y,
     );
-    if (!unit || unit.owner !== 'player' || !isReachable) return null;
+    if (!unit || unit.owner !== humanId || !isReachable) return null;
 
     const path = getPath(unit, hover, createMovementPFGrid(grid));
 
     return path.length > 1 ? path : null;
-  }, [grid, hover, reachableCells, selection, units]);
+  }, [humanId, grid, hover, reachableCells, selection, units]);
 
   // Ключ меняется только при постройке или сносе, а не при каждом уроне
   // зданию: террейн не перерисовывается без нужды.

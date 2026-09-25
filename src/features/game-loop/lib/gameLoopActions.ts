@@ -6,7 +6,10 @@ import { useEconomyStore } from '@entities/economies';
 import { useGameLoopStore } from '@entities/games';
 import { calculateIncome } from './calculateIncome';
 
-/** Начисляет доход активной стороне и завершает её ход. */
+/**
+ * Начисляет доход активной стороне, передаёт ход следующему участнику
+ * и восстанавливает очки только ему.
+ */
 export const nextTurn = () => {
   const { activePlayer, phase } = useGameLoopStore.getState();
 
@@ -21,9 +24,11 @@ export const nextTurn = () => {
 
   addResources(activePlayer, income);
 
-  useUnitsStore.getState().resetUnitsForNewTurn();
-  useBuildingsStore.getState().resetBuildingsForNewTurn();
   useGameLoopStore.getState().endTurn();
+
+  const next = useGameLoopStore.getState().activePlayer;
+  useUnitsStore.getState().resetUnitsForNewTurn(next);
+  useBuildingsStore.getState().resetBuildingsForNewTurn(next);
 };
 
 /** Сбрасывает фазу, объекты, карту, настройки и экономику партии. */

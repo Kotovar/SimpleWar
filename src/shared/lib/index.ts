@@ -5,3 +5,4 @@ export * from './canSpawnBuilding';
 export * from './getBuildingInfoText';
 export * from './coordNoise';
 export * from './renderHiDpiCanvas';
+export * from './relations';

@@ -1,6 +1,8 @@
 import type { Building, Owner, Position, Unit } from '@shared/config';
 
 export type MapClickContext = {
+  /** Участник, которым управляет интерфейс; его объекты — «свои». */
+  humanId: Owner;
   unit: Unit | null;
   building: Building | null;
   selectedUnit: Unit | null;
@@ -47,7 +49,7 @@ const handleClickWithoutSelection = (
 
   if (building) {
     ctx.selectBuilding(building.id);
-    if (building.owner === 'player' && building.role === 'combat') {
+    if (building.owner === ctx.humanId && building.role === 'combat') {
       // TODO: Поменять название функции
       ctx.calculateMovement(building.id);
     }
@@ -56,7 +58,7 @@ const handleClickWithoutSelection = (
 
   if (unit) {
     ctx.selectUnit(unit.id);
-    if (unit.owner === 'player') ctx.calculateMovement(unit.id);
+    if (unit.owner === ctx.humanId) ctx.calculateMovement(unit.id);
     return;
   }
 
@@ -96,7 +98,7 @@ const handleClickWithPlayerUnitSelected = (
     selectedUnit.role === 'civil' &&
     isTargetInHighlightedCells(ctx.buildableCells, gridX, gridY)
   ) {
-    ctx.build(selectedUnit.id, gridX, gridY, 'player');
+    ctx.build(selectedUnit.id, gridX, gridY, ctx.humanId);
     resetSelection(ctx);
     return;
   }
@@ -128,7 +130,7 @@ const handleClickWithPlayerBuildingSelected = (
     selectedBuilding.spawnPoints > 0 &&
     isTargetInHighlightedCells(ctx.spawnableCells, gridX, gridY)
   ) {
-    ctx.spawn(selectedBuilding.id, gridX, gridY, 'player');
+    ctx.spawn(selectedBuilding.id, gridX, gridY, ctx.humanId);
     resetSelection(ctx);
     ctx.clearSelectedBuildingForSpawn();
     return;
@@ -155,12 +157,12 @@ export const handleMapCellClick = (
 ) => {
   const { selectedUnit, selectedBuilding } = ctx;
 
-  // Повторный клик по выделению или любой клик при выбранной вражеской
+  // Повторный клик по выделению или любой клик при выбранной чужой
   // сущности снимает выделение.
+  const selectedOwner = (selectedUnit ?? selectedBuilding)?.owner;
   if (
     ctx.isClickOnCurrentSelection(gridX, gridY) ||
-    selectedUnit?.owner === 'ai' ||
-    selectedBuilding?.owner === 'ai'
+    (selectedOwner !== undefined && selectedOwner !== ctx.humanId)
   ) {
     resetSelection(ctx);
     return;

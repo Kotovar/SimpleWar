@@ -5,7 +5,7 @@ import type {
   Owner,
   BuildingType,
   Building,
-  Player,
+  ParticipantId,
   ProductionBuilding,
   SupplyBuilding,
 } from '@shared/config';
@@ -23,14 +23,16 @@ type BuildingsState = {
   ) => string | null;
   damageBuilding: (id: string, damage: number) => void;
   getBuildingAt: (x: number, y: number) => Building | null;
-  getEconomicBuildings: (owner: Player) => Building[];
-  getLimitBuildings: (owner: Player) => SupplyBuilding[];
-  getProductionBuildings: (owner: Player) => ProductionBuilding[];
+  getEconomicBuildings: (owner: ParticipantId) => Building[];
+  getLimitBuildings: (owner: ParticipantId) => SupplyBuilding[];
+  getProductionBuildings: (owner: ParticipantId) => ProductionBuilding[];
   changeAttackPoints: (id: string) => void;
   changeSpawnPoints: (id: string) => void;
   selectBuildingForSpawn: (buildingType: BuildingType) => void;
   clearSelectedBuildingForSpawn: () => void;
-  resetBuildingsForNewTurn: () => void;
+  resetBuildingsForNewTurn: (owner: Owner) => void;
+  /** Удаляет здания выбывшего участника без событий разрушения. */
+  removeOwnerBuildings: (owner: Owner) => void;
   resetStore: () => void;
 };
 
@@ -130,9 +132,11 @@ export const useBuildingsStore = create<BuildingsState>()(
       });
     },
 
-    resetBuildingsForNewTurn: () =>
+    resetBuildingsForNewTurn: owner =>
       set(state => {
         Object.values(state.buildings).forEach(building => {
+          if (building.owner !== owner) return;
+
           if (building.role === 'combat') {
             building.attackPoints = building.maxAttackPoints;
           }
@@ -142,6 +146,13 @@ export const useBuildingsStore = create<BuildingsState>()(
           }
         });
         state.selectedBuildingForSpawn = null;
+      }),
+
+    removeOwnerBuildings: owner =>
+      set(state => {
+        for (const building of Object.values(state.buildings)) {
+          if (building.owner === owner) delete state.buildings[building.id];
+        }
       }),
 
     resetStore: () => {

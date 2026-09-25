@@ -11,7 +11,7 @@ describe('gameEvents', () => {
   it('keeps duplicate registrations independent when unsubscribing', () => {
     const received: unknown[] = [];
     const handler = (event: unknown) => received.push(event);
-    const event = { type: 'BASE_DESTROYED', owner: 'player' } as const;
+    const event = { type: 'BASE_DESTROYED', owner: 'p1' } as const;
 
     const stopFirst = gameEvents.subscribe(handler);
     const stopSecond = gameEvents.subscribe(handler);

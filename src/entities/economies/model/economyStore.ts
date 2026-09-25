@@ -5,17 +5,17 @@ import {
   START_POPULATION_CAPS,
   START_RESOURCES,
 } from '@shared/config';
-import type { Player, Resources, PopulationCap } from '@shared/config';
+import type { ParticipantId, Resources, PopulationCap } from '@shared/config';
 
 type EconomyState = {
-  resources: Record<Player, Resources>;
-  populationCap: Record<Player, PopulationCap>;
+  resources: Record<ParticipantId, Resources>;
+  populationCap: Record<ParticipantId, PopulationCap>;
 
-  addResources: (owner: Player, income: Partial<Resources>) => void;
-  removeResources: (owner: Player, cost: Partial<Resources>) => void;
-  addUnit: (owner: Player, unitCost: number) => void;
-  setPopulationSupply: (owner: Player, supply: number) => void;
-  removeUnit: (owner: Player, count: number) => void;
+  addResources: (owner: ParticipantId, income: Partial<Resources>) => void;
+  removeResources: (owner: ParticipantId, cost: Partial<Resources>) => void;
+  addUnit: (owner: ParticipantId, unitCost: number) => void;
+  setPopulationSupply: (owner: ParticipantId, supply: number) => void;
+  removeUnit: (owner: ParticipantId, count: number) => void;
   resetStore: () => void;
 };
 

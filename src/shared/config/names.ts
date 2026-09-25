@@ -19,10 +19,12 @@ export const BUILDINGS_NAME = {
   tower: 'Башня',
 } satisfies Record<BuildingType, string>;
 
-/** Игровые названия сторон. */
+/** Игровые названия сторон по цвету слота. */
 export const OWNER_NAME = {
-  player: 'Игрок',
-  ai: 'Противник',
+  p1: 'Синие',
+  p2: 'Красные',
+  p3: 'Жёлтые',
+  p4: 'Фиолетовые',
 } satisfies Record<Owner, string>;
 
 /** Игровые названия местности. */

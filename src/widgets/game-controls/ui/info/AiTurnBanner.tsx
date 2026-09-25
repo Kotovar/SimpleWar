@@ -18,7 +18,13 @@ export const AiTurnBanner = () => {
   useEffect(
     () =>
       useGameLoopStore.subscribe((state, previous) => {
-        if (state.activePlayer !== 'ai' || previous.activePlayer === 'ai') {
+        const isAi = (id: typeof state.activePlayer) =>
+          state.participants.find(p => p.id === id)?.controller === 'ai';
+        // Каждая смена хода на ИИ, включая переход от одного ИИ к другому.
+        if (
+          !isAi(state.activePlayer) ||
+          state.activePlayer === previous.activePlayer
+        ) {
           return;
         }
 

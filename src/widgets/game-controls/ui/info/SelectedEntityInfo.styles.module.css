@@ -16,12 +16,20 @@
 }
 
 /* Цвет стороны совпадает с постаментом на карте. */
-.EntityInfo[data-owner='player'] {
-  --owner: var(--team-player);
+.EntityInfo[data-owner='p1'] {
+  --owner: var(--team-p1);
 }
 
-.EntityInfo[data-owner='ai'] {
-  --owner: var(--team-ai);
+.EntityInfo[data-owner='p2'] {
+  --owner: var(--team-p2);
+}
+
+.EntityInfo[data-owner='p3'] {
+  --owner: var(--team-p3);
+}
+
+.EntityInfo[data-owner='p4'] {
+  --owner: var(--team-p4);
 }
 
 .EntityHeader {

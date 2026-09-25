@@ -1,4 +1,4 @@
-import type { Player } from './gameLoop';
+import { PARTICIPANT_IDS, type ParticipantId } from './gameLoop';
 
 type Resource = 'gold' | 'wood';
 
@@ -15,19 +15,20 @@ export type PopulationCap = {
 export const MAX_POPULATION_LIMIT = 30;
 
 /** Начальные ресурсы на старте игры. */
-export const START_RESOURCES: Record<Player, Resources> = {
-  player: { gold: 200, wood: 120 },
-  ai: { gold: 200, wood: 120 },
-};
+export const START_RESOURCES = Object.fromEntries(
+  PARTICIPANT_IDS.map(id => [id, { gold: 200, wood: 120 }]),
+) as Record<ParticipantId, Resources>;
 
 /** Лимит населения по умолчанию на старте. */
 export const START_POPULATION_CAP_DEFAULT = 10;
 
 /** Начальные лимиты населения для каждой стороны. */
-export const START_POPULATION_CAPS: Record<Player, PopulationCap> = {
-  player: { max: START_POPULATION_CAP_DEFAULT, occupied: 0 },
-  ai: { max: START_POPULATION_CAP_DEFAULT, occupied: 0 },
-};
+export const START_POPULATION_CAPS = Object.fromEntries(
+  PARTICIPANT_IDS.map(id => [
+    id,
+    { max: START_POPULATION_CAP_DEFAULT, occupied: 0 },
+  ]),
+) as Record<ParticipantId, PopulationCap>;
 
 /** Стоимость постройки здания или юнита. */
 export type Cost = {

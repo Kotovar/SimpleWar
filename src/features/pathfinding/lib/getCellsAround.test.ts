@@ -22,8 +22,8 @@ describe('getCellsAround', () => {
     grid[0][1].type = 'forest';
     grid[1][0].type = 'forest';
     grid[1][2].type = 'forest';
-    useUnitsStore.getState().spawnUnit('worker', 1, 0, 'player');
-    useBuildingsStore.getState().spawnBuilding('base', 0, 1, 'player');
+    useUnitsStore.getState().spawnUnit('worker', 1, 0, 'p1');
+    useBuildingsStore.getState().spawnBuilding('base', 0, 1, 'p1');
 
     expect(getCellsAround(grid, 0, 0)).toEqual([{ x: 1, y: 1 }]);
     expect(getCellsAround(grid, 1, 1, 'forest')).toEqual([{ x: 2, y: 1 }]);

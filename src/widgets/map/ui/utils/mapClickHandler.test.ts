@@ -8,11 +8,11 @@ const unitAt = (
   type: Unit['type'],
   x: number,
   y: number,
-  owner: Owner = 'player',
+  owner: Owner = 'p1',
 ) => createUnit(type, x, y, owner, true)!;
 
 const buildingAt = (type: Building['type'], x: number, y: number) =>
-  createBuilding(type, x, y, 'player')!;
+  createBuilding(type, x, y, 'p1')!;
 
 const makeContext = (overrides: Partial<MapClickContext> = {}) =>
   ({
@@ -27,6 +27,7 @@ const makeContext = (overrides: Partial<MapClickContext> = {}) =>
     isClickOnCurrentSelection: vi.fn(() => false),
     selectUnit: vi.fn(),
     selectBuilding: vi.fn(),
+    humanId: 'p1',
     selectCell: vi.fn(),
     calculateMovement: vi.fn(),
     moveUnit: vi.fn(),
@@ -75,7 +76,7 @@ describe('handleMapCellClick', () => {
 
   it('only clears selection when an enemy unit is selected', () => {
     const ctx = makeContext({
-      selectedUnit: unitAt('swordsman', 1, 1, 'ai'),
+      selectedUnit: unitAt('swordsman', 1, 1, 'p2'),
       reachableCells: [{ x: 2, y: 1 }],
     });
 
@@ -124,7 +125,7 @@ describe('handleMapCellClick', () => {
 
   it('attacks a target from a selected combat building', () => {
     const selectedBuilding = buildingAt('tower', 1, 1);
-    const unit = unitAt('archer', 3, 1, 'ai');
+    const unit = unitAt('archer', 3, 1, 'p2');
     const ctx = makeContext({
       selectedBuilding,
       unit,
@@ -152,7 +153,7 @@ describe('handleMapCellClick', () => {
     handleMapCellClick(2, 1, ready);
     handleMapCellClick(2, 1, empty);
 
-    expect(ready.spawn).toHaveBeenCalledWith(building.id, 2, 1, 'player');
+    expect(ready.spawn).toHaveBeenCalledWith(building.id, 2, 1, 'p1');
     expect(ready.clearSelectedBuildingForSpawn).toHaveBeenCalled();
     expect(empty.spawn).not.toHaveBeenCalled();
   });

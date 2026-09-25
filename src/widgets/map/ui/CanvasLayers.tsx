@@ -24,13 +24,13 @@ export const CanvasLayers = ({ onCellClick }: Props) => {
 
   const { gridColumns, gridRows, cellSize } = useSettingsSelectors();
   const { selection } = useSelectionSelectors();
-  const { activePlayer, phase } = useGameLoopSelectors();
+  const { activePlayer, humanId, phase } = useGameLoopSelectors();
   const [hover, setHover] = useState<Position | null>(null);
 
   const { reachableCells, attackableTargets } = useMovementSelectors();
   const { spawnableCells, buildableCells } = useHighlightSelectors();
 
-  const isInteractive = phase === 'inProgress' && activePlayer === 'player';
+  const isInteractive = phase === 'inProgress' && activePlayer === humanId;
 
   // Курсор показывает, что случится по клику именно в этой клетке.
   const contains = (cells: Position[] | null) =>

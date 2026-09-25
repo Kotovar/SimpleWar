@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useBuildingsSelectors } from '@entities/buildings';
 import { useEconomySelectors } from '@entities/economies';
-import { calculateIncome } from '@features/game-loop';
+import { calculateIncome, useGameLoopSelectors } from '@features/game-loop';
 import { GoldIcon, PopulationIcon, WoodIcon } from '@shared/ui';
 import styles from './ResourcesInfo.styles.module.css';
 
@@ -29,8 +29,11 @@ const Stat = ({ icon, label, value, extra, tone }: StatProps) => (
 export const ResourcesInfo = () => {
   const { resources, populationCap } = useEconomySelectors();
   const { getEconomicBuildings } = useBuildingsSelectors();
-  const income = calculateIncome(getEconomicBuildings('player'));
-  const { occupied, max } = populationCap.player;
+  const { humanId } = useGameLoopSelectors();
+  if (!humanId) return null;
+
+  const income = calculateIncome(getEconomicBuildings(humanId));
+  const { occupied, max } = populationCap[humanId];
 
   return (
     <div className={styles.Resources}>
@@ -38,14 +41,14 @@ export const ResourcesInfo = () => {
         tone='gold'
         icon={<GoldIcon size={18} />}
         label='Золото'
-        value={resources.player.gold}
+        value={resources[humanId].gold}
         extra={`+${income.gold}/ход`}
       />
       <Stat
         tone='wood'
         icon={<WoodIcon size={18} />}
         label='Древесина'
-        value={resources.player.wood}
+        value={resources[humanId].wood}
         extra={`+${income.wood}/ход`}
       />
       <Stat
