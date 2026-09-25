@@ -1,6 +1,16 @@
 import { TEAM_MARKERS, type Owner } from '@shared/config';
 
-// Общая система координат 32×32: масштабируются и модель, и толщина контура.
+/**
+ * Подготавливает холст для отрисовки сущности в координатах 32×32.
+ * Вызывающий код завершает рисунок через `ctx.restore()`.
+ *
+ * @param ctx - Контекст холста.
+ * @param cellX - Столбец клетки.
+ * @param cellY - Строка клетки.
+ * @param cellSize - Размер клетки в пикселях.
+ * @param owner - Сторона, определяющая цвет и форму маркера.
+ * @param scale - Масштаб силуэта внутри клетки.
+ */
 export const beginEntity = (
   ctx: CanvasRenderingContext2D,
   cellX: number,
@@ -94,6 +104,13 @@ export const circle = (
   ctx.stroke();
 };
 
+/**
+ * Рисует многоугольник по последовательным парам координат.
+ *
+ * @param ctx - Контекст холста.
+ * @param color - Цвет заливки.
+ * @param points - Координаты вершин в формате `[x, y, ...]`.
+ */
 export const shape = (
   ctx: CanvasRenderingContext2D,
   color: string,

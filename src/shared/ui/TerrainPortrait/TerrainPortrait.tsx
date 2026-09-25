@@ -60,10 +60,7 @@ type Props = {
   size?: number;
 };
 
-/**
- * Миниатюра клетки: та же отрисовка и тот же вариант рисунка, что у этой
- * клетки на карте.
- */
+/** Показывает клетку с тем же вариантом рисунка, что и на карте. */
 export const TerrainPortrait = ({ cell, size = 48 }: Props) => {
   const ref = useRef<HTMLCanvasElement>(null);
   const { x, y, type } = cell;
@@ -75,6 +72,7 @@ export const TerrainPortrait = ({ cell, size = 48 }: Props) => {
 
     const draw = () => {
       const ratio = window.devicePixelRatio || 1;
+      // Изменение размера буфера сбрасывает масштаб Canvas перед новой отрисовкой.
       canvas.width = Math.round(size * ratio);
       canvas.height = Math.round(size * ratio);
       ctx.scale(canvas.width / size, canvas.height / size);

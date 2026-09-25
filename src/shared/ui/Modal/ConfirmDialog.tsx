@@ -36,6 +36,7 @@ export const ConfirmDialog = ({
       dialog.close();
     }
 
+    // Закрываем dialog перед повторным эффектом и при размонтировании.
     return () => {
       if (dialog.open) dialog.close();
     };

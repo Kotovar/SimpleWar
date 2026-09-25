@@ -23,7 +23,7 @@ type Props = {
   size?: number;
 };
 
-/** Миниатюра использует ту же отрисовку, что и объект на карте. */
+/** Показывает сущность тем же рисунком, что и на карте. */
 export const EntityPortrait = ({ type, owner, size = 48 }: Props) => {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -34,6 +34,7 @@ export const EntityPortrait = ({ type, owner, size = 48 }: Props) => {
 
     const draw = () => {
       const ratio = window.devicePixelRatio || 1;
+      // Изменение размера буфера сбрасывает масштаб Canvas перед новой отрисовкой.
       canvas.width = Math.round(size * ratio);
       canvas.height = Math.round(size * ratio);
       ctx.scale(canvas.width / size, canvas.height / size);
