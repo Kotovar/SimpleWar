@@ -46,10 +46,7 @@ export const UnitOptions = ({ building }: Props) => {
       clearSelectedUnitForSpawn();
     } else {
       selectUnitForSpawn(spawnType);
-
-      if (requiredField) {
-        calculateSpawnableCells(building.id, requiredField);
-      }
+      calculateSpawnableCells(building.id, requiredField);
     }
   };
 
@@ -105,7 +102,7 @@ export const UnitOptions = ({ building }: Props) => {
               key={spawnType}
               className={styles.Card}
               disabled={!check.canSpawn}
-              onClick={() => onClick(spawnType, 'grass')}
+              onClick={() => onClick(spawnType)}
               aria-pressed={selectedUnitForSpawn === spawnType}
               title={[check.message, stats].filter(Boolean).join('. ')}
             >

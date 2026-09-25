@@ -138,6 +138,16 @@ const handleClickWithPlayerBuildingSelected = (
   handleClickWithoutSelection(gridX, gridY, ctx);
 };
 
+/**
+ * Выполняет действие по подсвеченной клетке или обновляет выделение.
+ *
+ * Приоритет действий задан порядком проверок: движение, атака,
+ * строительство или найм, затем выбор объекта под курсором.
+ *
+ * @param gridX - Столбец клетки.
+ * @param gridY - Строка клетки.
+ * @param ctx - Текущее выделение, подсветки и игровые действия.
+ */
 export const handleMapCellClick = (
   gridX: number,
   gridY: number,

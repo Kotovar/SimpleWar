@@ -31,6 +31,16 @@ type Props = {
   highlightRef: RefObject<HTMLCanvasElement | null>;
 };
 
+/**
+ * Обновляет слои карты при смене данных, масштаба или плотности экрана.
+ *
+ * @param props.selection - Выделение для верхнего слоя.
+ * @param props.hover - Клетка под курсором.
+ * @param props.terrainRef - Холст рельефа.
+ * @param props.unitsRef - Холст сущностей и их анимаций.
+ * @param props.movementRef - Холст доступных действий.
+ * @param props.highlightRef - Холст выделения и маршрута.
+ */
 export const useRenderFunctions = ({
   selection,
   hover,
