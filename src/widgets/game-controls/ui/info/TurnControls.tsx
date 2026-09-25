@@ -40,7 +40,7 @@ export const TurnControls = ({ onNextTurn, onReset }: Props) => {
         onClick={onNextTurn}
         disabled={activePlayer === 'ai'}
       >
-        Завершить ход
+        {activePlayer === 'ai' ? 'Ход противника…' : 'Завершить ход'}
       </button>
 
       <details className={styles.Menu} ref={menu}>

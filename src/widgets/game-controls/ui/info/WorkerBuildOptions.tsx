@@ -10,7 +10,13 @@ import { canSpawnBuilding, getBuildingInfoText } from '@shared/lib';
 import { useEconomySelectors } from '@entities/economies';
 import { useBuildingsSelectors } from '@entities/buildings';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
-import styles from './WorkerBuildOptions.styles.module.css';
+import styles from './OptionCards.styles.module.css';
+
+/** Где искать подсвеченную клетку для зданий с особым требованием к местности. */
+const PLACE: Partial<Record<CellType, string>> = {
+  gold: 'на золотой жиле',
+  forest: 'в лесу',
+};
 
 export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
   const { resources } = useEconomySelectors();
@@ -22,8 +28,11 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
 
   const { calculateMovement, resetStore: clearMovement } = useMovementStore();
 
-  const { calculateBuildableCells, resetStore: clearHighlight } =
-    useHighlightStore();
+  const {
+    buildableCells,
+    calculateBuildableCells,
+    resetStore: clearHighlight,
+  } = useHighlightStore();
 
   const isPlayerUnit = unit.owner === 'player';
   const isWorker = unit.type === 'worker' && unit.role === 'civil';
@@ -53,11 +62,36 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
     }
   };
 
-  return (
-    <div className={styles.BuildSection}>
-      <h4 className={styles.BuildHeader}>Построить здание</h4>
+  const selected = buildableTypes.find(
+    type => type === selectedBuildingForSpawn,
+  );
+  const selectedField = selected && BUILDINGS_CONFIG[selected].requiredField;
+  const place =
+    selectedField && PLACE[selectedField] ? ` ${PLACE[selectedField]}` : '';
 
-      <div className={styles.BuildButtons}>
+  return (
+    <section className={styles.Section}>
+      <header className={styles.Header}>
+        <h4 className={styles.Title}>Построить здание</h4>
+        <span
+          className={styles.Points}
+          data-empty={unit.buildPoints <= 0}
+          title='Очки строительства рабочего на этот ход'
+        >
+          Стройка: {unit.buildPoints} / {unit.maxBuildPoints}
+        </span>
+      </header>
+
+      {selected && (
+        <p className={styles.Prompt} role='status'>
+          {buildableCells?.length
+            ? `Кликните по подсвеченной клетке${place}, чтобы построить «${BUILDINGS_NAME[selected]}».`
+            : `Рядом с рабочим нет свободной клетки${place}: подведите его ближе.`}{' '}
+          Повторный клик по карточке отменит выбор.
+        </p>
+      )}
+
+      <div className={styles.List}>
         {buildableTypes.map(buildingType => {
           const { cost, requiredField } = BUILDINGS_CONFIG[buildingType];
           const name = BUILDINGS_NAME[buildingType];
@@ -73,7 +107,7 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
           return (
             <button
               key={buildingType}
-              className={styles.BuildButton}
+              className={styles.Card}
               disabled={!check.canSpawn}
               onClick={() => onClick(buildingType, requiredField)}
               aria-pressed={selectedBuildingForSpawn === buildingType}
@@ -82,22 +116,31 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
               <EntityPortrait type={buildingType} owner={unit.owner} />
               <span className={styles.Content}>
                 <span className={styles.Name}>{name}</span>
-                <small className={styles.Cost}>
-                  <GoldIcon /> {cost.gold} золота
-                </small>
-                {cost.wood === 0 ? null : (
-                  <small className={styles.Cost}>
-                    <WoodIcon /> {cost.wood} дерева
-                  </small>
-                )}
-                {selectedBuildingForSpawn === buildingType && infoText && (
-                  <small className={styles.InfoText}>{infoText}</small>
+                <span className={styles.Costs}>
+                  <span
+                    className={styles.Cost}
+                    data-lacking={resources.player.gold < cost.gold}
+                  >
+                    <GoldIcon /> {cost.gold} золота
+                  </span>
+                  {cost.wood === 0 ? null : (
+                    <span
+                      className={styles.Cost}
+                      data-lacking={resources.player.wood < cost.wood}
+                    >
+                      <WoodIcon /> {cost.wood} дерева
+                    </span>
+                  )}
+                </span>
+                {infoText && <span className={styles.Info}>{infoText}</span>}
+                {!check.canSpawn && (
+                  <span className={styles.Reason}>{check.message}</span>
                 )}
               </span>
             </button>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 };

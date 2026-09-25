@@ -14,10 +14,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 10px 16px;
-  background-color: var(--surface);
+  padding: 8px 12px;
+  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
 }
 
 .ContextPanel {
@@ -28,11 +29,12 @@
   scrollbar-gutter: stable;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   padding: 12px;
   background-color: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
 }
 
 .ContextPanel > * {
@@ -40,30 +42,32 @@
 }
 
 .Title {
+  margin: 0;
   text-align: center;
+  font-size: 2.2rem;
+  letter-spacing: 0.02em;
   color: var(--text);
 }
 
 .Wrapper {
   display: flex;
   flex-direction: column;
-
-  gap: 16px;
-
+  gap: 20px;
   color: var(--text);
 }
 
 .Section {
   display: flex;
   flex-direction: column;
-
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .Label {
-  font-weight: bold;
-  margin-block: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--text-muted);
 }
 
@@ -74,87 +78,230 @@
   flex-wrap: wrap;
 }
 
+.SizeGroup {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  width: 100%;
+}
+
 .ToggleButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
   background-color: var(--surface-sunken);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 8px 16px;
+  border-radius: var(--radius);
+  padding: 10px 16px;
   cursor: pointer;
   transition:
-    background-color 0.2s,
-    color 0.2s,
-    border-color 0.2s;
+    background-color 0.15s,
+    color 0.15s,
+    border-color 0.15s;
 
   &:hover {
-    background-color: var(--surface-strong);
+    background-color: var(--surface-hover);
     border-color: var(--border-strong);
   }
 
   &.Active {
-    background-color: var(--accent-strong);
+    background-color: rgb(111 181 255 / 0.14);
     border-color: var(--accent);
     color: var(--text);
+    box-shadow: inset 0 0 0 1px var(--accent);
   }
+}
+
+.ToggleTitle {
+  font-weight: 600;
+}
+
+.ToggleMeta {
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
 }
 
 .PrimaryButton {
-  background-color: var(--success);
-  color: var(--text);
-  border: none;
+  min-width: 220px;
+  background: linear-gradient(180deg, var(--success-strong), var(--success));
+  color: #0f1f12;
+  font-weight: 700;
+  border: 1px solid rgb(255 255 255 / 0.12);
   border-radius: var(--radius);
-  padding: 12px 24px;
-  font-size: 1.1em;
+  padding: 12px 28px;
+  font-size: 1.1rem;
   cursor: pointer;
   align-self: center;
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.25) inset,
+    0 4px 14px rgb(87 167 92 / 0.3);
 
   &:hover {
-    background-color: var(--success-strong);
+    filter: brightness(1.08);
+  }
+
+  &:active {
+    transform: translateY(1px);
   }
 }
 
+.Error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgb(255 138 114 / 0.4);
+  background-color: rgb(212 97 76 / 0.12);
+  color: #ffc2b4;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
 .GameOverTitle {
-  font-size: 2em;
-  font-weight: bold;
-  margin-bottom: 16px;
+  font-size: 2.4rem;
+  font-weight: 800;
   color: var(--gold);
 }
 
-.Hint {
+.GameOverTitle[data-winner='ai'] {
+  color: var(--danger-strong);
+}
+
+.GameOverText {
+  margin-bottom: 8px;
   color: var(--text-muted);
-  font-style: italic;
+}
+
+.Hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.Empty {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 12px;
+}
+
+.EmptyTitle {
+  margin: 0 0 -10px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.Legend,
+.Controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 0 0;
+  list-style: none;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.Legend li,
+.Controls li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Образцы повторяют подсветку на карте: SELECTED в shared/config/draws. */
+.Swatch {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  background-color: rgb(160 222 255 / 0.25);
+  box-shadow: inset 0 0 0 1.5px rgb(214 240 255 / 0.9);
+}
+
+.Swatch[data-kind='produce'] {
+  background-color: rgb(245 205 110 / 0.28);
+  box-shadow: inset 0 0 0 1.5px #f5d98f;
+}
+
+.Swatch[data-kind='attack'] {
+  background-color: transparent;
+  box-shadow: none;
+  border: 2px solid #ffac91;
+  clip-path: polygon(
+    0 0,
+    40% 0,
+    40% 20%,
+    60% 20%,
+    60% 0,
+    100% 0,
+    100% 40%,
+    80% 40%,
+    80% 60%,
+    100% 60%,
+    100% 100%,
+    60% 100%,
+    60% 80%,
+    40% 80%,
+    40% 100%,
+    0 100%,
+    0 60%,
+    20% 60%,
+    20% 40%,
+    0 40%
+  );
+}
+
+.Controls kbd {
+  min-width: 56px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  background-color: var(--surface-sunken);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
   text-align: center;
-  margin-top: 16px;
+  color: var(--text);
 }
 
 .SeedInputWrapper {
-  margin-top: 12px;
+  margin-top: 4px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 8px;
 }
 
 .SeedLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 0.9rem;
   color: var(--text-muted);
 }
 
 .SeedInput {
-  padding: 8px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  width: 120px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-variant-numeric: tabular-nums;
   background: var(--surface-sunken);
   color: var(--text);
   min-width: 60px;
 
-  &::-webkit-outer-spin-button,
-  &::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
+  &[aria-invalid='true'] {
+    border-color: var(--danger-strong);
   }
 }
 
 .SeedWarning {
   font-size: 0.8rem;
-  color: var(--danger-strong);
+  color: var(--text-muted);
   margin: 0;
 }

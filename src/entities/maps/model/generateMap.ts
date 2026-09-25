@@ -1,6 +1,6 @@
 import { createNoise2D } from 'simplex-noise';
 import type { Cell, CellType } from '@shared/config';
-import { createRandom } from './createRandom';
+import { createRandom, isValidSeed } from './createRandom';
 
 /**
  * Базовое количество золота на клетку.
@@ -64,8 +64,8 @@ export const generateMap = (
       'Размеры карты должны быть положительными целыми числами.',
     );
   }
-  if (seed !== undefined && !Number.isFinite(seed)) {
-    throw new RangeError('Сид должен быть конечным числом.');
+  if (seed !== undefined && !isValidSeed(seed)) {
+    throw new RangeError('Сид должен быть целым неотрицательным числом.');
   }
   const grid: Cell[][] = [];
 

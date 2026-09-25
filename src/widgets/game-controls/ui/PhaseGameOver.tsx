@@ -18,10 +18,12 @@ export const PhaseGameOver = () => {
 
   return (
     <section className={styles.Section}>
-      <div className={styles.GameOverTitle}>
-        {winner === 'player' ? 'Победа!' : 'Поражение...'}
+      <div className={styles.GameOverTitle} data-winner={winner}>
+        {winner === 'player' ? 'Победа!' : 'Поражение'}
       </div>
-      <div>Игра завершена за {currentTurn} ходов</div>
+      <div className={styles.GameOverText}>
+        Игра завершена за {currentTurn} ходов
+      </div>
 
       <button className={styles.PrimaryButton} onClick={onResetGame}>
         Начать новую игру

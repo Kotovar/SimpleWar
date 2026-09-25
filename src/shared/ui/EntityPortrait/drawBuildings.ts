@@ -1,5 +1,15 @@
 import { TEAM_MARKERS, type Owner } from '@shared/config';
-import { banner, beginEntity, rect, shape } from './drawEntity';
+import {
+  banner,
+  beginEntity,
+  OPENING,
+  rect,
+  shape,
+  sideShadow,
+  STONE,
+  STONE_DARK,
+  STONE_LIGHT,
+} from './drawEntity';
 
 export const drawBase = (
   ctx: CanvasRenderingContext2D,
@@ -10,87 +20,25 @@ export const drawBase = (
   scale: number = 1,
 ) => {
   beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  rect(ctx, '#b6c2c5', 7, 13, 18, 12);
-  // Две широкие зубчатые башни отличают базу от одиночной башни.
-  shape(
-    ctx,
-    '#dce1d5',
-    [4, 25, 4, 7, 7, 7, 7, 10, 10, 10, 10, 7, 13, 7, 13, 25],
-  );
-  shape(
-    ctx,
-    '#dce1d5',
-    [19, 25, 19, 7, 22, 7, 22, 10, 25, 10, 25, 7, 28, 7, 28, 25],
-  );
-  shape(ctx, '#313b42', [13, 25, 13, 19, 16, 16, 19, 19, 19, 25]);
-  ctx.fillStyle = '#536775';
-  ctx.fillRect(7, 14, 3, 5);
-  ctx.fillRect(22, 14, 3, 5);
-  banner(ctx, 16, 4, TEAM_MARKERS[owner].color, 12);
-  ctx.restore();
-};
-
-export const drawGoldMine = (
-  ctx: CanvasRenderingContext2D,
-  cellX: number,
-  cellY: number,
-  cellSize: number,
-  owner: Owner,
-  scale: number = 1,
-) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  shape(ctx, '#89918e', [3, 25, 6, 13, 12, 7, 21, 8, 27, 15, 29, 25]);
-  shape(ctx, '#b9bfac', [6, 13, 12, 7, 21, 8, 17, 14]);
-  rect(ctx, '#252e33', 10, 15, 12, 10);
-  rect(ctx, '#b98a51', 8, 14, 3, 11);
-  rect(ctx, '#b98a51', 21, 14, 3, 11);
-  rect(ctx, TEAM_MARKERS[owner].color, 8, 12, 16, 3);
-  shape(ctx, '#f5cd53', [14, 24, 16, 19, 20, 19, 23, 24]);
-  ctx.restore();
-};
-
-export const drawSawmill = (
-  ctx: CanvasRenderingContext2D,
-  cellX: number,
-  cellY: number,
-  cellSize: number,
-  owner: Owner,
-  scale: number = 1,
-) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  rect(ctx, '#b88b58', 6, 13, 19, 11);
-  shape(ctx, TEAM_MARKERS[owner].color, [3, 14, 10, 7, 22, 7, 28, 14]);
-  rect(ctx, '#303a36', 10, 16, 7, 8);
-  // Светлые торцы брёвен — крупный опознавательный признак лесопилки.
-  rect(ctx, '#805938', 17, 19, 10, 6);
-  rect(ctx, '#e8bf80', 20, 17, 6, 4);
-  rect(ctx, '#e8bf80', 16, 21, 6, 4);
-  rect(ctx, '#e8bf80', 23, 21, 6, 4);
-  ctx.restore();
-};
-
-export const drawFarm = (
-  ctx: CanvasRenderingContext2D,
-  cellX: number,
-  cellY: number,
-  cellSize: number,
-  owner: Owner,
-  scale: number = 1,
-) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  rect(ctx, '#e1c996', 5, 13, 13, 12);
-  shape(ctx, '#d6aa47', [3, 14, 11, 6, 20, 14]);
-  rect(ctx, '#68503e', 9, 18, 5, 7);
-  rect(ctx, '#725637', 20, 15, 8, 10);
-  ctx.strokeStyle = '#f7d776';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(22, 17);
-  ctx.lineTo(22, 23);
-  ctx.moveTo(26, 17);
-  ctx.lineTo(26, 23);
-  ctx.stroke();
-  banner(ctx, 24, 7, TEAM_MARKERS[owner].color, 8);
+  const team = TEAM_MARKERS[owner];
+  banner(ctx, 16, 3, team.color, 11);
+  // Стена с зубцами между двумя башнями.
+  rect(ctx, STONE, 8, 14, 16, 11);
+  for (const x of [11, 15, 19]) rect(ctx, STONE, x, 12, 2.4, 2);
+  // Две широкие башни с крышами в цвете стороны отличают базу от одиночной башни.
+  rect(ctx, STONE_LIGHT, 3.5, 11, 8, 14);
+  rect(ctx, STONE_LIGHT, 20.5, 11, 8, 14);
+  sideShadow(ctx, 8.8, 11.6, 2.1, 12.8);
+  sideShadow(ctx, 25.8, 11.6, 2.1, 12.8);
+  shape(ctx, team.color, [2.5, 11.5, 7.5, 4, 12.5, 11.5]);
+  shape(ctx, team.color, [19.5, 11.5, 24.5, 4, 29.5, 11.5]);
+  shape(ctx, team.shade, [7.5, 4, 12.5, 11.5, 8.6, 11.5]);
+  shape(ctx, team.shade, [24.5, 4, 29.5, 11.5, 25.6, 11.5]);
+  // Ворота и окна.
+  shape(ctx, OPENING, [13, 25, 13, 19.5, 16, 16.8, 19, 19.5, 19, 25]);
+  ctx.fillStyle = '#e8c068';
+  ctx.fillRect(6.5, 15, 2, 3);
+  ctx.fillRect(23.5, 15, 2, 3);
   ctx.restore();
 };
 
@@ -103,17 +51,26 @@ export const drawBarracks = (
   scale: number = 1,
 ) => {
   beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  rect(ctx, '#bbb6a3', 5, 14, 22, 11);
-  shape(ctx, '#98634c', [3, 14, 8, 8, 24, 8, 29, 14]);
-  rect(ctx, '#41434a', 12, 18, 8, 7);
-  // Большой щит над входом вместо мелких флагов.
-  shape(
-    ctx,
-    TEAM_MARKERS[owner].color,
-    [12, 10, 20, 10, 20, 14, 16, 18, 12, 14],
-  );
-  ctx.fillStyle = '#736c59';
-  ctx.fillRect(15, 11, 2, 4);
+  const team = TEAM_MARKERS[owner];
+  // Длинное казарменное здание с крышей стороны.
+  rect(ctx, '#c4bea9', 4, 14, 24, 11);
+  sideShadow(ctx, 24, 14.6, 3.4, 9.8);
+  shape(ctx, team.color, [2, 15, 7, 8, 25, 8, 30, 15]);
+  shape(ctx, team.shade, [25, 8, 30, 15, 26, 15, 21.5, 8.6]);
+  shape(ctx, '#3e4047', [12.5, 25, 12.5, 19.5, 16, 17.5, 19.5, 19.5, 19.5, 25]);
+  ctx.fillStyle = OPENING;
+  ctx.fillRect(6.5, 17.5, 3, 3);
+  ctx.fillRect(22.5, 17.5, 3, 3);
+  // Щит со скрещёнными мечами над входом.
+  shape(ctx, STONE_LIGHT, [13, 9.5, 19, 9.5, 19, 13, 16, 15.5, 13, 13]);
+  ctx.strokeStyle = '#6a5f4b';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(14.2, 10.5);
+  ctx.lineTo(17.8, 13.8);
+  ctx.moveTo(17.8, 10.5);
+  ctx.lineTo(14.2, 13.8);
+  ctx.stroke();
   ctx.restore();
 };
 
@@ -126,16 +83,22 @@ export const drawTower = (
   scale: number = 1,
 ) => {
   beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  shape(ctx, '#aebbbd', [8, 25, 11, 12, 21, 12, 24, 25]);
+  const team = TEAM_MARKERS[owner];
+  banner(ctx, 16, 0.5, team.color, 6);
+  // Высокая сужающаяся башня с зубцами.
+  shape(ctx, STONE, [9, 25, 10.5, 11, 21.5, 11, 23, 25]);
+  shape(ctx, STONE_DARK, [18.5, 11, 21.5, 11, 23, 25, 19.5, 25]);
   shape(
     ctx,
-    '#dce1d5',
+    STONE_LIGHT,
     [
-      9, 12, 8, 5, 12, 5, 12, 8, 14, 8, 14, 5, 18, 5, 18, 8, 20, 8, 20, 5, 24,
-      5, 23, 12,
+      8, 11.5, 8, 5.5, 11, 5.5, 11, 7.5, 13.5, 7.5, 13.5, 5.5, 18.5, 5.5, 18.5,
+      7.5, 21, 7.5, 21, 5.5, 24, 5.5, 24, 11.5,
     ],
   );
-  rect(ctx, '#384650', 14, 15, 4, 6);
-  rect(ctx, TEAM_MARKERS[owner].color, 8, 23, 16, 2);
+  rect(ctx, team.color, 9.3, 11.5, 13.4, 2.4);
+  // Бойница и дверь.
+  rect(ctx, OPENING, 14.8, 15, 2.4, 4.5);
+  shape(ctx, '#4a3a2c', [13.5, 25, 13.5, 22, 16, 20.5, 18.5, 22, 18.5, 25]);
   ctx.restore();
 };

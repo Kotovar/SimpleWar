@@ -2,11 +2,12 @@
 :root {
   color-scheme: dark;
 
-  --bg: #181d23;
-  --surface: #232a32;
+  --bg: #161b20;
+  --surface: #222930;
   --surface-strong: #2c343d;
-  --surface-sunken: #1e242b;
-  --border: #39434e;
+  --surface-hover: #333d47;
+  --surface-sunken: #1b2127;
+  --border: #353f49;
   --border-strong: #4d5a68;
 
   --text: #e8edf2;
@@ -23,9 +24,16 @@
   --wood: #d08a54;
   --population: #8fd8a4;
 
+  /* Цвета сторон совпадают с картой: TEAM_MARKERS в shared/config/draws. */
+  --team-player: #78ccff;
+  --team-ai: #ff9474;
+
+  --radius-lg: 12px;
   --radius: 8px;
   --radius-sm: 6px;
   --shadow: 0 2px 12px rgb(0 0 0 / 0.35);
+  --shadow-raised:
+    0 1px 0 rgb(255 255 255 / 0.04) inset, 0 4px 16px rgb(0 0 0 / 0.3);
 
   scrollbar-color: var(--border-strong) transparent;
   scrollbar-width: thin;
@@ -60,6 +68,17 @@ input {
 
 button {
   color: inherit;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
 }
 
 :focus-visible {

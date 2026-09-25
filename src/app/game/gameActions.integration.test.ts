@@ -203,7 +203,7 @@ describe('movement', () => {
 describe('game initialization', () => {
   it('rejects an isolated fixed map without spawning objects', () => {
     resetGame();
-    useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 0.15 });
+    useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 2 });
     useGameLoopStore.getState().startGame();
     initializeGame();
     expect(useGameLoopStore.getState()).toMatchObject({

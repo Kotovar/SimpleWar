@@ -1,5 +1,12 @@
-import { Cell, GRID } from '@shared/config';
-import { drawGroundDetails, sample } from './drawGroundDetails';
+import type { Cell } from '@shared/config';
+import { GRID } from '@shared/config';
+import { sample, smoothNoise } from '@shared/lib';
+import { drawGroundDetails } from './drawGroundDetails';
+import {
+  buildSilhouette,
+  drawShallows,
+  fillSilhouette,
+} from './drawSilhouette';
 
 /**
  * Плотность буфера слоя: масштаб, который задал `setupCanvas`.
@@ -20,15 +27,19 @@ const drawCellBackground = (
   x: number,
   y: number,
   cellSize: number,
-  color: { r: number; g: number; b: number },
   variation: number,
   ratio: number,
 ) => {
   // Без запасного нуля неверный шум даёт невалидный цвет: клетка остаётся
   // закрашенной предыдущим цветом или чёрным.
   const shade = Number.isFinite(variation) ? variation : 0;
+  // Луга: основной цвет плавно переходит в сухую траву крупными пятнами.
+  const dry = Math.max(0, smoothNoise(x, y, 6, 211) - 0.35) * 1.1;
+  const mix = (from: number, to: number) =>
+    Math.round(from + (to - from) * dry + shade);
+  const { colorGrass: lush, colorGrassDry: sere } = GRID;
 
-  ctx.fillStyle = `rgb(${color.r + shade}, ${color.g + shade}, ${color.b + shade})`;
+  ctx.fillStyle = `rgb(${mix(lush.r, sere.r)}, ${mix(lush.g, sere.g)}, ${mix(lush.b, sere.b)})`;
 
   const left = snap(x * cellSize, ratio);
   const top = snap(y * cellSize, ratio);
@@ -92,6 +103,7 @@ export const drawBackgroundAndGrid = (
   noise: number[][],
   grid: Cell[][],
   cellSize: number,
+  builtCells: ReadonlySet<string> = new Set(),
 ) => {
   const ratio = getPixelRatio(ctx);
 
@@ -102,70 +114,34 @@ export const drawBackgroundAndGrid = (
         x,
         y,
         cellSize,
-        GRID.colorGrass,
         (noise[y]?.[x] ?? 0) * 0.5,
         ratio,
       );
     }),
   );
 
-  drawGroundDetails(ctx, grid, cellSize);
+  drawGroundDetails(ctx, grid, cellSize, builtCells);
 
-  // Единый силуэт воды убирает швы между водными клетками.
-  const water = new Path2D();
-  const radius = cellSize * 0.42;
-  const isWater = (x: number, y: number) => grid[y]?.[x]?.type === 'water';
-
-  grid.forEach((row, y) =>
-    row.forEach((cell, x) => {
-      const left = x * cellSize;
-      const top = y * cellSize;
-      const north = isWater(x, y - 1);
-      const east = isWater(x + 1, y);
-      const south = isWater(x, y + 1);
-      const west = isWater(x - 1, y);
-
-      if (cell.type === 'water') {
-        // Оставляем место берегу внутри Canvas: за границей буфера он обрезается.
-        const edgeInset = cellSize * 0.1;
-        const insetLeft = x === 0 ? edgeInset : 0;
-        const insetTop = y === 0 ? edgeInset : 0;
-        const insetRight = x === row.length - 1 ? edgeInset : 0;
-        const insetBottom = y === grid.length - 1 ? edgeInset : 0;
-        water.roundRect(
-          left + insetLeft,
-          top + insetTop,
-          cellSize - insetLeft - insetRight,
-          cellSize - insetTop - insetBottom,
-          [
-            !north && !west ? radius : 0,
-            !north && !east ? radius : 0,
-            !south && !east ? radius : 0,
-            !south && !west ? radius : 0,
-          ],
-        );
-        return;
-      }
-
-      // Скругляем вогнутый берег только при наличии воды за обоими
-      // рёбрами и по диагонали: отдельные озёра не соединяются уголками.
-      const corners = [
-        { dx: -1, dy: -1, wet: north && west },
-        { dx: 1, dy: -1, wet: north && east },
-        { dx: 1, dy: 1, wet: south && east },
-        { dx: -1, dy: 1, wet: south && west },
-      ];
-      for (const { dx, dy, wet } of corners) {
-        if (!wet || !isWater(x + dx, y + dy)) continue;
-        const cx = left + (dx > 0 ? cellSize : 0);
-        const cy = top + (dy > 0 ? cellSize : 0);
-        water.moveTo(cx, cy);
-        water.lineTo(cx - dx * radius, cy);
-        water.quadraticCurveTo(cx, cy, cx, cy - dy * radius);
-        water.closePath();
-      }
-    }),
+  // Подложки под лесом и скалами: массив читается целиком, а не набором значков.
+  fillSilhouette(
+    ctx,
+    buildSilhouette(grid, cellSize, cell => cell.type === 'forest', 0.34),
+    GRID.colorForestFloor,
+    cellSize * ratio,
   );
+  fillSilhouette(
+    ctx,
+    buildSilhouette(
+      grid,
+      cellSize,
+      cell => cell.type === 'mountain' || cell.type === 'gold',
+      0.3,
+    ),
+    GRID.colorRockFloor,
+    cellSize * ratio,
+  );
+
+  const water = buildSilhouette(grid, cellSize, cell => cell.type === 'water');
 
   ctx.save();
   const { r, g, b } = GRID.colorWater;
@@ -189,6 +165,10 @@ export const drawBackgroundAndGrid = (
   }
   ctx.restore();
 
+  const columns = grid[0]?.length ?? gridSize;
+  if (grid.some(row => row.some(cell => cell.type === 'water'))) {
+    drawShallows(ctx, water, columns, grid.length, cellSize);
+  }
   drawWaterRipples(ctx, grid, water, cellSize);
 
   // Сетка поверх: каждая линия — ровно один пиксель экрана без сглаживания,
@@ -196,7 +176,6 @@ export const drawBackgroundAndGrid = (
   const width = (grid[0]?.length ?? gridSize) * cellSize;
   const height = grid.length * cellSize;
   const lineWidth = GRID.lineThickness / ratio;
-  const columns = grid[0]?.length ?? gridSize;
 
   ctx.fillStyle = GRID.lineColor;
   // Число линий по каждой оси своё: на прямоугольной карте строк и колонок

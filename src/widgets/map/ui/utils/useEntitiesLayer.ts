@@ -7,14 +7,18 @@ import {
   withClear,
   type CellOffsets,
   type Effect,
+  type EffectLayer,
 } from '@widgets/map/lib';
 import { setupCanvas } from './getCtx';
 import { useDevicePixelRatio } from './useDevicePixelRatio';
 
 const MOVE_DURATION = 220;
-const SPAWN_DURATION = 260;
+const SPAWN_DURATION = 420;
 
 const easeOut = (progress: number) => 1 - (1 - progress) ** 3;
+
+// Небольшой перелёт за 1 и возврат: модель «выпрыгивает» на клетку.
+const easeOutBack = (t: number) => 1 + 2.9 * (t - 1) ** 3 + 1.9 * (t - 1) ** 2;
 
 type Tracked = { x: number; y: number; hp: number };
 
@@ -71,7 +75,15 @@ export const useEntitiesLayer = ({
 
       // Первый кадр партии только запоминает состав: анимировать нечего.
       if (!before) {
-        if (!isFirstRun.current) spawns.current.set(entity.id, now);
+        if (!isFirstRun.current) {
+          spawns.current.set(entity.id, now);
+          effects.current.push({
+            x: entity.x,
+            y: entity.y,
+            spawn: entity.owner,
+            start: now,
+          });
+        }
 
         return;
       }
@@ -139,25 +151,33 @@ export const useEntitiesLayer = ({
           return;
         }
 
-        // Появление снизу вверх: здание или юнит «вырастает» на клетке.
+        // Появление с пружинкой: здание или юнит «выпрыгивает» на клетке.
         const current = offsets.get(id) ?? { dx: 0, dy: 0 };
-        offsets.set(id, { ...current, scale: 0.4 + easeOut(progress) * 0.6 });
+        offsets.set(id, {
+          ...current,
+          scale: 0.3 + easeOutBack(progress) * 0.7,
+        });
       });
 
       effects.current = effects.current.filter(
         effect => time - effect.start < EFFECT_DURATION,
       );
 
-      withClear(ctx, () => {
-        renderEntitiesLayer(ctx, buildings, units, cellSize, offsets);
+      const drawEffects = (layer: EffectLayer) =>
         effects.current.forEach(effect =>
           drawEffect(
             ctx,
             effect,
             (time - effect.start) / EFFECT_DURATION,
             cellSize,
+            layer,
           ),
         );
+
+      withClear(ctx, () => {
+        drawEffects('under');
+        renderEntitiesLayer(ctx, buildings, units, cellSize, offsets);
+        drawEffects('over');
       });
 
       if (

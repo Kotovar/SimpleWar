@@ -2,9 +2,9 @@
   display: grid;
   box-sizing: border-box;
   height: 100vh;
-  padding: 8px;
-  gap: 12px;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  padding: 10px;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) 360px;
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas: 'toolbar toolbar' 'map panel';
   background-color: var(--bg);
@@ -12,10 +12,10 @@
 
 .Setup {
   max-width: 640px;
-  margin: 48px auto;
-  padding: 24px;
-  background-color: var(--surface);
+  margin: 64px auto;
+  padding: 32px;
+  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
   border: 1px solid var(--border);
   border-radius: 16px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-raised);
 }
