@@ -3,6 +3,12 @@ import { useUnitsStore } from '@entities/units';
 import { gameEvents } from '@shared/lib';
 import { useGameLoopStore } from '@entities/games';
 
+/**
+ * Наносит урон в пределах дальности и списывает очко атаки.
+ *
+ * @param attackerId - ID атакующего юнита или здания.
+ * @param targetId - ID вражеской цели.
+ */
 export const attack = (attackerId: string, targetId: string) => {
   const { phase, activePlayer } = useGameLoopStore.getState();
 
@@ -39,6 +45,7 @@ export const attack = (attackerId: string, targetId: string) => {
   } else if (targetBuilding) {
     buildingsStore.damageBuilding(targetId, damage);
 
+    // Событие победы возникает только при фактическом уничтожении базы.
     const owner = targetBuilding.owner;
     if (
       targetBuilding.type === 'base' &&

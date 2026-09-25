@@ -101,6 +101,15 @@ export const FOREST_LAYOUTS: (readonly [number, number, number])[][] = [
   ],
 ];
 
+/**
+ * Рисует лес с устойчивым расположением и породами деревьев для клетки.
+ *
+ * @param ctx - Контекст холста.
+ * @param cellX - Столбец клетки.
+ * @param cellY - Строка клетки.
+ * @param cellSize - Размер клетки в пикселях.
+ * @param variant - Номер раскладки; по умолчанию зависит от координат.
+ */
 export const drawForest = (
   ctx: CanvasRenderingContext2D,
   cellX: number,

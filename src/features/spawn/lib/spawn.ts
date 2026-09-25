@@ -6,6 +6,14 @@ import { useMapStore } from '@entities/maps';
 import { useGameLoopStore } from '@entities/games';
 import { canSpawnUnit } from '@shared/lib';
 
+/**
+ * Нанимает выбранного юнита рядом со зданием и списывает ресурсы при успехе.
+ *
+ * @param selectedBuildingId - ID производящего здания.
+ * @param x - Столбец клетки для юнита.
+ * @param y - Строка клетки для юнита.
+ * @param owner - Сторона, выполняющая действие.
+ */
 export const spawn = (
   selectedBuildingId: string,
   x: number,

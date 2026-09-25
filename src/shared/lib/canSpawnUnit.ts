@@ -2,7 +2,7 @@ import {
   type Resources,
   type PopulationCap,
   UNITS_CONFIG,
-  UnitType,
+  type UnitType,
 } from '@shared/config';
 
 export type SpawnCheckResult = {
@@ -12,12 +12,13 @@ export type SpawnCheckResult = {
 };
 
 /**
- * Проверяет, можно ли заспавнить юнита данного типа
- * @param selectedUnitForSpawn - юнит, который хотим заспавнить
- * @param resources - текущие ресурсы владельца
- * @param populationCap - текущий лимит населения владельца
- * @param availableSpawnPoints - доступные очки спавна у здания
- * @returns объект с результатом и причиной отказа
+ * Проверяет ресурсы, население и очки здания для найма юнита.
+ *
+ * @param selectedUnitForSpawn - Тип нанимаемого юнита.
+ * @param resources - Ресурсы владельца.
+ * @param populationCap - Лимит населения владельца.
+ * @param availableSpawnPoints - Очки найма; без аргумента проверка пропускается.
+ * @returns Результат с причиной отказа и текстом для интерфейса.
  */
 export const canSpawnUnit = (
   selectedUnitForSpawn: UnitType,
@@ -27,7 +28,6 @@ export const canSpawnUnit = (
 ): SpawnCheckResult => {
   const { cost, requiresLimit } = UNITS_CONFIG[selectedUnitForSpawn];
 
-  // 1. Проверка ресурсов
   if (resources.gold < cost.gold || resources.wood < cost.wood) {
     return {
       canSpawn: false,
@@ -36,17 +36,15 @@ export const canSpawnUnit = (
     };
   }
 
-  // 2. Проверка лимита населения
   const newOccupied = populationCap.occupied + requiresLimit;
   if (newOccupied > populationCap.max) {
     return {
       canSpawn: false,
       reason: 'population',
-      message: `Не хватает лимита населения`,
+      message: 'Не хватает лимита населения',
     };
   }
 
-  // 3. Проверка очков спавна
   if (availableSpawnPoints !== undefined && availableSpawnPoints <= 0) {
     return {
       canSpawn: false,

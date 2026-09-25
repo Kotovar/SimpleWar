@@ -52,13 +52,11 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
 
     if (selectedBuildingForSpawn === buildingType) {
       clearSelectedBuildingForSpawn();
+      // После отмены строительства снова показываем клетки для движения.
       calculateMovement(unit.id);
     } else {
       selectBuildingForSpawn(buildingType);
-
-      if (requiredField) {
-        calculateBuildableCells(unit.id, requiredField);
-      }
+      calculateBuildableCells(unit.id, requiredField);
     }
   };
 

@@ -3,6 +3,108 @@ import { GRID } from '@shared/config';
 
 type Predicate = (cell: Cell) => boolean;
 
+// Стороны по битам: север, восток, юг, запад.
+const CONCAVE_CORNERS = [
+  [-1, -1, 0b1001],
+  [1, -1, 0b0011],
+  [1, 1, 0b0110],
+  [-1, 1, 0b1100],
+] as const;
+
+const isPartAt = (parts: Uint8Array[], x: number, y: number) =>
+  parts[y]?.[x] === 1;
+
+const getEdgeMask = (parts: Uint8Array[], x: number, y: number) => {
+  const north = isPartAt(parts, x, y - 1);
+  const east = isPartAt(parts, x + 1, y);
+  const south = isPartAt(parts, x, y + 1);
+  const west = isPartAt(parts, x - 1, y);
+
+  return (
+    (north ? 0b0001 : 0) |
+    (east ? 0b0010 : 0) |
+    (south ? 0b0100 : 0) |
+    (west ? 0b1000 : 0)
+  );
+};
+
+const getCornerRadii = (edgeMask: number, radius: number) => [
+  (edgeMask & 0b1001) === 0 ? radius : 0,
+  (edgeMask & 0b0011) === 0 ? radius : 0,
+  (edgeMask & 0b0110) === 0 ? radius : 0,
+  (edgeMask & 0b1100) === 0 ? radius : 0,
+];
+
+const drawPartCell = (
+  path: Path2D,
+  parts: Uint8Array[],
+  x: number,
+  y: number,
+  cellSize: number,
+  radius: number,
+) => {
+  const row = parts[y];
+  const left = x * cellSize;
+  const top = y * cellSize;
+  const edgeInset = cellSize * 0.1;
+  const insetLeft = x === 0 ? edgeInset : 0;
+  const insetTop = y === 0 ? edgeInset : 0;
+  const insetRight = x === row.length - 1 ? edgeInset : 0;
+  const insetBottom = y === parts.length - 1 ? edgeInset : 0;
+  const edgeMask = getEdgeMask(parts, x, y);
+
+  path.roundRect(
+    left + insetLeft,
+    top + insetTop,
+    cellSize - insetLeft - insetRight,
+    cellSize - insetTop - insetBottom,
+    getCornerRadii(edgeMask, radius),
+  );
+};
+
+const drawConcaveCorners = (
+  path: Path2D,
+  parts: Uint8Array[],
+  x: number,
+  y: number,
+  cellSize: number,
+  radius: number,
+) => {
+  const left = x * cellSize;
+  const top = y * cellSize;
+  const edgeMask = getEdgeMask(parts, x, y);
+
+  for (const [dx, dy, requiredEdges] of CONCAVE_CORNERS) {
+    if (
+      (edgeMask & requiredEdges) !== requiredEdges ||
+      !isPartAt(parts, x + dx, y + dy)
+    ) {
+      continue;
+    }
+    const cx = left + (dx > 0 ? cellSize : 0);
+    const cy = top + (dy > 0 ? cellSize : 0);
+    path.moveTo(cx, cy);
+    path.lineTo(cx - dx * radius, cy);
+    path.quadraticCurveTo(cx, cy, cx, cy - dy * radius);
+    path.closePath();
+  }
+};
+
+const drawCell = (
+  path: Path2D,
+  parts: Uint8Array[],
+  x: number,
+  y: number,
+  cellSize: number,
+  radius: number,
+) => {
+  if (isPartAt(parts, x, y)) {
+    drawPartCell(path, parts, x, y, cellSize, radius);
+    return;
+  }
+  drawConcaveCorners(path, parts, x, y, cellSize, radius);
+};
+
 /**
  * Собирает единый силуэт клеток, подходящих под `predicate`.
  *
@@ -17,60 +119,16 @@ export const buildSilhouette = (
 ) => {
   const path = new Path2D();
   const radius = cellSize * radiusRatio;
-  const isPart = (x: number, y: number) => {
-    const cell = grid[y]?.[x];
-    return !!cell && predicate(cell);
-  };
+  const parts = grid.map(row => {
+    const mask = new Uint8Array(row.length);
+    row.forEach((cell, x) => {
+      if (cell) mask[x] = predicate(cell) ? 1 : 0;
+    });
+    return mask;
+  });
 
   grid.forEach((row, y) =>
-    row.forEach((_, x) => {
-      const left = x * cellSize;
-      const top = y * cellSize;
-      const north = isPart(x, y - 1);
-      const east = isPart(x + 1, y);
-      const south = isPart(x, y + 1);
-      const west = isPart(x - 1, y);
-
-      if (isPart(x, y)) {
-        // Оставляем место берегу внутри Canvas: за границей буфера он обрезается.
-        const edgeInset = cellSize * 0.1;
-        const insetLeft = x === 0 ? edgeInset : 0;
-        const insetTop = y === 0 ? edgeInset : 0;
-        const insetRight = x === row.length - 1 ? edgeInset : 0;
-        const insetBottom = y === grid.length - 1 ? edgeInset : 0;
-        path.roundRect(
-          left + insetLeft,
-          top + insetTop,
-          cellSize - insetLeft - insetRight,
-          cellSize - insetTop - insetBottom,
-          [
-            !north && !west ? radius : 0,
-            !north && !east ? radius : 0,
-            !south && !east ? radius : 0,
-            !south && !west ? radius : 0,
-          ],
-        );
-        return;
-      }
-
-      // Скругляем вогнутый угол только при наличии пятна за обоими
-      // рёбрами и по диагонали: отдельные пятна не соединяются уголками.
-      const corners = [
-        { dx: -1, dy: -1, wet: north && west },
-        { dx: 1, dy: -1, wet: north && east },
-        { dx: 1, dy: 1, wet: south && east },
-        { dx: -1, dy: 1, wet: south && west },
-      ];
-      for (const { dx, dy, wet } of corners) {
-        if (!wet || !isPart(x + dx, y + dy)) continue;
-        const cx = left + (dx > 0 ? cellSize : 0);
-        const cy = top + (dy > 0 ? cellSize : 0);
-        path.moveTo(cx, cy);
-        path.lineTo(cx - dx * radius, cy);
-        path.quadraticCurveTo(cx, cy, cx, cy - dy * radius);
-        path.closePath();
-      }
-    }),
+    row.forEach((_, x) => drawCell(path, parts, x, y, cellSize, radius)),
   );
 
   return path;

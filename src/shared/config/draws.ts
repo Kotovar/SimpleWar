@@ -27,6 +27,7 @@ export const TEAM_MARKERS: Record<
   },
 };
 
+/** Параметры отрисовки полосы здоровья над зданиями. */
 export const HP_BAR = {
   widthRatio: 0.65,
   heightRatio: 0.085,
@@ -39,6 +40,7 @@ export const HP_BAR = {
   colorBorder: '#202c30',
 };
 
+/** Параметры отрисовки сетки карты. */
 export const GRID = {
   lineThickness: 1,
   lineColor: 'hsla(0, 0%, 0%, 0.05)',
@@ -52,6 +54,7 @@ export const GRID = {
   colorRockFloor: 'rgb(128, 138, 106)',
 };
 
+/** Параметры отрисовки одиночного выделения */
 export const SELECTED = {
   free: 'rgba(160, 222, 255, 0.2)',
   enemy: 'rgba(255, 120, 90, 0.16)',
@@ -64,12 +67,14 @@ export const SELECTED = {
   lineThickness: 2,
 } as const;
 
+/** Параметры отрисовки множественного выделения клеток. */
 export const SELECTION = {
   colorOutline: '#fff0c4',
   colorShadow: 'rgba(28, 36, 30, 0.75)',
   cellFill: 'rgba(255, 240, 196, 0.22)',
 };
 
+/** Цвета отрисовки рельефа */
 export const TERRAIN = {
   colorShadow: 'hsla(0, 0%, 0%, 0.25)',
   colorForestTrunk: '#8a6a45',

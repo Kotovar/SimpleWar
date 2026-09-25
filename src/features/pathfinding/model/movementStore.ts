@@ -13,7 +13,6 @@ import {
 interface MovementState {
   reachableCells: Position[] | null;
   attackableTargets: Position[] | null;
-  currentPath: Position[] | null;
 
   calculateMovement: (unitId: string) => void;
   resetStore: () => void;
@@ -23,8 +22,8 @@ export const useMovementStore = create<MovementState>()(
   immer(set => ({
     reachableCells: null,
     attackableTargets: null,
-    currentPath: null,
 
+    // Для юнита считает клетки движения и цели; для боевого здания — только цели.
     calculateMovement: unitId => {
       const { units } = useUnitsStore.getState();
       const unit = units[unitId];
@@ -60,7 +59,6 @@ export const useMovementStore = create<MovementState>()(
       set(state => {
         state.reachableCells = null;
         state.attackableTargets = null;
-        state.currentPath = null;
       });
     },
   })),

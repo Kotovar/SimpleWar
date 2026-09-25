@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { BuildingType, Owner, UnitType } from '@shared/config';
+import { renderHiDpiCanvas } from '@shared/lib';
 import { drawBarracks, drawBase, drawTower } from './drawBuildings';
 import { drawFarm, drawGoldMine, drawSawmill } from './drawEconomyBuildings';
 import { drawArcher, drawSwordsman, drawWorker } from './drawUnits';
@@ -23,26 +24,16 @@ type Props = {
   size?: number;
 };
 
-/** Миниатюра использует ту же отрисовку, что и объект на карте. */
+/** Показывает сущность тем же рисунком, что и на карте. */
 export const EntityPortrait = ({ type, owner, size = 48 }: Props) => {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = ref.current;
-    const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx) return;
-
-    const draw = () => {
-      const ratio = window.devicePixelRatio || 1;
-      canvas.width = Math.round(size * ratio);
-      canvas.height = Math.round(size * ratio);
-      ctx.scale(canvas.width / size, canvas.height / size);
-      DRAW_ENTITY[type](ctx, 0, 0, size, owner);
-    };
-
-    draw();
-    window.addEventListener('resize', draw);
-    return () => window.removeEventListener('resize', draw);
+    if (!canvas) return;
+    return renderHiDpiCanvas(canvas, size, ctx =>
+      DRAW_ENTITY[type](ctx, 0, 0, size, owner),
+    );
   }, [type, owner, size]);
 
   return (

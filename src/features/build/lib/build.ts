@@ -6,6 +6,14 @@ import { useMapStore } from '@entities/maps';
 import { useGameLoopStore } from '@entities/games';
 import { canSpawnBuilding } from '@shared/lib';
 
+/**
+ * Строит выбранное здание рядом с рабочим и списывает ресурсы при успехе.
+ *
+ * @param selectedUnitId - ID рабочего.
+ * @param x - Столбец клетки для постройки.
+ * @param y - Строка клетки для постройки.
+ * @param owner - Сторона, выполняющая действие.
+ */
 export const build = (
   selectedUnitId: string,
   x: number,

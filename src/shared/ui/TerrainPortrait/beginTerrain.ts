@@ -1,6 +1,16 @@
 import { TERRAIN } from '@shared/config';
 import { sample } from '@shared/lib';
 
+/**
+ * Подготавливает холст для рисунка рельефа в координатах 32×32.
+ * Вызывающий код завершает рисунок через `ctx.restore()`.
+ *
+ * @param ctx - Контекст холста.
+ * @param cellX - Столбец клетки.
+ * @param cellY - Строка клетки.
+ * @param cellSize - Размер клетки в пикселях.
+ * @param shadow - Нужно ли рисовать общую тень рельефа.
+ */
 export const beginTerrain = (
   ctx: CanvasRenderingContext2D,
   cellX: number,
@@ -21,7 +31,15 @@ export const beginTerrain = (
   ctx.fill();
 };
 
-// Вариация зависит только от координат: клетка выглядит одинаково при перерисовке.
+/**
+ * Выбирает устойчивый вариант рисунка по координатам клетки.
+ *
+ * @param cellX - Столбец клетки.
+ * @param cellY - Строка клетки.
+ * @param salt - Значение, разделяющее наборы вариантов.
+ * @param count - Число доступных вариантов.
+ * @returns Индекс варианта от нуля до `count - 1`.
+ */
 export const variantFor = (
   cellX: number,
   cellY: number,

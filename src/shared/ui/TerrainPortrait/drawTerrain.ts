@@ -82,6 +82,15 @@ const withJitter = (
   ctx.restore();
 };
 
+/**
+ * Рисует месторождение золота в клетке карты.
+ *
+ * @param ctx - Контекст холста.
+ * @param cellX - Столбец клетки.
+ * @param cellY - Строка клетки.
+ * @param cellSize - Размер клетки в пикселях.
+ * @param variant - Номер рисунка; по умолчанию зависит от координат.
+ */
 export const drawGoldOre = (
   ctx: CanvasRenderingContext2D,
   cellX: number,
@@ -142,6 +151,15 @@ const MOUNTAIN_VARIANTS = [
   },
 ];
 
+/**
+ * Рисует горы в клетке карты.
+ *
+ * @param ctx - Контекст холста.
+ * @param cellX - Столбец клетки.
+ * @param cellY - Строка клетки.
+ * @param cellSize - Размер клетки в пикселях.
+ * @param variant - Номер рисунка; по умолчанию зависит от координат.
+ */
 export const drawMountains = (
   ctx: CanvasRenderingContext2D,
   cellX: number,

@@ -33,6 +33,15 @@ const isSpentBuilding = (building: Building) => {
   return false;
 };
 
+/**
+ * Рисует здания и юнитов с текущими смещениями и состоянием действий.
+ *
+ * @param ctx - Контекст холста.
+ * @param buildings - Здания на карте.
+ * @param units - Юниты на карте.
+ * @param cellSize - Размер клетки в пикселях.
+ * @param offsets - Смещения в клетках и масштабы анимируемых сущностей.
+ */
 export const renderEntitiesLayer = (
   ctx: CanvasRenderingContext2D,
   buildings: Record<string, Building>,

@@ -1,8 +1,7 @@
 import { gameEvents } from '@shared/lib';
 import { useGameLoopStore } from '@entities/games';
 
-export { useGameLoopStore } from '@entities/games';
-
+// Подписка общая для партии и не должна добавляться при каждом монтировании Game.
 let initialized = false;
 
 export const initGameLoopEvents = () => {

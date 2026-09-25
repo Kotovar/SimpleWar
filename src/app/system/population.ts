@@ -2,8 +2,10 @@ import { calculateMaxPopulation, gameEvents } from '@shared/lib';
 import { useBuildingsStore } from '@entities/buildings';
 import { useEconomyStore } from '@entities/economies';
 
+// Подписка общая для всех партий и не должна дублироваться при повторном монтировании Game.
 let initialized = false;
 
+/** Подписывает учёт населения на создание и уничтожение юнитов и зданий. */
 export const initPopulationSystem = () => {
   if (initialized) return;
 
@@ -28,15 +30,13 @@ export const initPopulationSystem = () => {
     if (event.type === 'UNIT_SPAWNED') {
       const { addUnit } = useEconomyStore.getState();
       const { owner, unit } = event;
-      const unitCost = unit.requiresLimit ?? 1;
-      addUnit(owner, unitCost);
+      addUnit(owner, unit.requiresLimit);
     }
 
     if (event.type === 'UNIT_DESTROYED') {
       const { removeUnit } = useEconomyStore.getState();
       const { owner, unit } = event;
-      const unitCost = unit.requiresLimit ?? 1;
-      removeUnit(owner, unitCost);
+      removeUnit(owner, unit.requiresLimit);
     }
   });
 };

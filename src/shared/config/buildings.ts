@@ -2,6 +2,7 @@ import type { CellType, Owner } from './common';
 import type { Cost } from './economy';
 import type { UnitType } from './units';
 
+/** Строковые имена всех типов зданий. */
 export type BuildingType =
   | 'base'
   | 'mine'
@@ -10,12 +11,11 @@ export type BuildingType =
   | 'barracks'
   | 'tower';
 
-export type Income = {
-  gold?: number;
-  wood?: number;
-};
+/** Частичный набор ресурсов, которые здание производит за ход. */
+export type Income = Partial<Cost>;
 
-type ConfigOmit = 'role' | 'type' | 'x' | 'y' | 'id' | 'owner' | 'hp';
+/** Поля, которые есть только у экземпляра на карте, а не в статическом конфиге. */
+export type InstanceKeys = 'role' | 'type' | 'x' | 'y' | 'id' | 'owner' | 'hp';
 
 type BaseBuilding = {
   id: string;
@@ -30,29 +30,27 @@ type BaseBuilding = {
   income?: Income;
 };
 
+/** Здание, которое производит юниты. */
 export type ProductionBuilding = BaseBuilding & {
   role: 'production';
-  canSpawn: true;
   spawningUnits: UnitType[];
   spawnPoints: number;
   maxSpawnPoints: number;
-
-  // TODO: убрать отсюда данное поле. Сделано из-за базы, нужно перенести число в стартовые
-  populationSupply?: number;
 };
 
+/** Здание, которое производит ресурсы. */
 export type ResourceBuilding = BaseBuilding & {
   role: 'resource';
-  canSpawn: false;
   income: Income;
 };
 
+/** Здание, которое увеличивает лимит населения. */
 export type SupplyBuilding = BaseBuilding & {
   role: 'supply';
-  canSpawn: false;
   populationSupply: number;
 };
 
+/** Здание с боевыми характеристиками. */
 export type CombatBuilding = BaseBuilding & {
   role: 'combat';
   attack: number;
@@ -61,6 +59,7 @@ export type CombatBuilding = BaseBuilding & {
   attackRange: number;
 };
 
+/** Любое здание на карте в зависимости от роли. */
 export type Building =
   | ProductionBuilding
   | ResourceBuilding
@@ -69,23 +68,20 @@ export type Building =
 
 export const PRODUCTION_BUILDINGS_CONFIG: Record<
   Extract<BuildingType, 'base' | 'barracks'>,
-  Omit<ProductionBuilding, ConfigOmit>
+  Omit<ProductionBuilding, InstanceKeys>
 > = {
   base: {
     maxHp: 700,
     income: { gold: 3 },
     cost: { gold: 0, wood: 0 },
-    canSpawn: true,
     spawningUnits: ['worker'],
     spawnPoints: 1,
     maxSpawnPoints: 1,
-    populationSupply: 10,
   },
   barracks: {
     maxHp: 150,
     cost: { gold: 80, wood: 140 },
     requiredField: 'grass',
-    canSpawn: true,
     spawningUnits: ['swordsman', 'archer'],
     spawnPoints: 0,
     maxSpawnPoints: 1,
@@ -94,39 +90,36 @@ export const PRODUCTION_BUILDINGS_CONFIG: Record<
 
 export const RESOURCE_BUILDINGS_CONFIG: Record<
   Extract<BuildingType, 'mine' | 'sawmill'>,
-  Omit<ResourceBuilding, ConfigOmit>
+  Omit<ResourceBuilding, InstanceKeys>
 > = {
   mine: {
     maxHp: 130,
     income: { gold: 15 },
     cost: { gold: 120, wood: 0 },
     requiredField: 'gold',
-    canSpawn: false,
   },
   sawmill: {
     maxHp: 90,
     income: { wood: 15 },
     cost: { gold: 60, wood: 80 },
     requiredField: 'forest',
-    canSpawn: false,
   },
 };
 
 export const SUPPLY_BUILDINGS_CONFIG: Record<
   Extract<BuildingType, 'farm'>,
-  Omit<SupplyBuilding, ConfigOmit>
+  Omit<SupplyBuilding, InstanceKeys>
 > = {
   farm: {
     maxHp: 70,
     cost: { gold: 60, wood: 160 },
     populationSupply: 5,
-    canSpawn: false,
   },
 };
 
 export const COMBAT_BUILDINGS_CONFIG: Record<
   Extract<BuildingType, 'tower'>,
-  Omit<CombatBuilding, ConfigOmit>
+  Omit<CombatBuilding, InstanceKeys>
 > = {
   tower: {
     maxHp: 180,

@@ -13,13 +13,14 @@
     "test": "vp test run",
     "test:unit": "vp test run --exclude '**/*.integration.test.ts'",
     "test:integration": "vp test run .integration.test.ts",
+    "smoke": "vp test run scripts/ai-turn-smoke.test.ts",
     "fsd-check": "steiger ./src",
     "preview": "vp preview",
     "lint-staged": "lint-staged",
     "lint:length": "node scripts/check-file-length.ts",
     "prepare": "husky",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "check": "vp check --fix && pnpm fsd-check && pnpm test"
   },
   "dependencies": {
     "@types/pathfinding": "^0.1.0",

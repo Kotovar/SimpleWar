@@ -6,13 +6,17 @@ import { useSettingsSelectors } from '@entities/settings';
 import { useGameLoopSelectors } from '@features/game-loop';
 import styles from './styles.module.css';
 
+type Props = {
+  onStartGame: () => void;
+};
+
 /** Только цифры; остальное (`0.5`, `-1`, `0x1`, `1e3`) — NaN. */
 const parseSeed = (text: string) => {
   const value = text.trim();
   return /^\d+$/.test(value) ? Number(value) : NaN;
 };
 
-export const PhaseSetup = () => {
+export const PhaseSetup = ({ onStartGame }: Props) => {
   const {
     gridRows,
     mapGenerationMode,
@@ -22,7 +26,7 @@ export const PhaseSetup = () => {
     setMapGenerationMode,
   } = useSettingsSelectors();
 
-  const { startGame, startError } = useGameLoopSelectors();
+  const { startError } = useGameLoopSelectors();
 
   // Текст поля хранится отдельно от стора: неверный ввод остаётся в поле
   // как есть и подсвечивается. После неудачного старта с пустым вводом
@@ -119,7 +123,7 @@ export const PhaseSetup = () => {
             {startError}
           </p>
         )}
-        <button className={styles.PrimaryButton} onClick={startGame}>
+        <button className={styles.PrimaryButton} onClick={onStartGame}>
           Начать игру
         </button>
       </section>

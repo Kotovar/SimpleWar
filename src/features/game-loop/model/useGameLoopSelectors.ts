@@ -1,4 +1,4 @@
-import { useGameLoopStore } from './gameLoopStore';
+import { useGameLoopStore } from '@entities/games';
 
 export const useGameLoopSelectors = () => {
   const currentTurn = useGameLoopStore(state => state.currentTurn);
@@ -7,7 +7,6 @@ export const useGameLoopSelectors = () => {
   const winner = useGameLoopStore(state => state.winner);
   const startError = useGameLoopStore(state => state.startError);
   const startGame = useGameLoopStore(state => state.startGame);
-  const setPhase = useGameLoopStore(state => state.setPhase);
   const endTurn = useGameLoopStore(state => state.endTurn);
   const resetGame = useGameLoopStore(state => state.resetGame);
   const declareWinner = useGameLoopStore(state => state.declareWinner);
@@ -19,7 +18,6 @@ export const useGameLoopSelectors = () => {
     winner,
     startError,
     startGame,
-    setPhase,
     endTurn,
     resetGame,
     declareWinner,

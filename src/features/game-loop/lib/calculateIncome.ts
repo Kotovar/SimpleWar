@@ -1,6 +1,12 @@
-import type { ResourceBuilding, Resources } from '@shared/config';
+import type { Building, Resources } from '@shared/config';
 
-export const calculateIncome = (buildings: ResourceBuilding[]): Resources => {
+/**
+ * Суммирует доход зданий за один ход.
+ *
+ * @param buildings - Здания, доход которых учитывается.
+ * @returns Количество золота и древесины без изменения входного списка.
+ */
+export const calculateIncome = (buildings: Building[]): Resources => {
   return buildings.reduce(
     (acc, building) => {
       if (!building.income) return acc;

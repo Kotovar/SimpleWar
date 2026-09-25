@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useGameLoopStore } from '@features/game-loop';
+import { useGameLoopStore } from '@entities/games';
 import styles from './AiTurnBanner.styles.module.css';
 
 const MESSAGE = 'Ход противника';

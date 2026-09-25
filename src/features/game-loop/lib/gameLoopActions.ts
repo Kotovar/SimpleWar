@@ -3,12 +3,15 @@ import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
 import { useSettingsStore } from '@entities/settings';
 import { useEconomyStore } from '@entities/economies';
-import { useGameLoopStore } from '../model';
+import { useGameLoopStore } from '@entities/games';
 import { calculateIncome } from './calculateIncome';
 
+/** Начисляет доход активной стороне и завершает её ход. */
 export const nextTurn = () => {
   const { activePlayer, phase } = useGameLoopStore.getState();
+
   if (phase !== 'inProgress') return;
+
   const { getEconomicBuildings } = useBuildingsStore.getState();
   const { addResources } = useEconomyStore.getState();
 
@@ -23,6 +26,7 @@ export const nextTurn = () => {
   useGameLoopStore.getState().endTurn();
 };
 
+/** Сбрасывает фазу, объекты, карту, настройки и экономику партии. */
 export const resetGame = () => {
   useGameLoopStore.getState().resetGame();
   useBuildingsStore.getState().resetStore();

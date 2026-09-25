@@ -185,6 +185,7 @@ export const Map = () => {
         aria-label='Карта. Перетаскивайте любой кнопкой мыши, масштабируйте колесом. Левый клик выбирает клетку или выполняет действие.'
         onContextMenu={event => event.preventDefault()}
         onClickCapture={event => {
+          // После перетаскивания браузер всё равно посылает click: не выполняем действие.
           if (!suppressClick.current) return;
           suppressClick.current = false;
           event.stopPropagation();
@@ -213,6 +214,7 @@ export const Map = () => {
           const dx = current.x - event.clientX;
           const dy = current.y - event.clientY;
           if (!current.active) {
+            // Мелкое движение мыши ещё считается обычным левым кликом.
             if (Math.hypot(dx, dy) < 5) return;
             current.active = true;
             event.currentTarget.setPointerCapture(event.pointerId);

@@ -10,18 +10,33 @@ type GameEvent =
 type EventHandler = (event: GameEvent) => void;
 
 class EventBus {
-  private handlers: EventHandler[] = [];
+  private handlers = new Set<EventHandler>();
 
+  /**
+   * Подписывает обработчик на игровые события.
+   *
+   * @param handler - Функция обработки события.
+   * @returns Функция отмены именно этой подписки.
+   */
   subscribe(handler: EventHandler) {
-    this.handlers.push(handler);
+    // Обёртка позволяет подписать один обработчик несколько раз независимо.
+    const subscription = (event: GameEvent) => handler(event);
+    this.handlers.add(subscription);
 
     return () => {
-      this.handlers = this.handlers.filter(h => h !== handler);
+      this.handlers.delete(subscription);
     };
   }
 
+  /**
+   * Рассылает событие по снимку подписок, пропуская отписавшихся.
+   *
+   * @param event - Игровое событие для рассылки.
+   */
   emit(event: GameEvent) {
-    this.handlers.forEach(handler => handler(event));
+    for (const handler of Array.from(this.handlers)) {
+      if (this.handlers.has(handler)) handler(event);
+    }
   }
 }
 

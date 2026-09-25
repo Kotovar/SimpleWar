@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import {
   MAX_POPULATION_LIMIT,
-  START_POPULATION_CAP,
+  START_POPULATION_CAPS,
   START_RESOURCES,
 } from '@shared/config';
 import type { Player, Resources, PopulationCap } from '@shared/config';
@@ -12,7 +12,7 @@ type EconomyState = {
   populationCap: Record<Player, PopulationCap>;
 
   addResources: (owner: Player, income: Partial<Resources>) => void;
-  removeResources: (owner: Player, income: Partial<Resources>) => void;
+  removeResources: (owner: Player, cost: Partial<Resources>) => void;
   addUnit: (owner: Player, unitCost: number) => void;
   setPopulationSupply: (owner: Player, supply: number) => void;
   removeUnit: (owner: Player, count: number) => void;
@@ -22,7 +22,7 @@ type EconomyState = {
 export const useEconomyStore = create<EconomyState>()(
   immer(set => ({
     resources: START_RESOURCES,
-    populationCap: START_POPULATION_CAP,
+    populationCap: START_POPULATION_CAPS,
 
     addResources: (owner, income) => {
       set(state => {
@@ -33,23 +33,18 @@ export const useEconomyStore = create<EconomyState>()(
       });
     },
 
-    removeResources: (owner, income) => {
+    removeResources: (owner, cost) => {
       set(state => {
         const resource = state.resources[owner];
 
-        if (income.gold) resource.gold -= income.gold;
-        if (income.wood) resource.wood -= income.wood;
+        if (cost.gold) resource.gold -= cost.gold;
+        if (cost.wood) resource.wood -= cost.wood;
       });
     },
 
     addUnit: (owner, unitCost) => {
       set(state => {
-        const cap = state.populationCap[owner];
-        const newOccupied = cap.occupied + unitCost;
-
-        if (newOccupied <= cap.max) {
-          cap.occupied = newOccupied;
-        }
+        state.populationCap[owner].occupied += unitCost;
       });
     },
 
@@ -62,15 +57,14 @@ export const useEconomyStore = create<EconomyState>()(
 
     removeUnit: (owner, count) => {
       set(state => {
-        const cap = state.populationCap[owner];
-        cap.occupied = Math.max(0, cap.occupied - count);
+        state.populationCap[owner].occupied -= count;
       });
     },
 
     resetStore: () => {
       set(state => {
         state.resources = START_RESOURCES;
-        state.populationCap = START_POPULATION_CAP;
+        state.populationCap = START_POPULATION_CAPS;
       });
     },
   })),

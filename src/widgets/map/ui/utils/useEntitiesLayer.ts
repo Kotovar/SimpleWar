@@ -38,6 +38,13 @@ type Props = {
  * превращается в плавный переезд, потеря HP — во вспышку с числом урона,
  * исчезновение сущности — в эффект гибели. Механику это не меняет:
  * сторы уже обновлены, анимируется только картинка.
+ *
+ * @param props.ref - Холст сущностей.
+ * @param props.buildings - Текущее состояние зданий.
+ * @param props.units - Текущее состояние юнитов.
+ * @param props.cellSize - Размер клетки в пикселях.
+ * @param props.width - Ширина холста в CSS-пикселях.
+ * @param props.height - Высота холста в CSS-пикселях.
  */
 export const useEntitiesLayer = ({
   ref,
@@ -64,6 +71,7 @@ export const useEntitiesLayer = ({
     const now = performance.now();
     const alive = new Set<string>();
 
+    // Снимок остаётся в ref между обновлениями сторов и сменами размера холста.
     [...Object.values(buildings), ...Object.values(units)].forEach(entity => {
       alive.add(entity.id);
       const before = tracked.current.get(entity.id);

@@ -1,8 +1,15 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test';
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  onTestFinished,
+} from 'vite-plus/test';
 import type { Cell, Owner } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useEconomyStore } from '@entities/economies';
+import { useGameLoopStore } from '@entities/games';
 import { useMapStore } from '@entities/maps';
 import { useSelectionStore } from '@features/selection';
 import {
@@ -13,12 +20,7 @@ import {
 import { build } from '@features/build';
 import { spawn } from '@features/spawn';
 import { attack } from '@features/combat';
-import {
-  initGameLoopEvents,
-  nextTurn,
-  resetGame,
-  useGameLoopStore,
-} from '@features/game-loop';
+import { initGameLoopEvents, nextTurn, resetGame } from '@features/game-loop';
 import { initializeGame } from '@widgets/start-game';
 import { useSettingsStore } from '@entities/settings';
 import { createMovementPFGrid, getPath } from '@features/pathfinding';
@@ -49,7 +51,7 @@ beforeEach(() => {
       isWalkable: true,
     })),
   );
-  useMapStore.setState({ grid, width: 7, height: 7 });
+  useMapStore.setState({ grid });
   initPopulationSystem();
   initGameLoopEvents();
   buildings().spawnBuilding('base', 0, 0, 'player');
@@ -203,9 +205,9 @@ describe('movement', () => {
 describe('game initialization', () => {
   it('rejects an isolated fixed map without spawning objects', () => {
     resetGame();
-    useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 2 });
-    useGameLoopStore.getState().startGame();
-    initializeGame();
+    // На карте 30 × 30 этот сид не даёт допустимого прохода и ресурсов.
+    useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 0 });
+    expect(initializeGame()).toBe(false);
     expect(useGameLoopStore.getState()).toMatchObject({
       phase: 'setup',
       startError: expect.any(String),
@@ -215,11 +217,27 @@ describe('game initialization', () => {
     expect(useMapStore.getState().grid).toEqual([]);
   });
 
-  it('starts a connected map once and keeps its objects on repeated initialization', () => {
+  it('starts on the minimum 5 × 5 map', () => {
+    const { gridColumns, gridRows } = useSettingsStore.getState();
+    onTestFinished(() => useSettingsStore.setState({ gridColumns, gridRows }));
     resetGame();
-    useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 0 });
+    useSettingsStore.setState({
+      mapGenerationMode: 'fixed',
+      customSeed: 3,
+      gridColumns: 5,
+      gridRows: 5,
+    });
+    expect(initializeGame()).toBe(true);
     useGameLoopStore.getState().startGame();
-    initializeGame();
+    expect(useGameLoopStore.getState().phase).toBe('inProgress');
+    expect(Object.values(buildings().buildings)).toHaveLength(2);
+  });
+
+  it('starts with the default fixed seed once and keeps its objects on repeated initialization', () => {
+    resetGame();
+    useSettingsStore.setState({ mapGenerationMode: 'fixed' });
+    expect(initializeGame()).toBe(true);
+    useGameLoopStore.getState().startGame();
     expect(useGameLoopStore.getState().phase).toBe('inProgress');
     const original = units().units;
     expect(Object.values(original)).toHaveLength(2);

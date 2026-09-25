@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vite-plus/test';
-import { CELL_SIZE, CELL_SIZE_LIMITS } from '@shared/config';
+import {
+  CELL_SIZE,
+  CELL_SIZE_LIMITS,
+  MAP_PRESETS,
+  TEMP_START_SEED,
+} from '@shared/config';
 import { useSettingsStore } from './settingsStore';
 
 const zoomTo = (edge: 'min' | 'max') => {
@@ -55,5 +60,34 @@ describe('масштаб карты', () => {
     useSettingsStore.getState().resetStore();
 
     expect(useSettingsStore.getState().cellSize).toBe(CELL_SIZE);
+  });
+
+  it('обновляет режим генерации, сид и размер карты', () => {
+    const store = useSettingsStore.getState();
+    store.setMapGenerationMode('fixed');
+    store.setCustomSeed(73);
+    store.setGridSize(18, 12);
+
+    expect(useSettingsStore.getState()).toMatchObject({
+      mapGenerationMode: 'fixed',
+      customSeed: 73,
+      gridColumns: 18,
+      gridRows: 12,
+    });
+  });
+
+  it('возвращает настройки карты к значениям по умолчанию', () => {
+    useSettingsStore.getState().setMapGenerationMode('fixed');
+    useSettingsStore.getState().setCustomSeed(73);
+    useSettingsStore.getState().setGridSize(18, 12);
+    useSettingsStore.getState().resetStore();
+
+    expect(useSettingsStore.getState()).toMatchObject({
+      mapGenerationMode: 'random',
+      customSeed: TEMP_START_SEED,
+      gridColumns: MAP_PRESETS.large.cols,
+      gridRows: MAP_PRESETS.large.rows,
+      cellSize: CELL_SIZE,
+    });
   });
 });

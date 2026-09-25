@@ -2,6 +2,15 @@ import type { Position } from '@shared/config';
 import type { Cell } from '@shared/config';
 import { isCellOccupied } from './isCellOccupied';
 
+/**
+ * Возвращает незанятые соседние клетки, включая диагональные.
+ *
+ * @param grid - Клетки карты.
+ * @param centerX - Столбец центральной клетки.
+ * @param centerY - Строка центральной клетки.
+ * @param cellType - Нужный тип рельефа; без него тип не проверяется.
+ * @returns Координаты подходящих клеток в пределах карты.
+ */
 export const getCellsAround = (
   grid: Cell[][],
   centerX: number,

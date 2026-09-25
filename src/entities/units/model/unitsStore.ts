@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { gameEvents } from '@shared/lib';
-import type { Owner, Unit, Player, UnitType } from '@shared/config';
+import type { Owner, Unit, UnitType } from '@shared/config';
 import { createUnit } from './createUnit';
 
 type UnitsState = {
@@ -16,8 +16,7 @@ type UnitsState = {
     initialSpawn?: boolean,
   ) => string | null;
   moveUnit: (id: string, x: number, y: number, cost: number) => void;
-  getUnitAt: (x?: number, y?: number) => Unit | null;
-  getUnits: (owner: Player) => Unit[];
+  getUnitAt: (x: number, y: number) => Unit | null;
   damageUnit: (id: string, damage: number) => void;
   changeAttackPoints: (id: string) => void;
   changeBuildPoints: (id: string) => void;
@@ -45,9 +44,6 @@ export const useUnitsStore = create<UnitsState>()(
       return unit.id;
     },
 
-    getUnits: owner =>
-      Object.values(get().units).filter(unit => unit.owner === owner),
-
     moveUnit: (id, x, y, cost) =>
       set(state => {
         const unit = state.units[id];
@@ -62,65 +58,44 @@ export const useUnitsStore = create<UnitsState>()(
       }),
 
     damageUnit: (id, damage) => {
-      const unitBefore = get().units[id];
-      if (!unitBefore) return;
+      const unit = get().units[id];
+      if (!unit) return;
 
-      let destroyed = false;
+      const hp = unit.hp - damage;
 
       set(state => {
-        const unit = state.units[id];
-        if (!unit) return;
-
-        const resultHP = unit.hp - damage;
-
-        if (resultHP > 0) {
-          unit.hp = resultHP;
-        } else {
-          destroyed = true;
-          delete state.units[id];
-        }
+        if (hp > 0) state.units[id].hp = hp;
+        else delete state.units[id];
       });
 
-      if (destroyed) {
-        gameEvents.emit({
-          type: 'UNIT_DESTROYED',
-          unit: unitBefore,
-          owner: unitBefore.owner,
-        });
+      if (hp <= 0) {
+        gameEvents.emit({ type: 'UNIT_DESTROYED', unit, owner: unit.owner });
       }
     },
 
     getUnitAt: (x, y) => {
-      const units = Object.values(get().units);
-      return units.find(unit => unit.x === x && unit.y === y) || null;
+      return (
+        Object.values(get().units).find(unit => unit.x === x && unit.y === y) ??
+        null
+      );
     },
 
     changeAttackPoints: id => {
       set(state => {
         const unit = state.units[id];
-        if (!unit || unit.role === 'civil') return;
-
-        if (unit.attackPoints > 0) {
+        if (unit?.role === 'military' && unit.attackPoints > 0) {
           unit.attackPoints--;
-
-          if (unit.attackPoints === 0) {
-            unit.movePoints = 0;
-          }
+          if (unit.attackPoints === 0) unit.movePoints = 0;
         }
       });
     },
 
-    changeBuildPoints: (id: string) => {
+    changeBuildPoints: id => {
       set(state => {
         const unit = state.units[id];
-        if (!unit || unit.role !== 'civil') return;
-
-        if (unit.buildPoints > 0) {
+        if (unit?.role === 'civil' && unit.buildPoints > 0) {
           unit.buildPoints--;
-
-          if (unit.buildPoints === 0) {
-            unit.movePoints = 0;
-          }
+          if (unit.buildPoints === 0) unit.movePoints = 0;
         }
       });
     },
@@ -142,11 +117,9 @@ export const useUnitsStore = create<UnitsState>()(
         Object.values(state.units).forEach(unit => {
           unit.movePoints = unit.maxMovePoints;
 
-          if (unit.role !== 'civil') {
+          if (unit.role === 'military') {
             unit.attackPoints = unit.maxAttackPoints;
-          }
-
-          if (unit.role === 'civil') {
+          } else {
             unit.buildPoints = unit.maxBuildPoints;
           }
         });

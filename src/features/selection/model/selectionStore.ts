@@ -4,10 +4,10 @@ import type { Building, Cell, Unit } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
-import type { Selection } from '@features/selection';
+import type { Selection } from './types';
 
 interface SelectionState {
-  selection: Selection | null;
+  selection: Selection;
 
   selectCell: (x: number, y: number) => void;
   selectUnit: (id: string) => void;
@@ -41,17 +41,18 @@ export const useSelectionStore = create<SelectionState>()(
     getSelectedUnit: () => {
       const selection = get().selection;
       return selection?.kind === 'unit'
-        ? useUnitsStore.getState().units[selection?.id]
+        ? (useUnitsStore.getState().units[selection.id] ?? null)
         : null;
     },
 
     getSelectedBuilding: () => {
       const selection = get().selection;
       return selection?.kind === 'building'
-        ? useBuildingsStore.getState().buildings[selection?.id]
+        ? (useBuildingsStore.getState().buildings[selection.id] ?? null)
         : null;
     },
 
+    // Уход с выбранного объекта отменяет также незавершённый найм или стройку.
     clearSelection: () => {
       set({ selection: null });
       useUnitsStore.getState().clearSelectedUnitForSpawn();
@@ -80,10 +81,6 @@ export const useSelectionStore = create<SelectionState>()(
       }
     },
 
-    resetStore: () => {
-      set(state => {
-        state.selection = null;
-      });
-    },
+    resetStore: () => get().clearSelection(),
   })),
 );

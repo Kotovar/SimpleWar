@@ -23,6 +23,7 @@ const mix = (value: number) => {
 const toState = (seed: number) =>
   mix(mix(seed) ^ mix(Math.floor(seed / 0x100000000) + 0x9e3779b9));
 
+/** Создаёт воспроизводимый генератор чисел в диапазоне [0, 1). */
 export const createRandom = (seed: number = randomSeed()) => {
   let randomState = toState(seed);
 

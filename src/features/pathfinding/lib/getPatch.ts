@@ -1,6 +1,14 @@
 import PF from 'pathfinding';
 import type { Position } from '@shared/config';
 
+/**
+ * Находит кратчайший путь без изменения исходной сетки.
+ *
+ * @param firstPosition - Исходная клетка, даже если она занята юнитом.
+ * @param lastPosition - Свободная целевая клетка.
+ * @param pfGrid - Сетка препятствий.
+ * @returns Клетки пути от начала до цели или пустой список.
+ */
 export const getPath = (
   firstPosition: Position,
   lastPosition: Position,
@@ -17,7 +25,7 @@ export const getPath = (
   )
     return [];
 
-  // Pathfinding stores visited nodes on the grid; each search needs a fresh copy.
+  // Поиск помечает посещённые узлы, поэтому для каждого вызова нужна копия сетки.
   const searchGrid = pfGrid.clone();
   searchGrid.setWalkableAt(startX, startY, true);
 

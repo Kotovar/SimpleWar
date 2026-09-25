@@ -8,7 +8,11 @@ import { runAITurn } from '@app/game/ai';
 import styles from './styles.module.css';
 
 export const Game = () => {
-  const { activePlayer, phase } = useGameLoopSelectors();
+  const { activePlayer, phase, startGame } = useGameLoopSelectors();
+
+  const handleStartGame = () => {
+    if (initializeGame()) startGame();
+  };
 
   useEffect(() => {
     initGameLoopEvents();
@@ -21,16 +25,10 @@ export const Game = () => {
     }
   }, [activePlayer, phase]);
 
-  useEffect(() => {
-    if (phase === 'inProgress') {
-      initializeGame();
-    }
-  }, [phase]);
-
   return (
     <main className={phase === 'inProgress' ? styles.Main : styles.Setup}>
       {phase === 'inProgress' && <Map />}
-      <GameControls />
+      <GameControls onStartGame={handleStartGame} />
     </main>
   );
 };
