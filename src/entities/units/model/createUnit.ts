@@ -12,6 +12,16 @@ const CONFIGS_BY_ROLE = [
   ['civil', CIVIL_UNITS_CONFIG],
 ] as const;
 
+/**
+ * Создаёт юнита по конфигурации его роли.
+ *
+ * @param type - Тип юнита.
+ * @param x - Столбец клетки.
+ * @param y - Строка клетки.
+ * @param owner - Сторона владельца.
+ * @param initialSpawn - Даёт стартовому юниту очки движения и стройки.
+ * @returns Новый юнит или `null` для неизвестного типа во время выполнения.
+ */
 export const createUnit = (
   type: UnitType,
   x: number,

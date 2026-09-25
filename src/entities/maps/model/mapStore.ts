@@ -13,7 +13,11 @@ type MapState = {
    */
   setGrid: (grid: Cell[][]) => void;
   getCell: (x: number, y: number) => Cell | null;
-  setCell: (x: number, y: number, newCell: Partial<Cell>) => void;
+  setCell: (
+    x: number,
+    y: number,
+    newCell: Partial<Pick<Cell, 'type' | 'isWalkable'>>,
+  ) => void;
   resetStore: () => void;
 };
 

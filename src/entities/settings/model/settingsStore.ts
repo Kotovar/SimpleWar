@@ -14,7 +14,6 @@ type SettingsState = {
   gridRows: number;
   cellSize: number;
 
-  seed?: number;
   mapGenerationMode: MapGenerationMode;
   customSeed: number;
 

@@ -16,6 +16,15 @@ const CONFIGS_BY_ROLE = [
   ['combat', COMBAT_BUILDINGS_CONFIG],
 ] as const;
 
+/**
+ * Создаёт здание по конфигурации его роли.
+ *
+ * @param type - Тип здания.
+ * @param x - Столбец клетки.
+ * @param y - Строка клетки.
+ * @param owner - Сторона владельца.
+ * @returns Новое здание или `null` для неизвестного типа во время выполнения.
+ */
 export const createBuilding = (
   type: BuildingType,
   x: number,

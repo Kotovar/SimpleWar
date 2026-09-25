@@ -22,7 +22,7 @@ type BuildingsState = {
     owner: Owner,
   ) => string | null;
   damageBuilding: (id: string, damage: number) => void;
-  getBuildingAt: (x?: number, y?: number) => Building | null;
+  getBuildingAt: (x: number, y: number) => Building | null;
   getEconomicBuildings: (owner: Player) => Building[];
   getLimitBuildings: (owner: Player) => SupplyBuilding[];
   getProductionBuildings: (owner: Player) => ProductionBuilding[];

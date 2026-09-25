@@ -16,7 +16,7 @@ type UnitsState = {
     initialSpawn?: boolean,
   ) => string | null;
   moveUnit: (id: string, x: number, y: number, cost: number) => void;
-  getUnitAt: (x?: number, y?: number) => Unit | null;
+  getUnitAt: (x: number, y: number) => Unit | null;
   damageUnit: (id: string, damage: number) => void;
   changeAttackPoints: (id: string) => void;
   changeBuildPoints: (id: string) => void;
