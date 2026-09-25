@@ -13,6 +13,7 @@
     "test": "vp test run",
     "test:unit": "vp test run --exclude '**/*.integration.test.ts'",
     "test:integration": "vp test run .integration.test.ts",
+    "smoke": "vp test run scripts/ai-turn-smoke.test.ts",
     "fsd-check": "steiger ./src",
     "preview": "vp preview",
     "lint-staged": "lint-staged",
