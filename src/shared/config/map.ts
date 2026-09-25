@@ -21,4 +21,4 @@ export const MAP_PRESET_LABELS: Record<keyof typeof MAP_PRESETS, string> = {
 };
 
 /** Предлагаемый стартовый сид. */
-export const TEMP_START_SEED = 42;
+export const TEMP_START_SEED = 43;

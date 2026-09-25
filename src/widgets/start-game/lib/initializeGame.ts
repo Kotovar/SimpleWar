@@ -12,6 +12,13 @@ import { useSettingsStore } from '@entities/settings';
 import { useGameLoopStore } from '@entities/games';
 import { createMovementPFGrid, getReachableCells } from '@features/pathfinding';
 
+/**
+ * Проверяет доступность леса и золота из области, достижимой рабочим.
+ *
+ * @param grid - Клетки проверяемой карты.
+ * @param reachable - Клетки, до которых рабочий может дойти.
+ * @returns `true`, если рабочий может строить рядом с обоими ресурсами.
+ */
 const hasAccessibleResources = (grid: Cell[][], reachable: Position[]) => {
   const resources = new Set<'gold' | 'forest'>();
 
@@ -29,6 +36,11 @@ const hasAccessibleResources = (grid: Cell[][], reachable: Position[]) => {
   return false;
 };
 
+/**
+ * Подготавливает карту и стартовые объекты перед запуском партии.
+ *
+ * @returns `true`, если карта прошла проверки и объекты созданы; иначе `false`.
+ */
 export const initializeGame = () => {
   const { gridColumns, gridRows, mapGenerationMode, customSeed } =
     useSettingsStore.getState();
@@ -64,6 +76,7 @@ export const initializeGame = () => {
   const enemyStart = { x: gridColumns - 2, y: gridRows - 2 };
   const playerWorker = { x: 2, y: 1 };
   const enemyWorker = { x: gridColumns - 3, y: gridRows - 2 };
+  // Для заданного сида повторная попытка создала бы ту же карту.
   const attempts = mapGenerationMode === 'fixed' ? 1 : 10;
 
   for (let attempt = 0; attempt < attempts; attempt++) {
@@ -79,6 +92,7 @@ export const initializeGame = () => {
     pfGrid.setWalkableAt(playerStart.x, playerStart.y, false);
     pfGrid.setWalkableAt(enemyStart.x, enemyStart.y, false);
 
+    // Лимит в число клеток позволяет проверить всю связную область рабочего.
     const reachable = getReachableCells(
       pfGrid,
       playerWorker.x,

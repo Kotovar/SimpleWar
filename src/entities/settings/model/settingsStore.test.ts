@@ -76,12 +76,14 @@ describe('масштаб карты', () => {
     });
   });
 
-  it('возвращает размер карты и сид к значениям по умолчанию', () => {
+  it('возвращает настройки карты к значениям по умолчанию', () => {
+    useSettingsStore.getState().setMapGenerationMode('fixed');
     useSettingsStore.getState().setCustomSeed(73);
     useSettingsStore.getState().setGridSize(18, 12);
     useSettingsStore.getState().resetStore();
 
     expect(useSettingsStore.getState()).toMatchObject({
+      mapGenerationMode: 'random',
       customSeed: TEMP_START_SEED,
       gridColumns: MAP_PRESETS.large.cols,
       gridRows: MAP_PRESETS.large.rows,

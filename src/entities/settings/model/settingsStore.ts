@@ -69,6 +69,7 @@ export const useSettingsStore = create<SettingsState>()(
         state.gridRows = MAP_PRESETS.large.rows;
         state.cellSize = CELL_SIZE;
 
+        state.mapGenerationMode = 'random';
         state.customSeed = TEMP_START_SEED;
       });
     },

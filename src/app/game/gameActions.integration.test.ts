@@ -233,9 +233,9 @@ describe('game initialization', () => {
     expect(Object.values(buildings().buildings)).toHaveLength(2);
   });
 
-  it('starts a connected map once and keeps its objects on repeated initialization', () => {
+  it('starts with the default fixed seed once and keeps its objects on repeated initialization', () => {
     resetGame();
-    useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 2 });
+    useSettingsStore.setState({ mapGenerationMode: 'fixed' });
     expect(initializeGame()).toBe(true);
     useGameLoopStore.getState().startGame();
     expect(useGameLoopStore.getState().phase).toBe('inProgress');
