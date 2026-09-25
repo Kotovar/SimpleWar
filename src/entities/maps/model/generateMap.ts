@@ -1,5 +1,5 @@
 import type { Cell } from '@shared/config';
-import { createRandom } from './createRandom';
+import { createRandom, isValidSeed } from './createRandom';
 import { generateTerrain } from './generateTerrain';
 import { placeGold } from './placeGold';
 
@@ -9,7 +9,7 @@ import { placeGold } from './placeGold';
  * @param width - Ширина карты в клетках.
  * @param height - Высота карты в клетках.
  * @param seed - Зерно генерации.
- * @throws {RangeError} Если размеры не положительные целые или сид не конечен.
+ * @throws {RangeError} Если размеры не положительные целые или сид недопустим.
  */
 const assertMapParams = (width: number, height: number, seed?: number) => {
   if (
@@ -22,8 +22,8 @@ const assertMapParams = (width: number, height: number, seed?: number) => {
       'Размеры карты должны быть положительными целыми числами.',
     );
   }
-  if (seed !== undefined && !Number.isFinite(seed)) {
-    throw new RangeError('Сид должен быть конечным числом.');
+  if (seed !== undefined && !isValidSeed(seed)) {
+    throw new RangeError('Сид должен быть целым неотрицательным числом.');
   }
 };
 
@@ -37,7 +37,7 @@ const assertMapParams = (width: number, height: number, seed?: number) => {
  * @param height - Высота карты в клетках.
  * @param seed - Зерно генерации; без него карта случайна.
  * @returns Клетки карты, индексируемые как `grid[y][x]`.
- * @throws {RangeError} Если размеры не положительные целые или сид не конечен.
+ * @throws {RangeError} Если размеры не положительные целые или сид недопустим.
  */
 export const generateMap = (
   width: number,

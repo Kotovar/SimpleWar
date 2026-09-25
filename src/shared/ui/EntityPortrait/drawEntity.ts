@@ -17,30 +17,37 @@ export const beginEntity = (
   ctx.lineCap = 'round';
   ctx.lineWidth = 1.2;
 
-  ctx.fillStyle = 'rgba(24, 39, 32, 0.24)';
-  ctx.beginPath();
-  ctx.ellipse(17, 27, 13, 3.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-
+  // Постамент в цвете стороны: принадлежность читается по силуэту снизу,
+  // а форма маркера дублирует цвет.
   const team = TEAM_MARKERS[owner];
-  ctx.save();
-  ctx.globalAlpha *= 0.3;
+  ctx.fillStyle = 'rgba(16, 26, 22, 0.35)';
+  ctx.beginPath();
+  ctx.ellipse(16.5, 27.2, 13, 4.2, 0, 0, Math.PI * 2);
+  ctx.fill();
   ctx.fillStyle = team.background;
   ctx.strokeStyle = team.color;
+  ctx.lineWidth = 1.6;
   ctx.beginPath();
-  ctx.roundRect(2, 5, 28, 25, 6);
+  ctx.ellipse(16, 26.2, 12, 3.6, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.stroke();
-  ctx.restore();
+
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = '#1c2420';
   ctx.fillStyle = team.color;
   ctx.beginPath();
-  ctx.roundRect(9, 26, 14, 4, 2);
+  if (team.marker === 'circle') {
+    ctx.arc(16, 29.6, 1.8, 0, Math.PI * 2);
+  } else {
+    ctx.moveTo(16, 27.6);
+    ctx.lineTo(18, 29.6);
+    ctx.lineTo(16, 31.6);
+    ctx.lineTo(14, 29.6);
+    ctx.closePath();
+  }
   ctx.fill();
-  ctx.fillStyle = '#fff8e6';
-  ctx.font = 'bold 5px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(team.symbol, 16, 28.3);
+  ctx.stroke();
+  ctx.lineWidth = 1.2;
 
   ctx.translate(16, 16);
   ctx.scale(scale, scale);
@@ -73,6 +80,20 @@ export const banner = (
   shape(ctx, color, [x + 1, y, x + 8, y + 2.5, x + 1, y + 5]);
 };
 
+export const circle = (
+  ctx: CanvasRenderingContext2D,
+  color: string,
+  x: number,
+  y: number,
+  radius: number,
+) => {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+};
+
 export const shape = (
   ctx: CanvasRenderingContext2D,
   color: string,
@@ -87,4 +108,22 @@ export const shape = (
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
+};
+
+export const STONE = '#c3cbc6';
+export const STONE_LIGHT = '#dfe3d8';
+export const STONE_DARK = '#9aa5a3';
+export const TIMBER = '#a87945';
+export const OPENING = '#2c3338';
+
+/** Тень правой грани: у всех построек свет падает слева, как у рельефа. */
+export const sideShadow = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) => {
+  ctx.fillStyle = 'rgba(20, 28, 34, 0.18)';
+  ctx.fillRect(x, y, width, height);
 };

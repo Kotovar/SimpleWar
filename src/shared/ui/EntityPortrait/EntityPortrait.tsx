@@ -1,13 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { BuildingType, Owner, UnitType } from '@shared/config';
-import {
-  drawBarracks,
-  drawBase,
-  drawFarm,
-  drawGoldMine,
-  drawSawmill,
-  drawTower,
-} from './drawBuildings';
+import { drawBarracks, drawBase, drawTower } from './drawBuildings';
+import { drawFarm, drawGoldMine, drawSawmill } from './drawEconomyBuildings';
 import { drawArcher, drawSwordsman, drawWorker } from './drawUnits';
 import styles from './styles.module.css';
 

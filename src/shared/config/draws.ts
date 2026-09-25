@@ -1,12 +1,30 @@
 import type { Owner } from './common';
 
-/** Цвета и символы для команд игрока и ИИ. */
+/**
+ * Цвета стороны: `color` — одежда, крыши и флаги, `shade` — их затенённая
+ * часть, `background` — подложка постамента.
+ */
 export const TEAM_MARKERS: Record<
   Owner,
-  { background: string; color: string; symbol: string }
+  {
+    background: string;
+    color: string;
+    shade: string;
+    marker: 'circle' | 'diamond';
+  }
 > = {
-  player: { background: '#233e50', color: '#78ccff', symbol: '●' },
-  ai: { background: '#51302d', color: '#ff9474', symbol: '◆' },
+  player: {
+    background: '#1d3a52',
+    color: '#78ccff',
+    shade: '#3f86c4',
+    marker: 'circle',
+  },
+  ai: {
+    background: '#4f2a25',
+    color: '#ff9474',
+    shade: '#c95b41',
+    marker: 'diamond',
+  },
 };
 
 /** Параметры отрисовки полосы здоровья над зданиями. */
@@ -25,35 +43,45 @@ export const HP_BAR = {
 /** Параметры отрисовки сетки карты. */
 export const GRID = {
   lineThickness: 1,
-  lineColor: 'hsla(0, 0%, 0%, 0.025)',
+  lineColor: 'hsla(0, 0%, 0%, 0.05)',
   colorGrass: { r: 91, g: 151, b: 76 },
+  /** Сухая трава: луга плавно смешиваются с основным цветом. */
+  colorGrassDry: { r: 128, g: 158, b: 76 },
   colorWater: { r: 40, g: 110, b: 180 },
+  colorWaterShallow: 'rgba(150, 214, 245, 0.9)',
+  /** Подложки под лесом и скалами связывают соседние клетки в массив. */
+  colorForestFloor: 'rgb(66, 118, 62)',
+  colorRockFloor: 'rgb(128, 138, 106)',
 };
 
 /** Параметры отрисовки одиночного выделения */
 export const SELECTED = {
-  free: 'rgba(153, 218, 233, 0.14)',
-  enemy: 'rgba(244, 151, 122, 0.12)',
-  produce: 'rgba(234, 196, 110, 0.12)',
-  freeOutline: 'rgba(190, 235, 241, 0.4)',
+  free: 'rgba(160, 222, 255, 0.2)',
+  enemy: 'rgba(255, 120, 90, 0.16)',
+  produce: 'rgba(245, 205, 110, 0.22)',
+  freeOutline: 'rgba(214, 240, 255, 0.9)',
   enemyOutline: '#ffac91',
-  produceOutline: '#f0d58d',
+  produceOutline: '#f5d98f',
+  /** Тёмная подводка под контуром: он читается и на траве, и на воде. */
+  outlineShadow: 'rgba(22, 30, 28, 0.45)',
   lineThickness: 2,
 } as const;
 
 /** Параметры отрисовки множественного выделения клеток. */
 export const SELECTION = {
   colorOutline: '#fff0c4',
-  colorShadow: '#374438',
-  cellFill: 'rgba(255, 240, 196, 0.09)',
+  colorShadow: 'rgba(28, 36, 30, 0.75)',
+  cellFill: 'rgba(255, 240, 196, 0.22)',
 };
 
 /** Цвета отрисовки рельефа */
 export const TERRAIN = {
   colorShadow: 'hsla(0, 0%, 0%, 0.25)',
-  colorForestTrunk: '#b98a51',
-  colorForestCrown: '#416859',
-  colorForestLight: '#80a073',
+  colorForestTrunk: '#8a6a45',
+  colorForestCrown: '#2f6a50',
+  colorForestLight: '#4f9068',
+  colorLeafCrown: '#4f8c3c',
+  colorLeafLight: '#7fb456',
   colorOreDark: '#c4943e',
   colorOreLight: '#f5d879',
   colorMountainDark: '#687b80',

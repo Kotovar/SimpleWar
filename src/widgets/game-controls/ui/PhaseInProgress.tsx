@@ -14,6 +14,43 @@ import {
 } from './info';
 import styles from './styles.module.css';
 
+const LEGEND = [
+  { kind: 'move', text: 'Куда можно пойти' },
+  { kind: 'produce', text: 'Где можно построить или нанять' },
+  { kind: 'attack', text: 'Кого можно атаковать' },
+] as const;
+
+/** Пустая панель подсказывает управление и значение подсветок на карте. */
+const EmptySelection = () => (
+  <div className={styles.Empty}>
+    <p className={styles.EmptyTitle}>Ничего не выбрано</p>
+    <p className={styles.Hint}>
+      Кликните по своему юниту, зданию или клетке карты.
+    </p>
+
+    <ul className={styles.Legend}>
+      {LEGEND.map(({ kind, text }) => (
+        <li key={kind}>
+          <span className={styles.Swatch} data-kind={kind} aria-hidden />
+          {text}
+        </li>
+      ))}
+    </ul>
+
+    <ul className={styles.Controls}>
+      <li>
+        <kbd>ЛКМ</kbd> выбрать или выполнить действие
+      </li>
+      <li>
+        <kbd>ПКМ</kbd> перетаскивание карты
+      </li>
+      <li>
+        <kbd>Колесо</kbd> масштаб
+      </li>
+    </ul>
+  </div>
+);
+
 export const PhaseInProgress = () => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
@@ -69,11 +106,7 @@ export const PhaseInProgress = () => {
           </>
         )}
 
-        {selection === null && (
-          <div className={styles.Hint}>
-            Кликните по карте, чтобы выбрать клетку
-          </div>
-        )}
+        {selection === null && <EmptySelection />}
       </aside>
 
       <ConfirmDialog

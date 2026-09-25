@@ -1,16 +1,12 @@
 import type { Cell } from '@shared/config';
-
-// Координатный шум: декор не меняет положение при перерисовке карты.
-export const sample = (x: number, y: number, salt: number) => {
-  let value = Math.imul(x + 1, 374761393) ^ Math.imul(y + 1, 668265263) ^ salt;
-  value = Math.imul(value ^ (value >>> 13), 1274126177);
-  return ((value ^ (value >>> 16)) >>> 0) / 0x100000000;
-};
+import { sample, smoothNoise } from '@shared/lib';
 
 export const drawGroundDetails = (
   ctx: CanvasRenderingContext2D,
   grid: Cell[][],
   cellSize: number,
+  /** Под зданиями мелкий декор не рисуется: он торчал бы из-под модели. */
+  builtCells: ReadonlySet<string> = new Set(),
 ) => {
   ctx.save();
   ctx.scale(cellSize / 32, cellSize / 32);
@@ -18,23 +14,10 @@ export const drawGroundDetails = (
   ctx.lineJoin = 'round';
   ctx.lineWidth = 0.8;
 
-  // Крупные мягкие пятна связывают клетки в ландшафт. Вода рисуется поверх.
-  for (let y = 0; y < grid.length; y += 6) {
-    for (let x = 0; x < (grid[y]?.length ?? 0); x += 6) {
-      const cx = (x + sample(x, y, 71) * 6) * 32;
-      const cy = (y + sample(x, y, 89) * 6) * 32;
-      const radius = 32 * 5;
-      const shade = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-      shade.addColorStop(0, 'rgba(210, 192, 112, 0.16)');
-      shade.addColorStop(1, 'rgba(210, 192, 112, 0)');
-      ctx.fillStyle = shade;
-      ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
-    }
-  }
-
   grid.forEach((row, y) =>
     row.forEach((cell, x) => {
       if (cell.type !== 'grass' || sample(x, y, 17) > 0.62) return;
+      if (builtCells.has(`${x},${y}`)) return;
       const px = x * 32 + 7 + sample(x, y, 101) * 18;
       const py = y * 32 + 9 + sample(x, y, 307) * 16;
       const neighbors = [
@@ -93,6 +76,23 @@ export const drawGroundDetails = (
         ctx.fill();
         ctx.stroke();
         ctx.fillRect(4, 0, 1.5, 1);
+      } else if (kind > 0.86) {
+        // Цветы: оттенок общий для луга, чтобы поляны читались пятнами.
+        const petals = ['#f4efd8', '#f2d470', '#e9a7b8'][
+          Math.floor(smoothNoise(x, y, 4, 577) * 3)
+        ];
+        ctx.fillStyle = petals;
+        for (const [dx, dy] of [
+          [-3, -1],
+          [0, -3],
+          [2.5, 0],
+        ]) {
+          ctx.beginPath();
+          ctx.arc(dx, dy, 1.1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = '#6c8a3a';
+        ctx.fillRect(-0.5, 0, 1, 2);
       } else {
         // Цвет плавно меняется по карте, а не случайно от клетки к клетке.
         ctx.strokeStyle =

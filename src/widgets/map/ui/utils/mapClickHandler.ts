@@ -98,7 +98,11 @@ const handleClickWithPlayerUnitSelected = (
   ) {
     ctx.build(selectedUnit.id, gridX, gridY, 'player');
     resetSelection(ctx);
+    return;
   }
+
+  ctx.clearHighlight();
+  handleClickWithoutSelection(gridX, gridY, ctx);
 };
 
 const handleClickWithPlayerBuildingSelected = (
@@ -127,7 +131,11 @@ const handleClickWithPlayerBuildingSelected = (
     ctx.spawn(selectedBuilding.id, gridX, gridY, 'player');
     resetSelection(ctx);
     ctx.clearSelectedBuildingForSpawn();
+    return;
   }
+
+  ctx.clearHighlight();
+  handleClickWithoutSelection(gridX, gridY, ctx);
 };
 
 export const handleMapCellClick = (

@@ -20,5 +20,5 @@ export const MAP_PRESET_LABELS: Record<keyof typeof MAP_PRESETS, string> = {
   extra: 'Огромная',
 };
 
-/** Предлагаемый стартовый сид */
-export const TEMP_START_SEED = 0.15;
+/** Предлагаемый стартовый сид. */
+export const TEMP_START_SEED = 42;

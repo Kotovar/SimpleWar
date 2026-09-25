@@ -205,8 +205,8 @@ describe('movement', () => {
 describe('game initialization', () => {
   it('rejects an isolated fixed map without spawning objects', () => {
     resetGame();
-    // На карте 30 × 30 этот сид отрезает базу хребтом, проливом и лесом.
-    useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 0.03 });
+    // На карте 30 × 30 этот сид не даёт допустимого прохода и ресурсов.
+    useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 0 });
     expect(initializeGame()).toBe(false);
     expect(useGameLoopStore.getState()).toMatchObject({
       phase: 'setup',
@@ -223,7 +223,7 @@ describe('game initialization', () => {
     resetGame();
     useSettingsStore.setState({
       mapGenerationMode: 'fixed',
-      customSeed: 0.08,
+      customSeed: 3,
       gridColumns: 5,
       gridRows: 5,
     });
@@ -235,7 +235,7 @@ describe('game initialization', () => {
 
   it('starts a connected map once and keeps its objects on repeated initialization', () => {
     resetGame();
-    useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 0 });
+    useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 2 });
     expect(initializeGame()).toBe(true);
     useGameLoopStore.getState().startGame();
     expect(useGameLoopStore.getState().phase).toBe('inProgress');

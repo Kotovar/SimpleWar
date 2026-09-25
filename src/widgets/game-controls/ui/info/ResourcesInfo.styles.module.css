@@ -1,26 +1,61 @@
 .Resources {
   display: flex;
-  gap: 24px;
-  font-size: 1em;
+  gap: 8px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
-.Gold {
-  color: var(--gold);
-  font-weight: bold;
+.Stat {
+  --tone: var(--gold);
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 150px;
+  padding: 6px 14px 6px 10px;
+  border-radius: var(--radius);
+  background-color: var(--surface-sunken);
+  border: 1px solid var(--border);
 }
 
-.Wood {
-  color: var(--wood);
-  font-weight: bold;
+.Stat[data-tone='wood'] {
+  --tone: var(--wood);
 }
 
-.Income {
+.Stat[data-tone='population'] {
+  --tone: var(--population);
+}
+
+.Icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background-color: color-mix(in srgb, var(--tone) 14%, transparent);
+}
+
+.Body {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.Label {
+  font-size: 0.72rem;
   color: var(--text-muted);
-  font-size: 0.9em;
 }
 
-.Limit {
-  color: var(--population);
-  font-weight: bold;
+.Value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.Extra {
+  margin-left: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--tone);
 }
