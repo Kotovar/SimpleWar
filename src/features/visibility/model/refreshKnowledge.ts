@@ -90,10 +90,11 @@ export const refreshKnowledge = () => {
   }
 
   const next: Partial<Record<ParticipantId, ParticipantKnowledge>> = {};
+  const eliminatedIds = new Set(eliminated);
   let changed = false;
   for (const { id } of participants) {
     const previous = byParticipant[id];
-    if (eliminated.includes(id)) {
+    if (eliminatedIds.has(id)) {
       if (previous) next[id] = previous;
       continue;
     }
