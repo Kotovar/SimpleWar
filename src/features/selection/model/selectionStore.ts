@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { withDevtools } from '@shared/lib';
+import { gameEvents, withDevtools } from '@shared/lib';
 import type { Building, Cell, Unit } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
@@ -84,3 +84,7 @@ export const useSelectionStore = create<SelectionState>()(
     resetStore: () => get().clearSelection(),
   })),
 );
+
+gameEvents.subscribe(event => {
+  if (event.type === 'GAME_RESET') useSelectionStore.getState().resetStore();
+});

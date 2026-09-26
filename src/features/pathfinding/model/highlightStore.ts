@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { withDevtools } from '@shared/lib';
+import { gameEvents, withDevtools } from '@shared/lib';
 import type { Cell, Position } from '@shared/config';
 
 import { useMapStore } from '@entities/maps';
@@ -58,3 +58,7 @@ export const useHighlightStore = create<HighlightState>()(
     },
   })),
 );
+
+gameEvents.subscribe(event => {
+  if (event.type === 'GAME_RESET') useHighlightStore.getState().resetStore();
+});

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { withDevtools } from '@shared/lib';
+import { gameEvents, withDevtools } from '@shared/lib';
 import type { Position } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
@@ -63,3 +63,7 @@ export const useMovementStore = create<MovementState>()(
     },
   })),
 );
+
+gameEvents.subscribe(event => {
+  if (event.type === 'GAME_RESET') useMovementStore.getState().resetStore();
+});

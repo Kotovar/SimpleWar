@@ -236,7 +236,25 @@ describe('turn and reset boundaries', () => {
 
   it('clears recruitment in the common reset action', () => {
     units().selectUnitForSpawn('archer');
+    useSelectionStore.getState().selectCell(1, 1);
+    useMovementStore.setState({
+      reachableCells: [{ x: 1, y: 1 }],
+      attackableTargets: [{ x: 2, y: 2 }],
+    });
+    useHighlightStore.setState({
+      spawnableCells: [{ x: 1, y: 0 }],
+      buildableCells: [{ x: 0, y: 1 }],
+    });
     resetGame();
+    expect(useSelectionStore.getState().selection).toBeNull();
+    expect(useMovementStore.getState()).toMatchObject({
+      reachableCells: null,
+      attackableTargets: null,
+    });
+    expect(useHighlightStore.getState()).toMatchObject({
+      spawnableCells: null,
+      buildableCells: null,
+    });
     expect(units().selectedUnitForSpawn).toBeNull();
     expect(units().units).toEqual({});
     expect(buildings().buildings).toEqual({});

@@ -25,6 +25,7 @@ export type JournalVisibility = ParticipantId[] | 'all';
 
 /** Причина отказа команды. */
 export type RejectionCode =
+  | 'busy'
   | 'phase'
   | 'turn'
   | 'notFound'
@@ -47,6 +48,7 @@ export type RejectionCode =
  * подробности — только в `detail` для отладки.
  */
 export const REJECTION_MESSAGE: Record<RejectionCode, string> = {
+  busy: 'Предыдущее действие ещё выполняется',
   phase: 'Партия сейчас не идёт',
   turn: 'Сейчас не ваш ход',
   notFound: 'Объект недоступен',

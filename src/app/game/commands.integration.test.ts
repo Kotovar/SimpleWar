@@ -1,4 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test';
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  onTestFinished,
+} from 'vite-plus/test';
+import { gameEvents } from '@shared/lib';
 import { DEFAULT_PARTICIPANTS, type Cell } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
@@ -58,6 +65,29 @@ beforeEach(() => {
 });
 
 describe('command rejections leave the state unchanged', () => {
+  it('rejects recruitment reentered from a creation event before payment', () => {
+    economy().removeResources('p1', { gold: 160, wood: 80 });
+    const command = {
+      actor: 'p1',
+      buildingId: base,
+      unitType: 'worker',
+      x: 1,
+      y: 0,
+    } as const;
+    let nested: ReturnType<typeof spawn> | undefined;
+    const unsubscribe = gameEvents.subscribe(event => {
+      if (event.type !== 'UNIT_SPAWNED') return;
+      unsubscribe();
+      nested = spawn({ ...command, x: 0, y: 1 });
+    });
+    onTestFinished(unsubscribe);
+
+    expect(spawn(command)).toEqual({ ok: true });
+    expect(nested).toMatchObject({ ok: false, code: 'busy' });
+    expect(Object.values(units().units)).toHaveLength(1);
+    expect(economy().resources.p1).toEqual({ gold: 0, wood: 0 });
+  });
+
   const cases = [
     {
       name: 'foreign unit',

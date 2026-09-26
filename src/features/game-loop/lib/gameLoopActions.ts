@@ -1,5 +1,5 @@
 import type { CommandResult, ParticipantId } from '@shared/config';
-import { ok, reject } from '@shared/lib';
+import { gameEvents, ok, reject } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
@@ -73,4 +73,5 @@ export const resetGame = () => {
   useDebugStore.getState().resetStore();
   useEconomyStore.getState().resetStore();
   useJournalStore.getState().newGame();
+  gameEvents.emit({ type: 'GAME_RESET' });
 };

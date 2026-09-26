@@ -84,7 +84,6 @@ export const PhaseInProgress = () => {
 
   const onResetGame = () => {
     setShowResetConfirm(false);
-    clearInteraction();
     resetGame();
   };
 

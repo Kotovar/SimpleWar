@@ -7,7 +7,7 @@ import type {
   JournalVisibility,
   ParticipantId,
 } from '@shared/config';
-import { failure, withDevtools } from '@shared/lib';
+import { failure, reject, withDevtools } from '@shared/lib';
 
 /** Лимит хранимых записей каждого вида; старые вытесняются. */
 export const JOURNAL_LIMIT = 200;
@@ -124,6 +124,9 @@ export const useJournalStore = create<JournalState>()(
   })),
 );
 
+// Команды синхронны; подписчики не должны запускать следующую до списаний.
+let executing = false;
+
 /**
  * Выполняет команду и записывает итог в общий журнал: успех — в события,
  * отказ или исключение — в ошибки. Исключение превращается в сбой.
@@ -138,11 +141,15 @@ export const runCommand = (
   turn: number,
   execute: () => CommandResult,
 ): CommandResult => {
+  if (executing) return reject('busy');
+  executing = true;
   let result: CommandResult;
   try {
     result = execute();
   } catch (error) {
     result = failure(error instanceof Error ? error.message : String(error));
+  } finally {
+    executing = false;
   }
 
   const journal = useJournalStore.getState();
