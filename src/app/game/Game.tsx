@@ -27,7 +27,10 @@ export const Game = () => {
   useEffect(() => {
     if (activeController !== 'ai' || phase !== 'inProgress') return;
 
-    const timer = setTimeout(() => runAITurn(activePlayer), AI_TURN_DELAY_MS);
+    const timer = setTimeout(
+      () => void runAITurn(activePlayer),
+      AI_TURN_DELAY_MS,
+    );
     return () => clearTimeout(timer);
   }, [activePlayer, activeController, phase]);
 

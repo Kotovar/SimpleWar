@@ -8,6 +8,8 @@ import { useGameLoopStore } from '@entities/games';
 import { useSettingsStore } from '@entities/settings';
 import { useUnitsStore } from '@entities/units';
 import { initGameLoopEvents, nextTurn, resetGame } from '@features/game-loop';
+import { initVisibilitySystem } from '@features/visibility';
+import { useJournalStore } from '@entities/journals';
 import { initializeGame } from '@widgets/start-game';
 
 const fixedSeed = 3;
@@ -75,12 +77,13 @@ beforeEach(() => {
   });
   initPopulationSystem();
   initGameLoopEvents();
+  initVisibilitySystem();
   expect(initializeGame()).toBe(true);
   useGameLoopStore.getState().startGame();
 });
 
 describe('AI turn simulation smoke', () => {
-  it('completes ten real player and AI rounds and saves the turn snapshots', () => {
+  it('completes ten real player and AI rounds and saves the turn snapshots', async () => {
     const settings = useSettingsStore.getState();
     const turns: Array<{
       round: number;
@@ -107,14 +110,17 @@ describe('AI turn simulation smoke', () => {
       });
 
       const aiBefore = captureState();
-      runAITurn('p2');
+      const result = await runAITurn('p2', {
+        yieldControl: () => Promise.resolve(),
+      });
+      expect(result?.cancelled).toBe(false);
       const aiAfter = captureState();
       expect(aiAfter.activePlayer).toBe('p1');
       expect(aiAfter.turn).toBe(round + 1);
       turns.push({
         round,
         side: 'p2',
-        action: 'runAITurn (currently advances with nextTurn)',
+        action: `runAITurn: ${result?.commands} commands, ${result?.reason}`,
         target: null,
         before: aiBefore,
         after: aiAfter,
@@ -127,11 +133,17 @@ describe('AI turn simulation smoke', () => {
       turn: rounds + 1,
       activePlayer: 'p1',
       phase: 'inProgress',
-      resources: {
-        p1: { gold: 200 + rounds * 3, wood: 120 + rounds * 2 },
-        p2: { gold: 200 + rounds * 3, wood: 120 + rounds * 2 },
-      },
+      // Пассивный игрок получает только доход ратуши.
+      resources: { p1: { gold: 200 + rounds * 3, wood: 120 + rounds * 2 } },
     });
+    // ИИ действует сам: развивает экономику и не уходит в минус.
+    const decisions = useJournalStore.getState().decisions;
+    expect(decisions.some(({ result }) => result === 'ok')).toBe(true);
+    expect(finalState.resources.p2.gold).toBeGreaterThanOrEqual(0);
+    expect(finalState.resources.p2.wood).toBeGreaterThanOrEqual(0);
+    expect(
+      finalState.buildings.filter(({ owner }) => owner === 'p2').length,
+    ).toBeGreaterThan(1);
 
     writeFileSync(
       outputPath,
@@ -149,7 +161,16 @@ describe('AI turn simulation smoke', () => {
           roundsCompleted: rounds,
           playerBehavior: 'skip each turn through nextTurn',
           aiBehavior:
-            'runAITurn delegates to nextTurn; no tactical action is implemented',
+            'runAITurn plans from its own observation and uses shared commands',
+          decisions: useJournalStore
+            .getState()
+            .decisions.map(({ turn, step, ruleId, action, result }) => ({
+              turn,
+              step,
+              ruleId,
+              action,
+              result,
+            })),
           randomness:
             'fixed map seed; generated entity IDs are omitted from snapshots',
           turns,

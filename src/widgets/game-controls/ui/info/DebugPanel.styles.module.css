@@ -97,3 +97,53 @@
   color: var(--text-muted);
   font-size: 0.8rem;
 }
+
+/* Журнал решений ИИ: только для разработчика, компактный и прокручиваемый. */
+.AiLog summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.AiFilters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  margin: 6px 0;
+}
+
+.AiFilters select,
+.AiFilters input,
+.AiFilters button {
+  min-width: 0;
+  padding: 3px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-strong);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  color-scheme: dark;
+}
+
+.AiEntries {
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.75rem;
+}
+
+.AiEntries li {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.AiEntries li[data-result='failed'] strong {
+  color: var(--danger-strong);
+}
+
+.AiMeta {
+  color: var(--text-muted);
+}

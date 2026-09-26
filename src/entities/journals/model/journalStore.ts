@@ -8,6 +8,8 @@ import type {
   ParticipantId,
 } from '@shared/config';
 import { failure, reject, withDevtools } from '@shared/lib';
+import type { AiDecisionInput, AiDecisionRecord } from './decisions';
+import { DECISION_LIMIT } from './decisions';
 
 /** Лимит хранимых записей каждого вида; старые вытесняются. */
 export const JOURNAL_LIMIT = 200;
@@ -50,6 +52,8 @@ type JournalState = {
   nextId: number;
   entries: JournalEntry[];
   errors: JournalError[];
+  /** Решения ИИ для отладки; обычный журнал участника их не содержит. */
+  decisions: AiDecisionRecord[];
 
   record: (event: JournalEventInput) => void;
   reportError: (
@@ -58,6 +62,8 @@ type JournalState = {
     rejection: CommandRejection,
   ) => void;
   clearErrors: () => void;
+  recordDecision: (decision: AiDecisionInput) => void;
+  clearDecisions: () => void;
   newGame: () => void;
 };
 
@@ -78,6 +84,7 @@ export const useJournalStore = create<JournalState>()(
     nextId: 1,
     entries: [],
     errors: [],
+    decisions: [],
 
     record: event =>
       set(state => {
@@ -115,11 +122,21 @@ export const useJournalStore = create<JournalState>()(
         state.errors = [];
       }),
 
+    recordDecision: decision =>
+      set(state => {
+        const id = state.nextId++;
+        state.decisions.push({ ...decision, id, gameId: state.gameId });
+        if (state.decisions.length > DECISION_LIMIT) state.decisions.shift();
+      }),
+
+    clearDecisions: () => set({ decisions: [] }),
+
     newGame: () =>
       set(state => {
         state.gameId++;
         state.entries = [];
         state.errors = [];
+        state.decisions = [];
       }),
   })),
 );

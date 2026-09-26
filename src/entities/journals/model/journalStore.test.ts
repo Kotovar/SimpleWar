@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vite-plus/test';
 import { reject } from '@shared/lib';
+import { DECISION_LIMIT, type AiDecisionInput } from './decisions';
 import {
   JOURNAL_LIMIT,
   getVisibleRecords,
@@ -109,5 +110,32 @@ describe('useJournalStore', () => {
       'eliminated',
     ]);
     expect(JSON.stringify(visible)).not.toContain('"x":9');
+  });
+
+  it('решения ИИ хранятся отдельно, ограниченно и сбрасываются с партией', () => {
+    const decision = (step: number): AiDecisionInput => ({
+      actor: 'p2',
+      turn: 1,
+      step,
+      strategy: 'G02',
+      ruleId: 'W02',
+      actorId: 'u1',
+      action: 'на добычу',
+      reason: 'тест',
+      basis: {},
+      alternatives: [],
+      result: 'ok',
+    });
+
+    for (let step = 1; step <= DECISION_LIMIT + 5; step++) {
+      journal().recordDecision(decision(step));
+    }
+
+    expect(journal().decisions).toHaveLength(DECISION_LIMIT);
+    expect(journal().decisions[0].step).toBe(6);
+    expect(journal().entries).toEqual([]);
+
+    journal().newGame();
+    expect(journal().decisions).toEqual([]);
   });
 });

@@ -10,3 +10,4 @@ export * from './economy';
 export * from './commands';
 export * from './debug';
 export * from './vision';
+export * from './ai';

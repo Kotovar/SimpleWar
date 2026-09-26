@@ -1,46 +1,17 @@
-import type {
-  Building,
-  CellType,
-  ParticipantId,
-  Position,
-  Unit,
-} from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useGameLoopStore } from '@entities/games';
+import { useEconomyStore } from '@entities/economies';
 import {
   getContactConfidence,
   getKnownCellType,
   getParticipantKnowledge,
   type Contact,
-  type ContactConfidence,
+  type Observation,
 } from '@entities/perceptions';
+import type { ParticipantId } from '@shared/config';
 
-/** Устаревший контакт: объект вне обзора с оценкой достоверности. */
-export type RememberedContact = Contact & { confidence: ContactConfidence };
-
-/**
- * Наблюдение участника — всё, что он вправе знать о мире. Не содержит
- * скрытых ID, ресурсов и улучшений других сторон, мест их баз из генератора.
- */
-export type Observation = {
-  participant: ParticipantId;
-  turn: number;
-  width: number;
-  height: number;
-  ownUnits: Unit[];
-  ownBuildings: Building[];
-  /** Враги в обзоре: только наблюдаемые поля. */
-  visibleEnemies: Omit<Contact, 'seenTurn'>[];
-  /** Известная местность, `knownTerrain[y][x]`; `null` — не разведано. */
-  knownTerrain: (CellType | null)[][];
-  /** Видимость клеток сейчас, `visible[y][x]`. */
-  visible: boolean[][];
-  /** Обнаруженные золото и лес. */
-  resources: (Position & { type: 'gold' | 'forest' })[];
-  /** Память об объектах вне обзора. */
-  contacts: RememberedContact[];
-};
+export type { Observation, RememberedContact } from '@entities/perceptions';
 
 /**
  * Собирает наблюдение участника из его знаний и его собственных объектов.
@@ -74,9 +45,13 @@ export const getObservation = (participant: ParticipantId): Observation => {
   const isVisibleNow = (contact: Contact) =>
     contact.seenTurn === turn && visible[contact.y]?.[contact.x];
 
+  const economy = useEconomyStore.getState();
+
   return {
     participant,
     turn,
+    stock: { ...economy.resources[participant] },
+    population: { ...economy.populationCap[participant] },
     width,
     height,
     ownUnits: Object.values(useUnitsStore.getState().units).filter(isOwn),

@@ -8,6 +8,7 @@ import {
 import { useMapStore } from '@entities/maps';
 import { useDebugStore } from '@entities/settings';
 import { useGameLoopSelectors } from '@features/game-loop';
+import { AiDecisionLog } from './AiDecisionLog';
 import styles from './DebugPanel.styles.module.css';
 
 type Target = ParticipantId | 'all';
@@ -129,6 +130,7 @@ export const DebugPanel = () => {
           </label>
         );
       })}
+      <AiDecisionLog />
     </section>
   );
 };

@@ -12,6 +12,8 @@ import { drawArcher, drawSwordsman, drawWorker } from './drawUnits';
 import { drawHpBar } from './drawHpBar';
 import { drawActionPips } from './drawActionPips';
 import { drawWorkBadge } from './drawWorkBadge';
+import { drawIdleBadge } from './drawIdleBadge';
+import { findServingWorker } from '@shared/lib';
 
 /** Смещение в клетках и масштаб сущностей, которые сейчас анимируются. */
 export type CellOffsets = Map<
@@ -97,6 +99,14 @@ export const renderEntitiesLayer = (
     ctx.restore();
 
     drawHpBar(ctx, x + dx, y + dy, cellSize, hpRatio);
+    // Свой рудник или лесопилка без рабочего простаивает: подсказываем.
+    if (
+      owner === humanId &&
+      building.role === 'resource' &&
+      !findServingWorker(building, Object.values(units))
+    ) {
+      drawIdleBadge(ctx, x + dx, y + dy, cellSize);
+    }
   });
 
   Object.values(units).forEach(unit => {

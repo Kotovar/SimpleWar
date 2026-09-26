@@ -59,3 +59,12 @@
   font-weight: 600;
   color: var(--tone);
 }
+
+/* Простой добычи: здание есть, а рабочего рядом нет. */
+.Warning {
+  margin-top: 2px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #f2c14e;
+  cursor: help;
+}
