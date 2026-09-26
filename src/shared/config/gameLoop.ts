@@ -21,3 +21,9 @@ export const DEFAULT_PARTICIPANTS: Participant[] = [
 
 /** Фаза игры. */
 export type Phase = 'setup' | 'deployment' | 'inProgress' | 'gameOver';
+
+/**
+ * Пауза перед ходом ИИ, мс. Кнопка конца хода в это время заблокирована,
+ * поэтому двойной клик не завершает следующий ход человека.
+ */
+export const AI_TURN_DELAY_MS = 600;

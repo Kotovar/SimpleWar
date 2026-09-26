@@ -74,6 +74,7 @@ export const useGameLoopStore = create<GameLoopStoreState>()(
 
       startGame: (participants = DEFAULT_PARTICIPANTS) =>
         set(state => {
+          if (state.phase !== 'setup') return;
           state.phase = 'inProgress';
           state.startError = null;
           state.currentTurn = 1;

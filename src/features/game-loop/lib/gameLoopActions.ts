@@ -7,6 +7,7 @@ import { useDebugStore, useSettingsStore } from '@entities/settings';
 import { useEconomyStore } from '@entities/economies';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand, useJournalStore } from '@entities/journals';
+import { eliminateParticipant } from '../model/gameLoopStore';
 import { calculateIncome } from './calculateIncome';
 
 const validateAndEndTurn = (actor: ParticipantId): CommandResult => {
@@ -38,6 +39,28 @@ export const nextTurn = (actor: ParticipantId) =>
     { type: 'endTurn', actor },
     useGameLoopStore.getState().currentTurn,
     () => validateAndEndTurn(actor),
+  );
+
+const validateAndSurrender = (actor: ParticipantId): CommandResult => {
+  if (useGameLoopStore.getState().phase !== 'inProgress') {
+    return reject('phase');
+  }
+  // Сдаться можно и в чужой ход, но только за себя и один раз.
+  if (!eliminateParticipant(actor)) return reject('notFound');
+  return ok;
+};
+
+/**
+ * Сдача: участник выбывает так же, как при потере ратуши.
+ *
+ * @param actor - Сдающийся участник; сдаться за другого нельзя.
+ * @returns Успех либо причина отказа; при отказе состояние не меняется.
+ */
+export const surrender = (actor: ParticipantId) =>
+  runCommand(
+    { type: 'surrender', actor },
+    useGameLoopStore.getState().currentTurn,
+    () => validateAndSurrender(actor),
   );
 
 /** Сбрасывает фазу, объекты, карту, настройки, отладку, экономику и журнал. */

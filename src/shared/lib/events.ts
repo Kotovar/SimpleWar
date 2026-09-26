@@ -2,6 +2,8 @@ import type { Building, ParticipantId, Unit } from '@shared/config';
 
 type GameEvent =
   | { type: 'BASE_DESTROYED'; owner: ParticipantId }
+  /** Выбывание уже применено; `turn` — ход, в котором оно произошло. */
+  | { type: 'PARTICIPANT_ELIMINATED'; owner: ParticipantId; turn: number }
   | { type: 'BUILDING_SPAWNED'; building: Building; owner: ParticipantId }
   | { type: 'BUILDING_DESTROYED'; building: Building; owner: ParticipantId }
   | { type: 'UNIT_SPAWNED'; unit: Unit; owner: ParticipantId }

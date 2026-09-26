@@ -7,7 +7,8 @@ export type CommandType =
   | 'attack'
   | 'build'
   | 'spawn'
-  | 'endTurn';
+  | 'endTurn'
+  | 'surrender';
 
 /** Последствия действий, которые журнал записывает помимо самих команд. */
 export type GameOutcomeType =

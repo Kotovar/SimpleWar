@@ -12,8 +12,8 @@ const between = (actor: ParticipantId, owner: ParticipantId) =>
 
 /**
  * Записывает в журнал последствия команд: гибель юнитов, разрушение зданий,
- * выбывание участника и конец партии. Подписываться после
- * `initGameLoopEvents`: выбывание к этому моменту уже применено.
+ * выбывание участника и конец партии. Выбывание приходит уже применённым
+ * и ровно один раз (`PARTICIPANT_ELIMINATED`), порядок подписок не важен.
  */
 export const initJournalSystem = () => {
   if (initialized) return;
@@ -46,21 +46,11 @@ export const initJournalSystem = () => {
       });
     }
 
-    if (event.type === 'BASE_DESTROYED') {
-      // Записываем выбывание один раз и только если оно действительно применено.
-      const alreadyRecorded = useJournalStore
-        .getState()
-        .entries.some(
-          ({ type, details }) =>
-            type === 'eliminated' && details?.participant === event.owner,
-        );
-      const { eliminated } = useGameLoopStore.getState();
-      if (alreadyRecorded || !eliminated.includes(event.owner)) return;
-
+    if (event.type === 'PARTICIPANT_ELIMINATED') {
       record({
         type: 'eliminated',
         actor: null,
-        turn,
+        turn: event.turn,
         visibleTo: 'all',
         details: { participant: event.owner },
       });
@@ -70,7 +60,7 @@ export const initJournalSystem = () => {
         record({
           type: 'gameOver',
           actor: null,
-          turn,
+          turn: event.turn,
           visibleTo: 'all',
           details: { winner: winner ?? 'none' },
         });

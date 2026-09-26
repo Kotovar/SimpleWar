@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { AI_TURN_DELAY_MS } from '@shared/config';
 import { initGameLoopEvents, useGameLoopSelectors } from '@features/game-loop';
 import { Map } from '@widgets/map';
 import { initializeGame } from '@widgets/start-game';
@@ -22,10 +23,10 @@ export const Game = () => {
   }, []);
 
   useEffect(() => {
-    if (activeController === 'ai' && phase === 'inProgress') {
-      runAITurn(activePlayer);
-    }
-    // activePlayer в зависимостях: ход переходит от одного ИИ к другому.
+    if (activeController !== 'ai' || phase !== 'inProgress') return;
+
+    const timer = setTimeout(() => runAITurn(activePlayer), AI_TURN_DELAY_MS);
+    return () => clearTimeout(timer);
   }, [activePlayer, activeController, phase]);
 
   return (

@@ -71,19 +71,20 @@ export const PhaseInProgress = () => {
 
   const { humanId } = useGameLoopSelectors();
 
-  const onNextTurn = async () => {
-    if (humanId) nextTurn(humanId);
+  const clearInteraction = () => {
     clearSelection();
     clearMovement();
     clearHighlight();
   };
 
+  const onNextTurn = () => {
+    if (humanId) nextTurn(humanId);
+    clearInteraction();
+  };
+
   const onResetGame = () => {
     setShowResetConfirm(false);
-
-    clearSelection();
-    clearMovement();
-    clearHighlight();
+    clearInteraction();
     resetGame();
   };
 
