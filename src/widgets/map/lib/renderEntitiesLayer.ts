@@ -11,6 +11,7 @@ import {
 import { drawArcher, drawSwordsman, drawWorker } from './drawUnits';
 import { drawHpBar } from './drawHpBar';
 import { drawActionPips } from './drawActionPips';
+import { drawWorkBadge } from './drawWorkBadge';
 
 /** Смещение в клетках и масштаб сущностей, которые сейчас анимируются. */
 export type CellOffsets = Map<
@@ -123,5 +124,8 @@ export const renderEntitiesLayer = (
     // Полоса здоровья и очки остаются контрастными даже у отходившего юнита.
     drawHpBar(ctx, x + dx, y + dy, cellSize, hpRatio);
     if (owner === humanId) drawActionPips(ctx, x + dx, y + dy, cellSize, unit);
+    if (owner === humanId && unit.role === 'civil' && unit.workplaceId) {
+      drawWorkBadge(ctx, x + dx, y + dy, cellSize);
+    }
   });
 };

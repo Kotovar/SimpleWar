@@ -40,7 +40,10 @@ export type ProductionBuilding = BaseBuilding & {
   maxSpawnPoints: number;
 };
 
-/** Здание, которое производит ресурсы. */
+/**
+ * Здание, которое производит ресурсы. Доход идёт только с назначенным
+ * рабочим, который тратит на добычу своё рабочее действие.
+ */
 export type ResourceBuilding = BaseBuilding & {
   role: 'resource';
   income: Income;
@@ -75,7 +78,8 @@ export const PRODUCTION_BUILDINGS_CONFIG: Record<
   base: {
     maxHp: 700,
     sightRange: 4,
-    income: { gold: 3 },
+    // Страховка от остановки экономики: доход без рабочего.
+    income: { gold: 3, wood: 2 },
     cost: { gold: 0, wood: 0 },
     spawningUnits: ['worker'],
     spawnPoints: 1,

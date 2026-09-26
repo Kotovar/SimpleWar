@@ -30,6 +30,15 @@ export const START_POPULATION_CAPS = Object.fromEntries(
   ]),
 ) as Record<ParticipantId, PopulationCap>;
 
+/**
+ * Ремонт своего здания рабочим: столько HP за одно рабочее действие
+ * и такая цена. Старт; подбирается в S21.
+ */
+export const REPAIR = {
+  hp: 40,
+  cost: { gold: 10, wood: 20 },
+};
+
 /** Стоимость постройки здания или юнита. */
 export type Cost = {
   gold: number;

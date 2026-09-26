@@ -21,6 +21,7 @@ import {
   useHoverCell,
   useHoverPath,
   useMapView,
+  useProduceCells,
   drawCachedTerrain,
   type TerrainCache,
 } from './utils';
@@ -51,7 +52,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   const reachableCells = useMovementStore(state => state.reachableCells);
   const attackableTargets = useMovementStore(state => state.attackableTargets);
   const spawnableCells = useHighlightStore(state => state.spawnableCells);
-  const buildableCells = useHighlightStore(state => state.buildableCells);
+  const buildableCells = useProduceCells();
 
   const isInteractive = phase === 'inProgress' && activePlayer === humanId;
   const { hover, cursor, onMouseMove, onMouseLeave } = useHoverCell(

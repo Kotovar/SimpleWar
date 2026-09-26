@@ -18,6 +18,8 @@ import {
   SelectedEntityInfo,
   WorkerBuildOptions,
   UnitOptions,
+  WorkerJobs,
+  BuildingManage,
   DebugPanel,
 } from './info';
 import styles from './styles.module.css';
@@ -157,8 +159,14 @@ export const PhaseInProgress = ({ minimap }: Props) => {
         {(cell || unit || building) && (
           <>
             <SelectedEntityInfo cell={cell} unit={unit} building={building} />
+            {unit?.role === 'civil' && unit.owner === humanId && (
+              <WorkerJobs unit={unit} />
+            )}
             {unit && <WorkerBuildOptions unit={unit} />}
             {building && <UnitOptions building={building} />}
+            {building && building.owner === humanId && (
+              <BuildingManage building={building} />
+            )}
           </>
         )}
 

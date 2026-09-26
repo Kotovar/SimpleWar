@@ -48,6 +48,11 @@ export type CivilUnit = {
   buildableBuildings: BuildingType[];
   buildPoints: number;
   maxBuildPoints: number;
+  /**
+   * Рудник или лесопилка, где рабочий добывает; `null` — без работы.
+   * Связь хранится только здесь: занятость здания ищется по рабочим.
+   */
+  workplaceId: string | null;
 } & BaseUnit;
 
 /** Любой юнит в зависимости от роли. */
@@ -97,6 +102,7 @@ export const CIVIL_UNITS_CONFIG: Record<
     buildPoints: 0,
     maxBuildPoints: 1,
     canBuild: true,
+    workplaceId: null,
     buildableBuildings: ['mine', 'sawmill', 'farm', 'barracks', 'tower'],
     requiresLimit: 1,
     cost: { gold: 40, wood: 40 },

@@ -128,8 +128,8 @@ describe('AI turn simulation smoke', () => {
       activePlayer: 'p1',
       phase: 'inProgress',
       resources: {
-        p1: { gold: 200 + rounds * 3, wood: 120 },
-        p2: { gold: 200 + rounds * 3, wood: 120 },
+        p1: { gold: 200 + rounds * 3, wood: 120 + rounds * 2 },
+        p2: { gold: 200 + rounds * 3, wood: 120 + rounds * 2 },
       },
     });
 

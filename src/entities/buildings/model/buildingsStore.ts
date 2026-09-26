@@ -21,6 +21,10 @@ type BuildingsState = {
     owner: Owner,
   ) => string | null;
   damageBuilding: (id: string, damage: number) => void;
+  /** Восстанавливает HP, не выше максимума. */
+  repairBuilding: (id: string, hp: number) => void;
+  /** Сносит здание: для систем это то же разрушение, без возврата ресурсов. */
+  demolishBuilding: (id: string) => void;
   getBuildingAt: (x: number, y: number) => Building | null;
   getEconomicBuildings: (owner: ParticipantId) => Building[];
   getLimitBuildings: (owner: ParticipantId) => SupplyBuilding[];
@@ -71,6 +75,29 @@ export const useBuildingsStore = create<BuildingsState>()(
           owner: building.owner,
         });
       }
+    },
+
+    repairBuilding: (id, hp) =>
+      set(state => {
+        const building = state.buildings[id];
+        if (building && hp > 0) {
+          building.hp = Math.min(building.maxHp, building.hp + hp);
+        }
+      }),
+
+    demolishBuilding: id => {
+      const building = get().buildings[id];
+      if (!building) return;
+
+      set(state => {
+        delete state.buildings[id];
+      });
+
+      gameEvents.emit({
+        type: 'BUILDING_DESTROYED',
+        building,
+        owner: building.owner,
+      });
     },
 
     getBuildingAt: (x, y) => {

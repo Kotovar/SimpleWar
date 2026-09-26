@@ -1,5 +1,5 @@
 import type { CommandResult, ParticipantId } from '@shared/config';
-import { gameEvents, ok, reject } from '@shared/lib';
+import { calculateTurnIncome, gameEvents, ok, reject } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
@@ -8,15 +8,18 @@ import { useEconomyStore } from '@entities/economies';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand, useJournalStore } from '@entities/journals';
 import { eliminateParticipant } from '../model/gameLoopStore';
-import { calculateIncome } from './calculateIncome';
 
 const validateAndEndTurn = (actor: ParticipantId): CommandResult => {
   const turnRejection = getTurnRejection(actor);
   if (turnRejection) return reject(turnRejection);
 
-  const income = calculateIncome(
+  // Добыча в конце своего хода: рабочий тратит на неё рабочее действие.
+  const units = useUnitsStore.getState();
+  const { income, miners } = calculateTurnIncome(
     useBuildingsStore.getState().getEconomicBuildings(actor),
+    Object.values(units.units).filter(({ owner }) => owner === actor),
   );
+  for (const id of miners) units.changeBuildPoints(id);
   useEconomyStore.getState().addResources(actor, income);
 
   useGameLoopStore.getState().endTurn();
