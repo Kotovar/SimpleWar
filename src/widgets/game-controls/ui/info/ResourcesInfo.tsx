@@ -30,14 +30,17 @@ const Stat = ({ icon, label, value, extra, tone }: StatProps) => (
 export const ResourcesInfo = () => {
   const { resources, populationCap } = useEconomySelectors();
   const { getEconomicBuildings } = useBuildingsSelectors();
-  const { humanId } = useGameLoopSelectors();
+  const { humanId, activePlayer } = useGameLoopSelectors();
   const units = useUnitsStore(state => state.units);
   if (!humanId) return null;
 
-  // Прогноз, если закончить ход сейчас: добыча идёт только с рабочими.
+  // Прогноз на конец своего хода: добыча идёт только с рабочими. В чужой
+  // ход рабочие действия уже потрачены добычей и восстановятся к своему
+  // ходу, поэтому прогноз считает их восстановленными.
   const income = calculateIncome(
     getEconomicBuildings(humanId),
     Object.values(units).filter(({ owner }) => owner === humanId),
+    { rested: activePlayer !== humanId },
   );
   const { occupied, max } = populationCap[humanId];
 

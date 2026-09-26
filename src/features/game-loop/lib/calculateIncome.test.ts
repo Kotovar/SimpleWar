@@ -72,4 +72,16 @@ describe('calculateIncome', () => {
       wood: 0,
     });
   });
+
+  it('forecast outside own turn counts on restored work actions', () => {
+    const mine = building('mine', 1);
+    const spent = [miner(mine, { buildPoints: 0 })];
+
+    expect(calculateIncome([mine], spent)).toEqual({ gold: 0, wood: 0 });
+    expect(calculateIncome([mine], spent, { rested: true })).toEqual({
+      gold: 15,
+      wood: 0,
+    });
+    expect(spent[0]).toMatchObject({ buildPoints: 0 });
+  });
 });
