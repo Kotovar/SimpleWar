@@ -8,9 +8,23 @@ import { calculateTurnIncome } from '@shared/lib';
  *
  * @param buildings - Здания участника.
  * @param units - Юниты участника; без них ресурсные здания ничего не дают.
+ * @param options.rested - Считать, что рабочие действия восстановлены: так
+ *   прогноз вне своего хода показывает доход следующего своего хода, а не
+ *   уже потраченную добычу.
  * @returns Количество золота и древесины без изменения входных данных.
  */
 export const calculateIncome = (
   buildings: Building[],
   units: Unit[] = [],
-): Resources => calculateTurnIncome(buildings, units).income;
+  { rested = false }: { rested?: boolean } = {},
+): Resources =>
+  calculateTurnIncome(
+    buildings,
+    rested
+      ? units.map(unit =>
+          unit.role === 'civil'
+            ? { ...unit, buildPoints: unit.maxBuildPoints }
+            : unit,
+        )
+      : units,
+  ).income;
