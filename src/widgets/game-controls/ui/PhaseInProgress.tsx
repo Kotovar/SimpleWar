@@ -67,20 +67,10 @@ type Props = {
   minimap?: ReactNode;
 };
 
-export const PhaseInProgress = ({ minimap }: Props) => {
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
-
-  const {
-    selection,
-    terrainSelection,
-    unitsSelection,
-    buildingsSelection,
-    clearSelection,
-  } = useSelectionSelectors();
-  const { resetStore: clearMovement } = useMovementStore();
-  const { resetStore: clearHighlight } = useHighlightStore();
-
+/** Выбранные объекты и рельеф, доступные смотрящему. */
+const useKnownSelection = () => {
+  const { selection, terrainSelection, unitsSelection, buildingsSelection } =
+    useSelectionSelectors();
   const { humanId } = useGameLoopSelectors();
   const viewer = useMapViewer(humanId);
   const knowledge = useParticipantKnowledge(viewer === 'world' ? null : viewer);
@@ -104,6 +94,20 @@ export const PhaseInProgress = ({ minimap }: Props) => {
   const cell: Cell | null =
     realCell && knownType ? { ...realCell, type: knownType } : null;
   const isUnknownCell = !!realCell && !knownType;
+
+  return { selection, cell, unit, building, isUnknownCell };
+};
+
+export const PhaseInProgress = ({ minimap }: Props) => {
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  const { selection, cell, unit, building, isUnknownCell } =
+    useKnownSelection();
+  const { clearSelection } = useSelectionSelectors();
+  const { resetStore: clearMovement } = useMovementStore();
+  const { resetStore: clearHighlight } = useHighlightStore();
+  const { humanId } = useGameLoopSelectors();
 
   const clearInteraction = () => {
     clearSelection();
