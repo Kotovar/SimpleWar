@@ -1,8 +1,10 @@
 import type { Owner, Position } from '@shared/config';
 import { getEnemyTargets } from './getEnemyTargets';
+import { isVisibleTo } from './createKnownMovementGrid';
 
 /**
- * Возвращает вражеские цели в пределах манхэттенской дальности атаки.
+ * Возвращает видимые стороне вражеские цели в пределах манхэттенской
+ * дальности атаки. Скрытый враг целью не является.
  *
  * @param unitPosition - Позиция атакующего.
  * @param attackRange - Дальность атаки в клетках.
@@ -19,6 +21,6 @@ export const getAttackableTargets = (
   return targets.filter(target => {
     const dist =
       Math.abs(unitPosition.x - target.x) + Math.abs(unitPosition.y - target.y);
-    return dist <= attackRange;
+    return dist <= attackRange && isVisibleTo(owner, target.x, target.y);
   });
 };

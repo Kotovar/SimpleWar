@@ -1,4 +1,4 @@
-import type { Owner } from './common';
+import type { CellType, Owner } from './common';
 
 /**
  * Цвета стороны: `color` — одежда, крыши и флаги, `shade` — их затенённая
@@ -102,4 +102,26 @@ export const TERRAIN = {
   colorMountainSnow: '#edf0df',
   colorSelectedTerrain: 'hsla(241, 32%, 55%, 0.56)',
   lineThickness: 1,
+};
+
+/** Туман войны: затемнение разведанного и заливка неизвестного. */
+export const FOG = {
+  /** Разведано, но не видно сейчас: рельеф читается, объекты приглушены. */
+  explored: 'rgba(12, 16, 22, 0.52)',
+  /** Никогда не разведано: сплошная заливка без намёка на рельеф. */
+  unknown: '#11161c',
+  /** Отметка снимка здания: сведения устарели. */
+  snapshotMark: 'rgba(230, 236, 240, 0.9)',
+  snapshotMarkBackground: 'rgba(20, 26, 32, 0.8)',
+};
+
+/** Цвета местности на мини-карте: плоские, без деталей основной карты. */
+export const MINIMAP_TERRAIN: Record<CellType, string> = {
+  grass: '#5b974c',
+  hill: '#8f9b5c',
+  swamp: '#6a7f4e',
+  mountain: '#8b928c',
+  water: '#2c6fb2',
+  forest: '#2f6a50',
+  gold: '#d8b04a',
 };

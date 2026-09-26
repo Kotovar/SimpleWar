@@ -3,10 +3,10 @@ import { gameEvents, withDevtools } from '@shared/lib';
 import type { Position } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
-import { useMapStore } from '@entities/maps';
 import {
   getReachableCells,
-  createMovementGrid,
+  createKnownMovementGrid,
+  TURN_UNKNOWN_COST,
   getAttackableTargets,
 } from '../lib';
 
@@ -31,10 +31,11 @@ export const useMovementStore = create<MovementState>()(
         unitId in units ? unit : useBuildingsStore.getState().buildings[unitId];
       if (!entity) return;
 
-      const grid = useMapStore.getState().grid;
+      // Клетки движения — по известной владельцу карте: скрытые юниты
+      // и скрытые изменения рельефа подсветку не меняют.
       const reachable = unit
         ? getReachableCells(
-            createMovementGrid(grid),
+            createKnownMovementGrid(unit.owner, TURN_UNKNOWN_COST),
             unit.x,
             unit.y,
             unit.movePoints,

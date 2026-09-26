@@ -1,7 +1,15 @@
 import type { CommandResult, ParticipantId } from '@shared/config';
-import { gameEvents, isHostile, ok, reject } from '@shared/lib';
+import {
+  gameEvents,
+  getSightSources,
+  isCellVisible,
+  isHostile,
+  ok,
+  reject,
+} from '@shared/lib';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
+import { useMapStore } from '@entities/maps';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand } from '@entities/journals';
 
@@ -41,6 +49,16 @@ const validateAndAttack = ({
   const target = targetId in unitsStore.units ? targetUnit : targetBuilding;
 
   if (!target) return reject('notFound');
+  // Скрытая цель неотличима от несуществующей: отказ ничего не раскрывает.
+  const sources = getSightSources(
+    actor,
+    [
+      ...Object.values(unitsStore.units),
+      ...Object.values(buildingsStore.buildings),
+    ],
+    useMapStore.getState().grid,
+  );
+  if (!isCellVisible(sources, target.x, target.y)) return reject('notFound');
   if (!isHostile(actor, target.owner)) return reject('target');
   const distance =
     Math.abs(attacker.x - target.x) + Math.abs(attacker.y - target.y);

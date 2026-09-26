@@ -3,8 +3,23 @@ import type { CellType } from './common';
 /** Размер клетки в пикселях. */
 export const CELL_SIZE = 32;
 
-/** Границы масштаба карты: клетка мельче 18 px нечитаема, крупнее 64 px не даёт обзора. */
-export const CELL_SIZE_LIMITS = { min: 18, max: 64, step: 1.15 };
+/**
+ * Границы масштаба карты. Мелкая клетка нужна для обзора всей большой карты,
+ * крупнее 64 px не даёт обзора.
+ */
+export const CELL_SIZE_LIMITS = { min: 6, max: 64, step: 1.15 };
+
+/**
+ * Насколько камера может выйти за край мира, CSS-пиксели: крайние клетки
+ * выводятся из-под кнопок камеры поверх карты.
+ */
+export const CAMERA_EDGE_MARGIN = 64;
+
+/**
+ * Допустимая сторона карты в клетках. Больший или невалидный размер
+ * отклоняется до генерации, то есть до выделения памяти под клетки.
+ */
+export const MAP_SIDE_LIMIT = 100;
 
 /** Размеры карт для каждого пресета в клетках. */
 export const MAP_PRESETS = {
@@ -12,6 +27,8 @@ export const MAP_PRESETS = {
   medium: { cols: 24, rows: 24 },
   large: { cols: 30, rows: 30 },
   extra: { cols: 40, rows: 40 },
+  wide: { cols: 100, rows: 60 },
+  huge: { cols: 100, rows: 100 },
 };
 
 /** Человекочитаемые названия пресетов карт. */
@@ -20,6 +37,8 @@ export const MAP_PRESET_LABELS: Record<keyof typeof MAP_PRESETS, string> = {
   medium: 'Средняя',
   large: 'Большая',
   extra: 'Огромная',
+  wide: 'Широкая',
+  huge: 'Гигантская',
 };
 
 /**

@@ -1,16 +1,18 @@
 import { useEffect, useRef, type RefObject } from 'react';
-import type { Building, Owner, Unit } from '@shared/config';
+import type { Owner } from '@shared/config';
 import {
   drawEffect,
   EFFECT_DURATION,
   renderEntitiesLayer,
+  renderSnapshots,
   withClear,
   type CellOffsets,
   type Effect,
   type EffectLayer,
+  type Scene,
 } from '@widgets/map/lib';
 import { setupCanvas } from './getCtx';
-import { useDevicePixelRatio } from './useDevicePixelRatio';
+import type { MapView } from './useMapView';
 
 const MOVE_DURATION = 220;
 const SPAWN_DURATION = 420;
@@ -24,57 +26,58 @@ type Tracked = { x: number; y: number; hp: number };
 
 type Props = {
   ref: RefObject<HTMLCanvasElement | null>;
-  buildings: Record<string, Building>;
-  units: Record<string, Unit>;
-  cellSize: number;
+  scene: Scene;
+  /**
+   * ID всех объектов мира. Нужны только чтобы отличить гибель от ухода
+   * из обзора и найм от появления в обзоре; сами объекты не рисуются.
+   */
+  worldIds: ReadonlySet<string>;
+  /** Видна ли клетка смотрящему: эффекты только в доступной зоне. */
+  isVisible: (x: number, y: number) => boolean;
   humanId: Owner | null;
-  width: number;
-  height: number;
+  view: MapView;
 };
 
 /**
- * Рисует слой сущностей и оживляет его изменения состояния.
+ * Рисует слой объектов сцены и оживляет его изменения.
  *
- * Сравнивает новое состояние сторов с предыдущим кадром: сдвиг клетки
- * превращается в плавный переезд, потеря HP — во вспышку с числом урона,
- * исчезновение сущности — в эффект гибели. Механику это не меняет:
- * сторы уже обновлены, анимируется только картинка.
+ * Сравнивает сцену с предыдущим кадром: сдвиг клетки превращается в плавный
+ * переезд, потеря HP — во вспышку с уроном, гибель — в эффект гибели.
+ * Объект, ушедший в туман или вышедший из него, просто исчезает или
+ * появляется: по анимации нельзя узнать о скрытых событиях.
  *
- * @param props.ref - Холст сущностей.
- * @param props.buildings - Текущее состояние зданий.
- * @param props.units - Текущее состояние юнитов.
- * @param props.cellSize - Размер клетки в пикселях.
+ * @param props.ref - Холст объектов.
+ * @param props.scene - Разрешённые для рисования объекты и снимки.
+ * @param props.worldIds - ID объектов мира для различения гибели и ухода.
+ * @param props.isVisible - Проверка видимости клетки.
  * @param props.humanId - Участник, которым управляет интерфейс.
- * @param props.width - Ширина холста в CSS-пикселях.
- * @param props.height - Высота холста в CSS-пикселях.
+ * @param props.view - Камера карты.
  */
 export const useEntitiesLayer = ({
   ref,
-  buildings,
-  units,
-  cellSize,
+  scene,
+  worldIds,
+  isVisible,
   humanId,
-  width,
-  height,
+  view,
 }: Props) => {
   const tracked = useRef(new Map<string, Tracked>());
+  const known = useRef<ReadonlySet<string>>(new Set());
   const moves = useRef(
     new Map<string, { fromX: number; fromY: number; start: number }>(),
   );
   const spawns = useRef(new Map<string, number>());
-  const pixelRatio = useDevicePixelRatio();
   const effects = useRef<Effect[]>([]);
   const frame = useRef(0);
   const isFirstRun = useRef(true);
 
-  useEffect(() => {
-    const ctx = setupCanvas(ref, width, height);
-    if (!ctx) return;
+  const { buildings, units, snapshots } = scene;
 
+  // Сравнение состава — только при изменении сцены, не при сдвиге камеры.
+  useEffect(() => {
     const now = performance.now();
     const alive = new Set<string>();
 
-    // Снимок остаётся в ref между обновлениями сторов и сменами размера холста.
     [...Object.values(buildings), ...Object.values(units)].forEach(entity => {
       alive.add(entity.id);
       const before = tracked.current.get(entity.id);
@@ -84,9 +87,9 @@ export const useEntitiesLayer = ({
         hp: entity.hp,
       });
 
-      // Первый кадр партии только запоминает состав: анимировать нечего.
       if (!before) {
-        if (!isFirstRun.current) {
+        // Эффект найма — только для действительно нового объекта мира.
+        if (!isFirstRun.current && !known.current.has(entity.id)) {
           spawns.current.set(entity.id, now);
           effects.current.push({
             x: entity.x,
@@ -95,7 +98,6 @@ export const useEntitiesLayer = ({
             start: now,
           });
         }
-
         return;
       }
 
@@ -122,8 +124,9 @@ export const useEntitiesLayer = ({
 
       tracked.current.delete(id);
       moves.current.delete(id);
-
       spawns.current.delete(id);
+      // Ушёл в туман — не гибель; гибель показываем только в обзоре.
+      if (worldIds.has(id) || !isVisible(before.x, before.y)) return;
       effects.current.push({
         x: before.x,
         y: before.y,
@@ -133,7 +136,14 @@ export const useEntitiesLayer = ({
       });
     });
 
+    known.current = worldIds;
     isFirstRun.current = false;
+  }, [buildings, isVisible, units, worldIds]);
+
+  useEffect(() => {
+    const { cellSize, viewport, offset, range } = view;
+    const ctx = setupCanvas(ref, viewport.width, viewport.height, offset);
+    if (!ctx) return;
 
     const draw = () => {
       const time = performance.now();
@@ -187,7 +197,16 @@ export const useEntitiesLayer = ({
 
       withClear(ctx, () => {
         drawEffects('under');
-        renderEntitiesLayer(ctx, buildings, units, cellSize, offsets, humanId);
+        renderSnapshots(ctx, snapshots, cellSize, range);
+        renderEntitiesLayer(
+          ctx,
+          buildings,
+          units,
+          cellSize,
+          offsets,
+          humanId,
+          range,
+        );
         drawEffects('over');
       });
 
@@ -204,5 +223,5 @@ export const useEntitiesLayer = ({
     draw();
 
     return () => cancelAnimationFrame(frame.current);
-  }, [buildings, cellSize, humanId, height, pixelRatio, ref, units, width]);
+  }, [buildings, humanId, ref, snapshots, units, view]);
 };

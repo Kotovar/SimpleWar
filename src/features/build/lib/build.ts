@@ -8,7 +8,9 @@ import {
 import {
   canSpawnBuilding,
   failure,
+  getSightSources,
   isBuildableTerrain,
+  isCellVisible,
   ok,
   reject,
 } from '@shared/lib';
@@ -57,6 +59,14 @@ const validateAndBuild = (
   }
   if (!isBuildableTerrain(config.requiredField, cell.type)) {
     return reject('terrain');
+  }
+  const { grid } = useMapStore.getState();
+  const viewers = [
+    ...Object.values(useUnitsStore.getState().units),
+    ...Object.values(useBuildingsStore.getState().buildings),
+  ];
+  if (!isCellVisible(getSightSources(actor, viewers, grid), x, y)) {
+    return reject('hidden');
   }
   // Рабочий строит на любой из восьми соседних клеток.
   if (Math.max(Math.abs(worker.x - x), Math.abs(worker.y - y)) !== 1) {

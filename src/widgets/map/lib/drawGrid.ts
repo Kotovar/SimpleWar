@@ -1,12 +1,10 @@
 import type { Cell } from '@shared/config';
 import { GRID } from '@shared/config';
-import { sample, smoothNoise } from '@shared/lib';
+import { sample, smoothNoise, type CellRange } from '@shared/lib';
+import { forEachCellIn, getFullRange } from './cellRange';
 import { drawGroundDetails } from './drawGroundDetails';
-import {
-  buildSilhouette,
-  drawShallows,
-  fillSilhouette,
-} from './drawSilhouette';
+import { buildSilhouette, fillSilhouette } from './drawSilhouette';
+import { drawShallows } from './drawShallows';
 
 /**
  * Плотность буфера слоя: масштаб, который задал `setupCanvas`.
@@ -58,74 +56,66 @@ const drawWaterRipples = (
   grid: Cell[][],
   water: Path2D,
   cellSize: number,
+  range: CellRange,
 ) => {
   ctx.save();
   ctx.clip(water);
   ctx.lineCap = 'round';
   ctx.lineWidth = cellSize * 0.05;
 
-  grid.forEach((row, y) =>
-    row.forEach((cell, x) => {
-      if (cell.type !== 'water') return;
-      const seed = sample(x, y, 613);
-      if (seed > 0.5) return;
+  forEachCellIn(grid, range, (cell, x, y) => {
+    if (cell.type !== 'water') return;
+    const seed = sample(x, y, 613);
+    if (seed > 0.5) return;
 
-      const left = x * cellSize;
-      const top = y * cellSize;
-      const cx = left + (0.25 + sample(x, y, 271) * 0.5) * cellSize;
-      const cy = top + (0.25 + sample(x, y, 457) * 0.5) * cellSize;
-      const radius = cellSize * (0.16 + seed * 0.22);
+    const left = x * cellSize;
+    const top = y * cellSize;
+    const cx = left + (0.25 + sample(x, y, 271) * 0.5) * cellSize;
+    const cy = top + (0.25 + sample(x, y, 457) * 0.5) * cellSize;
+    const radius = cellSize * (0.16 + seed * 0.22);
 
-      ctx.strokeStyle = 'rgba(226, 240, 255, 0.24)';
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius, Math.PI * 1.15, Math.PI * 1.85);
-      ctx.stroke();
+    ctx.strokeStyle = 'rgba(226, 240, 255, 0.24)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, Math.PI * 1.15, Math.PI * 1.85);
+    ctx.stroke();
 
-      ctx.strokeStyle = 'rgba(16, 66, 120, 0.22)';
-      ctx.beginPath();
-      ctx.arc(
-        cx,
-        cy + radius * 0.7,
-        radius * 0.7,
-        Math.PI * 1.2,
-        Math.PI * 1.8,
-      );
-      ctx.stroke();
-    }),
-  );
+    ctx.strokeStyle = 'rgba(16, 66, 120, 0.22)';
+    ctx.beginPath();
+    ctx.arc(cx, cy + radius * 0.7, radius * 0.7, Math.PI * 1.2, Math.PI * 1.8);
+    ctx.stroke();
+  });
 
   ctx.restore();
 };
 
 export const drawBackgroundAndGrid = (
   ctx: CanvasRenderingContext2D,
-  gridSize: number,
+  _gridSize: number,
   noise: number[][],
   grid: Cell[][],
   cellSize: number,
   builtCells: ReadonlySet<string> = new Set(),
+  /** Рисуемые клетки с запасом по краям окна; без него — вся карта. */
+  range: CellRange = getFullRange(grid),
 ) => {
   const ratio = getPixelRatio(ctx);
 
-  grid.forEach((row, y) =>
-    row.forEach((_, x) => {
-      drawCellBackground(
-        ctx,
-        x,
-        y,
-        cellSize,
-        (noise[y]?.[x] ?? 0) * 0.5,
-        ratio,
-      );
-    }),
-  );
+  forEachCellIn(grid, range, (_, x, y) => {
+    drawCellBackground(ctx, x, y, cellSize, (noise[y]?.[x] ?? 0) * 0.5, ratio);
+  });
 
-  drawGroundDetails(ctx, grid, cellSize, builtCells);
+  drawGroundDetails(ctx, grid, cellSize, builtCells, range);
 
   // Подложки под лесом и скалами: массив читается целиком, а не набором значков.
   fillSilhouette(
     ctx,
-    buildSilhouette(grid, cellSize, cell => cell.type === 'forest', 0.34),
+    buildSilhouette(
+      grid,
+      cellSize,
+      cell => cell.type === 'forest',
+      0.34,
+      range,
+    ),
     GRID.colorForestFloor,
     cellSize * ratio,
   );
@@ -136,6 +126,7 @@ export const drawBackgroundAndGrid = (
       cellSize,
       cell => cell.type === 'mountain' || cell.type === 'gold',
       0.3,
+      range,
     ),
     GRID.colorRockFloor,
     cellSize * ratio,
@@ -144,12 +135,18 @@ export const drawBackgroundAndGrid = (
   // Топь лежит под водой: вогнутые берега заходят в соседние клетки.
   fillSilhouette(
     ctx,
-    buildSilhouette(grid, cellSize, cell => cell.type === 'swamp', 0.34),
+    buildSilhouette(grid, cellSize, cell => cell.type === 'swamp', 0.34, range),
     GRID.colorSwampFloor,
     cellSize * ratio,
   );
 
-  const water = buildSilhouette(grid, cellSize, cell => cell.type === 'water');
+  const water = buildSilhouette(
+    grid,
+    cellSize,
+    cell => cell.type === 'water',
+    undefined,
+    range,
+  );
 
   ctx.save();
   const { r, g, b } = GRID.colorWater;
@@ -173,25 +170,27 @@ export const drawBackgroundAndGrid = (
   }
   ctx.restore();
 
-  const columns = grid[0]?.length ?? gridSize;
-  if (grid.some(row => row.some(cell => cell.type === 'water'))) {
-    drawShallows(ctx, water, columns, grid.length, cellSize);
-  }
-  drawWaterRipples(ctx, grid, water, cellSize);
+  let hasWater = false;
+  forEachCellIn(grid, range, cell => {
+    hasWater ||= cell.type === 'water';
+  });
+  if (hasWater) drawShallows(ctx, water, range, cellSize);
+  drawWaterRipples(ctx, grid, water, cellSize, range);
 
   // Сетка поверх: каждая линия — ровно один пиксель экрана без сглаживания,
-  // поэтому все линии одинаковой толщины на любом масштабе.
-  const width = (grid[0]?.length ?? gridSize) * cellSize;
-  const height = grid.length * cellSize;
+  // поэтому все линии одинаковой толщины на любом масштабе. Число линий
+  // по осям своё: на прямоугольной карте строк и колонок разное количество.
   const lineWidth = GRID.lineThickness / ratio;
+  const top = range.y0 * cellSize;
+  const left = range.x0 * cellSize;
+  const width = (range.x1 - range.x0) * cellSize;
+  const height = (range.y1 - range.y0) * cellSize;
 
   ctx.fillStyle = GRID.lineColor;
-  // Число линий по каждой оси своё: на прямоугольной карте строк и колонок
-  // разное количество.
-  for (let x = 0; x <= columns; x++) {
-    ctx.fillRect(snap(x * cellSize, ratio), 0, lineWidth, height);
+  for (let x = range.x0; x <= range.x1; x++) {
+    ctx.fillRect(snap(x * cellSize, ratio), top, lineWidth, height);
   }
-  for (let y = 0; y <= grid.length; y++) {
-    ctx.fillRect(0, snap(y * cellSize, ratio), width, lineWidth);
+  for (let y = range.y0; y <= range.y1; y++) {
+    ctx.fillRect(left, snap(y * cellSize, ratio), width, lineWidth);
   }
 };

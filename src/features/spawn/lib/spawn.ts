@@ -7,7 +7,9 @@ import {
 import {
   canSpawnUnit,
   failure,
+  getSightSources,
   isBuildableTerrain,
+  isCellVisible,
   ok,
   reject,
 } from '@shared/lib';
@@ -57,6 +59,14 @@ const validateAndSpawn = (
     return reject('bounds');
   }
   if (!isBuildableTerrain('grass', cell.type)) return reject('terrain');
+  const { grid } = useMapStore.getState();
+  const viewers = [
+    ...Object.values(useUnitsStore.getState().units),
+    ...Object.values(useBuildingsStore.getState().buildings),
+  ];
+  if (!isCellVisible(getSightSources(actor, viewers, grid), x, y)) {
+    return reject('hidden');
+  }
   if (Math.max(Math.abs(building.x - x), Math.abs(building.y - y)) !== 1) {
     return reject('distance');
   }
