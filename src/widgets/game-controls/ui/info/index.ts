@@ -5,3 +5,4 @@ export * from './SelectedEntityInfo';
 export * from './WorkerBuildOptions';
 export * from './UnitOptions';
 export * from './AiTurnBanner';
+export * from './DebugPanel';

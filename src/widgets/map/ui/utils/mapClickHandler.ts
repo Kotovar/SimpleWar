@@ -1,176 +1,163 @@
-import type { Building, Owner, Position, Unit } from '@shared/config';
+import type { Building, Position, Unit } from '@shared/config';
+import type { MapClickContext } from './mapClickContext';
 
-export type MapClickContext = {
-  unit: Unit | null;
-  building: Building | null;
-  selectedUnit: Unit | null;
-  selectedBuilding: Building | null;
-  reachableCells: Position[] | null;
-  attackableTargets: Position[] | null;
-  buildableCells: Position[] | null;
-  spawnableCells: Position[] | null;
-  isClickOnCurrentSelection: (x: number, y: number) => boolean;
-  selectUnit: (id: string) => void;
-  selectBuilding: (id: string) => void;
-  selectCell: (x: number, y: number) => void;
-  calculateMovement: (unitId: string) => void;
-  moveUnit: (unitId: string, x: number, y: number) => void;
-  attack: (attackerId: string, targetId: string) => void;
-  build: (unitId: string, x: number, y: number, owner: Owner) => void;
-  spawn: (buildingId: string, x: number, y: number, owner: Owner) => void;
-  clearSelection: () => void;
-  clearHighlight: () => void;
-  clearMovement: () => void;
-  clearSelectedBuildingForSpawn: () => void;
+export type { MapClickContext };
+
+const isHighlighted = (cells: Position[] | null, x: number, y: number) =>
+  !!cells?.some(cell => cell.x === x && cell.y === y);
+
+/** Полный сброс интерактивного выбора: выбор, движение и подсветка стройки/найма. */
+const resetInteraction = ({ ui }: MapClickContext) => {
+  ui.clearSelection();
+  ui.clearMovement();
+  ui.clearHighlight();
 };
 
-const isTargetInHighlightedCells = (
-  highlightedCells: Position[] | null,
-  gridX: number,
-  gridY: number,
-) => !!highlightedCells?.some(cell => cell.x === gridX && cell.y === gridY);
+// Выбор объекта под курсором. Подсветку стройки/найма здесь не трогаем:
+// её снимает вызывающая ветка, если она была активна.
+const selectClicked = (x: number, y: number, ctx: MapClickContext) => {
+  const { clicked, ui, humanId } = ctx;
+  ui.clearSelection();
+  ui.clearMovement();
 
-const resetSelection = (ctx: MapClickContext) => {
-  ctx.clearSelection();
-  ctx.clearMovement();
-  ctx.clearHighlight();
-};
-
-const handleClickWithoutSelection = (
-  gridX: number,
-  gridY: number,
-  ctx: MapClickContext,
-) => {
-  const { unit, building } = ctx;
-  ctx.clearSelection();
-  ctx.clearMovement();
-
-  if (building) {
-    ctx.selectBuilding(building.id);
-    if (building.owner === 'player' && building.role === 'combat') {
-      // TODO: Поменять название функции
-      ctx.calculateMovement(building.id);
+  if (clicked.building) {
+    ui.selectBuilding(clicked.building.id);
+    if (
+      clicked.building.owner === humanId &&
+      clicked.building.role === 'combat'
+    ) {
+      ui.calculateActionHighlights(clicked.building.id);
     }
     return;
   }
 
-  if (unit) {
-    ctx.selectUnit(unit.id);
-    if (unit.owner === 'player') ctx.calculateMovement(unit.id);
+  if (clicked.unit) {
+    ui.selectUnit(clicked.unit.id);
+    if (clicked.unit.owner === humanId) {
+      ui.calculateActionHighlights(clicked.unit.id);
+    }
     return;
   }
 
-  ctx.selectCell(gridX, gridY);
+  ui.selectCell(x, y);
 };
 
-const handleClickWithPlayerUnitSelected = (
-  selectedUnit: Unit,
-  gridX: number,
-  gridY: number,
+const clickWithOwnUnit = (
+  unit: Unit,
+  x: number,
+  y: number,
   ctx: MapClickContext,
 ) => {
-  const target = ctx.unit ?? ctx.building;
+  const { clicked, selection, highlights, commands, humanId: actor } = ctx;
+  const target = clicked.unit ?? clicked.building;
 
-  if (
-    selectedUnit.movePoints > 0 &&
-    isTargetInHighlightedCells(ctx.reachableCells, gridX, gridY)
-  ) {
-    ctx.moveUnit(selectedUnit.id, gridX, gridY);
-    resetSelection(ctx);
+  if (unit.movePoints > 0 && isHighlighted(highlights.reachable, x, y)) {
+    commands.move({ actor, unitId: unit.id, x, y });
+    resetInteraction(ctx);
     return;
   }
 
   if (
     target &&
-    selectedUnit.role !== 'civil' &&
-    selectedUnit.attackPoints > 0 &&
-    isTargetInHighlightedCells(ctx.attackableTargets, gridX, gridY)
+    unit.role !== 'civil' &&
+    unit.attackPoints > 0 &&
+    isHighlighted(highlights.attackable, x, y)
   ) {
-    ctx.attack(selectedUnit.id, target.id);
-    resetSelection(ctx);
+    commands.attack({ actor, attackerId: unit.id, targetId: target.id });
+    resetInteraction(ctx);
     return;
   }
 
   if (
-    selectedUnit.type === 'worker' &&
-    selectedUnit.role === 'civil' &&
-    isTargetInHighlightedCells(ctx.buildableCells, gridX, gridY)
+    unit.type === 'worker' &&
+    unit.role === 'civil' &&
+    selection.buildingTypeToPlace &&
+    isHighlighted(highlights.buildable, x, y)
   ) {
-    ctx.build(selectedUnit.id, gridX, gridY, 'player');
-    resetSelection(ctx);
+    commands.build({
+      actor,
+      workerId: unit.id,
+      buildingType: selection.buildingTypeToPlace,
+      x,
+      y,
+    });
+    resetInteraction(ctx);
     return;
   }
 
-  ctx.clearHighlight();
-  handleClickWithoutSelection(gridX, gridY, ctx);
+  ctx.ui.clearHighlight();
+  selectClicked(x, y, ctx);
 };
 
-const handleClickWithPlayerBuildingSelected = (
-  selectedBuilding: Building,
-  gridX: number,
-  gridY: number,
+const clickWithOwnBuilding = (
+  building: Building,
+  x: number,
+  y: number,
   ctx: MapClickContext,
 ) => {
-  const target = ctx.unit ?? ctx.building;
+  const { clicked, selection, highlights, commands, humanId: actor } = ctx;
+  const target = clicked.unit ?? clicked.building;
 
   if (
-    selectedBuilding.role === 'combat' &&
+    building.role === 'combat' &&
     target &&
-    isTargetInHighlightedCells(ctx.attackableTargets, gridX, gridY)
+    isHighlighted(highlights.attackable, x, y)
   ) {
-    ctx.attack(selectedBuilding.id, target.id);
-    resetSelection(ctx);
+    commands.attack({ actor, attackerId: building.id, targetId: target.id });
+    resetInteraction(ctx);
     return;
   }
 
   if (
-    selectedBuilding.role === 'production' &&
-    selectedBuilding.spawnPoints > 0 &&
-    isTargetInHighlightedCells(ctx.spawnableCells, gridX, gridY)
+    building.role === 'production' &&
+    building.spawnPoints > 0 &&
+    selection.unitTypeToSpawn &&
+    isHighlighted(highlights.spawnable, x, y)
   ) {
-    ctx.spawn(selectedBuilding.id, gridX, gridY, 'player');
-    resetSelection(ctx);
-    ctx.clearSelectedBuildingForSpawn();
+    commands.spawn({
+      actor,
+      buildingId: building.id,
+      unitType: selection.unitTypeToSpawn,
+      x,
+      y,
+    });
+    resetInteraction(ctx);
     return;
   }
 
-  ctx.clearHighlight();
-  handleClickWithoutSelection(gridX, gridY, ctx);
+  ctx.ui.clearHighlight();
+  selectClicked(x, y, ctx);
 };
 
 /**
- * Выполняет действие по подсвеченной клетке или обновляет выделение.
- *
- * Приоритет действий задан порядком проверок: движение, атака,
+ * Переводит клик по клетке в намерение: приказ по подсвеченной клетке
+ * либо смену выбора. Приоритет задан порядком проверок: движение, атака,
  * строительство или найм, затем выбор объекта под курсором.
+ * Результат команды пока не влияет на очистку выбора; сообщение об отказе — S19.
  *
- * @param gridX - Столбец клетки.
- * @param gridY - Строка клетки.
- * @param ctx - Текущее выделение, подсветки и игровые действия.
+ * @param x - Столбец клетки.
+ * @param y - Строка клетки.
+ * @param ctx - Клетка, выбор, подсветка, команды и действия интерфейса.
  */
 export const handleMapCellClick = (
-  gridX: number,
-  gridY: number,
+  x: number,
+  y: number,
   ctx: MapClickContext,
 ) => {
-  const { selectedUnit, selectedBuilding } = ctx;
+  const { unit, building } = ctx.selection;
 
-  // Повторный клик по выделению или любой клик при выбранной вражеской
+  // Повторный клик по выделению или любой клик при выбранной чужой
   // сущности снимает выделение.
+  const selectedOwner = (unit ?? building)?.owner;
   if (
-    ctx.isClickOnCurrentSelection(gridX, gridY) ||
-    selectedUnit?.owner === 'ai' ||
-    selectedBuilding?.owner === 'ai'
+    ctx.selection.isCurrent(x, y) ||
+    (selectedOwner !== undefined && selectedOwner !== ctx.humanId)
   ) {
-    resetSelection(ctx);
+    resetInteraction(ctx);
     return;
   }
 
-  if (selectedUnit) {
-    handleClickWithPlayerUnitSelected(selectedUnit, gridX, gridY, ctx);
-  } else if (selectedBuilding) {
-    handleClickWithPlayerBuildingSelected(selectedBuilding, gridX, gridY, ctx);
-  } else {
-    handleClickWithoutSelection(gridX, gridY, ctx);
-  }
+  if (unit) clickWithOwnUnit(unit, x, y, ctx);
+  else if (building) clickWithOwnBuilding(building, x, y, ctx);
+  else selectClicked(x, y, ctx);
 };

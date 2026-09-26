@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
+import { withDevtools } from '@shared/lib';
 import {
   CELL_SIZE,
   CELL_SIZE_LIMITS,
@@ -26,7 +26,7 @@ type SettingsState = {
 };
 
 export const useSettingsStore = create<SettingsState>()(
-  immer(set => ({
+  withDevtools('settings', set => ({
     gridColumns: MAP_PRESETS.large.cols,
     gridRows: MAP_PRESETS.large.rows,
     cellSize: CELL_SIZE,

@@ -3,6 +3,7 @@ import { GRID, type Cell, type CellType } from '@shared/config';
 import { renderHiDpiCanvas } from '@shared/lib';
 import { drawForest } from './drawForest';
 import { drawGoldOre, drawMountains } from './drawTerrain';
+import { drawHill, drawSwamp } from './drawRelief';
 import styles from './styles.module.css';
 
 const rgb = ({ r, g, b }: { r: number; g: number; b: number }) =>
@@ -10,6 +11,8 @@ const rgb = ({ r, g, b }: { r: number; g: number; b: number }) =>
 
 const GROUND: Record<CellType, string> = {
   grass: rgb(GRID.colorGrass),
+  hill: rgb(GRID.colorGrass),
+  swamp: GRID.colorSwampFloor,
   forest: GRID.colorForestFloor,
   mountain: GRID.colorRockFloor,
   gold: GRID.colorRockFloor,
@@ -87,6 +90,8 @@ export const TerrainPortrait = ({ cell, size = 48 }: Props) => {
       if (type === 'forest') drawForest(ctx, x, y, size);
       if (type === 'mountain') drawMountains(ctx, x, y, size);
       if (type === 'gold') drawGoldOre(ctx, x, y, size);
+      if (type === 'hill') drawHill(ctx, x, y, size);
+      if (type === 'swamp') drawSwamp(ctx, x, y, size);
       ctx.restore();
     });
   }, [size, type, x, y]);

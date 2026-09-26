@@ -13,7 +13,7 @@ const unitCases = [
     config: MILITARY_UNITS_CONFIG.swordsman,
     x: 2,
     y: 5,
-    owner: 'player',
+    owner: 'p1',
   },
   {
     type: 'archer',
@@ -21,7 +21,7 @@ const unitCases = [
     config: MILITARY_UNITS_CONFIG.archer,
     x: 3,
     y: 6,
-    owner: 'ai',
+    owner: 'p2',
   },
   {
     type: 'worker',
@@ -29,7 +29,7 @@ const unitCases = [
     config: CIVIL_UNITS_CONFIG.worker,
     x: 4,
     y: 7,
-    owner: 'player',
+    owner: 'p1',
   },
 ] as const;
 
@@ -55,7 +55,7 @@ describe('createUnit', () => {
   it('даёт стартовому рабочему полные очки хода и строительства', () => {
     const { maxMovePoints, maxBuildPoints } = CIVIL_UNITS_CONFIG.worker;
 
-    expect(createUnit('worker', 0, 0, 'player', true)).toMatchObject({
+    expect(createUnit('worker', 0, 0, 'p1', true)).toMatchObject({
       movePoints: maxMovePoints,
       buildPoints: maxBuildPoints,
     });
@@ -64,13 +64,13 @@ describe('createUnit', () => {
   it('даёт стартовому военному полные очки хода', () => {
     const { maxMovePoints, attackPoints } = MILITARY_UNITS_CONFIG.archer;
 
-    expect(createUnit('archer', 0, 0, 'ai', true)).toMatchObject({
+    expect(createUnit('archer', 0, 0, 'p2', true)).toMatchObject({
       movePoints: maxMovePoints,
       attackPoints,
     });
   });
 
   it('возвращает null для неизвестного типа', () => {
-    expect(createUnit('unknown' as UnitType, 0, 0, 'player', false)).toBeNull();
+    expect(createUnit('unknown' as UnitType, 0, 0, 'p1', false)).toBeNull();
   });
 });

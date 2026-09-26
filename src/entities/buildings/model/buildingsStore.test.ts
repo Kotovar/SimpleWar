@@ -6,7 +6,7 @@ import { useBuildingsStore } from './buildingsStore';
 let events: unknown[];
 let unsubscribe: (() => void) | undefined;
 
-const spawn = (type: BuildingType, owner: Owner = 'player') => {
+const spawn = (type: BuildingType, owner: Owner = 'p1') => {
   const id = useBuildingsStore.getState().spawnBuilding(type, 2, 3, owner);
   if (id === null) throw new Error(`Не удалось создать здание ${type}`);
   return id;
@@ -22,16 +22,16 @@ afterEach(() => unsubscribe?.());
 
 describe('useBuildingsStore', () => {
   it('создаёт здание, находит его по клетке и сообщает о создании', () => {
-    const id = spawn('mine', 'ai');
+    const id = spawn('mine', 'p2');
 
     expect(useBuildingsStore.getState().getBuildingAt(2, 3)).toMatchObject({
       id,
       type: 'mine',
-      owner: 'ai',
+      owner: 'p2',
     });
     expect(useBuildingsStore.getState().getBuildingAt(0, 0)).toBeNull();
     expect(events).toMatchObject([
-      { type: 'BUILDING_SPAWNED', owner: 'ai', building: { type: 'mine' } },
+      { type: 'BUILDING_SPAWNED', owner: 'p2', building: { type: 'mine' } },
     ]);
   });
 
@@ -48,7 +48,7 @@ describe('useBuildingsStore', () => {
       { type: 'BUILDING_SPAWNED' },
       {
         type: 'BUILDING_DESTROYED',
-        owner: 'player',
+        owner: 'p1',
         building: { type: 'base' },
       },
     ]);
@@ -57,21 +57,23 @@ describe('useBuildingsStore', () => {
   it('фильтрует здания по владельцу и роли', () => {
     spawn('base');
     spawn('mine');
-    spawn('sawmill', 'ai');
+    spawn('sawmill', 'p2');
     spawn('farm');
     spawn('barracks');
     spawn('tower');
 
     const store = useBuildingsStore.getState();
-    expect(
-      store.getEconomicBuildings('player').map(({ type }) => type),
-    ).toEqual(['base', 'mine']);
-    expect(store.getLimitBuildings('player').map(({ type }) => type)).toEqual([
+    expect(store.getEconomicBuildings('p1').map(({ type }) => type)).toEqual([
+      'base',
+      'mine',
+    ]);
+    expect(store.getLimitBuildings('p1').map(({ type }) => type)).toEqual([
       'farm',
     ]);
-    expect(
-      store.getProductionBuildings('player').map(({ type }) => type),
-    ).toEqual(['base', 'barracks']);
+    expect(store.getProductionBuildings('p1').map(({ type }) => type)).toEqual([
+      'base',
+      'barracks',
+    ]);
   });
 
   it('расходует и восстанавливает очки действий, очищая выбор спавна', () => {
@@ -79,7 +81,7 @@ describe('useBuildingsStore', () => {
     const baseId = spawn('base');
     const store = useBuildingsStore.getState();
 
-    store.resetBuildingsForNewTurn();
+    store.resetBuildingsForNewTurn('p1');
     store.changeAttackPoints(towerId);
     store.changeAttackPoints(towerId);
     store.changeSpawnPoints(baseId);
@@ -92,7 +94,7 @@ describe('useBuildingsStore', () => {
       spawnPoints: 0,
     });
 
-    useBuildingsStore.getState().resetBuildingsForNewTurn();
+    useBuildingsStore.getState().resetBuildingsForNewTurn('p1');
     expect(useBuildingsStore.getState().buildings[towerId]).toMatchObject({
       attackPoints: 1,
     });
@@ -106,7 +108,7 @@ describe('useBuildingsStore', () => {
     expect(
       useBuildingsStore
         .getState()
-        .spawnBuilding('unknown' as BuildingType, 0, 0, 'player'),
+        .spawnBuilding('unknown' as BuildingType, 0, 0, 'p1'),
     ).toBeNull();
     expect(useBuildingsStore.getState().buildings).toEqual({});
     expect(events).toEqual([]);

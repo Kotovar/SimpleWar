@@ -1,4 +1,11 @@
-import type { Cell, Position } from '@shared/config';
+import {
+  DEFAULT_PARTICIPANTS,
+  MAP_ATTEMPTS,
+  MAX_PARTICIPANTS,
+  MIN_MAP_SIDE,
+  REJECTION_MESSAGE,
+  type Cell,
+} from '@shared/config';
 import { useBuildingsStore } from '@entities/buildings';
 import {
   generateMap,
@@ -10,61 +17,102 @@ import {
 import { useUnitsStore } from '@entities/units';
 import { useSettingsStore } from '@entities/settings';
 import { useGameLoopStore } from '@entities/games';
-import { createMovementPFGrid, getReachableCells } from '@features/pathfinding';
+import { useJournalStore } from '@entities/journals';
+import { failure, reject } from '@shared/lib';
+import { evaluateMap, type StartPosition } from './evaluateMap';
 
-/**
- * Проверяет доступность леса и золота из области, достижимой рабочим.
- *
- * @param grid - Клетки проверяемой карты.
- * @param reachable - Клетки, до которых рабочий может дойти.
- * @returns `true`, если рабочий может строить рядом с обоими ресурсами.
- */
-const hasAccessibleResources = (grid: Cell[][], reachable: Position[]) => {
-  const resources = new Set<'gold' | 'forest'>();
+/** Углы в порядке слотов: левый верхний, правый нижний, правый верхний, левый нижний. */
+export const getStartPositions = (
+  width: number,
+  height: number,
+  count: number,
+) =>
+  [
+    { base: { x: 1, y: 1 }, worker: { x: 2, y: 1 } },
+    {
+      base: { x: width - 2, y: height - 2 },
+      worker: { x: width - 3, y: height - 2 },
+    },
+    { base: { x: width - 2, y: 1 }, worker: { x: width - 3, y: 1 } },
+    { base: { x: 1, y: height - 2 }, worker: { x: 2, y: height - 2 } },
+  ].slice(0, count);
 
-  // Рабочий строит на соседней клетке, в том числе по диагонали.
-  for (const { x, y } of reachable) {
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        const type = grid[y + dy]?.[x + dx]?.type;
-        if (type === 'gold' || type === 'forest') resources.add(type);
-      }
-    }
-    if (resources.size === 2) return true;
+/** Обеспечивает каждому старту одинаково близкий лес и золото после расчистки. */
+export const placeStartResources = (
+  grid: Cell[][],
+  starts: StartPosition[],
+) => {
+  const width = grid[0].length;
+  const height = grid.length;
+  for (const { base } of starts) {
+    const gold =
+      grid[base.y === 1 ? 3 : height - 4][base.x === 1 ? 0 : width - 1];
+    const forest =
+      grid[base.y === 1 ? 0 : height - 1][base.x === 1 ? 3 : width - 4];
+    gold.type = 'gold';
+    forest.type = 'forest';
+    gold.isWalkable = forest.isWalkable = false;
   }
-
-  return false;
 };
 
-/**
- * Подготавливает карту и стартовые объекты перед запуском партии.
- *
- * @returns `true`, если карта прошла проверки и объекты созданы; иначе `false`.
- */
-export const initializeGame = () => {
+/** Проверенная резервная карта после лимита попыток. */
+const fallbackMap = (
+  width: number,
+  height: number,
+  starts: StartPosition[],
+): Cell[][] => {
+  const grid: Cell[][] = Array.from({ length: height }, (_, y) =>
+    Array.from({ length: width }, (_, x) => ({
+      x,
+      y,
+      type: 'grass',
+      isWalkable: true,
+    })),
+  );
+  placeStartResources(grid, starts);
+  return grid;
+};
+
+/** Подготавливает карту и стартовые объекты, если карта прошла оценку. */
+export const initializeGame = (participants = DEFAULT_PARTICIPANTS) => {
   const { gridColumns, gridRows, mapGenerationMode, customSeed } =
     useSettingsStore.getState();
   const { spawnBuilding, buildings } = useBuildingsStore.getState();
   const { spawnUnit } = useUnitsStore.getState();
-  // Повторный вызов не должен пересоздать уже начатую партию.
   if (
     useGameLoopStore.getState().phase !== 'setup' ||
     Object.keys(buildings).length
   )
     return false;
 
-  const fail = (startError: string) => {
+  useJournalStore.getState().newGame();
+  const fail = (startError: string, rejection = reject('map', startError)) => {
     useMapStore.getState().resetStore();
     useGameLoopStore.setState({ phase: 'setup', currentTurn: 0, startError });
+    useJournalStore
+      .getState()
+      .reportError({ type: 'start', actor: null }, 0, rejection);
   };
 
   if (
+    participants.length < 2 ||
+    participants.length > MAX_PARTICIPANTS ||
+    new Set(participants.map(({ id }) => id)).size !== participants.length
+  ) {
+    fail('Для партии нужны от двух до четырёх разных участников.');
+    return false;
+  }
+  const minSide =
+    participants.length === 2 ? MIN_MAP_SIDE.duel : MIN_MAP_SIDE.group;
+  if (
     !Number.isInteger(gridColumns) ||
     !Number.isInteger(gridRows) ||
-    gridColumns < 5 ||
-    gridRows < 5
+    gridColumns < minSide ||
+    gridRows < minSide
   ) {
-    fail('Для старта нужна карта не меньше 5 × 5 клеток.');
+    fail(
+      `Для ${participants.length} участников нужна карта не меньше ${minSide} × ${minSide} клеток.`,
+    );
     return false;
   }
   if (mapGenerationMode === 'fixed' && !isValidSeed(customSeed)) {
@@ -72,49 +120,48 @@ export const initializeGame = () => {
     return false;
   }
 
-  const playerStart = { x: 1, y: 1 };
-  const enemyStart = { x: gridColumns - 2, y: gridRows - 2 };
-  const playerWorker = { x: 2, y: 1 };
-  const enemyWorker = { x: gridColumns - 3, y: gridRows - 2 };
-  // Для заданного сида повторная попытка создала бы ту же карту.
-  const attempts = mapGenerationMode === 'fixed' ? 1 : 10;
+  const starts = getStartPositions(gridColumns, gridRows, participants.length);
+  const initialSeed = mapGenerationMode === 'fixed' ? customSeed : randomSeed();
+  const spawnStarts = () => {
+    for (const [index, { base, worker }] of starts.entries()) {
+      spawnBuilding('base', base.x, base.y, participants[index].id);
+      spawnUnit(
+        'worker',
+        worker.x,
+        worker.y,
+        participants[index].id,
+        index === 0,
+      );
+    }
+  };
 
-  for (let attempt = 0; attempt < attempts; attempt++) {
-    const seed = mapGenerationMode === 'fixed' ? customSeed : randomSeed();
-    useMapStore.getState().setGrid(generateMap(gridColumns, gridRows, seed));
-    prepareStartArea(playerStart.x, playerStart.y);
-    prepareStartArea(enemyStart.x, enemyStart.y);
+  try {
+    for (let attempt = 0; attempt < MAP_ATTEMPTS; attempt++) {
+      const seed =
+        initialSeed > Number.MAX_SAFE_INTEGER - attempt
+          ? attempt - (Number.MAX_SAFE_INTEGER - initialSeed) - 1
+          : initialSeed + attempt;
+      const grid = generateMap(gridColumns, gridRows, seed);
+      for (const { base } of starts) prepareStartArea(grid, base.x, base.y);
+      placeStartResources(grid, starts);
+      if (!evaluateMap(grid, starts).ok) continue;
+      useMapStore.getState().setGrid(grid, initialSeed);
+      spawnStarts();
+      return true;
+    }
 
-    const { grid } = useMapStore.getState();
-    const pfGrid = createMovementPFGrid(grid);
-
-    // Ратуши ещё не созданы, поэтому закрываем их клетки для проверки пути.
-    pfGrid.setWalkableAt(playerStart.x, playerStart.y, false);
-    pfGrid.setWalkableAt(enemyStart.x, enemyStart.y, false);
-
-    // Лимит в число клеток позволяет проверить всю связную область рабочего.
-    const reachable = getReachableCells(
-      pfGrid,
-      playerWorker.x,
-      playerWorker.y,
-      gridColumns * gridRows,
-    );
-    // Обход не включает стартовую клетку рабочего.
-    reachable.push(playerWorker);
-    if (
-      !reachable.some(
-        cell => cell.x === enemyWorker.x && cell.y === enemyWorker.y,
-      )
-    )
-      continue;
-    if (!hasAccessibleResources(grid, reachable)) continue;
-
-    // Создаём объекты только после всех проверок карты.
-    spawnBuilding('base', playerStart.x, playerStart.y, 'player');
-    spawnBuilding('base', enemyStart.x, enemyStart.y, 'ai');
-    spawnUnit('worker', playerWorker.x, playerWorker.y, 'player', true);
-    spawnUnit('worker', enemyWorker.x, enemyWorker.y, 'ai');
-    return true;
+    const grid = fallbackMap(gridColumns, gridRows, starts);
+    if (evaluateMap(grid, starts).ok) {
+      useMapStore.getState().setGrid(grid, initialSeed, true);
+      spawnStarts();
+      return true;
+    }
+  } catch (error) {
+    useBuildingsStore.getState().resetStore();
+    useUnitsStore.getState().resetStore();
+    const detail = error instanceof Error ? error.message : String(error);
+    fail(REJECTION_MESSAGE.failure, failure(detail));
+    return false;
   }
 
   fail(

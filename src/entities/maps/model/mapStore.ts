@@ -1,9 +1,11 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
+import { withDevtools } from '@shared/lib';
 import type { Cell } from '@shared/config';
 
 type MapState = {
   grid: Cell[][];
+  seed: number | null;
+  usedFallback: boolean;
 
   /**
    * Заменяет карту целиком.
@@ -11,7 +13,11 @@ type MapState = {
    * Стор не импортирует генератор: иначе при HMR правка генератора
    * пересоздаёт модуль стора, и карта в открытой игре пропадает.
    */
-  setGrid: (grid: Cell[][]) => void;
+  setGrid: (
+    grid: Cell[][],
+    seed?: number | null,
+    usedFallback?: boolean,
+  ) => void;
   getCell: (x: number, y: number) => Cell | null;
   setCell: (
     x: number,
@@ -22,10 +28,13 @@ type MapState = {
 };
 
 export const useMapStore = create<MapState>()(
-  immer((set, get) => ({
+  withDevtools('map', (set, get) => ({
     grid: [],
+    seed: null,
+    usedFallback: false,
 
-    setGrid: grid => set({ grid }),
+    setGrid: (grid, seed = null, usedFallback = false) =>
+      set({ grid, seed, usedFallback }),
 
     getCell: (x, y) => get().grid[y]?.[x] ?? null,
 
@@ -35,6 +44,6 @@ export const useMapStore = create<MapState>()(
         if (cell) Object.assign(cell, newCell);
       }),
 
-    resetStore: () => set({ grid: [] }),
+    resetStore: () => set({ grid: [], seed: null, usedFallback: false }),
   })),
 );

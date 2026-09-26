@@ -1,6 +1,7 @@
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
 import type { Owner } from '@shared/config';
+import { isHostile } from '@shared/lib';
 
 type Attackable = {
   id: string;
@@ -11,7 +12,7 @@ type Attackable = {
 };
 
 /**
- * Собирает юнитов и здания противника для поиска целей атаки.
+ * Собирает юнитов и здания всех враждебных участников для поиска целей атаки.
  *
  * @param owner - Сторона атакующего.
  * @returns Цели с ID, координатами, стороной и видом сущности.
@@ -21,7 +22,7 @@ export const getEnemyTargets = (owner: Owner): Attackable[] => {
   const buildings = useBuildingsStore.getState().buildings;
 
   const enemyUnits: Attackable[] = Object.values(units)
-    .filter(unit => unit.owner !== owner)
+    .filter(unit => isHostile(owner, unit.owner))
     .map(unit => ({
       id: unit.id,
       x: unit.x,
@@ -31,7 +32,7 @@ export const getEnemyTargets = (owner: Owner): Attackable[] => {
     }));
 
   const enemyBuildings: Attackable[] = Object.values(buildings)
-    .filter(building => building.owner !== owner)
+    .filter(building => isHostile(owner, building.owner))
     .map(building => ({
       id: building.id,
       x: building.x,

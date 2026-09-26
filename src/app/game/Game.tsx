@@ -1,14 +1,16 @@
 import { useEffect } from 'react';
+import { AI_TURN_DELAY_MS } from '@shared/config';
 import { initGameLoopEvents, useGameLoopSelectors } from '@features/game-loop';
 import { Map } from '@widgets/map';
 import { initializeGame } from '@widgets/start-game';
 import { GameControls } from '@widgets/game-controls';
-import { initPopulationSystem } from '@app/system';
+import { initJournalSystem, initPopulationSystem } from '@app/system';
 import { runAITurn } from '@app/game/ai';
 import styles from './styles.module.css';
 
 export const Game = () => {
-  const { activePlayer, phase, startGame } = useGameLoopSelectors();
+  const { activePlayer, activeController, phase, startGame } =
+    useGameLoopSelectors();
 
   const handleStartGame = () => {
     if (initializeGame()) startGame();
@@ -17,13 +19,15 @@ export const Game = () => {
   useEffect(() => {
     initGameLoopEvents();
     initPopulationSystem();
+    initJournalSystem();
   }, []);
 
   useEffect(() => {
-    if (activePlayer === 'ai' && phase === 'inProgress') {
-      runAITurn();
-    }
-  }, [activePlayer, phase]);
+    if (activeController !== 'ai' || phase !== 'inProgress') return;
+
+    const timer = setTimeout(() => runAITurn(activePlayer), AI_TURN_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [activePlayer, activeController, phase]);
 
   return (
     <main className={phase === 'inProgress' ? styles.Main : styles.Setup}>

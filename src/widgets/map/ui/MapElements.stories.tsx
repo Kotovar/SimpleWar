@@ -14,11 +14,13 @@ import {
   drawEffect,
   drawForest,
   drawGoldOre,
+  drawHill,
   drawHoverHighlight,
   drawMountains,
   drawMovement,
   drawSelectionHighlight,
   drawTerrainHighlight,
+  drawSwamp,
   renderEntitiesLayer,
   renderMovementLayer,
   renderSelectionLayer,
@@ -106,14 +108,14 @@ const ground =
     drawBackgroundAndGrid(ctx, 1, [[0]], [[toCell(type)]], size);
 
 const withGround =
-  (draw: Draw): Draw =>
+  (draw: Draw, type: CellType = 'grass'): Draw =>
   (ctx, size) => {
-    ground()(ctx, size);
+    ground(type)(ctx, size);
     draw(ctx, size);
   };
 
 const unit = (patch: Partial<Unit> = {}, type: Unit['type'] = 'swordsman') =>
-  ({ ...createUnit(type, 0, 0, 'player', true)!, ...patch }) as Unit;
+  ({ ...createUnit(type, 0, 0, 'p1', true)!, ...patch }) as Unit;
 
 const place = <T extends Unit | Building>(items: (T | null)[]) =>
   Object.fromEntries(items.map(item => [item!.id, item!])) as Record<string, T>;
@@ -127,10 +129,11 @@ const variants = (
   label: string,
   draw: typeof drawForest,
   count: number,
+  type: CellType = 'grass',
 ): Tile[] =>
   Array.from({ length: count }, (_, variant) => ({
     label: `${label} ${variant + 1}`,
-    draw: withGround((ctx, size) => draw(ctx, 0, 0, size, variant)),
+    draw: withGround((ctx, size) => draw(ctx, 0, 0, size, variant), type),
   }));
 
 const TERRAIN: Record<string, Tile[]> = {
@@ -153,9 +156,20 @@ const TERRAIN: Record<string, Tile[]> = {
     drawGoldOre,
     TERRAIN_VARIANTS.gold,
   ),
+  [TERRAIN_NAME.hill]: variants(
+    TERRAIN_NAME.hill,
+    drawHill,
+    TERRAIN_VARIANTS.hill,
+  ),
+  [TERRAIN_NAME.swamp]: variants(
+    TERRAIN_NAME.swamp,
+    drawSwamp,
+    TERRAIN_VARIANTS.swamp,
+    'swamp',
+  ),
 };
 
-const enemy = unit({ owner: 'ai' });
+const enemy = unit({ owner: 'p2' });
 
 // Середина вспышки: видны и подсветка клетки, и число урона.
 const EFFECT_PROGRESS = 0.15;
@@ -216,7 +230,7 @@ const OVERLAYS: Record<string, Tile[]> = {
         [],
         [
           {
-            ...createBuilding('tower', 0, 0, 'player')!,
+            ...createBuilding('tower', 0, 0, 'p1')!,
             attackPoints: 0,
           } as Building,
         ],
@@ -262,23 +276,23 @@ const GRID = MAP.map((row, y) =>
 );
 
 const archer = {
-  ...createUnit('archer', 4, 3, 'player', true)!,
+  ...createUnit('archer', 4, 3, 'p1', true)!,
   attackPoints: 1,
 };
 
 const UNITS = place<Unit>([
   archer,
-  createUnit('worker', 2, 5, 'player', true),
-  { ...createUnit('swordsman', 6, 2, 'ai', true)!, hp: 4 } as Unit,
-  createUnit('swordsman', 7, 3, 'ai', true),
+  createUnit('worker', 2, 5, 'p1', true),
+  { ...createUnit('swordsman', 6, 2, 'p2', true)!, hp: 4 } as Unit,
+  createUnit('swordsman', 7, 3, 'p2', true),
 ]);
 
 const BUILDINGS = place<Building>([
-  createBuilding('base', 1, 3, 'player'),
-  createBuilding('mine', 9, 1, 'player'),
-  createBuilding('sawmill', 2, 6, 'player'),
-  createBuilding('base', 9, 5, 'ai'),
-  createBuilding('tower', 6, 6, 'ai'),
+  createBuilding('base', 1, 3, 'p1'),
+  createBuilding('mine', 9, 1, 'p1'),
+  createBuilding('sawmill', 2, 6, 'p1'),
+  createBuilding('base', 9, 5, 'p2'),
+  createBuilding('tower', 6, 6, 'p2'),
 ]);
 
 const drawSampleMap: Draw = (ctx, size) => {
@@ -305,10 +319,13 @@ const drawSampleMap: Draw = (ctx, size) => {
     size,
     {
       hover: { x: 5, y: 3 },
-      path: [
-        [4, 3],
-        [5, 3],
-      ],
+      path: {
+        path: [
+          { x: 4, y: 3 },
+          { x: 5, y: 3 },
+        ],
+        cost: 1,
+      },
       attackableTargets: [{ x: 6, y: 2 }],
     },
   );

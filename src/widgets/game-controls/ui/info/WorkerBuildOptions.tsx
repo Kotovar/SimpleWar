@@ -10,6 +10,8 @@ import { canSpawnBuilding, getBuildingInfoText } from '@shared/lib';
 import { useEconomySelectors } from '@entities/economies';
 import { useBuildingsSelectors } from '@entities/buildings';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
+import { useGameLoopSelectors } from '@features/game-loop';
+import { getPayableResources, useDebugException } from '@entities/settings';
 import styles from './OptionCards.styles.module.css';
 
 /** Где искать подсвеченную клетку для зданий с особым требованием к местности. */
@@ -20,13 +22,18 @@ const PLACE: Partial<Record<CellType, string>> = {
 
 export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
   const { resources } = useEconomySelectors();
+  const { humanId } = useGameLoopSelectors();
+  const { owner } = unit;
+  const isFree = useDebugException(owner, 'freeBuild');
+  const payable = getPayableResources(resources[owner], isFree);
   const {
     selectedBuildingForSpawn,
     selectBuildingForSpawn,
     clearSelectedBuildingForSpawn,
   } = useBuildingsSelectors();
 
-  const { calculateMovement, resetStore: clearMovement } = useMovementStore();
+  const { calculateActionHighlights, resetStore: clearMovement } =
+    useMovementStore();
 
   const {
     buildableCells,
@@ -34,10 +41,10 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
     resetStore: clearHighlight,
   } = useHighlightStore();
 
-  const isPlayerUnit = unit.owner === 'player';
+  const isOwnUnit = unit.owner === humanId;
   const isWorker = unit.type === 'worker' && unit.role === 'civil';
 
-  if (!isPlayerUnit || !isWorker) return null;
+  if (!isOwnUnit || !isWorker) return null;
 
   const buildableTypes = unit.buildableBuildings;
   if (buildableTypes.length === 0) return null;
@@ -53,7 +60,7 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
     if (selectedBuildingForSpawn === buildingType) {
       clearSelectedBuildingForSpawn();
       // После отмены строительства снова показываем клетки для движения.
-      calculateMovement(unit.id);
+      calculateActionHighlights(unit.id);
     } else {
       selectBuildingForSpawn(buildingType);
       calculateBuildableCells(unit.id, requiredField);
@@ -96,7 +103,7 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
 
           const check = canSpawnBuilding(
             buildingType,
-            resources.player,
+            payable,
             unit.buildPoints,
           );
 
@@ -113,20 +120,23 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
             >
               <EntityPortrait type={buildingType} owner={unit.owner} />
               <span className={styles.Content}>
-                <span className={styles.Name}>{name}</span>
+                <span className={styles.Name}>
+                  {name}
+                  {isFree && ' · бесплатно (отладка)'}
+                </span>
                 <span className={styles.Costs}>
                   <span
                     className={styles.Cost}
-                    data-lacking={resources.player.gold < cost.gold}
+                    data-lacking={payable.gold < cost.gold}
                   >
-                    <GoldIcon /> {cost.gold} золота
+                    <GoldIcon /> {isFree ? 0 : cost.gold} золота
                   </span>
                   {cost.wood === 0 ? null : (
                     <span
                       className={styles.Cost}
-                      data-lacking={resources.player.wood < cost.wood}
+                      data-lacking={payable.wood < cost.wood}
                     >
-                      <WoodIcon /> {cost.wood} дерева
+                      <WoodIcon /> {isFree ? 0 : cost.wood} дерева
                     </span>
                   )}
                 </span>

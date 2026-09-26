@@ -163,7 +163,7 @@
   color: var(--gold);
 }
 
-.GameOverTitle[data-winner='ai'] {
+.GameOverTitle[data-defeat='true'] {
   color: var(--danger-strong);
 }
 

@@ -1,11 +1,14 @@
-import type { Building, Player, Unit } from '@shared/config';
+import type { Building, ParticipantId, Unit } from '@shared/config';
 
 type GameEvent =
-  | { type: 'BASE_DESTROYED'; owner: Player }
-  | { type: 'BUILDING_SPAWNED'; building: Building; owner: Player }
-  | { type: 'BUILDING_DESTROYED'; building: Building; owner: Player }
-  | { type: 'UNIT_SPAWNED'; unit: Unit; owner: Player }
-  | { type: 'UNIT_DESTROYED'; unit: Unit; owner: Player };
+  | { type: 'GAME_RESET' }
+  | { type: 'BASE_DESTROYED'; owner: ParticipantId }
+  /** Выбывание уже применено; `turn` — ход, в котором оно произошло. */
+  | { type: 'PARTICIPANT_ELIMINATED'; owner: ParticipantId; turn: number }
+  | { type: 'BUILDING_SPAWNED'; building: Building; owner: ParticipantId }
+  | { type: 'BUILDING_DESTROYED'; building: Building; owner: ParticipantId }
+  | { type: 'UNIT_SPAWNED'; unit: Unit; owner: ParticipantId }
+  | { type: 'UNIT_DESTROYED'; unit: Unit; owner: ParticipantId };
 
 type EventHandler = (event: GameEvent) => void;
 

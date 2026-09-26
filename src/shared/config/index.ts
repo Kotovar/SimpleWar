@@ -7,3 +7,5 @@ export * from './consts';
 export * from './gameLoop';
 export * from './draws';
 export * from './economy';
+export * from './commands';
+export * from './debug';

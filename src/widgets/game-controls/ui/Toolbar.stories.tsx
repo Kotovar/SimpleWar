@@ -29,7 +29,7 @@ const setIncomeBuildings = () =>
   useBuildingsStore.setState({
     buildings: Object.fromEntries(
       (['mine', 'sawmill', 'sawmill'] as const)
-        .map(type => createBuilding(type, 0, 0, 'player') as Building)
+        .map(type => createBuilding(type, 0, 0, 'p1') as Building)
         .map(building => [building.id, building]),
     ),
   });
@@ -42,7 +42,7 @@ const meta = {
     useGameLoopStore.setState({
       phase: 'inProgress',
       currentTurn: 12,
-      activePlayer: 'player',
+      activePlayer: 'p1',
     });
     setEconomy(340, 85, 4);
     setIncomeBuildings();
@@ -57,7 +57,7 @@ export const PlayerTurn: Story = {};
 
 /** Во время хода ИИ кнопка завершения хода недоступна. */
 export const AiTurn: Story = {
-  beforeEach: () => useGameLoopStore.setState({ activePlayer: 'ai' }),
+  beforeEach: () => useGameLoopStore.setState({ activePlayer: 'p2' }),
 };
 
 export const FirstTurn: Story = {
@@ -79,8 +79,8 @@ export const PopulationFull: Story = {
 export const OpponentTurnBanner: Story = {
   render: args => {
     const passTurn = () => {
-      useGameLoopStore.setState({ activePlayer: 'player' });
-      useGameLoopStore.setState({ activePlayer: 'ai' });
+      useGameLoopStore.setState({ activePlayer: 'p1' });
+      useGameLoopStore.setState({ activePlayer: 'p2' });
     };
 
     return (
@@ -94,6 +94,6 @@ export const OpponentTurnBanner: Story = {
     );
   },
   play: () => {
-    useGameLoopStore.setState({ activePlayer: 'ai' });
+    useGameLoopStore.setState({ activePlayer: 'p2' });
   },
 };

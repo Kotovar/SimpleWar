@@ -2,7 +2,13 @@ import type { Cell } from '@shared/config';
 import { drawBackgroundAndGrid } from './drawGrid';
 import { drawClearing } from './drawClearing';
 import { sample } from '@shared/lib';
-import { drawForest, drawGoldOre, drawMountains } from './drawTerrain';
+import {
+  drawForest,
+  drawGoldOre,
+  drawHill,
+  drawMountains,
+  drawSwamp,
+} from './drawTerrain';
 
 const TERRAIN_NOISE_AMPLITUDE = 6;
 
@@ -31,6 +37,8 @@ export const renderTerrainLayer = (
       if (cell.type === 'mountain') drawMountains(ctx, x, y, cellSize);
       if (cell.type === 'forest') drawForest(ctx, x, y, cellSize);
       if (cell.type === 'gold') drawGoldOre(ctx, x, y, cellSize);
+      if (cell.type === 'hill') drawHill(ctx, x, y, cellSize);
+      if (cell.type === 'swamp') drawSwamp(ctx, x, y, cellSize);
     }),
   );
 };

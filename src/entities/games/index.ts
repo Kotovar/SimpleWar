@@ -1,1 +1,6 @@
-export { useGameLoopStore } from './model/gameLoopStore';
+export {
+  useGameLoopStore,
+  getAliveParticipants,
+  getHumanId,
+  getTurnRejection,
+} from './model/gameLoopStore';

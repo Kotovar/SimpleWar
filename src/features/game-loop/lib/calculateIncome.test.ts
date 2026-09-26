@@ -4,7 +4,7 @@ import type { Building, BuildingType } from '@shared/config';
 import { calculateIncome } from './calculateIncome';
 
 const building = (type: BuildingType, x: number): Building => {
-  const result = createBuilding(type, x, 0, 'player');
+  const result = createBuilding(type, x, 0, 'p1');
   if (!result) throw new Error('Не удалось создать здание ' + type);
   return result;
 };

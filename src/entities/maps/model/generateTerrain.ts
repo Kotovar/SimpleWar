@@ -169,12 +169,15 @@ const flattenStartCorners = (
  * Возвращает тип рельефа для высоты.
  *
  * @param value - Высота клетки.
+ * @param swampLevel - Верхняя граница болот с учётом лимита площади.
  * @returns Тип клетки без учёта золота.
  */
-const getTerrainType = (value: number): CellType => {
+const getTerrainType = (value: number, swampLevel: number): CellType => {
   if (value < -0.42) return 'water';
   if (value > 0.75) return 'mountain';
   if (value > 0.55) return 'forest';
+  if (value > 0.28) return 'hill';
+  if (value < swampLevel) return 'swamp';
   return 'grass';
 };
 
@@ -198,10 +201,27 @@ export const generateTerrain = (
     height,
   );
 
-  return Array.from({ length: height }, (_, y) =>
-    Array.from({ length: width }, (_, x): Cell => {
-      const type = getTerrainType(field(x, y) * CONTRAST);
-      return { x, y, type, isWalkable: type === 'grass' };
+  const heights = Array.from({ length: height }, (_, y) =>
+    Array.from({ length: width }, (_, x) => field(x, y) * CONTRAST),
+  );
+  // Узкая полоса низин даёт около 5% болот. На насыщенных сидах
+  // оставляем не более 10% самых низких клеток суши. Строгое сравнение
+  // с порогом сохраняет зеркальные пары даже на границе лимита.
+  const lowlands = heights
+    .flat()
+    .filter(value => value >= -0.42 && value < -0.325);
+  lowlands.sort((a, b) => a - b);
+  const swampLevel = lowlands[Math.floor(width * height * 0.1)] ?? -0.325;
+
+  return heights.map((row, y) =>
+    row.map((value, x): Cell => {
+      const type = getTerrainType(value, swampLevel);
+      return {
+        x,
+        y,
+        type,
+        isWalkable: type === 'grass' || type === 'hill' || type === 'swamp',
+      };
     }),
   );
 };

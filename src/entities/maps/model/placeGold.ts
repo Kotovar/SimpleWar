@@ -57,13 +57,15 @@ const isMineable = (grid: Cell[][], cell: Cell): boolean =>
  * @returns `true`, если пара поставлена.
  */
 const tryPlacePair = (grid: Cell[][], cell: Cell, mirror: Cell): boolean => {
-  if (cell === mirror || cell.type !== 'grass' || mirror.type !== 'grass')
-    return false;
+  if (cell === mirror || !cell.isWalkable || !mirror.isWalkable) return false;
 
+  const oldType = cell.type;
+  const oldMirrorType = mirror.type;
   cell.type = mirror.type = 'gold';
   const affected = [cell, mirror].flatMap(c => getSurroundings(grid, c));
   if (!affected.every(c => isMineable(grid, c))) {
-    cell.type = mirror.type = 'grass';
+    cell.type = oldType;
+    mirror.type = oldMirrorType;
     return false;
   }
 

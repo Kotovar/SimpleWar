@@ -4,6 +4,8 @@ import { drawSelectionHighlight } from './drawSelectionHighlight';
 export {
   drawForest,
   drawGoldOre,
+  drawHill,
+  drawSwamp,
   drawMountains,
   TERRAIN_VARIANTS,
 } from '@shared/ui';

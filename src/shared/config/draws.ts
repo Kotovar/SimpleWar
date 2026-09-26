@@ -10,20 +10,32 @@ export const TEAM_MARKERS: Record<
     background: string;
     color: string;
     shade: string;
-    marker: 'circle' | 'diamond';
+    marker: 'circle' | 'diamond' | 'square' | 'triangle';
   }
 > = {
-  player: {
+  p1: {
     background: '#1d3a52',
     color: '#78ccff',
     shade: '#3f86c4',
     marker: 'circle',
   },
-  ai: {
+  p2: {
     background: '#4f2a25',
     color: '#ff9474',
     shade: '#c95b41',
     marker: 'diamond',
+  },
+  p3: {
+    background: '#4d4220',
+    color: '#f5d05e',
+    shade: '#b8962e',
+    marker: 'square',
+  },
+  p4: {
+    background: '#3b2a4f',
+    color: '#c79bff',
+    shade: '#8a5fc4',
+    marker: 'triangle',
   },
 };
 
@@ -51,6 +63,7 @@ export const GRID = {
   colorWaterShallow: 'rgba(150, 214, 245, 0.9)',
   /** Подложки под лесом и скалами связывают соседние клетки в массив. */
   colorForestFloor: 'rgb(66, 118, 62)',
+  colorSwampFloor: 'rgb(105, 126, 77)',
   colorRockFloor: 'rgb(128, 138, 106)',
 };
 

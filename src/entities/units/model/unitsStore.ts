@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
-import { gameEvents } from '@shared/lib';
+import { gameEvents, withDevtools } from '@shared/lib';
 import type { Owner, Unit, UnitType } from '@shared/config';
 import { createUnit } from './createUnit';
 
@@ -22,12 +21,14 @@ type UnitsState = {
   changeBuildPoints: (id: string) => void;
   selectUnitForSpawn: (unitType: UnitType) => void;
   clearSelectedUnitForSpawn: () => void;
-  resetUnitsForNewTurn: () => void;
+  resetUnitsForNewTurn: (owner: Owner) => void;
+  /** Удаляет юнитов выбывшего участника без событий гибели. */
+  removeOwnerUnits: (owner: Owner) => void;
   resetStore: () => void;
 };
 
 export const useUnitsStore = create<UnitsState>()(
-  immer((set, get) => ({
+  withDevtools('units', (set, get) => ({
     units: {},
     selectedUnitForSpawn: null,
 
@@ -112,9 +113,11 @@ export const useUnitsStore = create<UnitsState>()(
       });
     },
 
-    resetUnitsForNewTurn: () =>
+    resetUnitsForNewTurn: owner =>
       set(state => {
         Object.values(state.units).forEach(unit => {
+          if (unit.owner !== owner) return;
+
           unit.movePoints = unit.maxMovePoints;
 
           if (unit.role === 'military') {
@@ -123,6 +126,13 @@ export const useUnitsStore = create<UnitsState>()(
             unit.buildPoints = unit.maxBuildPoints;
           }
         });
+      }),
+
+    removeOwnerUnits: owner =>
+      set(state => {
+        for (const unit of Object.values(state.units)) {
+          if (unit.owner === owner) delete state.units[unit.id];
+        }
       }),
 
     resetStore: () => {

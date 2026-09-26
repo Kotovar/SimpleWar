@@ -10,19 +10,17 @@ beforeEach(() => {
 
 describe('getAttackableTargets', () => {
   it('returns enemy units and buildings within Manhattan range only', () => {
-    const nearUnit = useUnitsStore.getState().spawnUnit('worker', 2, 1, 'ai');
+    const nearUnit = useUnitsStore.getState().spawnUnit('worker', 2, 1, 'p2');
     const diagonalUnit = useUnitsStore
       .getState()
-      .spawnUnit('archer', 2, 2, 'ai');
+      .spawnUnit('archer', 2, 2, 'p2');
     const distantUnit = useUnitsStore
       .getState()
-      .spawnUnit('swordsman', 4, 1, 'ai');
-    const alliedUnit = useUnitsStore
-      .getState()
-      .spawnUnit('worker', 0, 1, 'player');
+      .spawnUnit('swordsman', 4, 1, 'p2');
+    const alliedUnit = useUnitsStore.getState().spawnUnit('worker', 0, 1, 'p1');
     const nearBuilding = useBuildingsStore
       .getState()
-      .spawnBuilding('base', 1, 2, 'ai');
+      .spawnBuilding('base', 1, 2, 'p2');
 
     expect(nearUnit).not.toBeNull();
     expect(diagonalUnit).not.toBeNull();
@@ -30,7 +28,7 @@ describe('getAttackableTargets', () => {
     expect(alliedUnit).not.toBeNull();
     expect(nearBuilding).not.toBeNull();
 
-    const targets = getAttackableTargets({ x: 1, y: 1 }, 1, 'player');
+    const targets = getAttackableTargets({ x: 1, y: 1 }, 1, 'p1');
 
     expect(targets).toHaveLength(2);
     expect(targets).toEqual(
@@ -39,14 +37,14 @@ describe('getAttackableTargets', () => {
           id: nearUnit,
           x: 2,
           y: 1,
-          owner: 'ai',
+          owner: 'p2',
           kind: 'unit',
         },
         {
           id: nearBuilding,
           x: 1,
           y: 2,
-          owner: 'ai',
+          owner: 'p2',
           kind: 'building',
         },
       ]),

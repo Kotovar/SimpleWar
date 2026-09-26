@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ConfirmDialog } from '@shared/ui';
-import { nextTurn, resetGame } from '@features/game-loop';
+import { nextTurn, resetGame, useGameLoopSelectors } from '@features/game-loop';
 import { useSelectionSelectors } from '@features/selection';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import {
@@ -11,6 +11,7 @@ import {
   SelectedEntityInfo,
   WorkerBuildOptions,
   UnitOptions,
+  DebugPanel,
 } from './info';
 import styles from './styles.module.css';
 
@@ -68,19 +69,21 @@ export const PhaseInProgress = () => {
   const unit = unitsSelection.getSelectedUnit();
   const building = buildingsSelection.getSelectedBuilding();
 
-  const onNextTurn = async () => {
-    nextTurn();
+  const { humanId } = useGameLoopSelectors();
+
+  const clearInteraction = () => {
     clearSelection();
     clearMovement();
     clearHighlight();
   };
 
+  const onNextTurn = () => {
+    if (humanId) nextTurn(humanId);
+    clearInteraction();
+  };
+
   const onResetGame = () => {
     setShowResetConfirm(false);
-
-    clearSelection();
-    clearMovement();
-    clearHighlight();
     resetGame();
   };
 
@@ -98,6 +101,7 @@ export const PhaseInProgress = () => {
       <AiTurnBanner />
 
       <aside className={styles.ContextPanel} aria-label='Выбранный объект'>
+        <DebugPanel />
         {(cell || unit || building) && (
           <>
             <SelectedEntityInfo cell={cell} unit={unit} building={building} />

@@ -8,7 +8,7 @@
 - `pnpm test` — весь набор.
 - `pnpm test:unit` — только unit-тесты.
 - `pnpm test:integration` — взаимодействие настоящих хранилищ и событий.
-- `pnpm test:unit -- src/features/pathfinding/lib/getPatch.test.ts` — один файл.
+- `pnpm test:unit -- src/features/pathfinding/lib/getPath.test.ts` — один файл.
 - `pnpm type-check` — отдельная проверка типов, включая тесты.
 
 Unit-тесты размещаются рядом с модулем в `*.test.ts`. Интеграционные сценарии

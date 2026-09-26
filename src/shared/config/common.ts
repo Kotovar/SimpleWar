@@ -1,8 +1,17 @@
-/** Владелец юнита или здания. */
-export type Owner = 'player' | 'ai';
+import type { ParticipantId } from './gameLoop';
+
+/** Владелец юнита или здания — участник партии. */
+export type Owner = ParticipantId;
 
 /** Тип местности клетки. */
-export type CellType = 'grass' | 'mountain' | 'water' | 'forest' | 'gold';
+export type CellType =
+  | 'grass'
+  | 'hill'
+  | 'swamp'
+  | 'mountain'
+  | 'water'
+  | 'forest'
+  | 'gold';
 
 /** Координаты на карте. */
 export type Position = {

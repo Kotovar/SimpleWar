@@ -46,15 +46,12 @@ const ready = <T extends Unit | Building>(entity: T, patch: Partial<T>) => {
   return { ...entity, ...points, ...patch } as T;
 };
 
-const unit = (
-  type: UnitType,
-  owner: Owner = 'player',
-  patch: Partial<Unit> = {},
-) => ready(createUnit(type, 0, 0, owner, true)!, patch);
+const unit = (type: UnitType, owner: Owner = 'p1', patch: Partial<Unit> = {}) =>
+  ready(createUnit(type, 0, 0, owner, true)!, patch);
 
 const building = (
   type: BuildingType,
-  owner: Owner = 'player',
+  owner: Owner = 'p1',
   patch: Partial<Building> = {},
 ) => ready(createBuilding(type, 0, 0, owner)!, patch);
 
@@ -88,7 +85,7 @@ export const WorkerNoResources: Story = {
 };
 
 export const WorkerNoBuildPoints: Story = {
-  args: { unit: unit('worker', 'player', { buildPoints: 0 }) },
+  args: { unit: unit('worker', 'p1', { buildPoints: 0 }) },
 };
 
 export const WorkerSelectedBuilding: Story = {
@@ -99,7 +96,7 @@ export const WorkerSelectedBuilding: Story = {
 
 export const DamagedSwordsman: Story = {
   args: {
-    unit: unit('swordsman', 'player', {
+    unit: unit('swordsman', 'p1', {
       hp: 3,
       movePoints: 1,
       attackPoints: 1,
@@ -107,7 +104,7 @@ export const DamagedSwordsman: Story = {
   },
 };
 
-export const EnemyArcher: Story = { args: { unit: unit('archer', 'ai') } };
+export const EnemyArcher: Story = { args: { unit: unit('archer', 'p2') } };
 
 export const Base: Story = { args: { building: building('base') } };
 
@@ -133,5 +130,5 @@ export const Tower: Story = { args: { building: building('tower') } };
 export const Mine: Story = { args: { building: building('mine') } };
 
 export const EnemyBase: Story = {
-  args: { building: building('base', 'ai', { hp: 5 }) },
+  args: { building: building('base', 'p2', { hp: 5 }) },
 };

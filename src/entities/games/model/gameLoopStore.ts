@@ -1,62 +1,149 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
-import type { Phase, Player } from '@shared/config';
+import { withDevtools } from '@shared/lib';
+import {
+  DEFAULT_PARTICIPANTS,
+  type Participant,
+  type ParticipantId,
+  type Phase,
+} from '@shared/config';
 
 interface GameLoopStoreState {
   currentTurn: number;
-  activePlayer: Player;
+  /** Порядок ходов; выбывшие остаются в списке и пропускаются. */
+  participants: Participant[];
+  eliminated: ParticipantId[];
+  activePlayer: ParticipantId;
   phase: Phase;
-  winner: Player | null;
+  /** Единственный оставшийся участник; `null` — ничья или исход без победителя. */
+  winner: ParticipantId | null;
   startError: string | null;
 
-  startGame: () => void;
+  startGame: (participants?: Participant[]) => void;
   endTurn: () => void;
+  /** Выводит участников, выбывших одним действием; исход считается один раз. */
+  eliminate: (...ids: ParticipantId[]) => void;
   resetGame: () => void;
-  declareWinner: (winner: Player) => void;
 }
 
+/**
+ * ID участника, которым управляет человек за этим экраном: его объекты
+ * интерфейс считает «своими».
+ *
+ * @param participants - Участники партии.
+ * @returns ID первого участника-человека или `null` в партии из одних ИИ.
+ */
+export const getHumanId = (participants: Participant[]) =>
+  participants.find(({ controller }) => controller === 'human')?.id ?? null;
+
+/** Невыбывшие участники в порядке ходов. */
+export const getAliveParticipants = ({
+  participants,
+  eliminated,
+}: Pick<GameLoopStoreState, 'participants' | 'eliminated'>) => {
+  const out = new Set(eliminated);
+  return participants.filter(({ id }) => !out.has(id));
+};
+
 export const useGameLoopStore = create<GameLoopStoreState>()(
-  immer(set => ({
-    currentTurn: 0,
-    activePlayer: 'player',
-    phase: 'setup',
-    winner: null,
-    startError: null,
+  withDevtools('gameLoop', set => {
+    /** Передаёт ход следующему невыбывшему; обход начала списка завершает круг. */
+    const passTurn = (state: GameLoopStoreState) => {
+      const { participants } = state;
+      const from = participants.findIndex(p => p.id === state.activePlayer);
+      const out = new Set(state.eliminated);
 
-    startGame: () =>
-      set(state => {
-        state.phase = 'inProgress';
-        state.startError = null;
-        state.currentTurn = 1;
-        state.activePlayer = 'player';
-      }),
+      for (let step = 1; step <= participants.length; step++) {
+        const index = (from + step) % participants.length;
+        const next = participants[index];
+        if (out.has(next.id)) continue;
 
-    endTurn: () =>
-      set(state => {
-        if (state.phase !== 'inProgress') return;
+        if (index <= from) state.currentTurn++;
+        state.activePlayer = next.id;
+        return;
+      }
+    };
 
-        // TODO: изменить, когда игроков на карте будет больше 2х
-        if (state.activePlayer === 'ai') {
-          state.currentTurn++;
-        }
+    return {
+      currentTurn: 0,
+      participants: DEFAULT_PARTICIPANTS,
+      eliminated: [],
+      activePlayer: DEFAULT_PARTICIPANTS[0].id,
+      phase: 'setup',
+      winner: null,
+      startError: null,
 
-        state.activePlayer = state.activePlayer === 'player' ? 'ai' : 'player';
-      }),
+      startGame: (participants = DEFAULT_PARTICIPANTS) =>
+        set(state => {
+          if (state.phase !== 'setup') return;
+          state.phase = 'inProgress';
+          state.startError = null;
+          state.currentTurn = 1;
+          state.participants = participants;
+          state.eliminated = [];
+          state.winner = null;
+          state.activePlayer = participants[0].id;
+        }),
 
-    declareWinner: winner =>
-      set(state => {
-        state.phase = 'gameOver';
-        state.winner = winner;
-      }),
+      endTurn: () =>
+        set(state => {
+          if (state.phase !== 'inProgress') return;
+          passTurn(state);
+        }),
 
-    resetGame: () => {
-      set(state => {
-        state.phase = 'setup';
-        state.currentTurn = 0;
-        state.activePlayer = 'player';
-        state.winner = null;
-        state.startError = null;
-      });
-    },
-  })),
+      eliminate: (...ids) =>
+        set(state => {
+          if (state.phase !== 'inProgress') return;
+
+          const leavingIds = new Set(ids);
+          const leaving = getAliveParticipants(state).filter(p =>
+            leavingIds.has(p.id),
+          );
+          if (leaving.length === 0) return;
+
+          state.eliminated.push(...leaving.map(p => p.id));
+          const alive = getAliveParticipants(state);
+
+          const isHuman = ({ controller }: Participant) =>
+            controller === 'human';
+
+          // Без живого человека партия для него окончена: оставшиеся ИИ
+          // не объявляются победителями всей партии.
+          if (
+            alive.length <= 1 ||
+            (state.participants.some(isHuman) && !alive.some(isHuman))
+          ) {
+            state.phase = 'gameOver';
+            state.winner = alive.length === 1 ? alive[0].id : null;
+            return;
+          }
+
+          if (leavingIds.has(state.activePlayer)) passTurn(state);
+        }),
+
+      resetGame: () => {
+        set(state => {
+          state.phase = 'setup';
+          state.currentTurn = 0;
+          state.participants = DEFAULT_PARTICIPANTS;
+          state.eliminated = [];
+          state.activePlayer = DEFAULT_PARTICIPANTS[0].id;
+          state.winner = null;
+          state.startError = null;
+        });
+      },
+    };
+  }),
 );
+
+/**
+ * Проверяет, может ли участник сейчас отдавать приказы.
+ *
+ * @param actor - Участник, от имени которого выполняется команда.
+ * @returns Причина отказа или `null`, если партия идёт и сейчас его ход.
+ */
+export const getTurnRejection = (actor: ParticipantId) => {
+  const { phase, activePlayer } = useGameLoopStore.getState();
+  if (phase !== 'inProgress') return 'phase' as const;
+  if (activePlayer !== actor) return 'turn' as const;
+  return null;
+};

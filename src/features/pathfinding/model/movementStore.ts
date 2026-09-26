@@ -1,12 +1,12 @@
 import { create } from 'zustand';
-import { immer } from 'zustand/middleware/immer';
+import { gameEvents, withDevtools } from '@shared/lib';
 import type { Position } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
 import {
   getReachableCells,
-  createMovementPFGrid,
+  createMovementGrid,
   getAttackableTargets,
 } from '../lib';
 
@@ -14,17 +14,17 @@ interface MovementState {
   reachableCells: Position[] | null;
   attackableTargets: Position[] | null;
 
-  calculateMovement: (unitId: string) => void;
+  calculateActionHighlights: (unitId: string) => void;
   resetStore: () => void;
 }
 
 export const useMovementStore = create<MovementState>()(
-  immer(set => ({
+  withDevtools('movement', set => ({
     reachableCells: null,
     attackableTargets: null,
 
-    // Для юнита считает клетки движения и цели; для боевого здания — только цели.
-    calculateMovement: unitId => {
+    // Для юнита считает клетки движения и цели атаки; для башни — только цели.
+    calculateActionHighlights: unitId => {
       const { units } = useUnitsStore.getState();
       const unit = units[unitId];
       const entity =
@@ -34,7 +34,7 @@ export const useMovementStore = create<MovementState>()(
       const grid = useMapStore.getState().grid;
       const reachable = unit
         ? getReachableCells(
-            createMovementPFGrid(grid),
+            createMovementGrid(grid),
             unit.x,
             unit.y,
             unit.movePoints,
@@ -63,3 +63,7 @@ export const useMovementStore = create<MovementState>()(
     },
   })),
 );
+
+gameEvents.subscribe(event => {
+  if (event.type === 'GAME_RESET') useMovementStore.getState().resetStore();
+});

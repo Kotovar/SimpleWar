@@ -1,5 +1,5 @@
 import { useEffect, useRef, type RefObject } from 'react';
-import type { Building, Unit } from '@shared/config';
+import type { Building, Owner, Unit } from '@shared/config';
 import {
   drawEffect,
   EFFECT_DURATION,
@@ -27,6 +27,7 @@ type Props = {
   buildings: Record<string, Building>;
   units: Record<string, Unit>;
   cellSize: number;
+  humanId: Owner | null;
   width: number;
   height: number;
 };
@@ -43,6 +44,7 @@ type Props = {
  * @param props.buildings - Текущее состояние зданий.
  * @param props.units - Текущее состояние юнитов.
  * @param props.cellSize - Размер клетки в пикселях.
+ * @param props.humanId - Участник, которым управляет интерфейс.
  * @param props.width - Ширина холста в CSS-пикселях.
  * @param props.height - Высота холста в CSS-пикселях.
  */
@@ -51,6 +53,7 @@ export const useEntitiesLayer = ({
   buildings,
   units,
   cellSize,
+  humanId,
   width,
   height,
 }: Props) => {
@@ -184,7 +187,7 @@ export const useEntitiesLayer = ({
 
       withClear(ctx, () => {
         drawEffects('under');
-        renderEntitiesLayer(ctx, buildings, units, cellSize, offsets);
+        renderEntitiesLayer(ctx, buildings, units, cellSize, offsets, humanId);
         drawEffects('over');
       });
 
@@ -201,5 +204,5 @@ export const useEntitiesLayer = ({
     draw();
 
     return () => cancelAnimationFrame(frame.current);
-  }, [buildings, cellSize, height, pixelRatio, ref, units, width]);
+  }, [buildings, cellSize, humanId, height, pixelRatio, ref, units, width]);
 };

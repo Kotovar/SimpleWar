@@ -8,6 +8,8 @@ import {
   type Unit,
 } from '@shared/config';
 import { EntityPortrait, TerrainPortrait } from '@shared/ui';
+import { getMoveCost } from '@shared/lib';
+import { useGameLoopSelectors } from '@features/game-loop';
 import styles from './SelectedEntityInfo.styles.module.css';
 
 type Props = {
@@ -23,6 +25,7 @@ type AttackStats = Pick<
 >;
 
 const EntityHeader = ({ cell, unit, building }: Props) => {
+  const { humanId } = useGameLoopSelectors();
   const entity = unit ?? building;
   return (
     <div className={styles.EntityHeader}>
@@ -41,7 +44,8 @@ const EntityHeader = ({ cell, unit, building }: Props) => {
         </h3>
         {entity && (
           <span className={styles.Owner} data-owner={entity.owner}>
-            Владелец: {OWNER_NAME[entity.owner]}
+            Владелец:{' '}
+            {entity.owner === humanId ? 'Вы' : OWNER_NAME[entity.owner]}
           </span>
         )}
         {cell && (
@@ -87,7 +91,9 @@ const CellDetails = ({ cell }: { cell: Cell }) => (
       <dd
         className={cell.isWalkable ? styles.IsWalkable : styles.IsNotWalkable}
       >
-        {cell.isWalkable ? 'Проходима' : 'Непроходима'}
+        {cell.isWalkable
+          ? `Проходима, ход ${getMoveCost(cell)} ${getMoveCost(cell) === 1 ? 'очко' : 'очка'}`
+          : 'Непроходима'}
       </dd>
     </div>
   </>

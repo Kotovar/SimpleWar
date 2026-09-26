@@ -59,18 +59,18 @@ beforeEach(() => {
     buildings: {},
     selectedBuildingForSpawn: null,
   });
-  useGameLoopStore.setState({ phase: 'inProgress', activePlayer: 'player' });
+  useGameLoopStore.setState({ phase: 'inProgress', activePlayer: 'p1' });
 });
 
 describe('attack', () => {
   it('damages an in-range enemy unit and spends one attack point', () => {
-    const attackerId = addUnit('swordsman', 1, 1, 'player');
-    const targetId = addUnit('worker', 2, 1, 'ai');
-    useUnitsStore.getState().resetUnitsForNewTurn();
+    const attackerId = addUnit('swordsman', 1, 1, 'p1');
+    const targetId = addUnit('worker', 2, 1, 'p2');
+    useUnitsStore.getState().resetUnitsForNewTurn('p1');
     const attacker = getMilitaryUnit(attackerId);
     const target = getUnit(targetId);
 
-    attack(attackerId, targetId);
+    attack({ actor: 'p1', attackerId, targetId });
 
     expect(getUnit(targetId).hp).toBe(target.hp - attacker.attack);
     expect(getMilitaryUnit(attackerId).attackPoints).toBe(
@@ -79,14 +79,14 @@ describe('attack', () => {
   });
 
   it('does nothing during the setup phase', () => {
-    const attackerId = addUnit('swordsman', 1, 1, 'player');
-    const targetId = addUnit('worker', 2, 1, 'ai');
-    useUnitsStore.getState().resetUnitsForNewTurn();
+    const attackerId = addUnit('swordsman', 1, 1, 'p1');
+    const targetId = addUnit('worker', 2, 1, 'p2');
+    useUnitsStore.getState().resetUnitsForNewTurn('p1');
     const attacker = getMilitaryUnit(attackerId);
     const target = getUnit(targetId);
     useGameLoopStore.setState({ phase: 'setup' });
 
-    attack(attackerId, targetId);
+    attack({ actor: 'p1', attackerId, targetId });
 
     expect(getUnit(targetId).hp).toBe(target.hp);
     expect(getMilitaryUnit(attackerId).attackPoints).toBe(
@@ -95,19 +95,19 @@ describe('attack', () => {
   });
 
   it('does nothing when the attacker is out of range', () => {
-    const attackerId = addUnit('swordsman', 1, 1, 'player');
+    const attackerId = addUnit('swordsman', 1, 1, 'p1');
     const attacker = getMilitaryUnit(attackerId);
     const targetId = addUnit(
       'worker',
       attacker.x + attacker.attackRange + 1,
       attacker.y,
-      'ai',
+      'p2',
     );
-    useUnitsStore.getState().resetUnitsForNewTurn();
+    useUnitsStore.getState().resetUnitsForNewTurn('p1');
     const readyAttacker = getMilitaryUnit(attackerId);
     const target = getUnit(targetId);
 
-    attack(attackerId, targetId);
+    attack({ actor: 'p1', attackerId, targetId });
 
     expect(getUnit(targetId).hp).toBe(target.hp);
     expect(getMilitaryUnit(attackerId).attackPoints).toBe(
@@ -116,13 +116,13 @@ describe('attack', () => {
   });
 
   it('does nothing when the attacker does not own the active turn', () => {
-    const attackerId = addUnit('swordsman', 1, 1, 'ai');
-    const targetId = addUnit('worker', 2, 1, 'player');
-    useUnitsStore.getState().resetUnitsForNewTurn();
+    const attackerId = addUnit('swordsman', 1, 1, 'p2');
+    const targetId = addUnit('worker', 2, 1, 'p1');
+    useUnitsStore.getState().resetUnitsForNewTurn('p2');
     const attacker = getMilitaryUnit(attackerId);
     const target = getUnit(targetId);
 
-    attack(attackerId, targetId);
+    attack({ actor: 'p2', attackerId, targetId });
 
     expect(getUnit(targetId).hp).toBe(target.hp);
     expect(getMilitaryUnit(attackerId).attackPoints).toBe(
@@ -131,9 +131,9 @@ describe('attack', () => {
   });
 
   it('emits base destruction when a combat building destroys an enemy base', () => {
-    const attackerId = addBuilding('tower', 1, 1, 'player');
-    const targetId = addBuilding('base', 2, 1, 'ai');
-    useBuildingsStore.getState().resetBuildingsForNewTurn();
+    const attackerId = addBuilding('tower', 1, 1, 'p1');
+    const targetId = addBuilding('base', 2, 1, 'p2');
+    useBuildingsStore.getState().resetBuildingsForNewTurn('p1');
     const attacker = getCombatBuilding(attackerId);
     const target = getBuilding(targetId);
     useBuildingsStore.getState().damageBuilding(targetId, target.hp - 1);
@@ -144,10 +144,10 @@ describe('attack', () => {
     });
     onTestFinished(unsubscribe);
 
-    attack(attackerId, targetId);
+    attack({ actor: 'p1', attackerId, targetId });
 
     expect(useBuildingsStore.getState().buildings[targetId]).toBeUndefined();
-    expect(destroyedBaseOwner).toBe('ai');
+    expect(destroyedBaseOwner).toBe('p2');
     expect(getCombatBuilding(attackerId).attackPoints).toBe(
       attacker.attackPoints - 1,
     );

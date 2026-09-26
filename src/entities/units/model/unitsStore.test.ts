@@ -6,7 +6,7 @@ import { useUnitsStore } from './unitsStore';
 let events: unknown[];
 let unsubscribe: (() => void) | undefined;
 
-const spawn = (type: UnitType, owner: Owner = 'player') => {
+const spawn = (type: UnitType, owner: Owner = 'p1') => {
   const id = useUnitsStore.getState().spawnUnit(type, 2, 3, owner);
   if (id === null) throw new Error(`Не удалось создать юнита ${type}`);
   return id;
@@ -22,22 +22,22 @@ afterEach(() => unsubscribe?.());
 
 describe('useUnitsStore', () => {
   it('создаёт юнита и публикует событие', () => {
-    const id = spawn('worker', 'ai');
+    const id = spawn('worker', 'p2');
 
     expect(useUnitsStore.getState().units[id]).toMatchObject({
       type: 'worker',
-      owner: 'ai',
+      owner: 'p2',
       x: 2,
       y: 3,
     });
     expect(events).toMatchObject([
-      { type: 'UNIT_SPAWNED', owner: 'ai', unit: { type: 'worker' } },
+      { type: 'UNIT_SPAWNED', owner: 'p2', unit: { type: 'worker' } },
     ]);
   });
 
   it('перемещает юнита только при целой положительной цене в пределах очков', () => {
     const id = spawn('worker');
-    useUnitsStore.getState().resetUnitsForNewTurn();
+    useUnitsStore.getState().resetUnitsForNewTurn('p1');
 
     useUnitsStore.getState().moveUnit(id, 4, 5, 2);
     expect(useUnitsStore.getState().units[id]).toMatchObject({
@@ -58,7 +58,7 @@ describe('useUnitsStore', () => {
   });
 
   it('наносит урон, удаляет погибшего юнита и сообщает о смерти', () => {
-    const id = spawn('archer', 'ai');
+    const id = spawn('archer', 'p2');
     const hp = useUnitsStore.getState().units[id].hp;
 
     useUnitsStore.getState().damageUnit(id, 5);
@@ -67,8 +67,8 @@ describe('useUnitsStore', () => {
     useUnitsStore.getState().damageUnit(id, hp);
     expect(useUnitsStore.getState().units[id]).toBeUndefined();
     expect(events).toMatchObject([
-      { type: 'UNIT_SPAWNED', owner: 'ai' },
-      { type: 'UNIT_DESTROYED', owner: 'ai', unit: { type: 'archer' } },
+      { type: 'UNIT_SPAWNED', owner: 'p2' },
+      { type: 'UNIT_DESTROYED', owner: 'p2', unit: { type: 'archer' } },
     ]);
   });
 
@@ -76,7 +76,7 @@ describe('useUnitsStore', () => {
     const workerId = spawn('worker');
     const archerId = spawn('archer');
     const store = useUnitsStore.getState();
-    store.resetUnitsForNewTurn();
+    store.resetUnitsForNewTurn('p1');
     store.changeBuildPoints(workerId);
     store.changeAttackPoints(archerId);
 
@@ -89,7 +89,7 @@ describe('useUnitsStore', () => {
       movePoints: 0,
     });
 
-    useUnitsStore.getState().resetUnitsForNewTurn();
+    useUnitsStore.getState().resetUnitsForNewTurn('p1');
     expect(useUnitsStore.getState().units[workerId]).toMatchObject({
       buildPoints: 1,
       movePoints: 4,
@@ -102,7 +102,7 @@ describe('useUnitsStore', () => {
 
   it('не создаёт неизвестного юнита и очищает выбор и список', () => {
     expect(
-      useUnitsStore.getState().spawnUnit('unknown' as UnitType, 0, 0, 'player'),
+      useUnitsStore.getState().spawnUnit('unknown' as UnitType, 0, 0, 'p1'),
     ).toBeNull();
     expect(events).toEqual([]);
 

@@ -59,8 +59,8 @@ const captureState = () => {
     activePlayer: loop.activePlayer,
     phase: loop.phase,
     resources: {
-      player: { ...economy.resources.player },
-      ai: { ...economy.resources.ai },
+      p1: { ...economy.resources.p1 },
+      p2: { ...economy.resources.p2 },
     },
     units,
     buildings,
@@ -84,7 +84,7 @@ describe('AI turn simulation smoke', () => {
     const settings = useSettingsStore.getState();
     const turns: Array<{
       round: number;
-      side: 'player' | 'ai';
+      side: 'p1' | 'p2';
       action: string;
       target: null;
       before: ReturnType<typeof captureState>;
@@ -93,13 +93,13 @@ describe('AI turn simulation smoke', () => {
 
     for (let round = 1; round <= rounds; round++) {
       const playerBefore = captureState();
-      expect(playerBefore.activePlayer).toBe('player');
-      nextTurn();
+      expect(playerBefore.activePlayer).toBe('p1');
+      nextTurn('p1');
       const playerAfter = captureState();
-      expect(playerAfter.activePlayer).toBe('ai');
+      expect(playerAfter.activePlayer).toBe('p2');
       turns.push({
         round,
-        side: 'player',
+        side: 'p1',
         action: 'skip with nextTurn',
         target: null,
         before: playerBefore,
@@ -107,13 +107,13 @@ describe('AI turn simulation smoke', () => {
       });
 
       const aiBefore = captureState();
-      runAITurn();
+      runAITurn('p2');
       const aiAfter = captureState();
-      expect(aiAfter.activePlayer).toBe('player');
+      expect(aiAfter.activePlayer).toBe('p1');
       expect(aiAfter.turn).toBe(round + 1);
       turns.push({
         round,
-        side: 'ai',
+        side: 'p2',
         action: 'runAITurn (currently advances with nextTurn)',
         target: null,
         before: aiBefore,
@@ -125,11 +125,11 @@ describe('AI turn simulation smoke', () => {
     expect(turns).toHaveLength(rounds * 2);
     expect(finalState).toMatchObject({
       turn: rounds + 1,
-      activePlayer: 'player',
+      activePlayer: 'p1',
       phase: 'inProgress',
       resources: {
-        player: { gold: 200 + rounds * 3, wood: 120 },
-        ai: { gold: 200 + rounds * 3, wood: 120 },
+        p1: { gold: 200 + rounds * 3, wood: 120 },
+        p2: { gold: 200 + rounds * 3, wood: 120 },
       },
     });
 

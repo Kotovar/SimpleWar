@@ -39,7 +39,7 @@
   font-size: 0.9rem;
   font-weight: 600;
   background-color: rgb(120 204 255 / 0.12);
-  color: var(--team-player);
+  color: var(--team-p1);
 }
 
 .Side::before {
@@ -50,12 +50,24 @@
   background-color: currentColor;
 }
 
-.Side[data-owner='ai'] {
+.Side[data-relation='hostile'] {
   background-color: rgb(255 148 116 / 0.12);
-  color: var(--team-ai);
+  color: var(--team-p2);
 }
 
-.Side[data-owner='ai']::before {
+.Side[data-relation='hostile']::before {
   border-radius: 1px;
   transform: rotate(45deg);
+}
+
+/* Постоянная отметка режима отладки. */
+.Debug {
+  padding: 4px 10px;
+  border: 1px dashed var(--danger-strong);
+  border-radius: 999px;
+  color: var(--danger-strong);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }

@@ -1,5 +1,5 @@
-import type { Position } from '@shared/config';
-import type { Cell } from '@shared/config';
+import type { Cell, Position } from '@shared/config';
+import { isBuildableTerrain } from '@shared/lib';
 import { isCellOccupied } from './isCellOccupied';
 
 /**
@@ -8,7 +8,8 @@ import { isCellOccupied } from './isCellOccupied';
  * @param grid - Клетки карты.
  * @param centerX - Столбец центральной клетки.
  * @param centerY - Строка центральной клетки.
- * @param cellType - Нужный тип рельефа; без него тип не проверяется.
+ * @param cellType - Местность, которую требует здание или найм (холм
+ *   подходит вместо поля); без неё местность не проверяется.
  * @returns Координаты подходящих клеток в пределах карты.
  */
 export const getCellsAround = (
@@ -34,7 +35,9 @@ export const getCellsAround = (
 
       const cell = grid[y][x];
 
-      if (cellType !== undefined && cell.type !== cellType) continue;
+      if (cellType !== undefined && !isBuildableTerrain(cellType, cell.type)) {
+        continue;
+      }
 
       result.push({ x, y });
     }

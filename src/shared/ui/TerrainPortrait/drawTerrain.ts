@@ -3,6 +3,7 @@ import { shape } from '../EntityPortrait/drawEntity';
 import { sample } from '@shared/lib';
 import { beginTerrain, variantFor } from './beginTerrain';
 import { FOREST_LAYOUTS } from './drawForest';
+import { HILLS, SWAMPS } from './drawRelief';
 
 /** Блик на золотой жиле: заметен даже на мелком масштабе. */
 const sparkle = (ctx: CanvasRenderingContext2D, x: number, y: number) => {
@@ -174,6 +175,8 @@ export const drawMountains = (
 
 /** Число вариантов рисунка по типам: для витрины в Storybook. */
 export const TERRAIN_VARIANTS = {
+  hill: HILLS.length,
+  swamp: SWAMPS.length,
   forest: FOREST_LAYOUTS.length,
   mountain: MOUNTAIN_VARIANTS.length,
   gold: GOLD_VARIANTS.length,
