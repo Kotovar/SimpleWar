@@ -5,3 +5,5 @@ export * from './relations';
 export * from './commandResult';
 export * from './terrain';
 export * from './vision';
+export * from './workplace';
+export * from './access';

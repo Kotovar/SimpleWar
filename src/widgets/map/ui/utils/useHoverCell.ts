@@ -3,6 +3,7 @@ import type { Position } from '@shared/config';
 import { useSettingsStore } from '@entities/settings';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import type { MapView } from './useMapView';
+import { useProduceCells } from './useProduceCells';
 import styles from '../styles.module.css';
 
 const contains = (cells: Position[] | null, hover: Position) =>
@@ -22,7 +23,7 @@ export const useHoverCell = (view: MapView, isInteractive: boolean) => {
   const reachableCells = useMovementStore(state => state.reachableCells);
   const attackableTargets = useMovementStore(state => state.attackableTargets);
   const spawnableCells = useHighlightStore(state => state.spawnableCells);
-  const buildableCells = useHighlightStore(state => state.buildableCells);
+  const buildableCells = useProduceCells();
 
   const cursor = (() => {
     if (!isInteractive || !hover) return styles.CursorIdle;

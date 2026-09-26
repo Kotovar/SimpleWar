@@ -1,21 +1,16 @@
-import type { Building, Resources } from '@shared/config';
+import type { Building, Resources, Unit } from '@shared/config';
+import { calculateTurnIncome } from '@shared/lib';
 
 /**
- * Суммирует доход зданий за один ход.
+ * Доход участника за один ход: ратуша приносит свой доход сама, рудник
+ * и лесопилка — только с назначенным рабочим рядом, у которого осталось
+ * рабочее действие.
  *
- * @param buildings - Здания, доход которых учитывается.
- * @returns Количество золота и древесины без изменения входного списка.
+ * @param buildings - Здания участника.
+ * @param units - Юниты участника; без них ресурсные здания ничего не дают.
+ * @returns Количество золота и древесины без изменения входных данных.
  */
-export const calculateIncome = (buildings: Building[]): Resources => {
-  return buildings.reduce(
-    (acc, building) => {
-      if (!building.income) return acc;
-
-      if (building.income.gold) acc.gold += building.income.gold;
-      if (building.income.wood) acc.wood += building.income.wood;
-
-      return acc;
-    },
-    { gold: 0, wood: 0 },
-  );
-};
+export const calculateIncome = (
+  buildings: Building[],
+  units: Unit[] = [],
+): Resources => calculateTurnIncome(buildings, units).income;

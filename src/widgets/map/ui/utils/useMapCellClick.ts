@@ -7,6 +7,7 @@ import { attack } from '@features/combat';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { build } from '@features/build';
 import { spawn } from '@features/spawn';
+import { clearForest } from '@features/workers';
 import {
   move,
   useHighlightSelectors,
@@ -14,7 +15,7 @@ import {
 } from '@features/pathfinding';
 import { handleMapCellClick } from './mapClickHandler';
 
-const commands = { move, attack, build, spawn };
+const commands = { move, attack, build, spawn, clearForest };
 
 const findAt = <T extends { x: number; y: number }>(
   entities: Record<string, T>,
@@ -49,6 +50,7 @@ export const useMapCellClick = (scene: Scene) => {
   const {
     spawnableCells,
     buildableCells,
+    clearableCells,
     resetStore: clearHighlight,
   } = useHighlightSelectors();
 
@@ -77,6 +79,7 @@ export const useMapCellClick = (scene: Scene) => {
         attackable: attackableTargets,
         buildable: buildableCells,
         spawnable: spawnableCells,
+        clearable: clearableCells,
       },
       commands,
       ui: {

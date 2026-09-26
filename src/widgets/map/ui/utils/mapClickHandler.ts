@@ -69,6 +69,16 @@ const clickWithOwnUnit = (
   }
 
   if (
+    unit.role === 'civil' &&
+    commands.clearForest &&
+    isHighlighted(highlights.clearable ?? null, x, y)
+  ) {
+    commands.clearForest({ actor, workerId: unit.id, x, y });
+    resetInteraction(ctx);
+    return;
+  }
+
+  if (
     unit.type === 'worker' &&
     unit.role === 'civil' &&
     selection.buildingTypeToPlace &&
@@ -132,7 +142,7 @@ const clickWithOwnBuilding = (
 /**
  * Переводит клик по клетке в намерение: приказ по подсвеченной клетке
  * либо смену выбора. Приоритет задан порядком проверок: движение, атака,
- * строительство или найм, затем выбор объекта под курсором.
+ * расчистка, строительство или найм, затем выбор объекта под курсором.
  * Результат команды пока не влияет на очистку выбора; сообщение об отказе — S19.
  *
  * @param x - Столбец клетки.

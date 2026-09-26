@@ -21,6 +21,7 @@ import { useMapStore } from '@entities/maps';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand } from '@entities/journals';
 import { getDebugExceptions, getPayableResources } from '@entities/settings';
+import { isPlacementBlocking } from './placementAccess';
 
 const isBuildException = (exception: DebugException) =>
   exception === 'freeBuild' || exception === 'instantBuild';
@@ -74,6 +75,7 @@ const validateAndBuild = (
   }
   const { spawnBuilding, getBuildingAt } = useBuildingsStore.getState();
   if (getUnitAt(x, y) || getBuildingAt(x, y)) return reject('occupied');
+  if (isPlacementBlocking(actor, { x, y })) return reject('blocked');
 
   const { resources, removeResources } = useEconomyStore.getState();
   // Бесплатность снимает только цену: очки, место и тип проверены как обычно.
@@ -90,6 +92,8 @@ const validateAndBuild = (
     return failure(`Здание ${buildingType} не создано`);
   }
   changeBuildPoints(workerId);
+  // Приказ стройки снимает назначение на добычу.
+  useUnitsStore.getState().setWorkplace(workerId, null);
   if (!isFree) removeResources(actor, config.cost);
   return ok;
 };

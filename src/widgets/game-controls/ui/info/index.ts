@@ -6,3 +6,5 @@ export * from './WorkerBuildOptions';
 export * from './UnitOptions';
 export * from './AiTurnBanner';
 export * from './DebugPanel';
+export * from './WorkerJobs';
+export * from './BuildingManage';

@@ -12,6 +12,7 @@ import { useBuildingsSelectors } from '@entities/buildings';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { getPayableResources, useDebugException } from '@entities/settings';
+import { isPlacementBlocking } from '@features/build';
 import styles from './OptionCards.styles.module.css';
 
 /** Где искать подсвеченную клетку для зданий с особым требованием к местности. */
@@ -63,7 +64,13 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
       calculateActionHighlights(unit.id);
     } else {
       selectBuildingForSpawn(buildingType);
-      calculateBuildableCells(unit.id, requiredField);
+      // Предпросмотр: клетки, где здание перекроет последний проход, не
+      // подсвечиваются — та же проверка, что в команде стройки.
+      calculateBuildableCells(
+        unit.id,
+        requiredField,
+        cell => !isPlacementBlocking(unit.owner, cell),
+      );
     }
   };
 
@@ -91,7 +98,7 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
         <p className={styles.Prompt} role='status'>
           {buildableCells?.length
             ? `Кликните по подсвеченной клетке${place}, чтобы построить «${BUILDINGS_NAME[selected]}».`
-            : `Рядом с рабочим нет свободной клетки${place}: подведите его ближе.`}{' '}
+            : `Рядом с рабочим нет свободной клетки${place}, где здание не перекроет последний проход: подведите его в другое место.`}{' '}
           Повторный клик по карточке отменит выбор.
         </p>
       )}

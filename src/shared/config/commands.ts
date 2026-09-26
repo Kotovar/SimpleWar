@@ -8,7 +8,12 @@ export type CommandType =
   | 'build'
   | 'spawn'
   | 'endTurn'
-  | 'surrender';
+  | 'surrender'
+  | 'assign'
+  | 'unassign'
+  | 'repair'
+  | 'clearForest'
+  | 'demolish';
 
 /** Последствия действий, которые журнал записывает помимо самих команд. */
 export type GameOutcomeType =
@@ -41,6 +46,8 @@ export type RejectionCode =
   | 'resources'
   | 'population'
   | 'target'
+  | 'workplace'
+  | 'blocked'
   | 'map'
   | 'failure';
 
@@ -65,6 +72,8 @@ export const REJECTION_MESSAGE: Record<RejectionCode, string> = {
   resources: 'Недостаточно ресурсов',
   population: 'Не хватает лимита населения',
   target: 'Недопустимая цель',
+  workplace: 'Здание уже обслуживает другой рабочий',
+  blocked: 'Постройка перекроет последний проход',
   map: 'Не удалось подготовить карту',
   failure: 'Внутренняя ошибка игры',
 };

@@ -11,6 +11,7 @@ import type { MoveCommand } from '@features/pathfinding';
 import type { AttackCommand } from '@features/combat';
 import type { BuildCommand } from '@features/build';
 import type { SpawnCommand } from '@features/spawn';
+import type { ClearForestCommand } from '@features/workers';
 
 /** Всё, что нужно клику: где кликнули, что выбрано, что подсвечено и чем ответить. */
 export type MapClickContext = {
@@ -34,6 +35,8 @@ export type MapClickContext = {
     attackable: Position[] | null;
     buildable: Position[] | null;
     spawnable: Position[] | null;
+    /** Клетки леса в режиме расчистки. */
+    clearable?: Position[] | null;
   };
   /** Игровые команды — те же, что вызывает ИИ. */
   commands: {
@@ -41,6 +44,7 @@ export type MapClickContext = {
     attack: (command: AttackCommand) => CommandResult;
     build: (command: BuildCommand) => CommandResult;
     spawn: (command: SpawnCommand) => CommandResult;
+    clearForest?: (command: ClearForestCommand) => CommandResult;
   };
   /** Изменение выбора и подсветки в интерфейсе. */
   ui: {

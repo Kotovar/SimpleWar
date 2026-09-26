@@ -19,6 +19,8 @@ type UnitsState = {
   damageUnit: (id: string, damage: number) => void;
   changeAttackPoints: (id: string) => void;
   changeBuildPoints: (id: string) => void;
+  /** Назначает рабочего на рудник или лесопилку; `null` снимает назначение. */
+  setWorkplace: (id: string, buildingId: string | null) => void;
   selectUnitForSpawn: (unitType: UnitType) => void;
   clearSelectedUnitForSpawn: () => void;
   resetUnitsForNewTurn: (owner: Owner) => void;
@@ -56,6 +58,8 @@ export const useUnitsStore = create<UnitsState>()(
         unit.x = x;
         unit.y = y;
         unit.movePoints -= cost;
+        // Новый приказ движения снимает назначение: рабочий ушёл от здания.
+        if (unit.role === 'civil') unit.workplaceId = null;
       }),
 
     damageUnit: (id, damage) => {
@@ -101,6 +105,12 @@ export const useUnitsStore = create<UnitsState>()(
       });
     },
 
+    setWorkplace: (id, buildingId) =>
+      set(state => {
+        const unit = state.units[id];
+        if (unit?.role === 'civil') unit.workplaceId = buildingId;
+      }),
+
     selectUnitForSpawn: unitType => {
       set(state => {
         state.selectedUnitForSpawn = unitType;
@@ -143,3 +153,14 @@ export const useUnitsStore = create<UnitsState>()(
     },
   })),
 );
+
+// Разрушение или снос здания разрывает назначение его рабочего.
+gameEvents.subscribe(event => {
+  if (event.type !== 'BUILDING_DESTROYED') return;
+  const { units, setWorkplace } = useUnitsStore.getState();
+  for (const unit of Object.values(units)) {
+    if (unit.role === 'civil' && unit.workplaceId === event.building.id) {
+      setWorkplace(unit.id, null);
+    }
+  }
+});

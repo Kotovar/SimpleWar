@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useBuildingsSelectors } from '@entities/buildings';
+import { useUnitsStore } from '@entities/units';
 import { useEconomySelectors } from '@entities/economies';
 import { calculateIncome, useGameLoopSelectors } from '@features/game-loop';
 import { GoldIcon, PopulationIcon, WoodIcon } from '@shared/ui';
@@ -30,9 +31,14 @@ export const ResourcesInfo = () => {
   const { resources, populationCap } = useEconomySelectors();
   const { getEconomicBuildings } = useBuildingsSelectors();
   const { humanId } = useGameLoopSelectors();
+  const units = useUnitsStore(state => state.units);
   if (!humanId) return null;
 
-  const income = calculateIncome(getEconomicBuildings(humanId));
+  // Прогноз, если закончить ход сейчас: добыча идёт только с рабочими.
+  const income = calculateIncome(
+    getEconomicBuildings(humanId),
+    Object.values(units).filter(({ owner }) => owner === humanId),
+  );
   const { occupied, max } = populationCap[humanId];
 
   return (
