@@ -1,19 +1,22 @@
-import { SELECTED } from '@shared/config';
+import { SELECTED, type Position } from '@shared/config';
+
+/** Маршрут и его цена в очках движения, как их отдаёт `getPath`. */
+export type MovePath = { path: Position[]; cost: number };
 
 /**
  * Рисует маршрут до клетки под курсором и цену хода в конце пути.
  *
- * @param path - Клетки маршрута от текущей позиции до цели, как их отдаёт `getPath`.
+ * @param route - Клетки маршрута от текущей позиции до цели и цена.
  */
 export const drawPath = (
   ctx: CanvasRenderingContext2D,
-  path: number[][],
+  { path, cost }: MovePath,
   cellSize: number,
 ) => {
   if (path.length < 2) return;
 
   const scale = cellSize / 32;
-  const center = ([x, y]: number[]) => [
+  const center = ({ x, y }: Position) => [
     (x + 0.5) * cellSize,
     (y + 0.5) * cellSize,
   ];
@@ -36,9 +39,9 @@ export const drawPath = (
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Цена хода в клетках: столько очков движения спишется.
+  // Столько очков движения спишется: холм и болото стоят дороже поля.
   const [endX, endY] = center(path[path.length - 1]);
-  const text = String(path.length - 1);
+  const text = String(cost);
   ctx.font = `bold ${Math.round(11 * scale)}px sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';

@@ -4,7 +4,14 @@ import type { ParticipantId } from './gameLoop';
 export type Owner = ParticipantId;
 
 /** Тип местности клетки. */
-export type CellType = 'grass' | 'mountain' | 'water' | 'forest' | 'gold';
+export type CellType =
+  | 'grass'
+  | 'hill'
+  | 'swamp'
+  | 'mountain'
+  | 'water'
+  | 'forest'
+  | 'gold';
 
 /** Координаты на карте. */
 export type Position = {

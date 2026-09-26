@@ -30,6 +30,8 @@ export const OWNER_NAME = {
 /** Игровые названия местности. */
 export const TERRAIN_NAME = {
   grass: 'Поле',
+  hill: 'Холм',
+  swamp: 'Болото',
   mountain: 'Гора',
   water: 'Вода',
   forest: 'Лес',

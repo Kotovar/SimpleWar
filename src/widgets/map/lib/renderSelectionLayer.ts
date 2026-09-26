@@ -4,14 +4,14 @@ import {
   drawHoverHighlight,
   drawSelectionHighlight,
 } from './drawSelectionHighlight';
-import { drawAttackRange, drawPath } from './drawPath';
+import { drawAttackRange, drawPath, type MovePath } from './drawPath';
 import { drawTerrainHighlight } from './drawTerrain';
 
 type Options = {
   /** Клетка под курсором. */
   hover?: Position | null;
   /** Маршрут до клетки под курсором. */
-  path?: number[][] | null;
+  path?: MovePath | null;
   /** Цели, доступные выбранной сущности прямо сейчас. */
   attackableTargets?: Position[] | null;
   /** Фаза пульсации выделения от 0 до 1. */

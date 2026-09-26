@@ -1,34 +1,33 @@
-import PF from 'pathfinding';
 import type { Position } from '@shared/config';
+import { findCheapestPaths, type MovementGrid } from '@shared/lib';
 
 /**
- * Находит кратчайший путь без изменения исходной сетки.
+ * Находит самый дешёвый путь по ценам входа в клетки.
  *
  * @param firstPosition - Исходная клетка, даже если она занята юнитом.
  * @param lastPosition - Свободная целевая клетка.
- * @param pfGrid - Сетка препятствий.
- * @returns Клетки пути от начала до цели или пустой список.
+ * @param costs - Цены входа в клетки.
+ * @returns Клетки пути от начала до цели и его цена; пустой путь и цена
+ * `Infinity`, если цель недостижима или совпадает с началом.
  */
 export const getPath = (
   firstPosition: Position,
   lastPosition: Position,
-  pfGrid: PF.Grid,
+  costs: MovementGrid,
 ) => {
-  const { x: startX, y: startY } = firstPosition;
-  const { x: endX, y: endY } = lastPosition;
+  const { cost, previous, width } = findCheapestPaths(costs, firstPosition);
+  const { x, y } = lastPosition;
+  const isInside = Number.isInteger(x) && x >= 0 && x < width;
+  const total = isInside ? cost.get(y * width + x) : undefined;
+  if (!total) return { path: [], cost: Infinity };
 
-  if (
-    ![startX, startY, endX, endY].every(Number.isInteger) ||
-    !pfGrid.isInside(startX, startY) ||
-    !pfGrid.isInside(endX, endY) ||
-    !pfGrid.isWalkableAt(endX, endY)
-  )
-    return [];
-
-  // Поиск помечает посещённые узлы, поэтому для каждого вызова нужна копия сетки.
-  const searchGrid = pfGrid.clone();
-  searchGrid.setWalkableAt(startX, startY, true);
-
-  const finder = new PF.AStarFinder();
-  return finder.findPath(startX, startY, endX, endY, searchGrid);
+  const path: Position[] = [];
+  for (
+    let key: number | undefined = y * width + x;
+    key !== undefined;
+    key = previous.get(key)
+  ) {
+    path.push({ x: key % width, y: Math.floor(key / width) });
+  }
+  return { path: path.reverse(), cost: total };
 };

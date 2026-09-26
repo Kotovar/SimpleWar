@@ -30,7 +30,7 @@ import { initGameLoopEvents, nextTurn, resetGame } from '@features/game-loop';
 import { initializeGame } from '@widgets/start-game';
 import { gameEvents } from '@shared/lib';
 import { useSettingsStore } from '@entities/settings';
-import { createMovementPFGrid, getPath } from '@features/pathfinding';
+import { createMovementGrid, getPath } from '@features/pathfinding';
 import { initPopulationSystem } from '@app/system';
 
 const units = () => useUnitsStore.getState();
@@ -151,6 +151,33 @@ describe('construction and recruitment', () => {
       buildPoints: 1,
       movePoints: 4,
     });
+  });
+
+  it('allows a farm on a hill and rejects one on a swamp', () => {
+    const worker = units().spawnUnit('worker', 2, 2, 'p1', true)!;
+    economy().addResources('p1', { wood: 100 });
+    useMapStore.getState().setCell(2, 1, { type: 'swamp', isWalkable: true });
+    useMapStore.getState().setCell(3, 2, { type: 'hill', isWalkable: true });
+    expect(
+      build({
+        actor: 'p1',
+        workerId: worker,
+        buildingType: 'farm',
+        x: 2,
+        y: 1,
+      }),
+    ).toMatchObject({ ok: false, code: 'terrain' });
+    expect(buildings().getBuildingAt(2, 1)).toBeNull();
+    expect(
+      build({
+        actor: 'p1',
+        workerId: worker,
+        buildingType: 'farm',
+        x: 3,
+        y: 2,
+      }),
+    ).toMatchObject({ ok: true });
+    expect(buildings().getBuildingAt(3, 2)?.type).toBe('farm');
   });
 });
 
@@ -314,6 +341,24 @@ describe('three participants', () => {
 });
 
 describe('movement', () => {
+  it('charges two points to enter a hill and refuses it with one point left', () => {
+    const worker = units().spawnUnit('worker', 1, 2, 'p1', true)!;
+    expect(move({ actor: 'p1', unitId: worker, x: 2, y: 2 })).toMatchObject({
+      ok: true,
+    });
+    useMapStore.getState().setCell(3, 2, { type: 'hill', isWalkable: true });
+    expect(move({ actor: 'p1', unitId: worker, x: 3, y: 2 })).toMatchObject({
+      ok: true,
+    });
+    expect(units().units[worker].movePoints).toBe(1);
+    useMapStore.getState().setCell(4, 2, { type: 'swamp', isWalkable: true });
+    expect(move({ actor: 'p1', unitId: worker, x: 4, y: 2 })).toMatchObject({
+      ok: false,
+      code: 'points',
+    });
+    expect(units().units[worker]).toMatchObject({ x: 3, y: 2, movePoints: 1 });
+  });
+
   it('charges the actual four-cell detour instead of two-cell direct distance', () => {
     const worker = units().spawnUnit('worker', 1, 2, 'p1', true)!;
     useMapStore.getState().setCell(2, 2, { type: 'water', isWalkable: false });
@@ -330,10 +375,74 @@ describe('movement', () => {
 });
 
 describe('game initialization', () => {
-  it('rejects an isolated fixed map without spawning objects', () => {
+  it('reproduces the prepared map and fallback decision from a fixed seed', () => {
     resetGame();
-    // На карте 30 × 30 этот сид не даёт допустимого прохода и ресурсов.
     useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 0 });
+    expect(initializeGame()).toBe(true);
+    const first = {
+      grid: useMapStore.getState().grid,
+      seed: useMapStore.getState().seed,
+      usedFallback: useMapStore.getState().usedFallback,
+    };
+    resetGame();
+    useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 0 });
+    expect(initializeGame()).toBe(true);
+    expect(useMapStore.getState()).toMatchObject(first);
+  });
+
+  it('keeps the high bits of a safe-integer seed', () => {
+    resetGame();
+    useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 7 });
+    expect(initializeGame()).toBe(true);
+    const low = useMapStore.getState().grid;
+    resetGame();
+    useSettingsStore.setState({
+      mapGenerationMode: 'fixed',
+      customSeed: 0x100000007,
+    });
+    expect(initializeGame()).toBe(true);
+    expect(useMapStore.getState().grid).not.toEqual(low);
+  });
+
+  it('creates a connected base and worker for each participant', () => {
+    resetGame();
+    useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 3 });
+    const participants: Participant[] = [
+      { id: 'p1', controller: 'human' },
+      { id: 'p2', controller: 'ai' },
+      { id: 'p3', controller: 'ai' },
+      { id: 'p4', controller: 'ai' },
+    ];
+    expect(initializeGame(participants)).toBe(true);
+    expect(
+      Object.values(buildings().buildings)
+        .map(({ owner }) => owner)
+        .sort(),
+    ).toEqual(participants.map(({ id }) => id));
+    expect(
+      Object.values(units().units)
+        .map(({ owner }) => owner)
+        .sort(),
+    ).toEqual(participants.map(({ id }) => id));
+  });
+
+  it('rejects overlapping start zones before creating objects', () => {
+    resetGame();
+    useSettingsStore.setState({ gridColumns: 5, gridRows: 5 });
+    expect(
+      initializeGame([
+        { id: 'p1', controller: 'human' },
+        { id: 'p2', controller: 'ai' },
+        { id: 'p3', controller: 'ai' },
+      ]),
+    ).toBe(false);
+    expect(Object.values(buildings().buildings)).toHaveLength(0);
+    expect(Object.values(units().units)).toHaveLength(0);
+  });
+
+  it('rejects invalid map settings without spawning objects', () => {
+    resetGame();
+    useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: -1 });
     expect(initializeGame()).toBe(false);
     expect(useGameLoopStore.getState()).toMatchObject({
       phase: 'setup',
@@ -370,9 +479,11 @@ describe('game initialization', () => {
     expect(Object.values(original)).toHaveLength(2);
     expect(Object.values(buildings().buildings)).toHaveLength(2);
     const workers = Object.values(original);
-    const grid = createMovementPFGrid(useMapStore.getState().grid);
-    grid.setWalkableAt(workers[1].x, workers[1].y, true);
-    expect(getPath(workers[0], workers[1], grid).length).toBeGreaterThan(0);
+    const grid = createMovementGrid(useMapStore.getState().grid);
+    grid[workers[1].y][workers[1].x] = 1;
+    expect(getPath(workers[0], workers[1], grid).path.length).toBeGreaterThan(
+      0,
+    );
     initializeGame();
     expect(units().units).toBe(original);
   });

@@ -175,6 +175,8 @@ const getTerrainType = (value: number): CellType => {
   if (value < -0.42) return 'water';
   if (value > 0.75) return 'mountain';
   if (value > 0.55) return 'forest';
+  if (value > 0.28) return 'hill';
+  if (value < -0.22) return 'swamp';
   return 'grass';
 };
 
@@ -201,7 +203,12 @@ export const generateTerrain = (
   return Array.from({ length: height }, (_, y) =>
     Array.from({ length: width }, (_, x): Cell => {
       const type = getTerrainType(field(x, y) * CONTRAST);
-      return { x, y, type, isWalkable: type === 'grass' };
+      return {
+        x,
+        y,
+        type,
+        isWalkable: type === 'grass' || type === 'hill' || type === 'swamp',
+      };
     }),
   );
 };

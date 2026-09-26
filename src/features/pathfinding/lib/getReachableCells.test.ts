@@ -1,14 +1,13 @@
 import { describe, expect, it } from 'vite-plus/test';
-import PF from 'pathfinding';
 import { getReachableCells } from './getReachableCells';
 
 describe('getReachableCells', () => {
   it('обходит препятствие и не включает стартовую клетку', () => {
-    const grid = new PF.Grid([
-      [0, 0, 0],
-      [0, 1, 0],
-      [0, 0, 0],
-    ]);
+    const grid = [
+      [1, 1, 1],
+      [1, 0, 1],
+      [1, 1, 1],
+    ];
 
     const cells = getReachableCells(grid, 0, 0, 2);
     expect(cells).toHaveLength(4);
@@ -20,18 +19,34 @@ describe('getReachableCells', () => {
         { x: 0, y: 2 },
       ]),
     );
-    expect(grid.isWalkableAt(1, 1)).toBe(false);
   });
 
-  it('учитывает диагональные переходы', () => {
-    const grid = new PF.Grid(2, 2);
+  it('не пускает на холм, если осталось меньше двух очков', () => {
+    const grid = [[1, 1, 2]];
 
-    expect(getReachableCells(grid, 0, 0, 1)).toHaveLength(2);
-    expect(getReachableCells(grid, 0, 0, 1, true)).toHaveLength(3);
+    expect(getReachableCells(grid, 0, 0, 2)).toEqual([{ x: 1, y: 0 }]);
+    expect(getReachableCells(grid, 0, 0, 3)).toHaveLength(2);
+  });
+
+  it('не ходит по диагонали', () => {
+    expect(
+      getReachableCells(
+        [
+          [1, 0],
+          [0, 1],
+        ],
+        0,
+        0,
+        4,
+      ),
+    ).toEqual([]);
   });
 
   it('отклоняет недопустимый старт или лимит', () => {
-    const grid = new PF.Grid(2, 2);
+    const grid = [
+      [1, 1],
+      [1, 1],
+    ];
 
     expect(getReachableCells(grid, -1, 0, 1)).toEqual([]);
     expect(getReachableCells(grid, 0.5, 0, 1)).toEqual([]);

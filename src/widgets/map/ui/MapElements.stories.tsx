@@ -14,11 +14,13 @@ import {
   drawEffect,
   drawForest,
   drawGoldOre,
+  drawHill,
   drawHoverHighlight,
   drawMountains,
   drawMovement,
   drawSelectionHighlight,
   drawTerrainHighlight,
+  drawSwamp,
   renderEntitiesLayer,
   renderMovementLayer,
   renderSelectionLayer,
@@ -153,6 +155,18 @@ const TERRAIN: Record<string, Tile[]> = {
     drawGoldOre,
     TERRAIN_VARIANTS.gold,
   ),
+  [TERRAIN_NAME.hill]: [
+    {
+      label: TERRAIN_NAME.hill,
+      draw: withGround((ctx, size) => drawHill(ctx, 0, 0, size)),
+    },
+  ],
+  [TERRAIN_NAME.swamp]: [
+    {
+      label: TERRAIN_NAME.swamp,
+      draw: withGround((ctx, size) => drawSwamp(ctx, 0, 0, size)),
+    },
+  ],
 };
 
 const enemy = unit({ owner: 'p2' });
@@ -305,10 +319,13 @@ const drawSampleMap: Draw = (ctx, size) => {
     size,
     {
       hover: { x: 5, y: 3 },
-      path: [
-        [4, 3],
-        [5, 3],
-      ],
+      path: {
+        path: [
+          { x: 4, y: 3 },
+          { x: 5, y: 3 },
+        ],
+        cost: 1,
+      },
       attackableTargets: [{ x: 6, y: 2 }],
     },
   );

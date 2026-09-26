@@ -71,3 +71,9 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+
+.MapMeta {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}

@@ -5,7 +5,13 @@ import {
   type CommandResult,
   type ParticipantId,
 } from '@shared/config';
-import { canSpawnBuilding, failure, ok, reject } from '@shared/lib';
+import {
+  canSpawnBuilding,
+  failure,
+  isBuildableTerrain,
+  ok,
+  reject,
+} from '@shared/lib';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
 import { useEconomyStore } from '@entities/economies';
@@ -49,7 +55,9 @@ const validateAndBuild = (
   if (!Number.isInteger(x) || !Number.isInteger(y) || !cell) {
     return reject('bounds');
   }
-  if (cell.type !== (config.requiredField ?? 'grass')) return reject('terrain');
+  if (!isBuildableTerrain(config.requiredField, cell.type)) {
+    return reject('terrain');
+  }
   // Рабочий строит на любой из восьми соседних клеток.
   if (Math.max(Math.abs(worker.x - x), Math.abs(worker.y - y)) !== 1) {
     return reject('distance');

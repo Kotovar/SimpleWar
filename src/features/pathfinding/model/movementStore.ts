@@ -6,7 +6,7 @@ import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
 import {
   getReachableCells,
-  createMovementPFGrid,
+  createMovementGrid,
   getAttackableTargets,
 } from '../lib';
 
@@ -34,7 +34,7 @@ export const useMovementStore = create<MovementState>()(
       const grid = useMapStore.getState().grid;
       const reachable = unit
         ? getReachableCells(
-            createMovementPFGrid(grid),
+            createMovementGrid(grid),
             unit.x,
             unit.y,
             unit.movePoints,

@@ -4,7 +4,13 @@ import {
   type ParticipantId,
   type UnitType,
 } from '@shared/config';
-import { canSpawnUnit, failure, ok, reject } from '@shared/lib';
+import {
+  canSpawnUnit,
+  failure,
+  isBuildableTerrain,
+  ok,
+  reject,
+} from '@shared/lib';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
 import { useEconomyStore } from '@entities/economies';
@@ -50,7 +56,7 @@ const validateAndSpawn = (
   if (!Number.isInteger(x) || !Number.isInteger(y) || !cell) {
     return reject('bounds');
   }
-  if (cell.type !== 'grass' || !cell.isWalkable) return reject('terrain');
+  if (!isBuildableTerrain('grass', cell.type)) return reject('terrain');
   if (Math.max(Math.abs(building.x - x), Math.abs(building.y - y)) !== 1) {
     return reject('distance');
   }

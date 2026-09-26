@@ -4,7 +4,7 @@ import { useUnitsStore } from '@entities/units';
 import { useMapStore } from '@entities/maps';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand } from '@entities/journals';
-import { createMovementPFGrid } from './createMovementPFGrid';
+import { createMovementGrid } from './createMovementGrid';
 import { getPath } from './getPath';
 import { isCellOccupied } from './isCellOccupied';
 
@@ -36,9 +36,9 @@ const validateAndMove = ({
   }
   if (isCellOccupied(x, y)) return reject('occupied');
 
-  // Цена — длина реального пути в обход препятствий, а не Manhattan.
-  const cost = getPath(unit, { x, y }, createMovementPFGrid(grid)).length - 1;
-  if (cost <= 0) return reject('path');
+  // Цена — сумма цен входа по самому дешёвому пути, а не Manhattan.
+  const { cost } = getPath(unit, { x, y }, createMovementGrid(grid));
+  if (cost === Infinity) return reject('path');
   if (cost > unit.movePoints) return reject('points');
 
   moveUnit(unitId, x, y, cost);

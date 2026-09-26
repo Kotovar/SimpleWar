@@ -60,7 +60,7 @@
 Тесты: `pnpm test` — весь набор, `pnpm test:unit` — unit,
 `pnpm test:integration` — сценарии взаимодействия хранилищ и событий.
 Состояние партии находится в `entities/games`, запуск — в
-`widgets/start-game/initializeGame.ts`. Для изменений документации достаточно
+`widgets/start-game/lib/initializeGame.ts`. Для изменений документации достаточно
 проверить ссылки и форматирование только затронутых Markdown-файлов.
 
 Источники: [package.json](../package.json), [tsconfig.json](../tsconfig.json),

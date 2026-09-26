@@ -8,6 +8,7 @@ import {
   type Unit,
 } from '@shared/config';
 import { EntityPortrait, TerrainPortrait } from '@shared/ui';
+import { getMoveCost } from '@shared/lib';
 import { useGameLoopSelectors } from '@features/game-loop';
 import styles from './SelectedEntityInfo.styles.module.css';
 
@@ -90,7 +91,9 @@ const CellDetails = ({ cell }: { cell: Cell }) => (
       <dd
         className={cell.isWalkable ? styles.IsWalkable : styles.IsNotWalkable}
       >
-        {cell.isWalkable ? 'Проходима' : 'Непроходима'}
+        {cell.isWalkable
+          ? `Проходима, ход ${getMoveCost(cell)} ${getMoveCost(cell) === 1 ? 'очко' : 'очка'}`
+          : 'Непроходима'}
       </dd>
     </div>
   </>
