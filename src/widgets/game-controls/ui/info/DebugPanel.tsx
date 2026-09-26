@@ -23,6 +23,10 @@ export const DebugPanel = () => {
   const enabled = useDebugStore(state => state.enabled);
   const exceptions = useDebugStore(state => state.exceptions);
   const setException = useDebugStore(state => state.setException);
+  const fullView = useDebugStore(state => state.fullView);
+  const viewer = useDebugStore(state => state.viewer);
+  const setFullView = useDebugStore(state => state.setFullView);
+  const setViewer = useDebugStore(state => state.setViewer);
   const [target, setTarget] = useState<Target>(humanId ?? 'all');
 
   if (!enabled) return null;
@@ -52,8 +56,42 @@ export const DebugPanel = () => {
           )}
         </dl>
       )}
+      <label className={styles.Toggle}>
+        <input
+          type='checkbox'
+          checked={fullView}
+          onChange={event => setFullView(event.target.checked)}
+        />
+        Отключить туман
+      </label>
       <label className={styles.Target}>
-        Для кого
+        Смотреть глазами
+        <select
+          value={viewer ?? humanId ?? ''}
+          disabled={fullView}
+          onChange={event =>
+            setViewer(
+              event.target.value === humanId
+                ? null
+                : (event.target.value as ParticipantId),
+            )
+          }
+        >
+          {participants.map(({ id, controller }) => (
+            <option key={id} value={id}>
+              {nameOf(id)}
+              {controller === 'ai' ? ' (ИИ)' : ''}
+            </option>
+          ))}
+        </select>
+      </label>
+      <p className={styles.ViewNote}>
+        {fullView
+          ? 'Полный обзор мира: видны все объекты. Знания участников и решения ИИ не меняются, атаковать скрытые цели нельзя.'
+          : `Обзор участника «${nameOf(viewer ?? humanId ?? participants[0].id)}»: туман и память этой стороны.`}
+      </p>
+      <label className={styles.Target}>
+        Исключения для
         <select
           value={target}
           onChange={event => setTarget(event.target.value as Target)}

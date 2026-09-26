@@ -32,6 +32,7 @@ export type RejectionCode =
   | 'owner'
   | 'actionType'
   | 'bounds'
+  | 'hidden'
   | 'terrain'
   | 'occupied'
   | 'distance'
@@ -55,6 +56,7 @@ export const REJECTION_MESSAGE: Record<RejectionCode, string> = {
   owner: 'Этим объектом управляет другой участник',
   actionType: 'Этот объект не может выполнить такое действие',
   bounds: 'Клетка за пределами карты',
+  hidden: 'Клетка вне обзора',
   terrain: 'Неподходящая местность',
   occupied: 'Клетка занята',
   distance: 'Слишком далеко',

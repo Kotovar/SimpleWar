@@ -171,5 +171,6 @@ it('accepts 100 fixed seeds for each preset and both supported party sizes', () 
       2,
     ),
   );
-  expect(rows).toHaveLength(800);
-});
+  expect(rows).toHaveLength(Object.keys(MAP_PRESETS).length * 2 * 100);
+  // Карты 100 × 100 и 100 × 60 генерируются заметно дольше малых.
+}, 60_000);

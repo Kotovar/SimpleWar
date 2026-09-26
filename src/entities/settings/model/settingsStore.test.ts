@@ -91,3 +91,68 @@ describe('масштаб карты', () => {
     });
   });
 });
+
+describe('камера', () => {
+  const store = () => useSettingsStore.getState();
+
+  beforeEach(() => {
+    store().resetStore();
+    store().setGridSize(100, 60);
+    store().setViewport(320, 160);
+  });
+
+  it('сдвигается и выходит за край мира не дальше поля', () => {
+    store().panBy(64, 32);
+    expect(store().camera).toEqual({ x: 2, y: 1 });
+
+    // Поле CAMERA_EDGE_MARGIN = 64 px — две клетки по 32 px.
+    store().panBy(-1000, -1000);
+    expect(store().camera).toEqual({ x: -2, y: -2 });
+
+    store().panBy(100000, 100000);
+    // Окно 10 × 5 клеток у правого нижнего края с тем же полем.
+    expect(store().camera).toEqual({ x: 92, y: 57 });
+  });
+
+  it('при масштабе к точке оставляет под ней ту же клетку', () => {
+    store().centerOn(50, 30);
+    const anchor = { x: 40, y: 100 };
+    const before = {
+      x: store().camera.x + anchor.x / store().cellSize,
+      y: store().camera.y + anchor.y / store().cellSize,
+    };
+
+    store().zoomBy(2, anchor);
+
+    expect(store().camera.x + anchor.x / store().cellSize).toBeCloseTo(
+      before.x,
+    );
+    expect(store().camera.y + anchor.y / store().cellSize).toBeCloseTo(
+      before.y,
+    );
+  });
+
+  it('показывает весь мир целиком и центрирует его', () => {
+    store().setViewport(800, 600);
+    store().fitWorld();
+
+    expect(store().cellSize).toBe(8);
+    expect(store().camera.x).toBe(0);
+    // По высоте мир меньше окна: центрирован с полями сверху и снизу.
+    expect(store().camera.y).toBeLessThan(0);
+  });
+
+  it('маленький мир центрируется в большом окне', () => {
+    store().setGridSize(15, 15);
+    store().setViewport(1280, 720);
+    store().panBy(300, 300);
+
+    expect(store().camera).toEqual({ x: -12.5, y: -3.75 });
+  });
+
+  it('при сбросе сохраняет размер окна', () => {
+    store().resetStore();
+    expect(store().viewport).toEqual({ width: 320, height: 160 });
+    expect(store().camera).toEqual({ x: 0, y: 0 });
+  });
+});

@@ -1,4 +1,5 @@
-import type { Building, Owner, Unit } from '@shared/config';
+import type { Building, BuildingType, Owner, Unit } from '@shared/config';
+import type { CellRange } from '@shared/lib';
 import {
   drawBarracks,
   drawBase,
@@ -18,6 +19,35 @@ export type CellOffsets = Map<
 >;
 
 const SPENT_ALPHA = 0.45;
+
+const BUILDING_DRAWERS = {
+  base: drawBase,
+  mine: drawGoldMine,
+  sawmill: drawSawmill,
+  farm: drawFarm,
+  barracks: drawBarracks,
+  tower: drawTower,
+} satisfies Record<BuildingType, unknown>;
+
+/**
+ * Рисует модель здания без полосы здоровья.
+ *
+ * @param x - Столбец клетки, может быть дробным во время анимации.
+ * @param y - Строка клетки.
+ */
+export const drawBuildingModel = (
+  ctx: CanvasRenderingContext2D,
+  type: BuildingType,
+  x: number,
+  y: number,
+  cellSize: number,
+  owner: Owner,
+  scale = 1,
+) => BUILDING_DRAWERS[type](ctx, x, y, cellSize, owner, scale);
+
+/** Объект целиком вне окна камеры: его не рисуем. */
+const isOutside = (range: CellRange | undefined, x: number, y: number) =>
+  !!range && (x < range.x0 || x >= range.x1 || y < range.y0 || y >= range.y1);
 
 // Свою сущность без очков действий гасим: видно, кем ещё можно ходить.
 const isSpentUnit = (unit: Unit, humanId: Owner | null) =>
@@ -42,6 +72,7 @@ const isSpentBuilding = (building: Building, humanId: Owner | null) => {
  * @param cellSize - Размер клетки в пикселях.
  * @param offsets - Смещения в клетках и масштабы анимируемых сущностей.
  * @param humanId - Участник интерфейса: его сущности гаснут без очков и показывают очки.
+ * @param range - Клетки в окне камеры с запасом; без него рисуется всё.
  */
 export const renderEntitiesLayer = (
   ctx: CanvasRenderingContext2D,
@@ -50,38 +81,18 @@ export const renderEntitiesLayer = (
   cellSize: number,
   offsets?: CellOffsets,
   humanId: Owner | null = null,
+  range?: CellRange,
 ) => {
   Object.values(buildings).forEach(building => {
     const { id, x, y, type, hp, maxHp, owner } = building;
+    if (isOutside(range, x, y)) return;
     const hpRatio = hp / maxHp;
     const { dx = 0, dy = 0, scale = 1 } = offsets?.get(id) ?? {};
 
     ctx.save();
     if (isSpentBuilding(building, humanId)) ctx.globalAlpha = SPENT_ALPHA;
 
-    if (type === 'base') {
-      drawBase(ctx, x + dx, y + dy, cellSize, owner, scale);
-    }
-
-    if (type === 'mine') {
-      drawGoldMine(ctx, x + dx, y + dy, cellSize, owner, scale);
-    }
-
-    if (type === 'sawmill') {
-      drawSawmill(ctx, x + dx, y + dy, cellSize, owner, scale);
-    }
-
-    if (type === 'farm') {
-      drawFarm(ctx, x + dx, y + dy, cellSize, owner, scale);
-    }
-
-    if (type === 'barracks') {
-      drawBarracks(ctx, x + dx, y + dy, cellSize, owner, scale);
-    }
-
-    if (type === 'tower') {
-      drawTower(ctx, x + dx, y + dy, cellSize, owner, scale);
-    }
+    drawBuildingModel(ctx, type, x + dx, y + dy, cellSize, owner, scale);
     ctx.restore();
 
     drawHpBar(ctx, x + dx, y + dy, cellSize, hpRatio);
@@ -89,6 +100,7 @@ export const renderEntitiesLayer = (
 
   Object.values(units).forEach(unit => {
     const { id, x, y, type, hp, maxHp, owner } = unit;
+    if (isOutside(range, x, y)) return;
     const hpRatio = hp / maxHp;
     const { dx = 0, dy = 0, scale = 1 } = offsets?.get(id) ?? {};
 

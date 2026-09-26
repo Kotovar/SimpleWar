@@ -19,3 +19,12 @@
   border-radius: 16px;
   box-shadow: var(--shadow-raised);
 }
+
+/* Узкий экран: панель уходит под карту и сворачивается, карта не вытесняется. */
+@media (max-width: 900px) {
+  .Main {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'toolbar' 'map' 'panel';
+  }
+}

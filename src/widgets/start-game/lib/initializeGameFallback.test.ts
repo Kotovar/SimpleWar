@@ -41,3 +41,13 @@ it('uses the validated fallback after ten rejected candidates', () => {
   expect(Object.values(useBuildingsStore.getState().buildings)).toHaveLength(2);
   expect(Object.values(useUnitsStore.getState().units)).toHaveLength(2);
 });
+
+it('rejects an oversized map before generating it', () => {
+  resetGame();
+  vi.mocked(generateMap).mockClear();
+  useSettingsStore.setState({ gridColumns: 101, gridRows: 60 });
+
+  expect(initializeGame()).toBe(false);
+  expect(generateMap).not.toHaveBeenCalled();
+  expect(useMapStore.getState().grid).toEqual([]);
+});

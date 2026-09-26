@@ -13,3 +13,8 @@ export * from './renderSelectionLayer';
 export * from './renderTerrainLayer';
 export * from './renderMovementLayer';
 export * from './withClear';
+export * from './buildScene';
+export * from './cellRange';
+export * from './renderFogLayer';
+export * from './renderSnapshots';
+export * from './renderMinimap';

@@ -24,6 +24,8 @@ type BaseBuilding = {
   y: number;
   hp: number;
   maxHp: number;
+  /** Радиус обзора по Manhattan; не связан с дальностью атаки. */
+  sightRange: number;
   owner: Owner;
   cost: Cost;
   requiredField?: CellType;
@@ -72,6 +74,7 @@ export const PRODUCTION_BUILDINGS_CONFIG: Record<
 > = {
   base: {
     maxHp: 700,
+    sightRange: 4,
     income: { gold: 3 },
     cost: { gold: 0, wood: 0 },
     spawningUnits: ['worker'],
@@ -80,6 +83,7 @@ export const PRODUCTION_BUILDINGS_CONFIG: Record<
   },
   barracks: {
     maxHp: 150,
+    sightRange: 2,
     cost: { gold: 80, wood: 140 },
     requiredField: 'grass',
     spawningUnits: ['swordsman', 'archer'],
@@ -94,12 +98,14 @@ export const RESOURCE_BUILDINGS_CONFIG: Record<
 > = {
   mine: {
     maxHp: 130,
+    sightRange: 2,
     income: { gold: 15 },
     cost: { gold: 120, wood: 0 },
     requiredField: 'gold',
   },
   sawmill: {
     maxHp: 90,
+    sightRange: 2,
     income: { wood: 15 },
     cost: { gold: 60, wood: 80 },
     requiredField: 'forest',
@@ -112,6 +118,7 @@ export const SUPPLY_BUILDINGS_CONFIG: Record<
 > = {
   farm: {
     maxHp: 70,
+    sightRange: 2,
     cost: { gold: 60, wood: 160 },
     populationSupply: 5,
   },
@@ -123,6 +130,7 @@ export const COMBAT_BUILDINGS_CONFIG: Record<
 > = {
   tower: {
     maxHp: 180,
+    sightRange: 4,
     attack: 20,
     attackRange: 3,
     cost: { gold: 150, wood: 200 },

@@ -53,6 +53,7 @@ it.each([
 it('rejects invalid dimensions before allocating a map', () => {
   expect(() => generateMap(0, 15, 1)).toThrow();
   expect(() => generateMap(15.5, 15, 1)).toThrow();
+  expect(() => generateMap(101, 15, 1)).toThrow(RangeError);
 });
 
 it('rejects a fractional seed', () => {

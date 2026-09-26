@@ -1,5 +1,12 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
+import type { Cell } from '@shared/config';
 import { ConfirmDialog } from '@shared/ui';
+import { useMapViewer } from '@entities/settings';
+import {
+  getCellKnowledge,
+  getKnownCellType,
+  useParticipantKnowledge,
+} from '@entities/perceptions';
 import { nextTurn, resetGame, useGameLoopSelectors } from '@features/game-loop';
 import { useSelectionSelectors } from '@features/selection';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
@@ -43,17 +50,26 @@ const EmptySelection = () => (
         <kbd>ЛКМ</kbd> выбрать или выполнить действие
       </li>
       <li>
-        <kbd>ПКМ</kbd> перетаскивание карты
+        <kbd>ПКМ</kbd> перетаскивание карты (или средняя кнопка, Пробел + ЛКМ)
       </li>
       <li>
-        <kbd>Колесо</kbd> масштаб
+        <kbd>Колесо</kbd> масштаб к курсору
+      </li>
+      <li>
+        <kbd>WASD</kbd> или стрелки — сдвиг камеры
       </li>
     </ul>
   </div>
 );
 
-export const PhaseInProgress = () => {
+type Props = {
+  /** Мини-карта над сведениями о выбранном. */
+  minimap?: ReactNode;
+};
+
+export const PhaseInProgress = ({ minimap }: Props) => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   const {
     selection,
@@ -65,11 +81,29 @@ export const PhaseInProgress = () => {
   const { resetStore: clearMovement } = useMovementStore();
   const { resetStore: clearHighlight } = useHighlightStore();
 
-  const cell = terrainSelection.getSelectedCell();
-  const unit = unitsSelection.getSelectedUnit();
-  const building = buildingsSelection.getSelectedBuilding();
-
   const { humanId } = useGameLoopSelectors();
+  const viewer = useMapViewer(humanId);
+  const knowledge = useParticipantKnowledge(viewer === 'world' ? null : viewer);
+
+  // Панель показывает только то, что видит смотрящий: чужой объект
+  // вне обзора и настоящий рельеф неразведанной клетки не раскрываются.
+  const canSee = (entity: { owner: string; x: number; y: number } | null) =>
+    !!entity &&
+    (viewer === 'world' ||
+      entity.owner === viewer ||
+      getCellKnowledge(knowledge, entity.x, entity.y) === 'visible');
+  const selectedUnit = unitsSelection.getSelectedUnit();
+  const selectedBuilding = buildingsSelection.getSelectedBuilding();
+  const unit = canSee(selectedUnit) ? selectedUnit : null;
+  const building = canSee(selectedBuilding) ? selectedBuilding : null;
+  const realCell = terrainSelection.getSelectedCell();
+  const knownType =
+    realCell && viewer !== 'world'
+      ? getKnownCellType(knowledge, realCell.x, realCell.y)
+      : realCell?.type;
+  const cell: Cell | null =
+    realCell && knownType ? { ...realCell, type: knownType } : null;
+  const isUnknownCell = !!realCell && !knownType;
 
   const clearInteraction = () => {
     clearSelection();
@@ -100,8 +134,22 @@ export const PhaseInProgress = () => {
 
       <AiTurnBanner />
 
-      <aside className={styles.ContextPanel} aria-label='Выбранный объект'>
+      <aside
+        className={styles.ContextPanel}
+        aria-label='Панель партии'
+        data-collapsed={collapsed}
+      >
+        <button
+          type='button'
+          className={styles.PanelToggle}
+          aria-expanded={!collapsed}
+          onClick={() => setCollapsed(value => !value)}
+        >
+          {collapsed ? 'Показать панель' : 'Свернуть панель'}
+        </button>
+        {minimap}
         <DebugPanel />
+        {isUnknownCell && <p className={styles.Hint}>Клетка не разведана.</p>}
         {(cell || unit || building) && (
           <>
             <SelectedEntityInfo cell={cell} unit={unit} building={building} />

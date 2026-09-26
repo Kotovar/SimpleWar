@@ -13,6 +13,8 @@ export const useSettingsSelectors = () => {
   const setCustomSeed = useSettingsStore(state => state.setCustomSeed);
   const zoomBy = useSettingsStore(state => state.zoomBy);
   const resetZoom = useSettingsStore(state => state.resetZoom);
+  const camera = useSettingsStore(state => state.camera);
+  const viewport = useSettingsStore(state => state.viewport);
 
   return {
     canvasHeight: gridRows * cellSize,
@@ -22,6 +24,8 @@ export const useSettingsSelectors = () => {
     cellSize,
     customSeed,
     mapGenerationMode,
+    camera,
+    viewport,
 
     setGridSize,
     setMapGenerationMode,

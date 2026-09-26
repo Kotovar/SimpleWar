@@ -25,6 +25,8 @@ type BaseUnit = {
   maxHp: number;
   movePoints: number;
   maxMovePoints: number;
+  /** Радиус обзора по Manhattan; не связан с дальностью атаки. */
+  sightRange: number;
   owner: Owner;
   requiresLimit: number;
   cost: Cost;
@@ -58,6 +60,7 @@ export const MILITARY_UNITS_CONFIG: Record<
 > = {
   swordsman: {
     maxHp: 110,
+    sightRange: 3,
     attack: 18,
     movePoints: 0,
     maxMovePoints: 3,
@@ -69,6 +72,7 @@ export const MILITARY_UNITS_CONFIG: Record<
   },
   archer: {
     maxHp: 55,
+    sightRange: 4,
     attack: 22,
     movePoints: 0,
     maxMovePoints: 3,
@@ -87,6 +91,7 @@ export const CIVIL_UNITS_CONFIG: Record<
 > = {
   worker: {
     maxHp: 25,
+    sightRange: 3,
     movePoints: 0,
     maxMovePoints: 4,
     buildPoints: 0,

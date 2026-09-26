@@ -11,6 +11,7 @@ const farm = (x: number): SupplyBuilding => {
     y: 0,
     hp: 70,
     maxHp: 70,
+    sightRange: 2,
     owner: 'p1',
     role: 'supply',
     cost: { gold: 60, wood: 160 },

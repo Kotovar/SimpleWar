@@ -1,4 +1,4 @@
-import type { Cell } from '@shared/config';
+import { MAP_SIDE_LIMIT, type Cell } from '@shared/config';
 import { createRandom, isValidSeed } from './createRandom';
 import { generateTerrain } from './generateTerrain';
 import { placeGold } from './placeGold';
@@ -9,17 +9,19 @@ import { placeGold } from './placeGold';
  * @param width - Ширина карты в клетках.
  * @param height - Высота карты в клетках.
  * @param seed - Зерно генерации.
- * @throws {RangeError} Если размеры не положительные целые или сид недопустим.
+ * @throws {RangeError} Если размеры не целые от 1 до предела или сид недопустим.
  */
 const assertMapParams = (width: number, height: number, seed?: number) => {
   if (
     !Number.isInteger(width) ||
     !Number.isInteger(height) ||
     width <= 0 ||
-    height <= 0
+    height <= 0 ||
+    width > MAP_SIDE_LIMIT ||
+    height > MAP_SIDE_LIMIT
   ) {
     throw new RangeError(
-      'Размеры карты должны быть положительными целыми числами.',
+      `Размеры карты должны быть целыми числами от 1 до ${MAP_SIDE_LIMIT}.`,
     );
   }
   if (seed !== undefined && !isValidSeed(seed)) {

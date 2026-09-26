@@ -1,11 +1,22 @@
 import { beforeEach, describe, expect, it } from 'vite-plus/test';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
+import { useMapStore } from '@entities/maps';
+import type { Cell } from '@shared/config';
 import { getAttackableTargets } from './getAttackableTargets';
 
 beforeEach(() => {
   useUnitsStore.getState().resetStore();
   useBuildingsStore.getState().resetStore();
+  const grid: Cell[][] = Array.from({ length: 12 }, (_, y) =>
+    Array.from({ length: 12 }, (_, x) => ({
+      x,
+      y,
+      type: 'grass',
+      isWalkable: true,
+    })),
+  );
+  useMapStore.setState({ grid });
 });
 
 describe('getAttackableTargets', () => {
@@ -49,5 +60,13 @@ describe('getAttackableTargets', () => {
         },
       ]),
     );
+  });
+
+  it('does not target an enemy hidden from the attacker side', () => {
+    // Лучник p1 в (1, 1) видит на 4 клетки; враг в (6, 1) скрыт.
+    useUnitsStore.getState().spawnUnit('archer', 1, 1, 'p1');
+    useUnitsStore.getState().spawnUnit('worker', 6, 1, 'p2');
+
+    expect(getAttackableTargets({ x: 1, y: 1 }, 5, 'p1')).toEqual([]);
   });
 });

@@ -9,6 +9,13 @@ type DebugState = {
   exceptions: Partial<Record<ParticipantId, DebugException[]>>;
   /** В этой партии режим включали: признак не снимается выключением. */
   usedInGame: boolean;
+  /**
+   * «Отключить туман»: карта показывает весь мир. Меняется только вид —
+   * знания участников и решения ИИ считаются как обычно.
+   */
+  fullView: boolean;
+  /** Чьими глазами смотреть на карту; `null` — глазами человека. */
+  viewer: ParticipantId | null;
 
   setEnabled: (enabled: boolean) => void;
   setException: (
@@ -16,6 +23,8 @@ type DebugState = {
     exception: DebugException,
     on: boolean,
   ) => void;
+  setFullView: (fullView: boolean) => void;
+  setViewer: (viewer: ParticipantId | null) => void;
   resetStore: () => void;
 };
 
@@ -24,6 +33,8 @@ export const useDebugStore = create<DebugState>()(
     enabled: false,
     exceptions: {},
     usedInGame: false,
+    fullView: false,
+    viewer: null,
 
     setEnabled: enabled =>
       set(state => {
@@ -40,11 +51,23 @@ export const useDebugStore = create<DebugState>()(
         }
       }),
 
+    setFullView: fullView =>
+      set(state => {
+        state.fullView = fullView;
+      }),
+
+    setViewer: viewer =>
+      set(state => {
+        state.viewer = viewer;
+      }),
+
     resetStore: () =>
       set(state => {
         state.enabled = false;
         state.exceptions = {};
         state.usedInGame = false;
+        state.fullView = false;
+        state.viewer = null;
       }),
   })),
 );
@@ -89,3 +112,18 @@ export const useDebugException = (
   useDebugStore(
     state => state.enabled && !!state.exceptions[actor]?.includes(exception),
   );
+
+/**
+ * Чьими глазами рисовать карту. Настройки обзора действуют только при
+ * включённом режиме отладки; выключение возвращает обычный вид.
+ *
+ * @param humanId - Участник за этим экраном; `null` — партия без человека.
+ * @returns `'world'` — полный обзор, иначе ID смотрящего участника.
+ */
+export const useMapViewer = (
+  humanId: ParticipantId | null,
+): ParticipantId | 'world' =>
+  useDebugStore(state => {
+    if (state.enabled && state.fullView) return 'world';
+    return (state.enabled ? state.viewer : null) ?? humanId ?? 'world';
+  });

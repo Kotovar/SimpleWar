@@ -1,6 +1,7 @@
 import {
   DEFAULT_PARTICIPANTS,
   MAP_ATTEMPTS,
+  MAP_SIDE_LIMIT,
   MAX_PARTICIPANTS,
   MIN_MAP_SIDE,
   REJECTION_MESSAGE,
@@ -112,6 +113,13 @@ export const initializeGame = (participants = DEFAULT_PARTICIPANTS) => {
   ) {
     fail(
       `Для ${participants.length} участников нужна карта не меньше ${minSide} × ${minSide} клеток.`,
+    );
+    return false;
+  }
+  // Проверка до генерации: огромная карта не должна выделять память.
+  if (gridColumns > MAP_SIDE_LIMIT || gridRows > MAP_SIDE_LIMIT) {
+    fail(
+      `Сторона карты не больше ${MAP_SIDE_LIMIT} клеток: ${gridColumns} × ${gridRows} не поддерживается.`,
     );
     return false;
   }

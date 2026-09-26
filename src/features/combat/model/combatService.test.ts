@@ -153,3 +153,27 @@ describe('attack', () => {
     );
   });
 });
+
+describe('attack under fog', () => {
+  it('rejects a hidden target exactly like a missing one', () => {
+    const archer = addUnit('archer', 0, 0, 'p1');
+    useUnitsStore.getState().resetUnitsForNewTurn('p1');
+    const hidden = addUnit('worker', 9, 9, 'p2');
+
+    const toHidden = attack({
+      actor: 'p1',
+      attackerId: archer,
+      targetId: hidden,
+    });
+    const toMissing = attack({
+      actor: 'p1',
+      attackerId: archer,
+      targetId: 'missing',
+    });
+
+    expect(toHidden).toEqual(toMissing);
+    expect(toHidden).toMatchObject({ ok: false, code: 'notFound' });
+    expect(getUnit(hidden).hp).toBe(getUnit(hidden).maxHp);
+    expect(getMilitaryUnit(archer).attackPoints).toBe(1);
+  });
+});

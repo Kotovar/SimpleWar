@@ -305,3 +305,34 @@
   color: var(--text-muted);
   margin: 0;
 }
+
+/* Переключатель нужен только на узком экране, где панель под картой. */
+.PanelToggle {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .Toolbar {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+
+  .ContextPanel {
+    max-height: 45vh;
+  }
+
+  .PanelToggle {
+    display: block;
+    padding: 6px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    background-color: var(--surface-sunken);
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .ContextPanel[data-collapsed='true'] > :not(.PanelToggle) {
+    display: none;
+  }
+}

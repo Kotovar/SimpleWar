@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { AI_TURN_DELAY_MS } from '@shared/config';
 import { initGameLoopEvents, useGameLoopSelectors } from '@features/game-loop';
-import { Map } from '@widgets/map';
+import { initVisibilitySystem } from '@features/visibility';
+import { Map, Minimap } from '@widgets/map';
 import { initializeGame } from '@widgets/start-game';
 import { GameControls } from '@widgets/game-controls';
 import { initJournalSystem, initPopulationSystem } from '@app/system';
@@ -20,6 +21,7 @@ export const Game = () => {
     initGameLoopEvents();
     initPopulationSystem();
     initJournalSystem();
+    initVisibilitySystem();
   }, []);
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export const Game = () => {
   return (
     <main className={phase === 'inProgress' ? styles.Main : styles.Setup}>
       {phase === 'inProgress' && <Map />}
-      <GameControls onStartGame={handleStartGame} />
+      <GameControls onStartGame={handleStartGame} minimap={<Minimap />} />
     </main>
   );
 };
