@@ -1,66 +1,107 @@
-import { beginTerrain } from './beginTerrain';
+import { beginTerrain, variantFor } from './beginTerrain';
 
-/**
- * Рисует холм: пологий бугор поверх травы. Проходим за 2 очка, строить можно.
- * Простой рисунок-заглушка; варианты — S18.
- */
+export const HILLS = [
+  [14, 11, 23, 16],
+  [17, 10, 9, 17],
+  [13, 12, 23, 15],
+] as const;
+
+export const SWAMPS = [
+  [
+    [11, 14, 6, 3],
+    [21, 22, 6, 3],
+  ],
+  [
+    [20, 14, 6, 3],
+    [11, 22, 6, 3],
+  ],
+  [
+    [12, 15, 6, 3],
+    [21, 21, 5, 3],
+  ],
+] as const;
+
+/** Три близких силуэта пологих травяных холмов; вариант устойчив по координатам. */
 export const drawHill = (
   ctx: CanvasRenderingContext2D,
   cellX: number,
   cellY: number,
   cellSize: number,
+  variant = variantFor(cellX, cellY, 743, HILLS.length),
 ) => {
-  beginTerrain(ctx, cellX, cellY, cellSize, false);
-  ctx.fillStyle = 'rgba(150, 132, 78, 0.55)';
+  beginTerrain(ctx, cellX, cellY, cellSize);
+  const [peakX, peakY, rearX, rearY] = HILLS[variant];
+  ctx.fillStyle = '#598052';
   ctx.beginPath();
-  ctx.ellipse(16, 21, 14, 9, 0, Math.PI, 0);
+  ctx.moveTo(4, 25);
+  ctx.bezierCurveTo(rearX - 8, rearY, rearX, rearY - 5, 28, 25);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = 'rgba(70, 58, 30, 0.55)';
-  ctx.lineWidth = 1.4;
+  ctx.fillStyle = '#87a366';
   ctx.beginPath();
-  ctx.ellipse(16, 21, 14, 9, 0, Math.PI, 0);
-  ctx.stroke();
+  ctx.moveTo(3, 25);
+  ctx.bezierCurveTo(6, 21, peakX - 6, peakY, peakX, peakY);
+  ctx.bezierCurveTo(peakX + 6, peakY, 24, 22, 29, 25);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#62834f';
   ctx.beginPath();
-  ctx.ellipse(16, 21, 7, 4.5, 0, Math.PI * 1.1, Math.PI * 1.9);
+  ctx.moveTo(peakX, peakY);
+  ctx.bezierCurveTo(peakX + 6, peakY, 24, 22, 29, 25);
+  ctx.lineTo(16, 25);
+  ctx.quadraticCurveTo(peakX + 4, 20, peakX, peakY);
+  ctx.fill();
+  ctx.strokeStyle = '#afbb7e';
+  ctx.lineWidth = 1.2;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(7, 21);
+  ctx.quadraticCurveTo(peakX - 3, peakY + 2, peakX, peakY + 2);
   ctx.stroke();
   ctx.restore();
 };
 
-/**
- * Рисует болото: тёмная топь с лужами и камышом. Проходимо за 2 очка,
- * строить нельзя. Простой рисунок-заглушка; варианты — S18.
- */
+/** Неглубокие заводи и камыш; общая подложка болота рисуется под берегом. */
 export const drawSwamp = (
   ctx: CanvasRenderingContext2D,
   cellX: number,
   cellY: number,
   cellSize: number,
+  variant = variantFor(cellX, cellY, 829, SWAMPS.length),
 ) => {
   beginTerrain(ctx, cellX, cellY, cellSize, false);
-  ctx.fillStyle = 'rgba(62, 74, 40, 0.6)';
-  ctx.fillRect(0, 0, 32, 32);
-  ctx.fillStyle = 'rgba(70, 110, 105, 0.85)';
-  for (const [x, y, rx, ry] of [
-    [10, 12, 6, 3],
-    [22, 22, 7, 3.5],
-  ]) {
+  ctx.lineCap = 'round';
+  for (const [x, y, rx, ry] of SWAMPS[variant]) {
+    ctx.fillStyle = '#526e4d';
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx + 1, ry + 1, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#648d80';
     ctx.beginPath();
     ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = '#94afa0';
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.moveTo(x - 2, y);
+    ctx.lineTo(x + 2, y);
+    ctx.stroke();
+    ctx.strokeStyle = '#3e6040';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x - 3, y + 1);
+    ctx.lineTo(x - 4, y - 5);
+    ctx.moveTo(x - 3, y + 1);
+    ctx.lineTo(x - 1, y - 3);
+    ctx.moveTo(x - 3, y + 1);
+    ctx.lineTo(x - 6, y - 2);
+    ctx.stroke();
+    ctx.strokeStyle = '#82734c';
+    ctx.lineWidth = 1.7;
+    ctx.beginPath();
+    ctx.moveTo(x - 4, y - 5);
+    ctx.lineTo(x - 4.3, y - 7);
+    ctx.stroke();
   }
-  ctx.strokeStyle = 'rgba(40, 52, 22, 0.9)';
-  ctx.lineWidth = 1.2;
-  ctx.beginPath();
-  for (const [x, y, h] of [
-    [5, 24, 7],
-    [7, 25, 9],
-    [26, 11, 7],
-    [28, 12, 8],
-  ]) {
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + 1, y - h);
-  }
-  ctx.stroke();
   ctx.restore();
 };

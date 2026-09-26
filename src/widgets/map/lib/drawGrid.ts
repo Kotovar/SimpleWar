@@ -141,6 +141,14 @@ export const drawBackgroundAndGrid = (
     cellSize * ratio,
   );
 
+  // Топь лежит под водой: вогнутые берега заходят в соседние клетки.
+  fillSilhouette(
+    ctx,
+    buildSilhouette(grid, cellSize, cell => cell.type === 'swamp', 0.34),
+    GRID.colorSwampFloor,
+    cellSize * ratio,
+  );
+
   const water = buildSilhouette(grid, cellSize, cell => cell.type === 'water');
 
   ctx.save();

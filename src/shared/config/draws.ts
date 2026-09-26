@@ -63,6 +63,7 @@ export const GRID = {
   colorWaterShallow: 'rgba(150, 214, 245, 0.9)',
   /** Подложки под лесом и скалами связывают соседние клетки в массив. */
   colorForestFloor: 'rgb(66, 118, 62)',
+  colorSwampFloor: 'rgb(105, 126, 77)',
   colorRockFloor: 'rgb(128, 138, 106)',
 };
 

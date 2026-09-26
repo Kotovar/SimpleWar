@@ -108,9 +108,9 @@ const ground =
     drawBackgroundAndGrid(ctx, 1, [[0]], [[toCell(type)]], size);
 
 const withGround =
-  (draw: Draw): Draw =>
+  (draw: Draw, type: CellType = 'grass'): Draw =>
   (ctx, size) => {
-    ground()(ctx, size);
+    ground(type)(ctx, size);
     draw(ctx, size);
   };
 
@@ -129,10 +129,11 @@ const variants = (
   label: string,
   draw: typeof drawForest,
   count: number,
+  type: CellType = 'grass',
 ): Tile[] =>
   Array.from({ length: count }, (_, variant) => ({
     label: `${label} ${variant + 1}`,
-    draw: withGround((ctx, size) => draw(ctx, 0, 0, size, variant)),
+    draw: withGround((ctx, size) => draw(ctx, 0, 0, size, variant), type),
   }));
 
 const TERRAIN: Record<string, Tile[]> = {
@@ -155,18 +156,17 @@ const TERRAIN: Record<string, Tile[]> = {
     drawGoldOre,
     TERRAIN_VARIANTS.gold,
   ),
-  [TERRAIN_NAME.hill]: [
-    {
-      label: TERRAIN_NAME.hill,
-      draw: withGround((ctx, size) => drawHill(ctx, 0, 0, size)),
-    },
-  ],
-  [TERRAIN_NAME.swamp]: [
-    {
-      label: TERRAIN_NAME.swamp,
-      draw: withGround((ctx, size) => drawSwamp(ctx, 0, 0, size)),
-    },
-  ],
+  [TERRAIN_NAME.hill]: variants(
+    TERRAIN_NAME.hill,
+    drawHill,
+    TERRAIN_VARIANTS.hill,
+  ),
+  [TERRAIN_NAME.swamp]: variants(
+    TERRAIN_NAME.swamp,
+    drawSwamp,
+    TERRAIN_VARIANTS.swamp,
+    'swamp',
+  ),
 };
 
 const enemy = unit({ owner: 'p2' });

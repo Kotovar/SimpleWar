@@ -12,7 +12,7 @@ const rgb = ({ r, g, b }: { r: number; g: number; b: number }) =>
 const GROUND: Record<CellType, string> = {
   grass: rgb(GRID.colorGrass),
   hill: rgb(GRID.colorGrass),
-  swamp: rgb(GRID.colorGrass),
+  swamp: GRID.colorSwampFloor,
   forest: GRID.colorForestFloor,
   mountain: GRID.colorRockFloor,
   gold: GRID.colorRockFloor,

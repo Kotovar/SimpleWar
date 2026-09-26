@@ -61,3 +61,32 @@
   color: var(--text-muted);
   font-size: 0.8rem;
 }
+
+.MapMeta {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 4px;
+  padding: 8px 10px;
+  border-left: 2px solid var(--danger-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-strong);
+  font-size: 0.8rem;
+}
+
+.MapMeta div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.MapMeta dt {
+  color: var(--text-muted);
+}
+
+.MapMeta dd {
+  margin: 0;
+  font-family: monospace;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}

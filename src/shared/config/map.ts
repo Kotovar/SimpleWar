@@ -36,7 +36,7 @@ export const MOVE_COST: Partial<Record<CellType, number>> = {
  * Версия генератора карт. Повышается при любом изменении, из-за которого
  * тот же сид даёт другую карту: сид воспроизводим только вместе с версией.
  */
-export const MAP_GENERATOR_VERSION = 3;
+export const MAP_GENERATOR_VERSION = 4;
 
 /** Максимум воспроизводимых попыток (сид, сид + 1, ...) до резервной раскладки. */
 export const MAP_ATTEMPTS = 10;
