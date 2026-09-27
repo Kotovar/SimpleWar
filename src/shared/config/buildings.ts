@@ -103,7 +103,7 @@ export const PRODUCTION_BUILDINGS_CONFIG: Record<
   },
   barracks: {
     maxHp: 150,
-    sightRange: 2,
+    sightRange: 3,
     cost: { gold: 80, wood: 140 },
     requiredField: 'grass',
     spawningUnits: ['swordsman', 'archer', 'spearman'],
@@ -112,7 +112,7 @@ export const PRODUCTION_BUILDINGS_CONFIG: Record<
   },
   stable: {
     maxHp: 160,
-    sightRange: 2,
+    sightRange: 3,
     cost: { gold: 120, wood: 160 },
     requiredField: 'grass',
     spawningUnits: ['rider'],
@@ -121,7 +121,7 @@ export const PRODUCTION_BUILDINGS_CONFIG: Record<
   },
   workshop: {
     maxHp: 150,
-    sightRange: 2,
+    sightRange: 3,
     cost: { gold: 140, wood: 180 },
     requiredField: 'grass',
     spawningUnits: ['siege'],
@@ -131,7 +131,7 @@ export const PRODUCTION_BUILDINGS_CONFIG: Record<
   // Хрупкое место найма мага, лекаря и грифона.
   sanctuary: {
     maxHp: 120,
-    sightRange: 2,
+    sightRange: 3,
     cost: { gold: 160, wood: 140 },
     requiredField: 'grass',
     spawningUnits: ['mage', 'healer', 'griffon'],
@@ -146,14 +146,14 @@ export const RESOURCE_BUILDINGS_CONFIG: Record<
 > = {
   mine: {
     maxHp: 130,
-    sightRange: 2,
+    sightRange: 3,
     income: { gold: 15 },
     cost: { gold: 120, wood: 0 },
     requiredField: 'gold',
   },
   sawmill: {
     maxHp: 90,
-    sightRange: 2,
+    sightRange: 3,
     income: { wood: 15 },
     cost: { gold: 60, wood: 80 },
     requiredField: 'forest',
@@ -166,7 +166,7 @@ export const SUPPLY_BUILDINGS_CONFIG: Record<
 > = {
   farm: {
     maxHp: 70,
-    sightRange: 2,
+    sightRange: 3,
     cost: { gold: 60, wood: 160 },
     populationSupply: 5,
   },
@@ -194,7 +194,7 @@ export const RESEARCH_BUILDINGS_CONFIG: Record<
 > = {
   forge: {
     maxHp: 140,
-    sightRange: 2,
+    sightRange: 3,
     cost: { gold: 100, wood: 150 },
     requiredField: 'grass',
   },
