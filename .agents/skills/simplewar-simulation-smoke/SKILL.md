@@ -31,7 +31,7 @@ description: Use when asked to write or run smoke simulations in SimpleWar, insp
 
 ## Ходы и решения ИИ
 
-- Найди актуальные точки запуска. Ориентиры: `src/widgets/start-game/initializeGame.ts`,
+- Найди актуальные точки запуска. Ориентиры: `src/widgets/start-game/lib/initializeGame.ts`,
   `src/app/game/ai/aiTurn.ts`, `src/features/game-loop`, `src/entities/games/model`.
   Проверяй их реализацию: прямое переключение хода в store может обходить игровые эффекты.
 - По умолчанию игрок пропускает ход штатным действием; обозначь это в отчёте.
