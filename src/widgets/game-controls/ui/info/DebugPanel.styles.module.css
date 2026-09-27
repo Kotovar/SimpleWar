@@ -2,11 +2,24 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-top: 12px;
   padding: 10px 12px;
   border: 1px dashed var(--danger-strong);
   border-radius: var(--radius);
   background-color: var(--surface-sunken);
+}
+
+.Section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.Section > summary,
+.AiLog > summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .Title {
@@ -99,12 +112,6 @@
 }
 
 /* Журнал решений ИИ: только для разработчика, компактный и прокручиваемый. */
-.AiLog summary {
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
 .AiFilters {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

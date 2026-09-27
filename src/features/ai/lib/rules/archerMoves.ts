@@ -1,5 +1,6 @@
 import type { Position } from '@shared/config';
 import type { AiRule, Candidate } from '../../model/types';
+import type { AiContext } from '../context';
 import { nearest } from '../facts';
 import { manhattan } from '../geometry';
 import { stepToward, turnMoves } from '../movement';
@@ -47,6 +48,19 @@ export const A01: AiRule = {
     }),
 };
 
+/** Свободные проходимые клетки в радиусе от точки. */
+const near = (ctx: AiContext, center: Position, radius: number) => {
+  const cells: Position[] = [];
+  for (let dy = -radius; dy <= radius; dy++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      const cell = { x: center.x + dx, y: center.y + dy };
+      if (manhattan(cell, center) > radius || !ctx.inside(cell)) continue;
+      if (ctx.grid(1)[cell.y][cell.x] > 0) cells.push(cell);
+    }
+  }
+  return cells;
+};
+
 /** A04: своя пехота наступает — держаться позади неё. */
 export const A04: AiRule = {
   id: 'A04',
@@ -63,8 +77,17 @@ export const A04: AiRule = {
       .flatMap((unit): Candidate[] => {
         if (liveTargets(ctx, unit).length) return [];
         const front = nearest(target, cover);
-        if (!front) {
-          const step = stepToward(ctx, unit, [target]);
+        // Издалека — по пути к пехоте или на дальность выстрела по цели:
+        // шаг по прямой упирается в воду и горы.
+        if (!front || manhattan(unit, front) > 4) {
+          const line = front ? manhattan(front, target) : 0;
+          const step = stepToward(
+            ctx,
+            unit,
+            near(ctx, front ?? target, 3).filter(
+              c => manhattan(c, target) > line && manhattan(c, target) > 1,
+            ),
+          );
           return step
             ? [
                 moveTo('A04', unit, step.next, 35, 'иду с группой', {

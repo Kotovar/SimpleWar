@@ -27,6 +27,23 @@ export const turnMoves = (ctx: AiContext, unit: Unit): CostedCell[] => {
 };
 
 /**
+ * Маршруты юнита на несколько ходов по известной карте: неизвестное дороже
+ * поля. Считаются один раз за шаг.
+ */
+export const pathsFrom = (
+  ctx: AiContext,
+  unit: Unit,
+): ReturnType<typeof findCheapestPaths> => {
+  const cacheKey = `paths:${unit.id}`;
+  const cached = ctx.cache.get(cacheKey) as
+    | ReturnType<typeof findCheapestPaths>
+    | undefined;
+  const paths = cached ?? findCheapestPaths(ctx.grid(UNKNOWN_MOVE_COST), unit);
+  ctx.cache.set(cacheKey, paths);
+  return paths;
+};
+
+/**
  * Следующая клетка маршрута к ближайшей из целей: маршрут строится по
  * известной карте с повышенной ценой неизвестного, а юнит идёт по нему
  * настолько далеко, насколько хватает очков этого хода.
@@ -42,13 +59,7 @@ export const stepToward = (
   goals: Position[],
 ): { next: Position; total: number } | null => {
   if (unit.movePoints <= 0 || goals.length === 0) return null;
-  const cacheKey = `paths:${unit.id}`;
-  const cached = ctx.cache.get(cacheKey) as
-    | ReturnType<typeof findCheapestPaths>
-    | undefined;
-  const paths = cached ?? findCheapestPaths(ctx.grid(UNKNOWN_MOVE_COST), unit);
-  ctx.cache.set(cacheKey, paths);
-  const { cost, previous, width } = paths;
+  const { cost, previous, width } = pathsFrom(ctx, unit);
 
   let best: number | undefined;
   for (const goal of goals) {
@@ -100,4 +111,34 @@ export const standCells = (
     }
   }
   return cells;
+};
+
+/**
+ * Есть ли у клетки выход: достижимо ли из неё `need` клеток. Свои юниты
+ * уходят и выход не закрывают; клетка, запертая зданиями, выхода не имеет.
+ */
+export const hasRoom = (ctx: AiContext, start: Position, need = 6) => {
+  const units = new Set(
+    ctx.obs.ownUnits.map(({ x, y }) => cellKey(x, y, ctx.width)),
+  );
+  const grid = ctx.grid(TURN_UNKNOWN);
+  const seen = new Set([cellKey(start.x, start.y, ctx.width)]);
+  const queue = [start];
+  while (queue.length && seen.size < need) {
+    const cell = queue.pop()!;
+    for (const [dx, dy] of [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ]) {
+      const next = { x: cell.x + dx, y: cell.y + dy };
+      const key = cellKey(next.x, next.y, ctx.width);
+      if (!ctx.inside(next) || seen.has(key)) continue;
+      if (grid[next.y][next.x] <= 0 && !units.has(key)) continue;
+      seen.add(key);
+      queue.push(next);
+    }
+  }
+  return seen.size >= need;
 };

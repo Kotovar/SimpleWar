@@ -160,7 +160,6 @@ export const PhaseInProgress = ({ minimap }: Props) => {
           {collapsed ? 'Показать панель' : 'Свернуть панель'}
         </button>
         {minimap}
-        <DebugPanel />
         {isUnknownCell && <p className={styles.Hint}>Клетка не разведана.</p>}
         {(cell || unit || building) && (
           <>
@@ -177,6 +176,7 @@ export const PhaseInProgress = ({ minimap }: Props) => {
         )}
 
         {selection === null && <EmptySelection />}
+        <DebugPanel />
       </aside>
 
       <ConfirmDialog

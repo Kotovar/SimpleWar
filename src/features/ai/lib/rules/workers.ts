@@ -7,6 +7,7 @@ import {
   resourceSites,
   scarceResource,
 } from '../facts';
+import { isChoke } from '../approach';
 import { manhattan } from '../geometry';
 import { standCells, stepToward } from '../movement';
 import { bestMove, isFree, moveTo, taskOf } from './common';
@@ -80,7 +81,10 @@ const takeWorkplace =
           },
         ];
       }
-      const step = stepToward(ctx, worker, standCells(ctx, place));
+      // Не вставать в узком месте: рабочий закрыл бы проход.
+      const cells = standCells(ctx, place);
+      const roomy = cells.filter(cell => !isChoke(ctx, cell));
+      const step = stepToward(ctx, worker, roomy.length ? roomy : cells);
       return step
         ? [
             moveTo(ruleId, worker, step.next, score - 5, 'иду к месту добычи', {
@@ -132,19 +136,9 @@ export const W04: AiRule = {
     const worker = idleWorkers(ctx).find(({ movePoints }) => movePoints > 0);
     if (!worker || !frontier.length) return [];
     const step = stepToward(ctx, worker, frontier);
+    const reason = `ищу ${need === 'gold' ? 'золото' : 'лес'}`;
     return step
-      ? [
-          moveTo(
-            'W04',
-            worker,
-            step.next,
-            30,
-            `ищу ${need === 'gold' ? 'золото' : 'лес'}`,
-            {
-              group: 'scout',
-            },
-          ),
-        ]
+      ? [moveTo('W04', worker, step.next, 30, reason, { group: 'scout' })]
       : [];
   },
 };

@@ -47,31 +47,26 @@ beforeEach(() => {
 describe('runAITurn', () => {
   it('устаревший запуск прекращается, не завершая ход и не сохраняя память', async () => {
     start();
-    let cancelledRun = null;
-    for (let round = 1; round <= 30 && !cancelledRun; round++) {
-      nextTurn('p1');
-      const before = useAiMemoryStore.getState().byParticipant.p2;
-      const turn = useGameLoopStore.getState().currentTurn;
-      let yielded = false;
-      const result = await runAITurn('p2', {
-        // Первая пауза большого хода: партию перезапустили.
-        yieldControl: () => {
-          yielded = true;
-          useJournalStore.getState().newGame();
-          return Promise.resolve();
-        },
-      });
-      if (!yielded) continue;
+    nextTurn('p1');
+    const before = useAiMemoryStore.getState().byParticipant.p2;
+    const turn = useGameLoopStore.getState().currentTurn;
+    // После первого решения партию перезапускают: запуск устарел.
+    let restarted = false;
+    const unsubscribe = useJournalStore.subscribe(({ decisions }) => {
+      if (restarted || !decisions.length) return;
+      restarted = true;
+      useJournalStore.getState().newGame();
+    });
 
-      cancelledRun = result;
-      expect(useGameLoopStore.getState()).toMatchObject({
-        activePlayer: 'p2',
-        currentTurn: turn,
-      });
-      expect(useAiMemoryStore.getState().byParticipant.p2).toBe(before);
-    }
+    const result = await runAITurn('p2', { yieldControl: noWait });
+    unsubscribe();
 
-    expect(cancelledRun).toMatchObject({ cancelled: true });
+    expect(result).toMatchObject({ cancelled: true, commands: 1 });
+    expect(useGameLoopStore.getState()).toMatchObject({
+      activePlayer: 'p2',
+      currentTurn: turn,
+    });
+    expect(useAiMemoryStore.getState().byParticipant.p2).toBe(before);
   });
 
   it('два ИИ планируют раздельно: своя память и свои записи решений', async () => {

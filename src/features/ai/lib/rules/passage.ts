@@ -26,15 +26,25 @@ const exits = (ctx: AiContext, building: Building) =>
 const canYield = (ctx: AiContext, unit: Unit) =>
   isFree(ctx, unit.id) && unit.movePoints > 0;
 
-/** Отойти с клетки: ближайшая достижимая клетка вне запрета. */
+/**
+ * Отойти с клетки: ближайшая достижимая клетка вне запрета. Рабочий на
+ * добыче сперва ищет другую клетку рядом со своим зданием — назначение
+ * снимется движением, но W02/W03 сразу вернут его на работу.
+ */
 const stepAside = (
   ctx: AiContext,
   unit: Unit,
   avoid: (cell: Position) => boolean,
-) =>
-  turnMoves(ctx, unit)
+) => {
+  const place =
+    unit.role === 'civil'
+      ? ctx.obs.ownBuildings.find(({ id }) => id === unit.workplaceId)
+      : undefined;
+  const away = (cell: Position) => (place && isNear(cell, place) ? 0 : 1);
+  return turnMoves(ctx, unit)
     .filter(cell => !avoid(cell))
-    .sort((a, b) => a.cost - b.cost)[0];
+    .sort((a, b) => away(a) - away(b) || a.cost - b.cost)[0];
+};
 
 /**
  * Первый свой юнит на пути застрявшего: путь строится так, будто свои

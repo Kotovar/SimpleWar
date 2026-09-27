@@ -1,6 +1,7 @@
 import {
   UNITS_CONFIG,
   type Building,
+  type Cost,
   type Position,
   type ProductionBuilding,
   type UnitType,
@@ -8,8 +9,15 @@ import {
 import { isBuildableTerrain } from '@shared/lib';
 import type { AiRule, Candidate } from '../../model/types';
 import type { AiContext } from '../context';
-import { affordable, desiredArmy, desiredWorkers, nearest } from '../facts';
+import {
+  affordable,
+  desiredArmy,
+  desiredWorkers,
+  nearest,
+  nextRecruit,
+} from '../facts';
 import { around, manhattan, tieBreak } from '../geometry';
+import { hasRoom } from '../movement';
 import { isFree } from './common';
 
 /** Свободная клетка для новобранца: поле или холм, без угрозы. */
@@ -19,7 +27,8 @@ const spawnCell = (ctx: AiContext, building: Building, toward?: Position) => {
       ctx.inside(cell) &&
       isBuildableTerrain('grass', ctx.known(cell.x, cell.y) ?? 'water') &&
       !ctx.occupied(cell.x, cell.y) &&
-      ctx.threatAt(cell) === 0,
+      ctx.threatAt(cell) === 0 &&
+      hasRoom(ctx, cell),
   );
   const goal = toward ?? { x: ctx.width / 2, y: ctx.height / 2 };
   return cells.sort(
@@ -29,6 +38,19 @@ const spawnCell = (ctx: AiContext, building: Building, toward?: Position) => {
         tieBreak(`${b.x},${b.y}`, ctx.memory.seed),
   )[0];
 };
+
+/** Сколько ходов копить на лучника, прежде чем взять мечника. */
+const WAIT_TURNS = 4;
+
+/** Через сколько ходов хватит свободного бюджета при текущем доходе. */
+const turnsToAfford = (ctx: AiContext, cost: Cost) =>
+  Math.max(
+    ...(['gold', 'wood'] as const).map(key => {
+      const lack = cost[key] - ctx.budget[key];
+      if (lack <= 0) return 0;
+      return ctx.income[key] > 0 ? Math.ceil(lack / ctx.income[key]) : Infinity;
+    }),
+  );
 
 const canHire = (
   ctx: AiContext,
@@ -104,8 +126,10 @@ export const N01: AiRule = {
 };
 
 /**
- * N02 (G04): армии меньше нужного — нанять в казармах. Лучник — если
- * мечников уже вдвое больше и хватает дерева.
+ * N02 (G04): армии меньше нужного — нанять в казармах. Состав задаёт
+ * `nextRecruit`: пока копятся ресурсы на лучника, мечник вместо него не
+ * покупается — иначе золото уходит на мечников и лучников нет. При срочной
+ * обороне берётся любой доступный.
  */
 export const N02: AiRule = {
   id: 'N02',
@@ -115,15 +139,16 @@ export const N02: AiRule = {
     const lack = desiredArmy(ctx) - ctx.military.length;
     const urgent = ctx.memory.strategy === 'G01';
     if (lack <= 0 && !urgent) return [];
-    const swords = ctx.military.filter(
-      ({ type }) => type === 'swordsman',
-    ).length;
-    const archers = ctx.military.length - swords;
-    const preferArcher = swords >= archers * 2 + 1;
+    const preferred = nextRecruit(ctx);
+    // Лучника ждём, только если он накопится за несколько ходов.
+    const wanted =
+      turnsToAfford(ctx, UNITS_CONFIG[preferred].cost) <= WAIT_TURNS
+        ? preferred
+        : 'swordsman';
+    const order: UnitType[] = urgent
+      ? [wanted, wanted === 'archer' ? 'swordsman' : 'archer']
+      : [wanted];
     for (const building of producers(ctx)) {
-      const order: UnitType[] = preferArcher
-        ? ['archer', 'swordsman']
-        : ['swordsman', 'archer'];
       const type = order.find(t => canHire(ctx, building, t));
       if (!type) continue;
       const threat = nearest(

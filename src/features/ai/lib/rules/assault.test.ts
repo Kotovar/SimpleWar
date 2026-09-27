@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { manhattan } from '../geometry';
-import { cellOf, grass, own, ownBuilding, scene } from '../scene.test-utils';
+import {
+  cellOf,
+  foe,
+  grass,
+  own,
+  ownBuilding,
+  scene,
+} from '../scene.test-utils';
 import { M03, M04 } from './assault';
 
 const map = grass(12, 12);
@@ -62,6 +69,64 @@ describe('M03/M04: сбор и наступление', () => {
       map,
       units: [own('swordsman', 2, 2)],
       memory: { operation: gather },
+    });
+
+    expect(M04.evaluate(ctx)).toEqual([]);
+  });
+});
+
+describe('M04: занятые подходы к цели', () => {
+  // Карман у ратуши: лес, золото и край карты; входы (2,1) и (1,2).
+  const pocket = ['...f..', '......', '......', 'g.....', '......', '......'];
+  const advance = {
+    phase: 'advance' as const,
+    target: { x: 1, y: 1 },
+    rally: null,
+    since: 0,
+  };
+
+  it('атакующий во входе переходит глубже и освобождает подход', () => {
+    const door = own('swordsman', 2, 1);
+    const { ctx } = scene({
+      map: pocket,
+      units: [door, own('swordsman', 1, 2), own('swordsman', 4, 4)],
+      enemies: [foe('base', 1, 1)],
+      memory: { operation: advance },
+    });
+
+    const moves = M04.evaluate(ctx).filter(c => c.actorId === door.id);
+
+    expect(moves).toMatchObject([
+      {
+        action: { type: 'move', x: 1, y: 0 },
+        reason: 'освобождаю подход к цели',
+      },
+    ]);
+  });
+
+  it('отставший подходит ближе, пока подходы заняты', () => {
+    const late = own('swordsman', 4, 4);
+    const { ctx } = scene({
+      map: pocket,
+      units: [own('swordsman', 2, 1), own('swordsman', 1, 2), late],
+      enemies: [foe('base', 1, 1)],
+      memory: { operation: advance },
+    });
+
+    const [move] = M04.evaluate(ctx).filter(c => c.actorId === late.id);
+
+    expect(move.reason).toBe('подходы заняты: подхожу ближе');
+    expect(manhattan(cellOf(move.action), advance.target)).toBeLessThan(
+      manhattan(late, advance.target),
+    );
+  });
+
+  it('без затора атакующий у цели не двигается', () => {
+    const { ctx } = scene({
+      map: grass(6, 6),
+      units: [own('swordsman', 2, 1)],
+      enemies: [foe('base', 1, 1)],
+      memory: { operation: advance },
     });
 
     expect(M04.evaluate(ctx)).toEqual([]);

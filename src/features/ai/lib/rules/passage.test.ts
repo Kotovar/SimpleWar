@@ -79,3 +79,27 @@ describe('W10: освободить проход', () => {
     ]);
   });
 });
+
+describe('W10: рабочий на добыче', () => {
+  it('уступает проход, оставаясь рядом со своим зданием', () => {
+    const mine = ownBuilding('mine', 3, 0);
+    const worker = own('worker', 2, 1, { workplaceId: mine.id });
+    const { ctx } = scene({
+      map: ['^^h.^^^^', '........', '^^.^^^^^', '^^^^^^^^'],
+      units: [own('swordsman', 0, 1), worker],
+      buildings: [mine],
+      memory: {
+        operation: {
+          phase: 'gather',
+          rally: { x: 7, y: 1 },
+          target: null,
+          since: 0,
+        },
+      },
+    });
+
+    expect(W10.evaluate(ctx)).toMatchObject([
+      { actorId: worker.id, action: { type: 'move', x: 2, y: 0 } },
+    ]);
+  });
+});

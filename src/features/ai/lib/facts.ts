@@ -47,9 +47,8 @@ export const ownPower = (ctx: AiContext) =>
   );
 
 /**
- * Оценка силы врага: видимые и запомненные вооружённые объекты с весом
- * достоверности. Отсутствие контакта не доказывает отсутствие армии:
- * пока враг не виден, закладывается половина своей силы.
+ * Сила врага по видимым и запомненным объектам с весом достоверности; пока
+ * армия врага не видна, закладывается половина своей силы.
  */
 export const enemyPower = (ctx: AiContext) => {
   const known = [...ctx.enemies, ...ctx.remembered].reduce(
@@ -103,6 +102,13 @@ export const desiredWorkers = (ctx: AiContext) => {
 /** Желаемый размер армии: растёт со временем партии. */
 export const desiredArmy = (ctx: AiContext) =>
   Math.min(10, 2 + Math.floor(ctx.obs.turn / 5));
+
+/** Кого нанять следующим: лучника при мечниках ≥ 2 × лучники + 1. */
+export const nextRecruit = (ctx: AiContext): 'swordsman' | 'archer' => {
+  const swords = ctx.military.filter(({ type }) => type === 'swordsman');
+  const archers = ctx.military.length - swords.length;
+  return swords.length >= archers * 2 + 1 ? 'archer' : 'swordsman';
+};
 
 /** Ближайшие траты стратегии: что ИИ хочет купить в первую очередь. */
 export const plannedCosts = (ctx: AiContext): Cost => {
@@ -161,7 +167,7 @@ export const savingGoals = (ctx: AiContext): SavingGoal[] => {
     [
       'army',
       ctx.military.length < desiredArmy(ctx),
-      UNITS_CONFIG.swordsman.cost,
+      UNITS_CONFIG[nextRecruit(ctx)].cost,
     ],
   ];
   return wishes

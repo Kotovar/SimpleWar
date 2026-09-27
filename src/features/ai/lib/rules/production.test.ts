@@ -78,3 +78,61 @@ describe('N01/N02: найм', () => {
     expect(N02.evaluate(ctx)).toEqual([]);
   });
 });
+
+describe('N02: состав армии', () => {
+  const army = [
+    own('worker', 0, 0),
+    own('worker', 0, 1),
+    own('swordsman', 7, 7),
+  ];
+
+  it('копит на лучника, если хватит за несколько ходов, а не берёт мечника', () => {
+    const { ctx } = scene({
+      map: grass(8, 8),
+      units: army,
+      buildings: [ownBuilding('base', 1, 1), ownBuilding('barracks', 5, 5)],
+      stock: { gold: 100, wood: 500 },
+    });
+
+    expect(N02.evaluate(ctx)).toEqual([]);
+  });
+
+  it('берёт мечника, если на лучника копить слишком долго', () => {
+    const { ctx } = scene({
+      map: grass(8, 8),
+      units: army,
+      buildings: [ownBuilding('base', 1, 1), ownBuilding('barracks', 5, 5)],
+      stock: { gold: 100, wood: 0 },
+    });
+
+    expect(N02.evaluate(ctx)).toMatchObject([
+      { action: { type: 'spawn', unitType: 'swordsman' } },
+    ]);
+  });
+
+  it('не нанимает в клетку, запертую своими зданиями', () => {
+    const farms = [
+      [0, 0],
+      [1, 0],
+      [2, 0],
+      [0, 1],
+      [2, 1],
+      [1, 2],
+      [3, 2],
+      [2, 3],
+    ].map(([x, y]) => ownBuilding('farm', x, y));
+    const { ctx } = scene({
+      map: grass(8, 8),
+      units: [own('worker', 7, 0), own('worker', 7, 1)],
+      buildings: [
+        ownBuilding('base', 6, 6),
+        ownBuilding('barracks', 1, 1),
+        ...farms,
+      ],
+    });
+
+    expect(N02.evaluate(ctx)).toMatchObject([
+      { action: { type: 'spawn', x: 0, y: 2 } },
+    ]);
+  });
+});
