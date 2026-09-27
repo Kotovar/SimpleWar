@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import type { Cell } from '@shared/config';
+import { MOVE_COST, type Cell } from '@shared/config';
 import { ConfirmDialog } from '@shared/ui';
 import { useMapViewer } from '@entities/settings';
 import {
@@ -101,7 +101,13 @@ const useKnownSelection = () => {
       ? getKnownCellType(knowledge, realCell.x, realCell.y)
       : realCell?.type;
   const cell: Cell | null =
-    realCell && knownType ? { ...realCell, type: knownType } : null;
+    realCell && knownType
+      ? {
+          ...realCell,
+          type: knownType,
+          isWalkable: MOVE_COST[knownType] !== undefined,
+        }
+      : null;
   const isUnknownCell = !!realCell && !knownType;
 
   return { selection, cell, unit, building, isUnknownCell };

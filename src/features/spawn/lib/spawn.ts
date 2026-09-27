@@ -58,7 +58,6 @@ const validateAndSpawn = (
   if (!Number.isInteger(x) || !Number.isInteger(y) || !cell) {
     return reject('bounds');
   }
-  if (!isBuildableTerrain('grass', cell.type)) return reject('terrain');
   const { grid } = useMapStore.getState();
   const viewers = [
     ...Object.values(useUnitsStore.getState().units),
@@ -67,6 +66,7 @@ const validateAndSpawn = (
   if (!isCellVisible(getSightSources(actor, viewers, grid), x, y)) {
     return reject('hidden');
   }
+  if (!isBuildableTerrain('grass', cell.type)) return reject('terrain');
   if (Math.max(Math.abs(building.x - x), Math.abs(building.y - y)) !== 1) {
     return reject('distance');
   }

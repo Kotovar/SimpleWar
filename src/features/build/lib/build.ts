@@ -58,9 +58,6 @@ const validateAndBuild = (
   if (!Number.isInteger(x) || !Number.isInteger(y) || !cell) {
     return reject('bounds');
   }
-  if (!isBuildableTerrain(config.requiredField, cell.type)) {
-    return reject('terrain');
-  }
   const { grid } = useMapStore.getState();
   const viewers = [
     ...Object.values(useUnitsStore.getState().units),
@@ -68,6 +65,9 @@ const validateAndBuild = (
   ];
   if (!isCellVisible(getSightSources(actor, viewers, grid), x, y)) {
     return reject('hidden');
+  }
+  if (!isBuildableTerrain(config.requiredField, cell.type)) {
+    return reject('terrain');
   }
   // Рабочий строит на любой из восьми соседних клеток.
   if (Math.max(Math.abs(worker.x - x), Math.abs(worker.y - y)) !== 1) {

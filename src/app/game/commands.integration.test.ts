@@ -200,6 +200,39 @@ describe('command rejections leave the state unchanged', () => {
     expect(snapshot().resources).toBe(before.resources);
   });
 
+  it.each(['build', 'spawn'] as const)(
+    '%s не раскрывает скрытый рельеф отказом',
+    command => {
+      const worker = units().spawnUnit('worker', 0, 1, 'p1', true)!;
+      const execute = () =>
+        command === 'build'
+          ? build({
+              actor: 'p1',
+              workerId: worker,
+              buildingType: 'farm',
+              x: 6,
+              y: 5,
+            })
+          : spawn({
+              actor: 'p1',
+              buildingId: base,
+              unitType: 'worker',
+              x: 6,
+              y: 5,
+            });
+      for (const type of ['grass', 'forest', 'water'] as const) {
+        useMapStore
+          .getState()
+          .setCell(6, 5, { type, isWalkable: type === 'grass' });
+        const before = snapshot();
+        expect
+          .soft(execute(), type)
+          .toMatchObject({ ok: false, code: 'hidden' });
+        expect(snapshot()).toEqual(before);
+      }
+    },
+  );
+
   it('builds with exactly enough resources and charges only the actor', () => {
     const id = units().spawnUnit('worker', 3, 3, 'p1', true)!;
     economy().removeResources('p1', { gold: 140, wood: -40 }); // 60 / 160

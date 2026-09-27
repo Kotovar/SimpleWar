@@ -1,5 +1,11 @@
 import type { ParticipantId } from '@shared/config';
-import { calculateDamage, gameEvents, isFlyingType } from '@shared/lib';
+import {
+  calculateDamage,
+  gameEvents,
+  getSightSources,
+  isCellVisible,
+  isFlyingType,
+} from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
@@ -31,10 +37,24 @@ export const executePreparedStrikes = (owner: ParticipantId) => {
       unit => unit.x === x && unit.y === y && !isFlyingType(unit.type),
     );
     const building = useBuildingsStore.getState().getBuildingAt(x, y);
+    // Результат скрытого удара не раскрывает объекты под туманом.
+    const visible = isCellVisible(
+      getSightSources(
+        owner,
+        [
+          ...Object.values(useUnitsStore.getState().units),
+          ...Object.values(useBuildingsStore.getState().buildings),
+        ],
+        useMapStore.getState().grid,
+      ),
+      x,
+      y,
+    );
     const hits: string[] = [];
     for (const unit of units) {
       const damage = calculateDamage(siege, unit);
-      hits.push(`${unit.type}:${damage}`);
+      if (unit.owner === owner || !building)
+        hits.push(`${unit.type}:${damage}`);
       useUnitsStore.getState().damageUnit(unit.id, damage);
     }
     if (building) {
@@ -59,7 +79,11 @@ export const executePreparedStrikes = (owner: ParticipantId) => {
       actor: owner,
       turn: useGameLoopStore.getState().currentTurn,
       visibleTo: [owner],
-      details: { x, y, hits: hits.join(', ') || 'пусто' },
+      details: {
+        x,
+        y,
+        hits: visible ? hits.join(', ') || 'пусто' : 'вне обзора',
+      },
     });
     // Удар мог завершить партию: дальнейшие удары не нужны.
     if (useGameLoopStore.getState().phase !== 'inProgress') return;

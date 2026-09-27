@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import type { Position } from '@shared/config';
 import { useSettingsStore } from '@entities/settings';
+import { useUnitsStore } from '@entities/units';
 import { useSelectionStore } from '@features/selection';
 import { useMovementStore } from '@features/pathfinding';
 import { useCameraInput, useMapCellClick, useScene } from './utils';
@@ -11,7 +12,7 @@ import styles from './styles.module.css';
 export const Map = () => {
   const viewport = useRef<HTMLDivElement>(null);
   const input = useCameraInput(viewport);
-  const { scene, humanId } = useScene();
+  const { scene, humanId, viewer } = useScene();
   const handleCellClick = useMapCellClick(scene);
   const isMeasured = useSettingsStore(state => state.viewport.width > 0);
   const centerOn = useSettingsStore(state => state.centerOn);
@@ -39,14 +40,19 @@ export const Map = () => {
   const selection = useSelectionStore(state => state.selection);
   useLayoutEffect(() => {
     if (selection?.kind === 'unit' && !scene.units[selection.id]) {
-      useSelectionStore.getState().clearSelection();
-      useMovementStore.getState().resetStore();
+      const unit = useUnitsStore.getState().units[selection.id];
+      // Своего рабочего внутри здания можно выбрать через его панель,
+      // хотя на карте он не рисуется. Погибший юнит всегда теряет выбор.
+      if (!unit || (viewer !== 'world' && unit.owner !== viewer)) {
+        useSelectionStore.getState().clearSelection();
+        useMovementStore.getState().resetStore();
+      }
     }
     if (selection?.kind === 'building' && !scene.buildings[selection.id]) {
       useSelectionStore.getState().clearSelection();
       useMovementStore.getState().resetStore();
     }
-  }, [scene, selection]);
+  }, [scene, selection, viewer]);
 
   const onCellClick = ({ x, y }: Position) => handleCellClick(x, y);
 

@@ -11,11 +11,11 @@ import { useEconomyStore } from '@entities/economies';
 import { useGameLoopStore } from '@entities/games';
 import { useMapStore } from '@entities/maps';
 import { useKnowledgeStore } from '@entities/perceptions';
-import { useJournalStore } from '@entities/journals';
+import { getVisibleRecords, useJournalStore } from '@entities/journals';
 import { attack, prepareStrike } from '@features/combat';
 import { initGameLoopEvents, nextTurn, surrender } from '@features/game-loop';
 import { getObservation, initVisibilitySystem } from '@features/visibility';
-import { initPopulationSystem } from '@app/system';
+import { initJournalSystem, initPopulationSystem } from '@app/system';
 
 const units = () => useUnitsStore.getState();
 const buildings = () => useBuildingsStore.getState();
@@ -268,6 +268,91 @@ describe('подготовленный удар осады', () => {
     expect(code(3, 4, sword)).toMatchObject({ code: 'actionType' });
     expect(code(3, 2).ok).toBe(true);
     expect(code(3, 3)).toMatchObject({ code: 'points' });
+  });
+
+  it.each(['unit', 'building'] as const)(
+    'удар вне обзора не раскрывает скрытый %s в журнале',
+    kind => {
+      initJournalSystem();
+      start(THREE);
+      const siege = siegeAt(1, 2);
+      const target =
+        kind === 'unit'
+          ? units().spawnUnit('worker', 5, 2, 'p2')!
+          : buildings().spawnBuilding('farm', 5, 2, 'p2')!;
+      if (kind === 'unit') units().damageUnit(target, 24);
+      else
+        buildings().damageBuilding(
+          target,
+          buildings().buildings[target].hp - 1,
+        );
+      expect(prepareStrike({ actor: 'p1', unitId: siege, x: 5, y: 2 }).ok).toBe(
+        true,
+      );
+      // Разведчик уходит: цель остаётся разведанной, но больше не видна осаде.
+      const scout = Object.values(units().units).find(u => u.type === 'scout')!;
+      units().placeUnit(scout.id, 0, 5);
+      expect(getObservation('p1').visible[2][5]).toBe(false);
+      useJournalStore.getState().newGame();
+
+      round();
+
+      expect(
+        kind === 'unit' ? units().units[target] : buildings().buildings[target],
+      ).toBeUndefined();
+      const mine = getVisibleRecords(useJournalStore.getState().entries, 'p1');
+      expect
+        .soft(mine.filter(e => e.type === 'strike'))
+        .toMatchObject([{ details: { x: 5, y: 2, hits: 'вне обзора' } }]);
+      expect
+        .soft(
+          mine.some(
+            e => e.type === 'unitDestroyed' || e.type === 'buildingDestroyed',
+          ),
+        )
+        .toBe(false);
+      expect(
+        getVisibleRecords(useJournalStore.getState().entries, 'p2').some(
+          e =>
+            e.type ===
+            (kind === 'unit' ? 'unitDestroyed' : 'buildingDestroyed'),
+        ),
+      ).toBe(true);
+    },
+  );
+
+  it('видимая клетка здания не раскрывает поражённого рабочего внутри', () => {
+    initJournalSystem();
+    start(THREE);
+    const siege = siegeAt(1, 2);
+    const mine = buildings().spawnBuilding('mine', 3, 2, 'p2')!;
+    const worker = units().spawnUnit('worker', 3, 2, 'p2')!;
+    units().setWorkplace(worker, mine);
+    units().damageUnit(worker, 24);
+    expect(getObservation('p1').visibleEnemies.some(e => e.id === worker)).toBe(
+      false,
+    );
+    expect(prepareStrike({ actor: 'p1', unitId: siege, x: 3, y: 2 }).ok).toBe(
+      true,
+    );
+    useJournalStore.getState().newGame();
+
+    round();
+
+    expect(units().units[worker]).toBeUndefined();
+    const mineEntries = getVisibleRecords(
+      useJournalStore.getState().entries,
+      'p1',
+    );
+    expect
+      .soft(mineEntries.filter(e => e.type === 'strike'))
+      .toMatchObject([{ details: { hits: 'mine:52' } }]);
+    expect.soft(mineEntries.some(e => e.type === 'unitDestroyed')).toBe(false);
+    expect(
+      getVisibleRecords(useJournalStore.getState().entries, 'p2').some(
+        e => e.type === 'unitDestroyed',
+      ),
+    ).toBe(true);
   });
 
   it('прямой атакой осада не бьёт', () => {

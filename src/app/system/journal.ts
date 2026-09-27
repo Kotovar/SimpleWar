@@ -2,13 +2,26 @@ import type { ParticipantId } from '@shared/config';
 import { gameEvents } from '@shared/lib';
 import { useGameLoopStore } from '@entities/games';
 import { useJournalStore } from '@entities/journals';
+import { useMapStore } from '@entities/maps';
+import { useBuildingsStore } from '@entities/buildings';
+import { computeVisibleMask } from '@features/visibility';
 
 // Подписка общая для всех партий и не должна дублироваться при повторном монтировании Game.
 let initialized = false;
 
-/** Видят действующий и пострадавший участники; повтор убирается. */
-const between = (actor: ParticipantId, owner: ParticipantId) =>
-  actor === owner ? [actor] : [actor, owner];
+/** Владелец знает о потере; действующий — только если видит её. */
+const between = (
+  actor: ParticipantId,
+  entity: { owner: ParticipantId; x: number; y: number },
+  sheltered = false,
+) => {
+  const { owner, x, y } = entity;
+  if (actor === owner || sheltered) return [owner];
+  const width = useMapStore.getState().grid[0]?.length ?? 0;
+  return computeVisibleMask(actor)[y * width + x] === 1
+    ? [actor, owner]
+    : [owner];
+};
 
 /**
  * Записывает в журнал последствия команд: гибель юнитов, разрушение зданий,
@@ -30,7 +43,11 @@ export const initJournalSystem = () => {
         type: 'unitDestroyed',
         actor,
         turn,
-        visibleTo: between(actor, event.owner),
+        visibleTo: between(
+          actor,
+          event.unit,
+          !!useBuildingsStore.getState().getBuildingAt(x, y),
+        ),
         details: { owner: event.owner, unitType: type, x, y },
       });
     }
@@ -41,7 +58,7 @@ export const initJournalSystem = () => {
         type: 'buildingDestroyed',
         actor,
         turn,
-        visibleTo: between(actor, event.owner),
+        visibleTo: between(actor, event.building),
         details: { owner: event.owner, buildingType: type, x, y },
       });
     }
