@@ -1,0 +1,65 @@
+import type { ParticipantId } from '@shared/config';
+import { calculateDamage, gameEvents } from '@shared/lib';
+import { useUnitsStore } from '@entities/units';
+import { useBuildingsStore } from '@entities/buildings';
+import { useMapStore } from '@entities/maps';
+import { useGameLoopStore } from '@entities/games';
+import { useJournalStore } from '@entities/journals';
+
+/**
+ * Исполняет подготовленные удары осадных машин участника — шаг 8 порядка
+ * хода, в начале его следующего хода. Урон получает каждый объект на
+ * клетке, включая свои и рабочего внутри здания; лес становится полем.
+ * Удар однократный: отметка снимается сразу.
+ *
+ * @param owner - Участник, чей ход начался.
+ */
+export const executePreparedStrikes = (owner: ParticipantId) => {
+  const sieges = Object.values(useUnitsStore.getState().units).filter(
+    unit =>
+      unit.owner === owner && unit.role === 'military' && unit.preparedStrike,
+  );
+
+  for (const siege of sieges) {
+    if (siege.role !== 'military' || !siege.preparedStrike) continue;
+    const { x, y } = siege.preparedStrike;
+    useUnitsStore.getState().setPreparedStrike(siege.id, null);
+
+    const units = Object.values(useUnitsStore.getState().units).filter(
+      unit => unit.x === x && unit.y === y,
+    );
+    const building = useBuildingsStore.getState().getBuildingAt(x, y);
+    const hits: string[] = [];
+    for (const unit of units) {
+      const damage = calculateDamage(siege, unit);
+      hits.push(`${unit.type}:${damage}`);
+      useUnitsStore.getState().damageUnit(unit.id, damage);
+    }
+    if (building) {
+      const damage = calculateDamage(siege, building);
+      hits.push(`${building.type}:${damage}`);
+      useBuildingsStore.getState().damageBuilding(building.id, damage);
+      // Разрушенная ратуша выводит владельца — так же, как при атаке.
+      if (
+        building.type === 'base' &&
+        !useBuildingsStore.getState().buildings[building.id]
+      ) {
+        gameEvents.emit({ type: 'BASE_DESTROYED', owner: building.owner });
+      }
+    }
+    const { getCell, setCell } = useMapStore.getState();
+    if (getCell(x, y)?.type === 'forest') {
+      setCell(x, y, { type: 'grass', isWalkable: true });
+    }
+
+    useJournalStore.getState().record({
+      type: 'strike',
+      actor: owner,
+      turn: useGameLoopStore.getState().currentTurn,
+      visibleTo: [owner],
+      details: { x, y, hits: hits.join(', ') || 'пусто' },
+    });
+    // Удар мог завершить партию: дальнейшие удары не нужны.
+    if (useGameLoopStore.getState().phase !== 'inProgress') return;
+  }
+};

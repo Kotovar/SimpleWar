@@ -4,6 +4,8 @@ import { renderHiDpiCanvas } from '@shared/lib';
 import { drawBarracks, drawBase, drawTower } from './drawBuildings';
 import { drawFarm, drawGoldMine, drawSawmill } from './drawEconomyBuildings';
 import { drawArcher, drawSwordsman, drawWorker } from './drawUnits';
+import { drawRider, drawScout, drawSiege, drawSpearman } from './drawNewUnits';
+import { drawForge, drawStable, drawWorkshop } from './drawNewBuildings';
 import styles from './styles.module.css';
 
 const DRAW_ENTITY = {
@@ -16,7 +18,14 @@ const DRAW_ENTITY = {
   worker: drawWorker,
   swordsman: drawSwordsman,
   archer: drawArcher,
-};
+  scout: drawScout,
+  spearman: drawSpearman,
+  rider: drawRider,
+  siege: drawSiege,
+  stable: drawStable,
+  workshop: drawWorkshop,
+  forge: drawForge,
+} satisfies Record<BuildingType | UnitType, unknown>;
 
 type Props = {
   type: BuildingType | UnitType;

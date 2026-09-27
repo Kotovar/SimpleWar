@@ -10,6 +10,7 @@ import {
   type Observation,
 } from '@entities/perceptions';
 import type { ParticipantId } from '@shared/config';
+import { collectStrikeMarks } from '@shared/lib';
 
 export type { Observation, RememberedContact } from '@entities/perceptions';
 
@@ -70,5 +71,6 @@ export const getObservation = (participant: ParticipantId): Observation => {
         ...contact,
         confidence: getContactConfidence(contact, turn),
       })),
+    strikes: collectStrikeMarks(Object.values(useUnitsStore.getState().units)),
   };
 };

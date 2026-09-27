@@ -1,4 +1,9 @@
-import type { MilitaryUnit, Position } from '@shared/config';
+import type {
+  BuildingType,
+  MilitaryUnit,
+  Position,
+  UnitType,
+} from '@shared/config';
 import type { AiRule, Candidate } from '../../model/types';
 import type { AiContext, EnemyView } from '../context';
 import { baseAlarm, nearest } from '../facts';
@@ -26,12 +31,12 @@ export const swordsmen = (ctx: AiContext) =>
 export const targetValue = (
   ctx: AiContext,
   enemy: EnemyView,
-  damage: number,
+  attacker: { type: UnitType | BuildingType; attack: number },
 ) => {
   const nearHome = ctx.base && manhattan(enemy, ctx.base) <= 4 ? 15 : 0;
   return (
     (enemy.armed ? 20 + enemy.attack : 5) +
-    (isKillable(ctx, enemy, damage) ? 30 : 0) +
+    (isKillable(ctx, enemy, attacker) ? 30 : 0) +
     (enemy.range > 1 ? 5 : 0) +
     nearHome -
     enemy.hp / 40
@@ -141,8 +146,7 @@ export const M05: AiRule = {
         enemy => !isDoomed(ctx, enemy),
       );
       const best = [...targets].sort(
-        (a, b) =>
-          targetValue(ctx, b, unit.attack) - targetValue(ctx, a, unit.attack),
+        (a, b) => targetValue(ctx, b, unit) - targetValue(ctx, a, unit),
       )[0];
       return best
         ? [
@@ -150,8 +154,8 @@ export const M05: AiRule = {
               'M05',
               unit,
               best,
-              60 + targetValue(ctx, best, unit.attack) / 2,
-              isKillable(ctx, best, unit.attack)
+              60 + targetValue(ctx, best, unit) / 2,
+              isKillable(ctx, best, unit)
                 ? 'добиваю цель'
                 : 'атакую цель в дальности',
             ),

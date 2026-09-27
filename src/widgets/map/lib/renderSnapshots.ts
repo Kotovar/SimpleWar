@@ -1,7 +1,10 @@
-import { FOG } from '@shared/config';
+import { BUILDINGS_CONFIG, FOG, type BuildingType } from '@shared/config';
 import type { CellRange } from '@shared/lib';
 import type { Contact } from '@entities/perceptions';
 import { drawBuildingModel } from './renderEntitiesLayer';
+
+const isBuildingType = (type: string): type is BuildingType =>
+  type in BUILDINGS_CONFIG;
 
 /**
  * Рисует запомненные здания вне обзора как устаревший снимок: модель
@@ -26,9 +29,8 @@ export const renderSnapshots = (
     ) {
       continue;
     }
-    if (type === 'worker' || type === 'swordsman' || type === 'archer') {
-      continue;
-    }
+    // Снимки бывают только у зданий.
+    if (!isBuildingType(type)) continue;
 
     drawBuildingModel(ctx, type, x, y, cellSize, owner);
 

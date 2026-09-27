@@ -1,5 +1,6 @@
 import { SELECTED, type Position } from '@shared/config';
 import { drawMovement, drawZoneOutline } from './drawMovement';
+import { drawStrikeMark } from './drawStrikeMark';
 
 export const renderMovementLayer = (
   ctx: CanvasRenderingContext2D,
@@ -12,7 +13,19 @@ export const renderMovementLayer = (
   pulse = 0,
   /** Размер карты: обводка у её края сдвигается внутрь. */
   map?: { columns: number; rows: number },
+  /** Клетки прицела выбранной осадной машины. */
+  strikeCells: Position[] | null = null,
+  /** Публичные отметки подготовленных ударов всех сторон. */
+  strikeMarks: Position[] = [],
 ) => {
+  if (strikeCells?.length) {
+    strikeCells.forEach(({ x, y }) => {
+      drawMovement(ctx, x, y, cellSize, 'strike');
+    });
+    drawZoneOutline(ctx, strikeCells, cellSize, SELECTED.enemyOutline, map);
+  }
+  strikeMarks.forEach(({ x, y }) => drawStrikeMark(ctx, x, y, cellSize));
+
   if (reachableCells) {
     reachableCells.forEach(({ x, y }) => {
       drawMovement(ctx, x, y, cellSize, 'free');

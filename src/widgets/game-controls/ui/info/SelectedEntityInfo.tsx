@@ -3,12 +3,13 @@ import {
   OWNER_NAME,
   TERRAIN_NAME,
   UNITS_NAME,
+  SIEGE_STRIKE,
   type Building,
   type Cell,
   type Unit,
 } from '@shared/config';
 import { EntityPortrait, TerrainPortrait } from '@shared/ui';
-import { getMoveCost } from '@shared/lib';
+import { getCombatTraits, getMoveCost } from '@shared/lib';
 import { useGameLoopSelectors } from '@features/game-loop';
 import styles from './SelectedEntityInfo.styles.module.css';
 
@@ -21,7 +22,7 @@ type Props = {
 type Entity = Unit | Building;
 type AttackStats = Pick<
   Extract<Unit, { role: 'military' }> | Extract<Building, { role: 'combat' }>,
-  'attackPoints' | 'maxAttackPoints' | 'attackRange' | 'attack'
+  'attackPoints' | 'maxAttackPoints' | 'attackRange' | 'attack' | 'type'
 >;
 
 const EntityHeader = ({ cell, unit, building }: Props) => {
@@ -109,12 +110,22 @@ const AttackDetails = ({ entity }: { entity: AttackStats }) => (
     </div>
     <div>
       <dt>Радиус атаки</dt>
-      <dd>{entity.attackRange}</dd>
+      <dd>
+        {entity.type === 'siege'
+          ? `${SIEGE_STRIKE.minRange}–${SIEGE_STRIKE.maxRange}, удар по клетке`
+          : entity.attackRange}
+      </dd>
     </div>
     <div>
       <dt>Урон</dt>
       <dd>{entity.attack}</dd>
     </div>
+    {getCombatTraits(entity.type).length > 0 && (
+      <div>
+        <dt>Особенности</dt>
+        <dd>{getCombatTraits(entity.type).join(', ')}</dd>
+      </div>
+    )}
   </>
 );
 

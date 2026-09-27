@@ -1,10 +1,16 @@
 import {
   MOVE_COST,
+  type BuildingType,
   type MilitaryUnit,
+  type UnitType,
   type Position,
   type Unit,
 } from '@shared/config';
-import { blocksLastPassage, type AccessMap } from '@shared/lib';
+import {
+  blocksLastPassage,
+  calculateDamage,
+  type AccessMap,
+} from '@shared/lib';
 import type { AiTask } from '@entities/ai-memories';
 import type { Candidate } from '../../model/types';
 import type { AiContext, EnemyView } from '../context';
@@ -47,9 +53,18 @@ export const targetsInRange = (
 export const planned = (ctx: AiContext, id: string) =>
   ctx.turn.plannedDamage.get(id) ?? 0;
 
+/** Урон атакующего по цели по общей формуле. */
+export const damageTo = (
+  attacker: { type: UnitType | BuildingType; attack: number },
+  enemy: EnemyView,
+) => calculateDamage(attacker, enemy);
+
 /** Цель погибнет от удара с учётом общего фокуса. */
-export const isKillable = (ctx: AiContext, enemy: EnemyView, damage: number) =>
-  enemy.hp - planned(ctx, enemy.id) <= damage;
+export const isKillable = (
+  ctx: AiContext,
+  enemy: EnemyView,
+  attacker: { type: UnitType | BuildingType; attack: number },
+) => enemy.hp - planned(ctx, enemy.id) <= damageTo(attacker, enemy);
 
 /** Цель уже будет уничтожена запланированным уроном: не дублировать огонь. */
 export const isDoomed = (ctx: AiContext, enemy: EnemyView) =>
@@ -58,7 +73,7 @@ export const isDoomed = (ctx: AiContext, enemy: EnemyView) =>
 /** Предложение атаки с учётом фокуса огня. */
 export const attackOf = (
   ruleId: string,
-  attacker: { id: string; attack: number },
+  attacker: { id: string; type: UnitType | BuildingType; attack: number },
   target: EnemyView,
   score: number,
   reason: string,
@@ -69,7 +84,7 @@ export const attackOf = (
   action: { type: 'attack', attackerId: attacker.id, targetId: target.id },
   score,
   reason,
-  damage: { targetId: target.id, amount: attacker.attack },
+  damage: { targetId: target.id, amount: damageTo(attacker, target) },
   basis: { target: target.type, hp: target.hp, x: target.x, y: target.y },
 });
 

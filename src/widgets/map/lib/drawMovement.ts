@@ -5,7 +5,7 @@ export const drawMovement = (
   cellX: number,
   cellY: number,
   cellSize: number,
-  type: 'free' | 'enemy' | 'produce',
+  type: 'free' | 'enemy' | 'produce' | 'strike',
   /** Фаза пульсации цели атаки от 0 до 1. */
   pulse = 0,
 ) => {
@@ -24,6 +24,10 @@ export const drawMovement = (
     ctx.beginPath();
     ctx.arc(16, 16, 1.6, 0, Math.PI * 2);
     ctx.fill();
+  } else if (type === 'strike') {
+    // Клетки, куда осадная машина может подготовить удар.
+    ctx.fillStyle = 'rgba(220, 90, 60, 0.22)';
+    ctx.fillRect(0, 0, 32, 32);
   } else if (type === 'produce') {
     ctx.fillStyle = SELECTED.produce;
     ctx.fillRect(0, 0, 32, 32);

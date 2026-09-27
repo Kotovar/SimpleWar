@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { useEffect, useMemo, useRef, type MouseEvent } from 'react';
 import type { Owner, Position } from '@shared/config';
+import { collectStrikeMarks } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useGameLoopStore } from '@entities/games';
@@ -52,6 +53,13 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   const reachableCells = useMovementStore(state => state.reachableCells);
   const attackableTargets = useMovementStore(state => state.attackableTargets);
   const spawnableCells = useHighlightStore(state => state.spawnableCells);
+  const strikeCells = useHighlightStore(state => state.strikeCells);
+  // Отметки ударов публичны: берутся из всех юнитов, а не из сцены.
+  const allUnits = useUnitsStore(state => state.units);
+  const strikeMarks = useMemo(
+    () => collectStrikeMarks(Object.values(allUnits)),
+    [allUnits],
+  );
   const buildableCells = useProduceCells();
 
   const isInteractive = phase === 'inProgress' && activePlayer === humanId;
@@ -140,6 +148,8 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
           cellSize,
           pulse,
           mapSize,
+          strikeCells,
+          strikeMarks,
         ),
       ),
     );
@@ -149,6 +159,8 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     mapSize,
     reachableCells,
     spawnableCells,
+    strikeCells,
+    strikeMarks,
     view,
   ]);
 

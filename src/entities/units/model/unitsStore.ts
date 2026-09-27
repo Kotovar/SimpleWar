@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { gameEvents, withDevtools } from '@shared/lib';
-import type { Owner, Unit, UnitType } from '@shared/config';
+import type { Owner, Position, Unit, UnitType } from '@shared/config';
 import { createUnit } from './createUnit';
 
 type UnitsState = {
@@ -23,6 +23,8 @@ type UnitsState = {
   setWorkplace: (id: string, buildingId: string | null) => void;
   /** Ставит юнита на клетку без траты очков: вход в здание и выход из него. */
   placeUnit: (id: string, x: number, y: number) => void;
+  /** Подготовленный удар осадной машины; `null` снимает его. */
+  setPreparedStrike: (id: string, target: Position | null) => void;
   selectUnitForSpawn: (unitType: UnitType) => void;
   clearSelectedUnitForSpawn: () => void;
   resetUnitsForNewTurn: (owner: Owner) => void;
@@ -62,6 +64,8 @@ export const useUnitsStore = create<UnitsState>()(
         unit.movePoints -= cost;
         // Новый приказ движения снимает назначение: рабочий ушёл от здания.
         if (unit.role === 'civil') unit.workplaceId = null;
+        // Движение орудия отменяет подготовленный удар.
+        else unit.preparedStrike = null;
       }),
 
     damageUnit: (id, damage) => {
@@ -119,6 +123,12 @@ export const useUnitsStore = create<UnitsState>()(
         if (!unit) return;
         unit.x = x;
         unit.y = y;
+      }),
+
+    setPreparedStrike: (id, target) =>
+      set(state => {
+        const unit = state.units[id];
+        if (unit?.role === 'military') unit.preparedStrike = target;
       }),
 
     selectUnitForSpawn: unitType => {

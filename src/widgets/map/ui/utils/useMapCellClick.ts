@@ -3,7 +3,7 @@ import { useBuildingsStore } from '@entities/buildings';
 import { useSettingsSelectors } from '@entities/settings';
 import type { Scene } from '@widgets/map/lib';
 import { useSelectionSelectors } from '@features/selection';
-import { attack } from '@features/combat';
+import { attack, prepareStrike } from '@features/combat';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { build } from '@features/build';
 import { spawn } from '@features/spawn';
@@ -15,7 +15,7 @@ import {
 } from '@features/pathfinding';
 import { handleMapCellClick } from './mapClickHandler';
 
-const commands = { move, attack, build, spawn, clearForest };
+const commands = { move, attack, build, spawn, clearForest, prepareStrike };
 
 const findAt = <T extends { x: number; y: number }>(
   entities: Record<string, T>,
@@ -51,6 +51,7 @@ export const useMapCellClick = (scene: Scene) => {
     spawnableCells,
     buildableCells,
     clearableCells,
+    strikeCells,
     resetStore: clearHighlight,
   } = useHighlightSelectors();
 
@@ -80,6 +81,7 @@ export const useMapCellClick = (scene: Scene) => {
         buildable: buildableCells,
         spawnable: spawnableCells,
         clearable: clearableCells,
+        strike: strikeCells,
       },
       commands,
       ui: {

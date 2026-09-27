@@ -3,7 +3,13 @@ import type { Owner } from './common';
 import type { Cost } from './economy';
 
 /** Список военных юнитов. */
-export type MilitaryType = 'swordsman' | 'archer';
+export type MilitaryType =
+  | 'swordsman'
+  | 'archer'
+  | 'scout'
+  | 'spearman'
+  | 'rider'
+  | 'siege';
 
 /** Список гражданских юнитов. */
 export type CivilType = 'worker';
@@ -39,6 +45,11 @@ export type MilitaryUnit = {
   attackPoints: number;
   attackRange: number;
   maxAttackPoints: number;
+  /**
+   * Подготовленный удар осадной машины по клетке: исполнится в начале
+   * следующего своего хода. У других юнитов всегда `null`.
+   */
+  preparedStrike: { x: number; y: number } | null;
 } & BaseUnit;
 
 /** Гражданский юнит */
@@ -74,6 +85,7 @@ export const MILITARY_UNITS_CONFIG: Record<
     maxAttackPoints: 1,
     requiresLimit: 2,
     cost: { gold: 90, wood: 0 },
+    preparedStrike: null,
   },
   archer: {
     maxHp: 55,
@@ -86,6 +98,66 @@ export const MILITARY_UNITS_CONFIG: Record<
     maxAttackPoints: 1,
     requiresLimit: 2,
     cost: { gold: 110, wood: 120 },
+    preparedStrike: null,
+  },
+  // Большой обзор и скорость, слабый бой: ищет цели и ресурсы.
+  scout: {
+    maxHp: 45,
+    sightRange: 6,
+    attack: 6,
+    movePoints: 0,
+    maxMovePoints: 5,
+    attackPoints: 0,
+    attackRange: 1,
+    maxAttackPoints: 1,
+    requiresLimit: 1,
+    cost: { gold: 50, wood: 20 },
+    preparedStrike: null,
+  },
+  // Слабее мечника в обычном бою, но с бонусом против конницы.
+  spearman: {
+    maxHp: 100,
+    sightRange: 3,
+    attack: 14,
+    movePoints: 0,
+    maxMovePoints: 3,
+    attackPoints: 0,
+    attackRange: 1,
+    maxAttackPoints: 1,
+    requiresLimit: 2,
+    cost: { gold: 70, wood: 40 },
+    preparedStrike: null,
+  },
+  // Быстрый рейд по рабочим и стрелкам; уязвим для копейщиков.
+  rider: {
+    maxHp: 90,
+    sightRange: 4,
+    attack: 16,
+    movePoints: 0,
+    maxMovePoints: 5,
+    attackPoints: 0,
+    attackRange: 1,
+    maxAttackPoints: 1,
+    requiresLimit: 3,
+    cost: { gold: 120, wood: 60 },
+    preparedStrike: null,
+  },
+  /**
+   * Бьёт только подготовленным ударом по клетке в дальности 2–5
+   * (`SIEGE_STRIKE`): сильно по зданиям, слабо по войскам.
+   */
+  siege: {
+    maxHp: 70,
+    sightRange: 2,
+    attack: 12,
+    movePoints: 0,
+    maxMovePoints: 2,
+    attackPoints: 0,
+    attackRange: 5,
+    maxAttackPoints: 1,
+    requiresLimit: 3,
+    cost: { gold: 150, wood: 150 },
+    preparedStrike: null,
   },
 };
 
@@ -103,7 +175,16 @@ export const CIVIL_UNITS_CONFIG: Record<
     maxBuildPoints: 1,
     canBuild: true,
     workplaceId: null,
-    buildableBuildings: ['mine', 'sawmill', 'farm', 'barracks', 'tower'],
+    buildableBuildings: [
+      'mine',
+      'sawmill',
+      'farm',
+      'barracks',
+      'tower',
+      'stable',
+      'workshop',
+      'forge',
+    ],
     requiresLimit: 1,
     cost: { gold: 40, wood: 40 },
   },

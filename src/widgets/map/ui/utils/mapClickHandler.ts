@@ -51,6 +51,17 @@ const clickWithOwnUnit = (
   const { clicked, selection, highlights, commands, humanId: actor } = ctx;
   const target = clicked.unit ?? clicked.building;
 
+  // Режим прицела осады важнее движения: клетки могут совпадать.
+  if (
+    unit.type === 'siege' &&
+    commands.prepareStrike &&
+    isHighlighted(highlights.strike ?? null, x, y)
+  ) {
+    commands.prepareStrike({ actor, unitId: unit.id, x, y });
+    resetInteraction(ctx);
+    return;
+  }
+
   if (unit.movePoints > 0 && isHighlighted(highlights.reachable, x, y)) {
     commands.move({ actor, unitId: unit.id, x, y });
     resetInteraction(ctx);

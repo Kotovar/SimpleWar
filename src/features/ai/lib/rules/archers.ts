@@ -35,7 +35,7 @@ export const A02: AiRule = {
     archers(ctx).flatMap((unit): Candidate[] => {
       if (!canAttack(unit)) return [];
       const target = liveTargets(ctx, unit).find(
-        enemy => enemy.armed && isKillable(ctx, enemy, unit.attack),
+        enemy => enemy.armed && isKillable(ctx, enemy, unit),
       );
       return target
         ? [attackOf('A02', unit, target, 90, 'добиваю опасную цель')]

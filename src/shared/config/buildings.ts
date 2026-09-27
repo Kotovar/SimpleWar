@@ -9,7 +9,10 @@ export type BuildingType =
   | 'sawmill'
   | 'farm'
   | 'barracks'
-  | 'tower';
+  | 'tower'
+  | 'stable'
+  | 'workshop'
+  | 'forge';
 
 /** Частичный набор ресурсов, которые здание производит за ход. */
 export type Income = Partial<Cost>;
@@ -64,15 +67,24 @@ export type CombatBuilding = BaseBuilding & {
   attackRange: number;
 };
 
+/**
+ * Здание для исследований. Исследований пока нет (S16): кузница строится,
+ * но работ не запускает.
+ */
+export type ResearchBuilding = BaseBuilding & {
+  role: 'research';
+};
+
 /** Любое здание на карте в зависимости от роли. */
 export type Building =
   | ProductionBuilding
   | ResourceBuilding
   | SupplyBuilding
-  | CombatBuilding;
+  | CombatBuilding
+  | ResearchBuilding;
 
 export const PRODUCTION_BUILDINGS_CONFIG: Record<
-  Extract<BuildingType, 'base' | 'barracks'>,
+  Extract<BuildingType, 'base' | 'barracks' | 'stable' | 'workshop'>,
   Omit<ProductionBuilding, InstanceKeys>
 > = {
   base: {
@@ -81,7 +93,7 @@ export const PRODUCTION_BUILDINGS_CONFIG: Record<
     // Страховка от остановки экономики: доход без рабочего.
     income: { gold: 3, wood: 2 },
     cost: { gold: 0, wood: 0 },
-    spawningUnits: ['worker'],
+    spawningUnits: ['worker', 'scout'],
     spawnPoints: 1,
     maxSpawnPoints: 1,
   },
@@ -90,7 +102,25 @@ export const PRODUCTION_BUILDINGS_CONFIG: Record<
     sightRange: 2,
     cost: { gold: 80, wood: 140 },
     requiredField: 'grass',
-    spawningUnits: ['swordsman', 'archer'],
+    spawningUnits: ['swordsman', 'archer', 'spearman'],
+    spawnPoints: 0,
+    maxSpawnPoints: 1,
+  },
+  stable: {
+    maxHp: 160,
+    sightRange: 2,
+    cost: { gold: 120, wood: 160 },
+    requiredField: 'grass',
+    spawningUnits: ['rider'],
+    spawnPoints: 0,
+    maxSpawnPoints: 1,
+  },
+  workshop: {
+    maxHp: 150,
+    sightRange: 2,
+    cost: { gold: 140, wood: 180 },
+    requiredField: 'grass',
+    spawningUnits: ['siege'],
     spawnPoints: 0,
     maxSpawnPoints: 1,
   },
@@ -144,9 +174,22 @@ export const COMBAT_BUILDINGS_CONFIG: Record<
   },
 };
 
+export const RESEARCH_BUILDINGS_CONFIG: Record<
+  Extract<BuildingType, 'forge'>,
+  Omit<ResearchBuilding, InstanceKeys>
+> = {
+  forge: {
+    maxHp: 140,
+    sightRange: 2,
+    cost: { gold: 100, wood: 150 },
+    requiredField: 'grass',
+  },
+};
+
 export const BUILDINGS_CONFIG = {
   ...PRODUCTION_BUILDINGS_CONFIG,
   ...RESOURCE_BUILDINGS_CONFIG,
   ...SUPPLY_BUILDINGS_CONFIG,
   ...COMBAT_BUILDINGS_CONFIG,
+  ...RESEARCH_BUILDINGS_CONFIG,
 };

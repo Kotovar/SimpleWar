@@ -1,1 +1,9 @@
-export { drawArcher, drawSwordsman, drawWorker } from '@shared/ui';
+export {
+  drawArcher,
+  drawRider,
+  drawScout,
+  drawSiege,
+  drawSpearman,
+  drawSwordsman,
+  drawWorker,
+} from '@shared/ui';

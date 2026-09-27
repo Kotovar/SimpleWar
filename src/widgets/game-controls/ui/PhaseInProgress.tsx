@@ -21,6 +21,7 @@ import {
   WorkerJobs,
   BuildingManage,
   DebugPanel,
+  SiegeStrike,
 } from './info';
 import styles from './styles.module.css';
 
@@ -168,6 +169,9 @@ export const PhaseInProgress = ({ minimap }: Props) => {
               <WorkerJobs unit={unit} />
             )}
             {unit && <WorkerBuildOptions unit={unit} />}
+            {unit?.role === 'military' &&
+              unit.type === 'siege' &&
+              unit.owner === humanId && <SiegeStrike unit={unit} />}
             {building && <UnitOptions building={building} />}
             {building && building.owner === humanId && (
               <BuildingManage building={building} />

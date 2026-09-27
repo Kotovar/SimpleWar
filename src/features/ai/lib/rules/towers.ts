@@ -67,7 +67,7 @@ export const T02 = towerRule(
   85,
   'добиваю опасную цель',
   (ctx, tower, targets) =>
-    targets.find(e => e.armed && isKillable(ctx, e, tower.attack)),
+    targets.find(e => e.armed && isKillable(ctx, e, tower)),
 );
 
 /**

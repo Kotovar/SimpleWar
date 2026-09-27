@@ -13,14 +13,16 @@ export type CommandType =
   | 'unassign'
   | 'repair'
   | 'clearForest'
-  | 'demolish';
+  | 'demolish'
+  | 'prepareStrike';
 
 /** Последствия действий, которые журнал записывает помимо самих команд. */
 export type GameOutcomeType =
   | 'unitDestroyed'
   | 'buildingDestroyed'
   | 'eliminated'
-  | 'gameOver';
+  | 'gameOver'
+  | 'strike';
 
 /** Тип записи журнала: команда либо её последствие. */
 export type JournalEventType = CommandType | GameOutcomeType;

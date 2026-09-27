@@ -1,4 +1,5 @@
-import { Building, Position, Unit } from '@shared/config';
+import type { Building, Position, Unit } from '@shared/config';
+import { calculateDamage } from '@shared/lib';
 import type { Selection } from '@features/selection';
 import {
   drawHoverHighlight,
@@ -6,6 +7,7 @@ import {
 } from './drawSelectionHighlight';
 import { drawAttackRange, drawPath, type MovePath } from './drawPath';
 import { drawTerrainHighlight } from './drawTerrain';
+import { drawDamagePreview } from './drawDamagePreview';
 
 type Options = {
   /** Клетка под курсором. */
@@ -72,4 +74,31 @@ export const renderSelectionLayer = (
   }
 
   if (path) drawPath(ctx, path, cellSize);
+
+  // Ожидаемый урон по цели под курсором: та же формула, что у команды.
+  const attacker =
+    selection.kind === 'unit'
+      ? units[selection.id]
+      : selection.kind === 'building'
+        ? buildings[selection.id]
+        : undefined;
+  const aimed =
+    hover &&
+    attackableTargets?.some(({ x, y }) => x === hover.x && y === hover.y);
+  if (hover && aimed && attacker && 'attack' in attacker) {
+    const target =
+      Object.values(units).find(u => u.x === hover.x && u.y === hover.y) ??
+      Object.values(buildings).find(b => b.x === hover.x && b.y === hover.y);
+    if (target) {
+      const damage = calculateDamage(attacker, target);
+      drawDamagePreview(
+        ctx,
+        hover.x,
+        hover.y,
+        cellSize,
+        damage,
+        damage >= target.hp,
+      );
+    }
+  }
 };

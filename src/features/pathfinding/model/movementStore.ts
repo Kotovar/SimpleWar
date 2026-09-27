@@ -44,6 +44,7 @@ export const useMovementStore = create<MovementState>()(
 
       const attackable =
         (entity.role === 'military' || entity.role === 'combat') &&
+        entity.type !== 'siege' &&
         entity.attackPoints > 0
           ? getAttackableTargets(entity, entity.attackRange, entity.owner).map(
               enemy => ({ x: enemy.x, y: enemy.y }),

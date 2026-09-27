@@ -6,6 +6,7 @@ import {
   isHostile,
   ok,
   reject,
+  calculateDamage,
 } from '@shared/lib';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
@@ -42,6 +43,8 @@ const validateAndAttack = ({
   if (attacker.role !== 'military' && attacker.role !== 'combat') {
     return reject('actionType');
   }
+  // Осадная машина бьёт только подготовленным ударом по клетке.
+  if (attacker.type === 'siege') return reject('actionType');
   if (attacker.attackPoints <= 0) return reject('points');
 
   const targetUnit = unitsStore.units[targetId];
@@ -68,7 +71,7 @@ const validateAndAttack = ({
     Math.abs(attacker.x - target.x) + Math.abs(attacker.y - target.y);
   if (distance > attacker.attackRange) return reject('distance');
 
-  const damage = attacker.attack;
+  const damage = calculateDamage(attacker, target);
 
   if (targetUnit) {
     unitsStore.damageUnit(targetId, damage);

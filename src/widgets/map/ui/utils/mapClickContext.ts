@@ -8,7 +8,7 @@ import type {
   UnitType,
 } from '@shared/config';
 import type { MoveCommand } from '@features/pathfinding';
-import type { AttackCommand } from '@features/combat';
+import type { AttackCommand, PrepareStrikeCommand } from '@features/combat';
 import type { BuildCommand } from '@features/build';
 import type { SpawnCommand } from '@features/spawn';
 import type { ClearForestCommand } from '@features/workers';
@@ -37,6 +37,8 @@ export type MapClickContext = {
     spawnable: Position[] | null;
     /** Клетки леса в режиме расчистки. */
     clearable?: Position[] | null;
+    /** Клетки прицела осадной машины. */
+    strike?: Position[] | null;
   };
   /** Игровые команды — те же, что вызывает ИИ. */
   commands: {
@@ -45,6 +47,7 @@ export type MapClickContext = {
     build: (command: BuildCommand) => CommandResult;
     spawn: (command: SpawnCommand) => CommandResult;
     clearForest?: (command: ClearForestCommand) => CommandResult;
+    prepareStrike?: (command: PrepareStrikeCommand) => CommandResult;
   };
   /** Изменение выбора и подсветки в интерфейсе. */
   ui: {

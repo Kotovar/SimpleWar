@@ -2,6 +2,7 @@ import {
   Building,
   BuildingType,
   COMBAT_BUILDINGS_CONFIG,
+  RESEARCH_BUILDINGS_CONFIG,
   Owner,
   PRODUCTION_BUILDINGS_CONFIG,
   RESOURCE_BUILDINGS_CONFIG,
@@ -46,6 +47,10 @@ export const createBuilding = (
   if (hasConfig(COMBAT_BUILDINGS_CONFIG, type)) {
     const config = COMBAT_BUILDINGS_CONFIG[type];
     return { ...config, ...instance, hp: config.maxHp, role: 'combat' };
+  }
+  if (hasConfig(RESEARCH_BUILDINGS_CONFIG, type)) {
+    const config = RESEARCH_BUILDINGS_CONFIG[type];
+    return { ...config, ...instance, hp: config.maxHp, role: 'research' };
   }
 
   return null;

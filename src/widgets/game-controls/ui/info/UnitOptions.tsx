@@ -6,7 +6,7 @@ import {
   type CellType,
   type UnitType,
 } from '@shared/config';
-import { canSpawnUnit } from '@shared/lib';
+import { canSpawnUnit, getCombatTraits } from '@shared/lib';
 import { useUnitsSelectors } from '@entities/units';
 import { useEconomySelectors } from '@entities/economies';
 import { useHighlightStore } from '@features/pathfinding';
@@ -99,6 +99,7 @@ export const UnitOptions = ({ building }: Props) => {
             'attack' in config && `урон ${config.attack}`,
             'attackRange' in config && `дальность ${config.attackRange}`,
             `ход ${config.maxMovePoints}`,
+            ...getCombatTraits(spawnType),
           ]
             .filter(Boolean)
             .join(' · ');

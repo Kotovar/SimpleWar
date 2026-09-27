@@ -8,6 +8,7 @@ import { useEconomyStore } from '@entities/economies';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand, useJournalStore } from '@entities/journals';
 import { eliminateParticipant } from '../model/gameLoopStore';
+import { executePreparedStrikes } from './strikes';
 
 const validateAndEndTurn = (actor: ParticipantId): CommandResult => {
   const turnRejection = getTurnRejection(actor);
@@ -27,6 +28,8 @@ const validateAndEndTurn = (actor: ParticipantId): CommandResult => {
   const next = useGameLoopStore.getState().activePlayer;
   useUnitsStore.getState().resetUnitsForNewTurn(next);
   useBuildingsStore.getState().resetBuildingsForNewTurn(next);
+  // Шаг 8: подготовленные удары нового активного участника.
+  executePreparedStrikes(next);
   return ok;
 };
 

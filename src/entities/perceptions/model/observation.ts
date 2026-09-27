@@ -38,4 +38,9 @@ export type Observation = {
   resources: (Position & { type: 'gold' | 'forest' })[];
   /** Память об объектах вне обзора. */
   contacts: RememberedContact[];
+  /**
+   * Публичные отметки подготовленных ударов осады всех сторон: только
+   * клетка цели, без позиции, типа и HP орудия.
+   */
+  strikes: Position[];
 };

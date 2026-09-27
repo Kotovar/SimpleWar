@@ -8,3 +8,4 @@ export * from './AiTurnBanner';
 export * from './DebugPanel';
 export * from './WorkerJobs';
 export * from './BuildingManage';
+export * from './SiegeStrike';

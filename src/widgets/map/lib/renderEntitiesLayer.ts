@@ -1,14 +1,31 @@
-import type { Building, BuildingType, Owner, Unit } from '@shared/config';
+import type {
+  Building,
+  BuildingType,
+  Owner,
+  Unit,
+  UnitType,
+} from '@shared/config';
 import type { CellRange } from '@shared/lib';
 import {
   drawBarracks,
   drawBase,
   drawFarm,
+  drawForge,
   drawGoldMine,
   drawSawmill,
+  drawStable,
   drawTower,
+  drawWorkshop,
 } from './drawBuildings';
-import { drawArcher, drawSwordsman, drawWorker } from './drawUnits';
+import {
+  drawArcher,
+  drawRider,
+  drawScout,
+  drawSiege,
+  drawSpearman,
+  drawSwordsman,
+  drawWorker,
+} from './drawUnits';
 import { drawHpBar } from './drawHpBar';
 import { drawActionPips } from './drawActionPips';
 import { drawWorkBadge } from './drawWorkBadge';
@@ -30,7 +47,20 @@ const BUILDING_DRAWERS = {
   farm: drawFarm,
   barracks: drawBarracks,
   tower: drawTower,
+  stable: drawStable,
+  workshop: drawWorkshop,
+  forge: drawForge,
 } satisfies Record<BuildingType, unknown>;
+
+const UNIT_DRAWERS = {
+  worker: drawWorker,
+  swordsman: drawSwordsman,
+  archer: drawArcher,
+  scout: drawScout,
+  spearman: drawSpearman,
+  rider: drawRider,
+  siege: drawSiege,
+} satisfies Record<UnitType, unknown>;
 
 /**
  * Рисует модель здания без полосы здоровья.
@@ -65,7 +95,9 @@ const isSpentUnit = (
   unit.owner === humanId &&
   unit.movePoints === 0 &&
   (unit.role === 'military'
-    ? unit.attackPoints === 0 || !hasTarget(unit)
+    ? unit.attackPoints === 0 ||
+      // Осадная машина бьёт по клетке: цель ей не нужна.
+      (unit.type !== 'siege' && !hasTarget(unit))
     : unit.buildPoints === 0);
 
 const isSpentBuilding = (building: Building, humanId: Owner | null) => {
@@ -138,17 +170,7 @@ export const renderEntitiesLayer = (
     ctx.save();
     if (isSpentUnit(unit, humanId, hasTarget)) ctx.globalAlpha = SPENT_ALPHA;
 
-    if (type === 'swordsman') {
-      drawSwordsman(ctx, x + dx, y + dy, cellSize, owner, scale);
-    }
-
-    if (type === 'archer') {
-      drawArcher(ctx, x + dx, y + dy, cellSize, owner, scale);
-    }
-
-    if (type === 'worker') {
-      drawWorker(ctx, x + dx, y + dy, cellSize, owner, scale);
-    }
+    UNIT_DRAWERS[type](ctx, x + dx, y + dy, cellSize, owner, scale);
     ctx.restore();
 
     // Полоса здоровья и очки остаются контрастными даже у отходившего юнита.

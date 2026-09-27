@@ -34,10 +34,15 @@ export const getBuildingInfoText = (buildingType: BuildingType): string => {
         : '';
 
     case 'barracks':
+    case 'stable':
+    case 'workshop':
       if (!BUILDINGS_CONFIG[buildingType].spawningUnits.length) return '';
       return `Производит: ${BUILDINGS_CONFIG[buildingType].spawningUnits
         .map(unit => UNITS_NAME[unit])
         .join(', ')}`;
+
+    case 'forge':
+      return 'Здесь будут вестись исследования — они появятся в следующей версии';
 
     default:
       return '';
