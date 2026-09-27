@@ -28,6 +28,8 @@ export const drawMage = (
   circle(ctx, '#c9a8ff', 24, 4, 2.6);
   ctx.restore();
   robe(ctx, team.color, '#e8d9a8');
+  shape(ctx, team.shade, [19, 13, 21, 13, 23, 16, 21, 18, 18.5, 16]);
+  shape(ctx, SKIN, [21.5, 14.5, 25.3, 14.5, 25.3, 17, 22, 17]);
   circle(ctx, SKIN, 15.7, 10.2, 3.2);
   // Остроконечная шляпа.
   shape(ctx, team.shade, [10.8, 8.6, 20.6, 8.6, 17.5, 0.8]);
@@ -82,19 +84,59 @@ export const drawGriffon = (
   ctx.ellipse(16, 24.5, 8, 2.2, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
-  // Крылья стороны.
-  shape(ctx, team.color, [13, 11, 2, 3, 4.5, 12, 12, 15]);
-  shape(ctx, team.shade, [19, 11, 30, 3, 27.5, 12, 20, 15]);
-  // Тело льва и голова орла.
-  shape(ctx, '#c9a36a', [10, 12, 22, 12, 23, 18, 9, 18]);
-  circle(ctx, '#f3eedd', 22.5, 9.5, 3.2);
-  shape(ctx, '#e8b441', [25, 9, 28.5, 10.2, 25, 11.4]);
+  // Дальнее крыло и львиный хвост.
+  shape(
+    ctx,
+    team.shade,
+    [17, 13, 23, 5, 29, 1.5, 28, 7, 26, 6, 26, 10, 24, 9, 23, 13, 20, 16],
+  );
+  ctx.strokeStyle = '#c9a36a';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(10, 16);
+  ctx.bezierCurveTo(3, 21, 2, 15, 4, 13);
+  ctx.stroke();
+  ctx.strokeStyle = OUTLINE;
+  shape(ctx, '#8b6340', [3, 14, 2, 11, 5, 12, 5, 14]);
+  // Округлый львиный корпус и согнутые задние лапы.
+  ctx.fillStyle = '#c9a36a';
+  ctx.beginPath();
+  ctx.ellipse(15, 16, 7.5, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  shape(ctx, '#a07a48', [10, 17, 13, 18, 11, 21, 14, 21, 14, 23, 9, 23, 9, 20]);
+  // Ближнее крыло: отдельные маховые перья сохраняют зубчатый силуэт.
+  shape(ctx, team.color, [16, 15, 10, 13, 6, 10, 2, 2, 7, 4, 12, 8, 15, 11]);
+  shape(
+    ctx,
+    team.shade,
+    [16, 15, 9, 15, 5, 12, 3, 7, 7, 10, 5, 5, 10, 10, 8, 5, 13, 10],
+  );
+  // Светлая перьевая грудь, хохолок и загнутый клюв орла.
+  shape(
+    ctx,
+    '#e3dbc5',
+    [18, 12, 20, 9, 24, 10, 23, 15, 24, 17, 21, 16, 21, 19, 18, 17],
+  );
+  shape(
+    ctx,
+    '#f3eedd',
+    [19, 10, 20, 6, 19, 4, 22, 5.5, 25, 6, 26, 9, 24, 12, 21, 12],
+  );
+  shape(ctx, '#e8b441', [25, 8.5, 29, 10, 28, 12.5, 27, 11, 24.5, 10.5]);
   ctx.fillStyle = OUTLINE;
   ctx.beginPath();
-  ctx.arc(23.4, 8.8, 0.7, 0, Math.PI * 2);
+  ctx.arc(23.4, 8, 0.7, 0, Math.PI * 2);
   ctx.fill();
-  // Лапы.
-  rect(ctx, '#a07a48', 11, 18, 2, 3);
-  rect(ctx, '#a07a48', 19, 18, 2, 3);
+  // Орлиные передние лапы с когтями.
+  shape(ctx, '#e8b441', [20, 17, 22, 17, 21, 20, 24, 21, 24, 22.5, 19, 21.5]);
+  ctx.strokeStyle = '#f3eedd';
+  ctx.lineWidth = 0.7;
+  ctx.beginPath();
+  ctx.moveTo(22, 21);
+  ctx.lineTo(22, 22.5);
+  ctx.moveTo(24, 21.5);
+  ctx.lineTo(24.5, 23);
+  ctx.stroke();
   ctx.restore();
 };

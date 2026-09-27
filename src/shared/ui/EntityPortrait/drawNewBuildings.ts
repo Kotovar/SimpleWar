@@ -26,13 +26,11 @@ export const drawStable = (
   sideShadow(ctx, 24, 13.6, 3.4, 10.8);
   shape(ctx, team.color, [2, 14, 16, 5.5, 30, 14]);
   shape(ctx, team.shade, [16, 5.5, 30, 14, 25, 14]);
-  // Широкие ворота с диагональной перекладиной.
+  // Широкие двустворчатые ворота.
   rect(ctx, '#6e4d31', 10, 16.5, 12, 8.5);
   ctx.strokeStyle = '#c9a36a';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(10.5, 17);
-  ctx.lineTo(21.5, 24.5);
   ctx.moveTo(16, 16.5);
   ctx.lineTo(16, 25);
   ctx.stroke();
