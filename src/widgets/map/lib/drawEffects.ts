@@ -6,6 +6,8 @@ export type Effect = {
   y: number;
   /** Урон; отсутствует, если сущность просто исчезла с поля. */
   damage?: number;
+  /** Фактически восстановленные HP. */
+  healing?: number;
   lethal?: boolean;
   /** Сторона новой сущности: эффект появления юнита или здания. */
   spawn?: Owner;
@@ -120,7 +122,7 @@ export const drawEffect = (
   cellSize: number,
   layer: EffectLayer = 'over',
 ) => {
-  const { x, y, damage, lethal, spawn } = effect;
+  const { x, y, damage, healing, lethal, spawn } = effect;
 
   if (spawn) {
     ctx.save();
@@ -141,7 +143,7 @@ export const drawEffect = (
     const fade = 1 - progress / FLASH_PART;
     ctx.save();
     ctx.globalAlpha = fade * 0.75;
-    ctx.fillStyle = lethal ? '#ffd9c4' : '#ffb59a';
+    ctx.fillStyle = healing ? '#b9f6ca' : lethal ? '#ffd9c4' : '#ffb59a';
     ctx.beginPath();
     ctx.roundRect(
       cellSize * 0.1,
@@ -175,7 +177,7 @@ export const drawEffect = (
     ctx.restore();
   }
 
-  if (damage) {
+  if (damage || healing) {
     const rise = cellSize * (0.35 + progress * 0.6);
     ctx.globalAlpha = Math.min(1, (1 - progress) * 2.5);
     ctx.font = `bold ${Math.round(cellSize * 0.42)}px sans-serif`;
@@ -184,8 +186,8 @@ export const drawEffect = (
     ctx.lineJoin = 'round';
     ctx.lineWidth = cellSize * 0.1;
     ctx.strokeStyle = '#3a2723';
-    ctx.fillStyle = lethal ? '#ffd27a' : '#ff9d84';
-    const text = `−${damage}`;
+    ctx.fillStyle = healing ? '#86efac' : lethal ? '#ffd27a' : '#ff9d84';
+    const text = healing ? `+${healing}` : `−${damage}`;
     ctx.strokeText(text, cellSize / 2, cellSize / 2 - rise);
     ctx.fillText(text, cellSize / 2, cellSize / 2 - rise);
   }

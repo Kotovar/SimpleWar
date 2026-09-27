@@ -43,7 +43,7 @@ type Props = {
  * Рисует слой объектов сцены и оживляет его изменения.
  *
  * Сравнивает сцену с предыдущим кадром: сдвиг клетки превращается в плавный
- * переезд, потеря HP — во вспышку с уроном, гибель — в эффект гибели.
+ * переезд, изменение HP — во вспышку с числом, гибель — в эффект гибели.
  * Объект, ушедший в туман или вышедший из него, просто исчезает или
  * появляется: по анимации нельзя узнать о скрытых событиях.
  *
@@ -80,7 +80,19 @@ export const useEntitiesLayer = ({
     const now = performance.now();
     const alive = new Set<string>();
 
-    [...Object.values(buildings), ...Object.values(units)].forEach(entity => {
+    // Рабочие в своих зданиях не рисуются, но лечение им тоже доступно.
+    const sheltered = Object.values(worldUnits).filter(
+      unit =>
+        !units[unit.id] &&
+        unit.role === 'civil' &&
+        unit.workplaceId &&
+        staffed.has(unit.workplaceId),
+    );
+    [
+      ...Object.values(buildings),
+      ...Object.values(units),
+      ...sheltered,
+    ].forEach(entity => {
       alive.add(entity.id);
       const before = tracked.current.get(entity.id);
       tracked.current.set(entity.id, {
@@ -111,11 +123,13 @@ export const useEntitiesLayer = ({
         });
       }
 
-      if (entity.hp < before.hp) {
+      if (entity.hp !== before.hp) {
         effects.current.push({
           x: entity.x,
           y: entity.y,
-          damage: before.hp - entity.hp,
+          ...(entity.hp < before.hp
+            ? { damage: before.hp - entity.hp }
+            : { healing: entity.hp - before.hp }),
           start: now,
         });
       }
@@ -140,7 +154,7 @@ export const useEntitiesLayer = ({
 
     known.current = worldIds;
     isFirstRun.current = false;
-  }, [buildings, isVisible, units, worldIds]);
+  }, [buildings, isVisible, staffed, units, worldIds, worldUnits]);
 
   useEffect(() => {
     const { cellSize, viewport, offset, range } = view;
