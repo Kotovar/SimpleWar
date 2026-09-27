@@ -10,12 +10,14 @@ export const renderMovementLayer = (
   cellSize: number,
   /** Фаза пульсации целей атаки от 0 до 1. */
   pulse = 0,
+  /** Размер карты: обводка у её края сдвигается внутрь. */
+  map?: { columns: number; rows: number },
 ) => {
   if (reachableCells) {
     reachableCells.forEach(({ x, y }) => {
       drawMovement(ctx, x, y, cellSize, 'free');
     });
-    drawZoneOutline(ctx, reachableCells, cellSize, SELECTED.freeOutline);
+    drawZoneOutline(ctx, reachableCells, cellSize, SELECTED.freeOutline, map);
   }
 
   if (attackableEnemies) {
@@ -29,6 +31,6 @@ export const renderMovementLayer = (
     drawMovement(ctx, x, y, cellSize, 'produce');
   });
   if (produceCells.length > 0) {
-    drawZoneOutline(ctx, produceCells, cellSize, SELECTED.produceOutline);
+    drawZoneOutline(ctx, produceCells, cellSize, SELECTED.produceOutline, map);
   }
 };

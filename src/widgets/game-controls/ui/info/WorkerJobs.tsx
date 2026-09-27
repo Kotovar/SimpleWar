@@ -22,7 +22,7 @@ import styles from './OptionCards.styles.module.css';
 const where = ({ x, y }: Building) => `(${x}, ${y})`;
 
 /**
- * Работа своего рабочего: добыча на соседнем руднике или лесопилке,
+ * Работа своего рабочего: добыча внутри соседнего рудника или лесопилки,
  * ремонт соседних своих зданий и расчистка леса. Кнопки вызывают те же
  * команды, что и ИИ; занятость рабочих мест видна до клика.
  */
@@ -37,8 +37,12 @@ export const WorkerJobs = ({ unit }: { unit: CivilUnit }) => {
     useMovementStore.getState();
 
   const actor = unit.owner;
+  // Рабочий внутри здания работает с соседними клетками и с самим зданием.
   const nearby = Object.values(buildings).filter(
-    building => building.owner === actor && isAdjacent(unit, building),
+    building =>
+      building.owner === actor &&
+      (isAdjacent(unit, building) ||
+        (building.x === unit.x && building.y === unit.y)),
   );
   const workplaces = nearby.filter(({ role }) => role === 'resource');
   const damaged = nearby.filter(({ hp, maxHp }) => hp < maxHp);
@@ -87,7 +91,8 @@ export const WorkerJobs = ({ unit }: { unit: CivilUnit }) => {
           {hasAction
             ? `В конце хода принесёт +15 и потратит рабочее действие.`
             : 'Рабочее действие уже потрачено: в этот ход добычи не будет.'}{' '}
-          Движение или стройка снимут назначение.
+          Рабочий внутри здания: удар по клетке получает здание. Движение
+          выводит его наружу и снимает назначение.
         </p>
       )}
 
@@ -101,8 +106,8 @@ export const WorkerJobs = ({ unit }: { unit: CivilUnit }) => {
             <span className={styles.Content}>
               <span className={styles.Name}>Снять с работы</span>
               <span className={styles.Info}>
-                {BUILDINGS_NAME[current.type]} {where(current)} останется без
-                рабочего
+                Выйдет на соседнюю клетку; {BUILDINGS_NAME[current.type]}{' '}
+                {where(current)} останется без рабочего
               </span>
             </span>
           </button>
@@ -131,7 +136,8 @@ export const WorkerJobs = ({ unit }: { unit: CivilUnit }) => {
                     Работать: {BUILDINGS_NAME[building.type]} {where(building)}
                   </span>
                   <span className={styles.Info}>
-                    +15 {building.type === 'mine' ? 'золота' : 'дерева'} в конец
+                    Войдёт в здание: +15{' '}
+                    {building.type === 'mine' ? 'золота' : 'дерева'} в конце
                     своего хода за рабочее действие
                   </span>
                   {holder && (

@@ -1,8 +1,11 @@
-import type { CommandResult, ParticipantId } from '@shared/config';
+import type { CommandResult, ParticipantId, Position } from '@shared/config';
 import { findServingWorker, isAdjacent, ok, reject } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { getOwnWorker, isRejection, runWorkerCommand } from './common';
+import { findExit } from './shelter';
+
+const isInside = (a: Position, b: Position) => a.x === b.x && a.y === b.y;
 
 /** Приказ назначения: кто, какого рабочего и на какое здание. */
 export type AssignCommand = {
@@ -45,17 +48,21 @@ const validateAndAssign = ({
   if (!building) return reject('notFound');
   if (building.owner !== actor) return reject('owner');
   if (building.role !== 'resource') return reject('target');
-  if (!isAdjacent(worker, building)) return reject('distance');
+  if (!isAdjacent(worker, building) && !isInside(worker, building)) {
+    return reject('distance');
+  }
   // Одно рабочее место: второй рабочий не встанет на занятое здание.
   if (getWorkplaceHolder(buildingId, workerId)) return reject('workplace');
 
+  // Рабочий входит в здание: удар по клетке теперь приходится в здание.
   useUnitsStore.getState().setWorkplace(workerId, buildingId);
+  useUnitsStore.getState().placeUnit(workerId, building.x, building.y);
   return ok;
 };
 
 /**
- * Назначает своего рабочего на соседний рудник или лесопилку. Прежнее
- * назначение рабочего заменяется. Действие тратится позже — при добыче
+ * Назначает своего рабочего на соседний рудник или лесопилку: рабочий
+ * входит в здание. Прежнее назначение рабочего заменяется. Действие тратится позже — при добыче
  * в конце своего хода.
  *
  * @param command - Участник, рабочий и здание.
@@ -75,7 +82,8 @@ export const assignWorker = (command: AssignCommand) =>
 export type UnassignCommand = { actor: ParticipantId; workerId: string };
 
 /**
- * Снимает назначение рабочего; повторное снятие отклоняется.
+ * Снимает назначение рабочего: он выходит на свободную соседнюю клетку
+ * (нет такой — отказ `occupied`); повторное снятие отклоняется.
  *
  * @param command - Участник и рабочий.
  * @returns Успех либо причина отказа.
@@ -85,6 +93,14 @@ export const unassignWorker = ({ actor, workerId }: UnassignCommand) =>
     const worker = getOwnWorker(actor, workerId);
     if (isRejection(worker)) return worker;
     if (!worker.workplaceId) return reject('target');
+    // Рабочий выходит из здания на свободную соседнюю клетку.
+    const workplace =
+      useBuildingsStore.getState().buildings[worker.workplaceId];
+    if (workplace && isInside(worker, workplace)) {
+      const exit = findExit(worker);
+      if (!exit) return reject('occupied');
+      useUnitsStore.getState().placeUnit(workerId, exit.x, exit.y);
+    }
     useUnitsStore.getState().setWorkplace(workerId, null);
     return ok;
   });

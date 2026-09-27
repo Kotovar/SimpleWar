@@ -21,6 +21,8 @@ type UnitsState = {
   changeBuildPoints: (id: string) => void;
   /** Назначает рабочего на рудник или лесопилку; `null` снимает назначение. */
   setWorkplace: (id: string, buildingId: string | null) => void;
+  /** Ставит юнита на клетку без траты очков: вход в здание и выход из него. */
+  placeUnit: (id: string, x: number, y: number) => void;
   selectUnitForSpawn: (unitType: UnitType) => void;
   clearSelectedUnitForSpawn: () => void;
   resetUnitsForNewTurn: (owner: Owner) => void;
@@ -109,6 +111,14 @@ export const useUnitsStore = create<UnitsState>()(
       set(state => {
         const unit = state.units[id];
         if (unit?.role === 'civil') unit.workplaceId = buildingId;
+      }),
+
+    placeUnit: (id, x, y) =>
+      set(state => {
+        const unit = state.units[id];
+        if (!unit) return;
+        unit.x = x;
+        unit.y = y;
       }),
 
     selectUnitForSpawn: unitType => {

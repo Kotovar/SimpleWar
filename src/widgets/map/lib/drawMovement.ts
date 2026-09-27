@@ -77,16 +77,18 @@ export const drawZoneOutline = (
   cells: Position[],
   cellSize: number,
   color: string,
+  map?: { columns: number; rows: number },
 ) => {
   const keys = new Set(cells.map(({ x, y }) => `${x},${y}`));
   const has = (x: number, y: number) => keys.has(`${x},${y}`);
 
   const scale = cellSize / 32;
-  // На краю карты половина линии ушла бы за холст: такие рёбра сдвигаем внутрь.
+  // На краю карты половина линии ушла бы за край: такие рёбра сдвигаем
+  // внутрь. Граница — край карты в мировых координатах, а не холста:
+  // холст размером с окно, и его край не совпадает с краем карты.
   const inset = 1.5 * scale;
-  const ratio = ctx.getTransform().a || 1;
-  const maxX = ctx.canvas.width / ratio;
-  const maxY = ctx.canvas.height / ratio;
+  const maxX = map ? map.columns * cellSize : Infinity;
+  const maxY = map ? map.rows * cellSize : Infinity;
   const clampX = (value: number) =>
     Math.min(Math.max(value, inset), maxX - inset);
   const clampY = (value: number) =>

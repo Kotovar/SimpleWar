@@ -1,7 +1,7 @@
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
 import type { Owner } from '@shared/config';
-import { isHostile } from '@shared/lib';
+import { getShelteredIds, isHostile } from '@shared/lib';
 
 type Attackable = {
   id: string;
@@ -21,8 +21,13 @@ export const getEnemyTargets = (owner: Owner): Attackable[] => {
   const units = useUnitsStore.getState().units;
   const buildings = useBuildingsStore.getState().buildings;
 
+  // Рабочий внутри здания целью не бывает: удар приходится в здание.
+  const sheltered = getShelteredIds(
+    Object.values(units),
+    Object.values(buildings),
+  );
   const enemyUnits: Attackable[] = Object.values(units)
-    .filter(unit => isHostile(owner, unit.owner))
+    .filter(unit => isHostile(owner, unit.owner) && !sheltered.has(unit.id))
     .map(unit => ({
       id: unit.id,
       x: unit.x,

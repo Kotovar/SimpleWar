@@ -5,10 +5,11 @@ import { useUnitsStore } from '@entities/units';
 import { useSelectionStore } from '@features/selection';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import { demolish } from '@features/build';
+import { unassignWorker } from '@features/workers';
 import styles from './OptionCards.styles.module.css';
 
 /**
- * Управление своим зданием: кто на нём работает и снос. Снос ратуши
+ * Управление своим зданием: рабочий внутри и снос. Снос ратуши
  * запрещён; остальное сносится без возврата ресурсов после подтверждения.
  */
 export const BuildingManage = ({ building }: { building: Building }) => {
@@ -21,6 +22,13 @@ export const BuildingManage = ({ building }: { building: Building }) => {
   const isResource = building.role === 'resource';
   const canDemolish = building.type !== 'base';
   if (!isResource && !canDemolish) return null;
+
+  const onPickWorker = () => {
+    if (!worker) return;
+    useHighlightStore.getState().resetStore();
+    useSelectionStore.getState().selectUnit(worker.id);
+    useMovementStore.getState().calculateActionHighlights(worker.id);
+  };
 
   const onDemolish = () => {
     setConfirm(false);
@@ -43,9 +51,36 @@ export const BuildingManage = ({ building }: { building: Building }) => {
       )}
       {isResource && !worker && (
         <p className={styles.Prompt}>
-          Без рабочего здание ничего не приносит. Поставьте рабочего рядом и
-          назначьте его в панели рабочего.
+          Без рабочего здание ничего не приносит. Подведите рабочего вплотную и
+          нажмите «Работать» — он войдёт в здание.
         </p>
+      )}
+      {isResource && worker && (
+        <div className={styles.List}>
+          <button type='button' className={styles.Card} onClick={onPickWorker}>
+            <span className={styles.Content}>
+              <span className={styles.Name}>Выбрать рабочего</span>
+              <span className={styles.Info}>
+                Рабочий внутри: удар по клетке получает здание. Выберите его,
+                чтобы вывести или отдать другой приказ.
+              </span>
+            </span>
+          </button>
+          <button
+            type='button'
+            className={styles.Card}
+            onClick={() =>
+              unassignWorker({ actor: building.owner, workerId: worker.id })
+            }
+          >
+            <span className={styles.Content}>
+              <span className={styles.Name}>Снять с работы</span>
+              <span className={styles.Info}>
+                Рабочий выйдет на свободную соседнюю клетку
+              </span>
+            </span>
+          </button>
+        </div>
       )}
 
       {canDemolish && (

@@ -3,6 +3,7 @@ import {
   computeVisibility,
   gameEvents,
   getSightSources,
+  getShelteredIds,
   isHostile,
 } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
@@ -48,10 +49,15 @@ export const getVisibleEnemies = (
   visible: Uint8Array,
 ): Omit<Contact, 'seenTurn'>[] => {
   const width = useMapStore.getState().grid[0]?.length ?? 0;
+  const units = Object.values(useUnitsStore.getState().units);
+  const buildings = Object.values(useBuildingsStore.getState().buildings);
+  // Рабочего внутри здания снаружи не видно.
+  const sheltered = getShelteredIds(units, buildings);
   const pick =
     (kind: Contact['kind']) =>
     (entity: Unit | Building): Omit<Contact, 'seenTurn'>[] =>
       isHostile(owner, entity.owner) &&
+      !sheltered.has(entity.id) &&
       visible[entity.y * width + entity.x] === 1
         ? [
             {
@@ -68,10 +74,8 @@ export const getVisibleEnemies = (
         : [];
 
   return [
-    ...Object.values(useUnitsStore.getState().units).flatMap(pick('unit')),
-    ...Object.values(useBuildingsStore.getState().buildings).flatMap(
-      pick('building'),
-    ),
+    ...units.flatMap(pick('unit')),
+    ...buildings.flatMap(pick('building')),
   ];
 };
 

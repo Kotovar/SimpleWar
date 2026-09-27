@@ -13,7 +13,7 @@ import { drawHpBar } from './drawHpBar';
 import { drawActionPips } from './drawActionPips';
 import { drawWorkBadge } from './drawWorkBadge';
 import { drawIdleBadge } from './drawIdleBadge';
-import { findServingWorker } from '@shared/lib';
+import { isHostile } from '@shared/lib';
 
 /** Смещение в клетках и масштаб сущностей, которые сейчас анимируются. */
 export type CellOffsets = Map<
@@ -52,11 +52,21 @@ export const drawBuildingModel = (
 const isOutside = (range: CellRange | undefined, x: number, y: number) =>
   !!range && (x < range.x0 || x >= range.x1 || y < range.y0 || y >= range.y1);
 
-// Свою сущность без очков действий гасим: видно, кем ещё можно ходить.
-const isSpentUnit = (unit: Unit, humanId: Owner | null) =>
+/**
+ * Свою сущность без полезных действий гасим: видно, кем ещё можно ходить.
+ * Военный без очков движения считается отходившим и с очком атаки, если
+ * в его дальности нет видимых врагов.
+ */
+const isSpentUnit = (
+  unit: Unit,
+  humanId: Owner | null,
+  hasTarget: (unit: Unit) => boolean,
+) =>
   unit.owner === humanId &&
   unit.movePoints === 0 &&
-  (unit.role === 'military' ? unit.attackPoints === 0 : unit.buildPoints === 0);
+  (unit.role === 'military'
+    ? unit.attackPoints === 0 || !hasTarget(unit)
+    : unit.buildPoints === 0);
 
 const isSpentBuilding = (building: Building, humanId: Owner | null) => {
   if (building.owner !== humanId) return false;
@@ -76,6 +86,7 @@ const isSpentBuilding = (building: Building, humanId: Owner | null) => {
  * @param offsets - Смещения в клетках и масштабы анимируемых сущностей.
  * @param humanId - Участник интерфейса: его сущности гаснут без очков и показывают очки.
  * @param range - Клетки в окне камеры с запасом; без него рисуется всё.
+ * @param staffed - Свои рудники и лесопилки с рабочим внутри.
  */
 export const renderEntitiesLayer = (
   ctx: CanvasRenderingContext2D,
@@ -85,7 +96,19 @@ export const renderEntitiesLayer = (
   offsets?: CellOffsets,
   humanId: Owner | null = null,
   range?: CellRange,
+  staffed: ReadonlySet<string> = new Set(),
 ) => {
+  const enemies = [...Object.values(units), ...Object.values(buildings)].filter(
+    entity => humanId !== null && isHostile(humanId, entity.owner),
+  );
+  const hasTarget = (unit: Unit) =>
+    unit.role === 'military' &&
+    enemies.some(
+      enemy =>
+        Math.abs(enemy.x - unit.x) + Math.abs(enemy.y - unit.y) <=
+        unit.attackRange,
+    );
+
   Object.values(buildings).forEach(building => {
     const { id, x, y, type, hp, maxHp, owner } = building;
     if (isOutside(range, x, y)) return;
@@ -99,13 +122,10 @@ export const renderEntitiesLayer = (
     ctx.restore();
 
     drawHpBar(ctx, x + dx, y + dy, cellSize, hpRatio);
-    // Свой рудник или лесопилка без рабочего простаивает: подсказываем.
-    if (
-      owner === humanId &&
-      building.role === 'resource' &&
-      !findServingWorker(building, Object.values(units))
-    ) {
-      drawIdleBadge(ctx, x + dx, y + dy, cellSize);
+    // Свой рудник или лесопилка: рабочий внутри или простой без него.
+    if (owner === humanId && building.role === 'resource') {
+      if (staffed.has(id)) drawWorkBadge(ctx, x + dx, y + dy, cellSize);
+      else drawIdleBadge(ctx, x + dx, y + dy, cellSize);
     }
   });
 
@@ -116,7 +136,7 @@ export const renderEntitiesLayer = (
     const { dx = 0, dy = 0, scale = 1 } = offsets?.get(id) ?? {};
 
     ctx.save();
-    if (isSpentUnit(unit, humanId)) ctx.globalAlpha = SPENT_ALPHA;
+    if (isSpentUnit(unit, humanId, hasTarget)) ctx.globalAlpha = SPENT_ALPHA;
 
     if (type === 'swordsman') {
       drawSwordsman(ctx, x + dx, y + dy, cellSize, owner, scale);
@@ -134,8 +154,5 @@ export const renderEntitiesLayer = (
     // Полоса здоровья и очки остаются контрастными даже у отходившего юнита.
     drawHpBar(ctx, x + dx, y + dy, cellSize, hpRatio);
     if (owner === humanId) drawActionPips(ctx, x + dx, y + dy, cellSize, unit);
-    if (owner === humanId && unit.role === 'civil' && unit.workplaceId) {
-      drawWorkBadge(ctx, x + dx, y + dy, cellSize);
-    }
   });
 };

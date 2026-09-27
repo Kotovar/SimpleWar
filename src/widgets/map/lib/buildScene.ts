@@ -5,6 +5,7 @@ import {
   type ParticipantId,
   type Unit,
 } from '@shared/config';
+import { findServingWorker, getShelteredIds } from '@shared/lib';
 import {
   getKnownCellType,
   type Contact,
@@ -32,6 +33,8 @@ export type Scene = {
   snapshots: Contact[];
   /** Знания для тумана; `null` — туман не рисуется. */
   fog: ParticipantKnowledge | null;
+  /** Свои рудники и лесопилки смотрящего с рабочим внутри. */
+  staffed: Set<string>;
 };
 
 /**
@@ -85,8 +88,36 @@ export const buildScene = (
   view: SceneView,
   knownGrid?: Cell[][],
 ): Scene => {
+  // Рабочий внутри здания не рисуется и не выбирается кликом: клетку
+  // занимает здание, рабочий виден в его панели.
+  const sheltered = getShelteredIds(
+    Object.values(world.units),
+    Object.values(world.buildings),
+  );
+  const outside = Object.fromEntries(
+    Object.entries(world.units).filter(([id]) => !sheltered.has(id)),
+  );
+
+  // Кто работает внутри, знает только владелец здания.
+  const staffedFor = (viewer: ParticipantId | null) =>
+    new Set(
+      Object.values(world.buildings)
+        .filter(
+          b =>
+            (viewer === null || b.owner === viewer) &&
+            findServingWorker(b, Object.values(world.units)),
+        )
+        .map(({ id }) => id),
+    );
+
   if (view.mode === 'world') {
-    return { ...world, snapshots: [], fog: null };
+    return {
+      ...world,
+      units: outside,
+      snapshots: [],
+      fog: null,
+      staffed: staffedFor(null),
+    };
   }
 
   const { viewer, knowledge } = view;
@@ -100,9 +131,10 @@ export const buildScene = (
 
   return {
     grid: knownGrid ?? getKnownGrid(world.grid, knowledge),
-    units: filterVisible(world.units, viewer, knowledge),
+    units: filterVisible(outside, viewer, knowledge),
     buildings,
     snapshots,
     fog: knowledge ?? null,
+    staffed: staffedFor(viewer),
   };
 };

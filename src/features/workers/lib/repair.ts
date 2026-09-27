@@ -33,7 +33,9 @@ const validateAndRepair = ({
   const building = useBuildingsStore.getState().buildings[buildingId];
   if (!building) return reject('notFound');
   if (building.owner !== actor) return reject('owner');
-  if (!isAdjacent(worker, building)) return reject('distance');
+  // Рабочий внутри здания чинит его изнутри.
+  const inside = worker.x === building.x && worker.y === building.y;
+  if (!isAdjacent(worker, building) && !inside) return reject('distance');
   const amount = getRepairAmount(building.hp, building.maxHp);
   if (amount === 0) return reject('target');
   if (worker.buildPoints <= 0) return reject('points');

@@ -61,6 +61,11 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   );
 
   const { fog, grid, units, buildings, snapshots } = scene;
+  const columns = grid[0]?.length ?? 0;
+  const mapSize = useMemo(
+    () => ({ columns, rows: grid.length }),
+    [columns, grid.length],
+  );
   const worldIds = useMemo(
     () => new Set([...Object.keys(worldUnits), ...Object.keys(worldBuildings)]),
     [worldBuildings, worldUnits],
@@ -134,10 +139,18 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
           spawnableCells,
           cellSize,
           pulse,
+          mapSize,
         ),
       ),
     );
-  }, [attackableTargets, buildableCells, reachableCells, spawnableCells, view]);
+  }, [
+    attackableTargets,
+    buildableCells,
+    mapSize,
+    reachableCells,
+    spawnableCells,
+    view,
+  ]);
 
   const hoverPath = useHoverPath(
     hover,

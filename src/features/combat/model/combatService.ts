@@ -49,6 +49,10 @@ const validateAndAttack = ({
   const target = targetId in unitsStore.units ? targetUnit : targetBuilding;
 
   if (!target) return reject('notFound');
+  // Рабочий внутри здания не виден снаружи: целью может быть только здание.
+  if (targetUnit && buildingsStore.getBuildingAt(target.x, target.y)) {
+    return reject('notFound');
+  }
   // Скрытая цель неотличима от несуществующей: отказ ничего не раскрывает.
   const sources = getSightSources(
     actor,

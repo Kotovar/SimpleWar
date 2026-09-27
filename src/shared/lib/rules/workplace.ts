@@ -19,7 +19,8 @@ export const isWorker = (unit: Unit | undefined): unit is CivilUnit =>
 
 /**
  * Обслуживает ли рабочий здание прямо сейчас: назначен на него, того же
- * владельца и стоит рядом. Очко работы здесь не проверяется.
+ * владельца и находится внутри — на клетке здания. Очко работы здесь не
+ * проверяется.
  *
  * @param worker - Рабочий.
  * @param building - Рудник или лесопилка.
@@ -28,7 +29,28 @@ export const isServing = (worker: Unit, building: Building) =>
   isWorker(worker) &&
   worker.workplaceId === building.id &&
   worker.owner === building.owner &&
-  isAdjacent(worker, building);
+  worker.x === building.x &&
+  worker.y === building.y;
+
+/**
+ * Юниты внутри зданий: стоят на клетке здания. Их нельзя атаковать и
+ * увидеть со стороны — удар по клетке приходится в здание.
+ *
+ * @param units - Юниты.
+ * @param buildings - Здания.
+ * @returns ID укрытых юнитов.
+ */
+export const getShelteredIds = (
+  units: Iterable<Unit>,
+  buildings: Iterable<Position>,
+) => {
+  const cells = new Set([...buildings].map(({ x, y }) => `${x},${y}`));
+  const ids = new Set<string>();
+  for (const unit of units) {
+    if (cells.has(`${unit.x},${unit.y}`)) ids.add(unit.id);
+  }
+  return ids;
+};
 
 /**
  * Рабочий, назначенный на здание, если он жив и стоит рядом.
@@ -50,7 +72,7 @@ export const findServingWorker = (
  * Доход участника за ход и рабочие, которые на него потратят действие.
  *
  * Ратуша и другие здания с доходом без роли `resource` приносят его сами.
- * Рудник и лесопилка — только с живым назначенным рабочим рядом, у которого
+ * Рудник и лесопилка — только с живым назначенным рабочим внутри, у которого
  * осталось рабочее действие: добыча и стройка/ремонт в один ход не сочетаются.
  * Один рабочий кормит одно здание, поэтому двойной добычи нет.
  *

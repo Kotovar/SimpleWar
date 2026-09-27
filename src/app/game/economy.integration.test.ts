@@ -8,6 +8,7 @@ import { useMapStore } from '@entities/maps';
 import { useJournalStore } from '@entities/journals';
 import { move } from '@features/pathfinding';
 import { build, demolish } from '@features/build';
+import { attack } from '@features/combat';
 import { initGameLoopEvents, nextTurn } from '@features/game-loop';
 import {
   assignWorker,
@@ -128,7 +129,7 @@ describe('назначение рабочих', () => {
     expect(worker(miner).workplaceId).toBeNull();
   });
 
-  it('стройка снимает назначение, и в этот ход добычи нет', () => {
+  it('стройка из здания тратит действие: назначение остаётся, добычи нет', () => {
     const miner = readyWorker(3, 3);
     economy().addResources('p1', { wood: 200 });
     assignWorker({ actor: 'p1', workerId: miner, buildingId: mine });
@@ -136,11 +137,12 @@ describe('назначение рабочих', () => {
       actor: 'p1',
       workerId: miner,
       buildingType: 'farm',
-      x: 2,
+      x: 3,
       y: 3,
     });
 
-    expect(worker(miner).workplaceId).toBeNull();
+    expect(buildings().getBuildingAt(3, 3)?.type).toBe('farm');
+    expect(worker(miner).workplaceId).toBe(mine);
     const before = gold();
     nextTurn('p1');
     expect(gold()).toBe(before + 3);
@@ -307,5 +309,66 @@ describe('снос и последний проход', () => {
       }),
     ).toMatchObject({ ok: false, code: 'blocked' });
     expect(buildings().getBuildingAt(1, 0)).toBeNull();
+  });
+});
+
+describe('рабочий внутри здания', () => {
+  const enemyTurn = () => useGameLoopStore.setState({ activePlayer: 'p2' });
+
+  it('назначение заводит рабочего в здание, удар приходится в здание', () => {
+    const miner = readyWorker(3, 3);
+    assignWorker({ actor: 'p1', workerId: miner, buildingId: mine });
+    expect(worker(miner)).toMatchObject({ x: 4, y: 3, workplaceId: mine });
+
+    const raider = units().spawnUnit('swordsman', 5, 3, 'p2', true)!;
+    useUnitsStore.setState(state => ({
+      units: {
+        ...state.units,
+        [raider]: { ...state.units[raider], attackPoints: 1 },
+      },
+    }));
+    enemyTurn();
+    expect(
+      attack({ actor: 'p2', attackerId: raider, targetId: miner }),
+    ).toMatchObject({ ok: false, code: 'notFound' });
+    expect(attack({ actor: 'p2', attackerId: raider, targetId: mine }).ok).toBe(
+      true,
+    );
+    expect(worker(miner).hp).toBe(worker(miner).maxHp);
+  });
+
+  it('снятие с работы выводит рабочего на свободную соседнюю клетку', () => {
+    const miner = readyWorker(3, 3);
+    assignWorker({ actor: 'p1', workerId: miner, buildingId: mine });
+
+    expect(unassignWorker({ actor: 'p1', workerId: miner }).ok).toBe(true);
+    const { x, y } = worker(miner);
+    expect(Math.max(Math.abs(x - 4), Math.abs(y - 3))).toBe(1);
+  });
+
+  it('без свободной клетки выйти нельзя', () => {
+    const miner = readyWorker(3, 3);
+    assignWorker({ actor: 'p1', workerId: miner, buildingId: mine });
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        if (dx || dy) buildings().spawnBuilding('farm', 4 + dx, 3 + dy, 'p1');
+      }
+    }
+
+    expect(unassignWorker({ actor: 'p1', workerId: miner })).toMatchObject({
+      ok: false,
+      code: 'occupied',
+    });
+    expect(worker(miner).workplaceId).toBe(mine);
+  });
+
+  it('разрушение здания выпускает рабочего наружу живым', () => {
+    const miner = readyWorker(3, 3);
+    assignWorker({ actor: 'p1', workerId: miner, buildingId: mine });
+    buildings().damageBuilding(mine, 10_000);
+
+    const { x, y, workplaceId } = worker(miner);
+    expect(workplaceId).toBeNull();
+    expect(x !== 4 || y !== 3).toBe(true);
   });
 });

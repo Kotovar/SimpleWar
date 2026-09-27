@@ -91,9 +91,9 @@ const validateAndBuild = (
   if (!spawnBuilding(buildingType, x, y, actor)) {
     return failure(`Здание ${buildingType} не создано`);
   }
+  // Стройка тратит рабочее действие: добычи в этот ход нет, но рабочий
+  // внутри здания остаётся назначенным, как при ремонте и расчистке.
   changeBuildPoints(workerId);
-  // Приказ стройки снимает назначение на добычу.
-  useUnitsStore.getState().setWorkplace(workerId, null);
   if (!isFree) removeResources(actor, config.cost);
   return ok;
 };

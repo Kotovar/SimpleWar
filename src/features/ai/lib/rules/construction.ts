@@ -115,7 +115,8 @@ export const W08: AiRule = {
       .sort((a, b) => manhattan(a, target) - manhattan(b, target))[0];
     if (!worker) return [];
     const basis = { building: target.type, hp: target.hp, maxHp: target.maxHp };
-    if (isNear(worker, target)) {
+    const inside = worker.x === target.x && worker.y === target.y;
+    if (isNear(worker, target) || inside) {
       return [
         {
           ruleId: 'W08',

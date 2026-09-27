@@ -10,9 +10,9 @@ const building = (type: BuildingType, x: number): Building => {
   return result;
 };
 
-/** Рабочий рядом со зданием, назначенный на него, с рабочим действием. */
+/** Рабочий внутри здания, назначенный на него, с рабочим действием. */
 const miner = (target: Building, patch: Partial<Unit> = {}): Unit => {
-  const unit = createUnit('worker', target.x, 1, 'p1', true);
+  const unit = createUnit('worker', target.x, target.y, 'p1', true);
   if (unit?.role !== 'civil') throw new Error('Не удалось создать рабочего');
   return { ...unit, workplaceId: target.id, ...patch } as Unit;
 };
@@ -46,9 +46,14 @@ describe('calculateIncome', () => {
     expect({ buildings, units }).toEqual(before);
   });
 
-  it('needs a living adjacent worker with a work action left', () => {
+  it('needs a living worker inside with a work action left', () => {
     const mine = building('mine', 1);
     expect(calculateIncome([mine], [miner(mine, { buildPoints: 0 })])).toEqual({
+      gold: 0,
+      wood: 0,
+    });
+    // Рядом, но не внутри — не добывает.
+    expect(calculateIncome([mine], [miner(mine, { y: 1 })])).toEqual({
       gold: 0,
       wood: 0,
     });

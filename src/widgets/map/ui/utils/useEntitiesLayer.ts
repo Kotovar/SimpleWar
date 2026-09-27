@@ -71,7 +71,7 @@ export const useEntitiesLayer = ({
   const frame = useRef(0);
   const isFirstRun = useRef(true);
 
-  const { buildings, units, snapshots } = scene;
+  const { buildings, units, snapshots, staffed } = scene;
 
   // Сравнение состава — только при изменении сцены, не при сдвиге камеры.
   useEffect(() => {
@@ -206,6 +206,7 @@ export const useEntitiesLayer = ({
           offsets,
           humanId,
           range,
+          staffed,
         );
         drawEffects('over');
       });
@@ -223,5 +224,5 @@ export const useEntitiesLayer = ({
     draw();
 
     return () => cancelAnimationFrame(frame.current);
-  }, [buildings, humanId, ref, snapshots, units, view]);
+  }, [buildings, humanId, ref, snapshots, staffed, units, view]);
 };

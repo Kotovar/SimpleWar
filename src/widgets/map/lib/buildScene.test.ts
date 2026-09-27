@@ -92,7 +92,7 @@ describe('сцена карты', () => {
   it('полный обзор показывает весь мир без тумана и снимков', () => {
     const scene = buildScene(world, { mode: 'world' });
 
-    expect(scene.units).toBe(world.units);
+    expect(scene.units).toEqual(world.units);
     expect(scene.grid[0][4].type).toBe('forest');
     expect(scene.snapshots).toEqual([]);
     expect(scene.fog).toBeNull();
@@ -106,5 +106,36 @@ describe('сцена карты', () => {
     });
 
     expect(Object.keys(scene.units)).toEqual([own.id]);
+  });
+
+  it('рабочий внутри здания не рисуется, отметку работы видит только владелец', () => {
+    const mine = createBuilding('mine', 1, 0, 'p1')!;
+    const miner = {
+      ...createUnit('worker', 1, 0, 'p1', false)!,
+      workplaceId: mine.id,
+    };
+    const staffedWorld = {
+      grid,
+      units: byId<Unit>(own, miner as Unit),
+      buildings: byId<Building>(mine),
+    };
+
+    const ownView = buildScene(staffedWorld, {
+      mode: 'participant',
+      viewer: 'p1',
+      knowledge: undefined,
+    });
+    const enemyView = buildScene(staffedWorld, {
+      mode: 'participant',
+      viewer: 'p2',
+      knowledge: undefined,
+    });
+
+    expect(Object.keys(ownView.units)).toEqual([own.id]);
+    expect([...ownView.staffed]).toEqual([mine.id]);
+    expect([...enemyView.staffed]).toEqual([]);
+    expect(
+      buildScene(staffedWorld, { mode: 'world' }).units,
+    ).not.toHaveProperty(miner.id);
   });
 });

@@ -7,7 +7,6 @@ import {
   resourceSites,
   scarceResource,
 } from '../facts';
-import { isChoke } from '../approach';
 import { manhattan } from '../geometry';
 import { standCells, stepToward } from '../movement';
 import { bestMove, isFree, moveTo, taskOf } from './common';
@@ -20,7 +19,9 @@ export const W01: AiRule = {
   title: 'Эвакуация рабочего',
   evaluate: ctx =>
     ctx.workers.flatMap(worker => {
+      // Рабочий внутри здания укрыт: удар приходится в здание.
       if (!isFree(ctx, worker.id) || worker.movePoints <= 0) return [];
+      if (worker.workplaceId) return [];
       const danger = ctx.threatAt(worker);
       if (danger === 0) return [];
       const home = ctx.base ?? worker;
@@ -81,10 +82,7 @@ const takeWorkplace =
           },
         ];
       }
-      // Не вставать в узком месте: рабочий закрыл бы проход.
-      const cells = standCells(ctx, place);
-      const roomy = cells.filter(cell => !isChoke(ctx, cell));
-      const step = stepToward(ctx, worker, roomy.length ? roomy : cells);
+      const step = stepToward(ctx, worker, standCells(ctx, place));
       return step
         ? [
             moveTo(ruleId, worker, step.next, score - 5, 'иду к месту добычи', {

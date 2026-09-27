@@ -8,6 +8,7 @@
 .Stat {
   --tone: var(--gold);
 
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -60,11 +61,22 @@
   color: var(--tone);
 }
 
-/* Простой добычи: здание есть, а рабочего рядом нет. */
+/* Простой добычи: значок в углу плашки, высота и ширина не меняются. */
 .Warning {
-  margin-top: 2px;
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border: 2px solid var(--surface);
+  border-radius: 999px;
+  background-color: #f2c14e;
+  color: #1c221e;
   font-size: 0.7rem;
-  font-weight: 600;
-  color: #f2c14e;
+  font-weight: 800;
+  line-height: 1;
   cursor: help;
 }

@@ -1,6 +1,7 @@
 import { UNKNOWN_MOVE_COST, type Position, type Unit } from '@shared/config';
 import { findCheapestPaths } from '@shared/lib';
 import type { CostedCell } from '../model/types';
+import { mobileCells } from './approach';
 import type { AiContext } from './context';
 import { cellKey, fromKey } from './geometry';
 
@@ -118,9 +119,7 @@ export const standCells = (
  * уходят и выход не закрывают; клетка, запертая зданиями, выхода не имеет.
  */
 export const hasRoom = (ctx: AiContext, start: Position, need = 6) => {
-  const units = new Set(
-    ctx.obs.ownUnits.map(({ x, y }) => cellKey(x, y, ctx.width)),
-  );
+  const units = mobileCells(ctx);
   const grid = ctx.grid(TURN_UNKNOWN);
   const seen = new Set([cellKey(start.x, start.y, ctx.width)]);
   const queue = [start];

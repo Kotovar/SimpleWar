@@ -7,6 +7,7 @@ import {
 import { findCheapestPaths, isBuildableTerrain } from '@shared/lib';
 import type { AiRule } from '../../model/types';
 import type { AiContext } from '../context';
+import { mobileCells } from '../approach';
 import { isNear } from '../facts';
 import { around, cellKey, chebyshev, manhattan } from '../geometry';
 import { standCells, stepToward, turnMoves } from '../movement';
@@ -26,33 +27,26 @@ const exits = (ctx: AiContext, building: Building) =>
 const canYield = (ctx: AiContext, unit: Unit) =>
   isFree(ctx, unit.id) && unit.movePoints > 0;
 
-/**
- * Отойти с клетки: ближайшая достижимая клетка вне запрета. Рабочий на
- * добыче сперва ищет другую клетку рядом со своим зданием — назначение
- * снимется движением, но W02/W03 сразу вернут его на работу.
- */
+/** Отойти с клетки: ближайшая достижимая клетка вне запрета. */
 const stepAside = (
   ctx: AiContext,
   unit: Unit,
   avoid: (cell: Position) => boolean,
-) => {
-  const place =
-    unit.role === 'civil'
-      ? ctx.obs.ownBuildings.find(({ id }) => id === unit.workplaceId)
-      : undefined;
-  const away = (cell: Position) => (place && isNear(cell, place) ? 0 : 1);
-  return turnMoves(ctx, unit)
+) =>
+  turnMoves(ctx, unit)
     .filter(cell => !avoid(cell))
-    .sort((a, b) => away(a) - away(b) || a.cost - b.cost)[0];
-};
+    .sort((a, b) => a.cost - b.cost)[0];
 
 /**
  * Первый свой юнит на пути застрявшего: путь строится так, будто свои
  * юниты проходимы, — только тогда видно, кто именно загородил проход.
  */
 const blockerOnPath = (ctx: AiContext, unit: Unit, goal: Position) => {
+  const mobile = mobileCells(ctx);
   const own = new Map(
-    ctx.obs.ownUnits.map(u => [cellKey(u.x, u.y, ctx.width), u]),
+    ctx.obs.ownUnits
+      .map(u => [cellKey(u.x, u.y, ctx.width), u] as const)
+      .filter(([key]) => mobile.has(key)),
   );
   const grid = ctx.grid(2).map((row, y) =>
     row.map((cost, x) => {

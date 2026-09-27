@@ -13,8 +13,11 @@ type StatProps = {
   label: string;
   value: ReactNode;
   extra?: ReactNode;
-  /** Предупреждение под значением, например о простое добычи. */
-  warning?: { text: string; title: string };
+  /**
+   * Предупреждение значком в углу, например о простое добычи: не меняет
+   * размеры плашки, подробности — в подсказке.
+   */
+  warning?: { count: number; text: string; title: string };
   tone: 'gold' | 'wood' | 'population';
 };
 
@@ -27,12 +30,17 @@ const Stat = ({ icon, label, value, extra, warning, tone }: StatProps) => (
         {value}
         {extra && <span className={styles.Extra}>{extra}</span>}
       </span>
-      {warning && (
-        <span className={styles.Warning} title={warning.title}>
-          {warning.text}
-        </span>
-      )}
     </span>
+    {warning && (
+      <span
+        className={styles.Warning}
+        role='img'
+        aria-label={`${warning.text}. ${warning.title}`}
+        title={`${warning.text}. ${warning.title}`}
+      >
+        !{warning.count > 1 ? warning.count : ''}
+      </span>
+    )}
   </div>
 );
 
@@ -45,9 +53,10 @@ const countIdle = (buildings: Building[], units: Unit[], type: BuildingType) =>
 const idleWarning = (count: number, name: string) =>
   count > 0
     ? {
+        count,
         text: `${count} ${name} без рабочего`,
         title:
-          'Рудник и лесопилка приносят доход, только если рядом стоит назначенный рабочий. Выберите рабочего рядом со зданием и нажмите «Работать».',
+          'Рудник и лесопилка приносят доход, только если внутри работает рабочий. Подведите рабочего вплотную к зданию и нажмите «Работать».',
       }
     : undefined;
 

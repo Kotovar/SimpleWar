@@ -2,6 +2,27 @@ import type { Position } from '@shared/config';
 import type { AiContext } from './context';
 import { cellKey, manhattan, sides } from './geometry';
 
+/**
+ * Клетки своих юнитов, которые могут уйти: юнит внутри здания клетку не
+ * освобождает — её занимает здание.
+ *
+ * @param keep - Дополнительный отбор юнитов.
+ */
+export const mobileCells = (
+  ctx: AiContext,
+  keep: (unit: AiContext['obs']['ownUnits'][number]) => boolean = () => true,
+) => {
+  const buildings = new Set(
+    ctx.obs.ownBuildings.map(({ x, y }) => cellKey(x, y, ctx.width)),
+  );
+  return new Set(
+    ctx.obs.ownUnits
+      .filter(keep)
+      .map(({ x, y }) => cellKey(x, y, ctx.width))
+      .filter(key => !buildings.has(key)),
+  );
+};
+
 /** Окрестность цели, в которой проверяется доступ к клеткам атаки. */
 const RADIUS = 8;
 
@@ -22,11 +43,7 @@ export const approachReach = (
 ): Set<number> => {
   const same = (p: Position | null, x: number, y: number) =>
     !!p && p.x === x && p.y === y;
-  const movable = new Set(
-    ctx.obs.ownUnits
-      .filter(unit => manhattan(unit, target) > 1)
-      .map(({ x, y }) => cellKey(x, y, ctx.width)),
-  );
+  const movable = mobileCells(ctx, unit => manhattan(unit, target) > 1);
   const grid = ctx.grid(2);
   const open = (x: number, y: number) => {
     if (!ctx.inside({ x, y }) || manhattan({ x, y }, target) > RADIUS) {
@@ -73,35 +90,3 @@ export const countReachable = (
   reach: Set<number>,
   cells: Position[],
 ) => cells.filter(({ x, y }) => reach.has(cellKey(x, y, ctx.width))).length;
-
-/**
- * Узкое место: если встать на клетку, её проходимые соседи теряют связь
- * друг с другом в ближней окрестности. Свои юниты проходимы.
- */
-export const isChoke = (ctx: AiContext, cell: Position) => {
-  const units = new Set(
-    ctx.obs.ownUnits.map(({ x, y }) => cellKey(x, y, ctx.width)),
-  );
-  const grid = ctx.grid(1);
-  const open = (p: Position) =>
-    ctx.inside(p) &&
-    manhattan(p, cell) <= 3 &&
-    !(p.x === cell.x && p.y === cell.y) &&
-    (grid[p.y][p.x] > 0 || units.has(cellKey(p.x, p.y, ctx.width)));
-  const neighbours = sides(cell).filter(open);
-  if (neighbours.length <= 1) return false;
-  const reached = new Set([
-    cellKey(neighbours[0].x, neighbours[0].y, ctx.width),
-  ]);
-  const queue = [neighbours[0]];
-  while (queue.length) {
-    const current = queue.pop()!;
-    for (const next of sides(current)) {
-      const key = cellKey(next.x, next.y, ctx.width);
-      if (reached.has(key) || !open(next)) continue;
-      reached.add(key);
-      queue.push(next);
-    }
-  }
-  return neighbours.some(n => !reached.has(cellKey(n.x, n.y, ctx.width)));
-};

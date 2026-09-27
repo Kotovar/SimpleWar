@@ -77,7 +77,7 @@ describe('W02/W03: занять место добычи', () => {
     const { ctx } = scene({
       map,
       units: [
-        own('worker', 2, 2, { workplaceId: mine.id }),
+        own('worker', 3, 3, { workplaceId: mine.id }),
         own('worker', 4, 4),
       ],
       buildings: [mine],
@@ -174,21 +174,5 @@ describe('W05: новая добыча', () => {
     });
 
     expect(W05.evaluate(ctx)).toEqual([]);
-  });
-});
-
-describe('W02: место у рудника', () => {
-  it('рабочий встаёт в нишу, а не в узкий проход', () => {
-    const mine = ownBuilding('mine', 3, 0);
-    const worker = own('worker', 5, 1);
-    const { ctx } = scene({
-      map: ['^^.g^^^', '.......', '^^^^^^^'],
-      units: [worker],
-      buildings: [mine],
-    });
-
-    expect(W02.evaluate(ctx)).toMatchObject([
-      { action: { type: 'move', unitId: worker.id, x: 2, y: 0 } },
-    ]);
   });
 });

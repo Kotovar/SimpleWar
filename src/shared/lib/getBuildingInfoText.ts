@@ -14,12 +14,12 @@ export const getBuildingInfoText = (buildingType: BuildingType): string => {
   switch (buildingType) {
     case 'mine':
       return BUILDINGS_CONFIG[buildingType].income.gold
-        ? `+${BUILDINGS_CONFIG[buildingType].income.gold} золота/ход, только если рядом работает назначенный рабочий`
+        ? `+${BUILDINGS_CONFIG[buildingType].income.gold} золота/ход, только с рабочим внутри`
         : '';
 
     case 'sawmill':
       return BUILDINGS_CONFIG[buildingType].income.wood
-        ? `+${BUILDINGS_CONFIG[buildingType].income.wood} дерева/ход, только если рядом работает назначенный рабочий`
+        ? `+${BUILDINGS_CONFIG[buildingType].income.wood} дерева/ход, только с рабочим внутри`
         : '';
 
     case 'farm':

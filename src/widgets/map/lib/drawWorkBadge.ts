@@ -1,6 +1,7 @@
 /**
- * Отметка рабочего, назначенного на добычу: маленькая кирка в левом
- * верхнем углу клетки. Видна только владельцу, как и очки действий.
+ * Отметка своего рудника или лесопилки, где внутри работает рабочий:
+ * зелёный кружок с силуэтом человека в правом верхнем углу клетки — на
+ * том же месте, где у простаивающего здания жёлтый «!».
  *
  * @param x - Столбец клетки, может быть дробным во время анимации.
  * @param y - Строка клетки.
@@ -11,33 +12,34 @@ export const drawWorkBadge = (
   y: number,
   cellSize: number,
 ) => {
-  const radius = cellSize * 0.16;
-  const cx = x * cellSize + radius * 1.2;
-  const cy = y * cellSize + radius * 1.2;
+  const radius = cellSize * 0.17;
+  const cx = (x + 1) * cellSize - radius * 1.15;
+  const cy = y * cellSize + radius * 1.15;
 
   ctx.save();
-  ctx.fillStyle = 'rgba(28, 34, 30, 0.85)';
+  ctx.fillStyle = '#6fbf73';
+  ctx.strokeStyle = 'rgba(28, 34, 30, 0.9)';
+  ctx.lineWidth = Math.max(1, radius * 0.25);
   ctx.beginPath();
   ctx.arc(cx, cy, radius, 0, Math.PI * 2);
   ctx.fill();
+  ctx.stroke();
 
-  // Кирка: рукоять и изогнутое остриё.
-  ctx.lineCap = 'round';
-  ctx.lineWidth = Math.max(1, radius * 0.28);
-  ctx.strokeStyle = '#c9a36a';
+  // Силуэт рабочего: голова и плечи.
+  ctx.fillStyle = '#1c221e';
   ctx.beginPath();
-  ctx.moveTo(cx - radius * 0.45, cy + radius * 0.5);
-  ctx.lineTo(cx + radius * 0.3, cy - radius * 0.25);
-  ctx.stroke();
-  ctx.strokeStyle = '#f2d98f';
+  ctx.arc(cx, cy - radius * 0.28, radius * 0.3, 0, Math.PI * 2);
+  ctx.fill();
   ctx.beginPath();
-  ctx.arc(
-    cx + radius * 0.3,
-    cy + radius * 0.35,
-    radius * 0.7,
-    -Math.PI * 0.95,
-    -Math.PI * 0.2,
+  ctx.ellipse(
+    cx,
+    cy + radius * 0.5,
+    radius * 0.55,
+    radius * 0.35,
+    0,
+    Math.PI,
+    Math.PI * 2,
   );
-  ctx.stroke();
+  ctx.fill();
   ctx.restore();
 };
