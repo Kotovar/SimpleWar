@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { gameEvents, withDevtools } from '@shared/lib';
-import { HEALING, type Position } from '@shared/config';
+import { HEALING, type Position, type Unit } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import {
@@ -13,7 +13,7 @@ interface MovementState {
   reachableCells: Position[] | null;
   attackableTargets: Position[] | null;
   /** Свои раненые юниты, которых выбранный лекарь может вылечить. */
-  healTargets: Position[] | null;
+  healTargets: Unit[] | null;
 
   calculateActionHighlights: (unitId: string) => void;
   resetStore: () => void;
@@ -44,16 +44,14 @@ export const useMovementStore = create<MovementState>()(
       const heal = unit?.role === 'military' && HEALING[unit.type];
       const healable =
         unit?.role === 'military' && heal && unit.attackPoints > 0
-          ? Object.values(units)
-              .filter(
-                other =>
-                  other.id !== unit.id &&
-                  other.owner === unit.owner &&
-                  other.hp < other.maxHp &&
-                  Math.abs(other.x - unit.x) + Math.abs(other.y - unit.y) <=
-                    unit.attackRange,
-              )
-              .map(({ x, y }) => ({ x, y }))
+          ? Object.values(units).filter(
+              other =>
+                other.id !== unit.id &&
+                other.owner === unit.owner &&
+                other.hp < other.maxHp &&
+                Math.abs(other.x - unit.x) + Math.abs(other.y - unit.y) <=
+                  unit.attackRange,
+            )
           : null;
 
       const attackable =

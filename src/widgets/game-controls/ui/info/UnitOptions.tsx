@@ -165,7 +165,8 @@ export const UnitOptions = ({ building }: Props) => {
                   </span>
                 </span>
                 <span className={styles.Info}>
-                  {config.maxHp} HP · {damage || `лечение +${heal} HP`}
+                  {config.maxHp} HP{damage && <> · {damage}</>}
+                  {heal && ` · лечение +${heal} HP`}
                   {range && ` · дальность ${range}`} · ход{' '}
                   {config.maxMovePoints}
                   <FlightBadge type={spawnType} />

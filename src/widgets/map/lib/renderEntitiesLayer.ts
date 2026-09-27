@@ -35,6 +35,7 @@ import { drawActionPips } from './drawActionPips';
 import { drawWorkBadge } from './drawWorkBadge';
 import { drawIdleBadge } from './drawIdleBadge';
 import { isHostile } from '@shared/lib';
+import { getHealTargets } from '@features/combat';
 
 /** Смещение в клетках и масштаб сущностей, которые сейчас анимируются. */
 export type CellOffsets = Map<
@@ -127,6 +128,8 @@ const isSpentBuilding = (building: Building, humanId: Owner | null) => {
  * @param humanId - Участник интерфейса: его сущности гаснут без очков и показывают очки.
  * @param range - Клетки в окне камеры с запасом; без него рисуется всё.
  * @param staffed - Свои рудники и лесопилки с рабочим внутри.
+ * @param healingUnits - Юниты для проверки лечения, включая рабочих внутри зданий;
+ *   цели фильтруются по владельцу лекаря и не рисуются этим параметром.
  */
 export const renderEntitiesLayer = (
   ctx: CanvasRenderingContext2D,
@@ -137,17 +140,20 @@ export const renderEntitiesLayer = (
   humanId: Owner | null = null,
   range?: CellRange,
   staffed: ReadonlySet<string> = new Set(),
+  healingUnits: Iterable<Unit> = Object.values(units),
 ) => {
   const enemies = [...Object.values(units), ...Object.values(buildings)].filter(
     entity => humanId !== null && isHostile(humanId, entity.owner),
   );
   const hasTarget = (unit: Unit) =>
     unit.role === 'military' &&
-    enemies.some(
-      enemy =>
-        Math.abs(enemy.x - unit.x) + Math.abs(enemy.y - unit.y) <=
-        unit.attackRange,
-    );
+    (unit.type === 'healer'
+      ? getHealTargets(unit, healingUnits).length > 0
+      : enemies.some(
+          enemy =>
+            Math.abs(enemy.x - unit.x) + Math.abs(enemy.y - unit.y) <=
+            unit.attackRange,
+        ));
 
   Object.values(buildings).forEach(building => {
     const { id, x, y, type, hp, maxHp, owner } = building;

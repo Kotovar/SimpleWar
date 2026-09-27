@@ -44,7 +44,7 @@ export type MapClickContext = {
     /** Клетки прицела осадной машины. */
     strike?: Position[] | null;
     /** Свои раненые, которых может вылечить выбранный лекарь. */
-    heal?: Position[] | null;
+    heal?: Unit[] | null;
   };
   /** Игровые команды — те же, что вызывает ИИ. */
   commands: {

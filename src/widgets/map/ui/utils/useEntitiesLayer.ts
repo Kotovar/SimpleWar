@@ -1,3 +1,4 @@
+import { useUnitsStore } from '@entities/units';
 import { useEffect, useRef, type RefObject } from 'react';
 import type { Owner } from '@shared/config';
 import {
@@ -61,6 +62,7 @@ export const useEntitiesLayer = ({
   humanId,
   view,
 }: Props) => {
+  const worldUnits = useUnitsStore(state => state.units);
   const tracked = useRef(new Map<string, Tracked>());
   const known = useRef<ReadonlySet<string>>(new Set());
   const moves = useRef(
@@ -207,6 +209,7 @@ export const useEntitiesLayer = ({
           humanId,
           range,
           staffed,
+          Object.values(worldUnits),
         );
         drawEffects('over');
       });
@@ -224,5 +227,5 @@ export const useEntitiesLayer = ({
     draw();
 
     return () => cancelAnimationFrame(frame.current);
-  }, [buildings, humanId, ref, snapshots, staffed, units, view]);
+  }, [buildings, humanId, ref, snapshots, staffed, units, view, worldUnits]);
 };
