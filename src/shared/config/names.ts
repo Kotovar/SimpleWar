@@ -11,6 +11,9 @@ export const UNITS_NAME = {
   spearman: 'Копейщик',
   rider: 'Всадник',
   siege: 'Осадная машина',
+  mage: 'Маг',
+  healer: 'Лекарь',
+  griffon: 'Грифон',
 } satisfies Record<MilitaryType | CivilType, string>;
 
 /** Игровые названия зданий. */
@@ -24,6 +27,7 @@ export const BUILDINGS_NAME = {
   stable: 'Конюшня',
   workshop: 'Мастерская',
   forge: 'Кузница',
+  sanctuary: 'Святилище',
 } satisfies Record<BuildingType, string>;
 
 /** Игровые названия сторон по цвету слота. */

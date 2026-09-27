@@ -36,6 +36,7 @@ export const getBuildingInfoText = (buildingType: BuildingType): string => {
     case 'barracks':
     case 'stable':
     case 'workshop':
+    case 'sanctuary':
       if (!BUILDINGS_CONFIG[buildingType].spawningUnits.length) return '';
       return `Производит: ${BUILDINGS_CONFIG[buildingType].spawningUnits
         .map(unit => UNITS_NAME[unit])

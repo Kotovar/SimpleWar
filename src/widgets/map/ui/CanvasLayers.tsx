@@ -54,6 +54,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   const attackableTargets = useMovementStore(state => state.attackableTargets);
   const spawnableCells = useHighlightStore(state => state.spawnableCells);
   const strikeCells = useHighlightStore(state => state.strikeCells);
+  const healTargets = useMovementStore(state => state.healTargets);
   // Отметки ударов публичны: берутся из всех юнитов, а не из сцены.
   const allUnits = useUnitsStore(state => state.units);
   const strikeMarks = useMemo(
@@ -150,6 +151,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
           mapSize,
           strikeCells,
           strikeMarks,
+          healTargets,
         ),
       ),
     );
@@ -161,6 +163,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     spawnableCells,
     strikeCells,
     strikeMarks,
+    healTargets,
     view,
   ]);
 
@@ -188,11 +191,21 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
           hover,
           path: hoverPath,
           attackableTargets,
+          healTargets,
           pulse,
         }),
       ),
     );
-  }, [attackableTargets, buildings, hover, hoverPath, selection, units, view]);
+  }, [
+    attackableTargets,
+    buildings,
+    healTargets,
+    hover,
+    hoverPath,
+    selection,
+    units,
+    view,
+  ]);
 
   const handleClick = (event: MouseEvent<HTMLCanvasElement>) => {
     const box = event.currentTarget.getBoundingClientRect();

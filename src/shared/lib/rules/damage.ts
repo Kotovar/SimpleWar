@@ -1,6 +1,11 @@
 import {
   ARMOR,
   CATEGORY_AGAINST,
+  DAMAGE_TYPE,
+  FLYING_UNITS,
+  HEALING,
+  HITS_AIR,
+  MAGIC_RESIST,
   DAMAGE_BONUS,
   UNIT_CATEGORY,
   type BuildingType,
@@ -15,9 +20,24 @@ export const getTargetCategory = (
 ): TargetCategory =>
   type in UNIT_CATEGORY ? UNIT_CATEGORY[type as UnitType] : 'building';
 
+/** Летает ли тип: воздушный профиль передвижения. */
+export const isFlyingType = (type: UnitType | BuildingType) =>
+  FLYING_UNITS.includes(type as UnitType);
+
 /**
- * Урон по общей формуле: атака + бонус против категории цели − броня цели,
- * не меньше 1. Одна формула для всех сторон, атак и подготовленного удара.
+ * Может ли атакующий поразить цель по матрице «земля / воздух»: воздух
+ * бьют только лучник, башня, маг и летающие; землю — все атакующие.
+ */
+export const canHitTarget = (
+  attacker: UnitType | BuildingType,
+  target: UnitType | BuildingType,
+) => !isFlyingType(target) || HITS_AIR.includes(attacker);
+
+/**
+ * Урон по общей формуле: атака + бонус против категории цели − защита цели
+ * от типа урона атакующего (броня от физического, магическая защита от
+ * магического), не меньше 1: иммунитетов нет. Одна формула для всех сторон,
+ * предпросмотра, атак и подготовленного удара.
  *
  * @param attacker - Тип и атака атакующего.
  * @param target - Тип цели.
@@ -29,8 +49,11 @@ export const calculateDamage = (
 ) => {
   const bonuses = DAMAGE_BONUS[attacker.type as MilitaryType] ?? {};
   const bonus = bonuses[getTargetCategory(target.type)] ?? 0;
-  const armor = ARMOR[target.type] ?? 0;
-  return Math.max(1, attacker.attack + bonus - armor);
+  const defense =
+    DAMAGE_TYPE[attacker.type] === 'magic'
+      ? (MAGIC_RESIST[target.type] ?? 0)
+      : (ARMOR[target.type] ?? 0);
+  return Math.max(1, attacker.attack + bonus - defense);
 };
 
 /**
@@ -44,5 +67,16 @@ export const getCombatTraits = (type: UnitType | BuildingType): string[] => {
     ([category, value]) =>
       `+${value} против ${CATEGORY_AGAINST[category as TargetCategory]}`,
   );
-  return [...(armor ? [`броня ${armor}`] : []), ...bonuses];
+  const resist = MAGIC_RESIST[type] ?? 0;
+  const heal = HEALING[type as UnitType];
+  const hitsAir = HITS_AIR.includes(type) && type !== 'griffon';
+  return [
+    ...(DAMAGE_TYPE[type] === 'magic' ? ['магический урон'] : []),
+    ...(heal ? [`лечит +${heal.amount} HP своему юниту`] : []),
+    ...(isFlyingType(type) ? ['летает, бьёт землю и воздух'] : []),
+    ...(hitsAir ? ['бьёт воздух'] : []),
+    ...(armor ? [`броня ${armor}`] : []),
+    ...(resist ? [`маг. защита ${resist}`] : []),
+    ...bonuses,
+  ];
 };

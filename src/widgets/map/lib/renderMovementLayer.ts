@@ -17,7 +17,10 @@ export const renderMovementLayer = (
   strikeCells: Position[] | null = null,
   /** Публичные отметки подготовленных ударов всех сторон. */
   strikeMarks: Position[] = [],
+  /** Свои раненые в дальности выбранного лекаря. */
+  healTargets: Position[] | null = null,
 ) => {
+  healTargets?.forEach(({ x, y }) => drawMovement(ctx, x, y, cellSize, 'heal'));
   if (strikeCells?.length) {
     strikeCells.forEach(({ x, y }) => {
       drawMovement(ctx, x, y, cellSize, 'strike');

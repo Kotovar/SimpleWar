@@ -1,4 +1,5 @@
 import type { Position } from '@shared/config';
+import { canHitTarget } from '@shared/lib';
 import type { AiRule, Candidate } from '../../model/types';
 import type { AiContext, EnemyView } from '../context';
 import { baseAlarm } from '../facts';
@@ -87,7 +88,9 @@ export const A05: AiRule = {
       if (!canAttack(unit)) return [];
       const target = attackers.find(
         enemy =>
-          manhattan(enemy, unit) <= unit.attackRange && !isDoomed(ctx, enemy),
+          manhattan(enemy, unit) <= unit.attackRange &&
+          canHitTarget(unit.type, enemy.type) &&
+          !isDoomed(ctx, enemy),
       );
       if (target) {
         return [

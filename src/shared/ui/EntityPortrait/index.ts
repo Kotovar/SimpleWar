@@ -5,3 +5,4 @@ export * from './drawUnits';
 export { circle, rect, shape } from './drawEntity';
 export * from './drawNewUnits';
 export * from './drawNewBuildings';
+export * from './drawMagicUnits';

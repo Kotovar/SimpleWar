@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { ARMOR, DAMAGE_BONUS, UNITS_CONFIG } from '@shared/config';
-import { calculateDamage, getCombatTraits, getTargetCategory } from './damage';
+import {
+  ARMOR,
+  DAMAGE_BONUS,
+  UNITS_CONFIG,
+  type BuildingType,
+  type UnitType,
+} from '@shared/config';
+import {
+  calculateDamage,
+  canHitTarget,
+  getCombatTraits,
+  getTargetCategory,
+} from './damage';
 
 const hit = (
   attacker: 'swordsman' | 'spearman' | 'rider' | 'siege' | 'scout',
@@ -57,5 +68,56 @@ describe('категории и особенности', () => {
       '+16 против конницы',
     ]);
     expect(getCombatTraits('swordsman')).toEqual([]);
+  });
+});
+
+describe('типы урона', () => {
+  const mage = { type: 'mage' as const, attack: UNITS_CONFIG.mage.attack };
+
+  it('магия проходит сквозь броню, но упирается в магическую защиту', () => {
+    expect(calculateDamage(mage, { type: 'spearman' })).toBe(20);
+    expect(calculateDamage(mage, { type: 'healer' })).toBe(16);
+    // Физическая броня от магии не защищает, магическая — от стрел.
+    expect(calculateDamage(hit('swordsman'), { type: 'healer' })).toBe(18);
+  });
+
+  it('маг не заменяет осаду: здания держат магию', () => {
+    expect(calculateDamage(mage, { type: 'barracks' })).toBe(10);
+    expect(calculateDamage(hit('siege'), { type: 'barracks' })).toBeGreaterThan(
+      40,
+    );
+  });
+
+  it('минимум 1 и для магии', () => {
+    expect(calculateDamage({ type: 'mage', attack: 2 }, { type: 'base' })).toBe(
+      1,
+    );
+  });
+});
+
+describe('матрица земля / воздух', () => {
+  const attackers: (UnitType | BuildingType)[] = [
+    'swordsman',
+    'spearman',
+    'rider',
+    'scout',
+    'siege',
+    'archer',
+    'tower',
+    'mage',
+    'griffon',
+  ];
+  const hitsAir = new Set(['archer', 'tower', 'mage', 'griffon']);
+
+  it.each(attackers)('%s: земля — всегда, воздух — по матрице', attacker => {
+    expect(canHitTarget(attacker, 'swordsman')).toBe(true);
+    expect(canHitTarget(attacker, 'base')).toBe(true);
+    expect(canHitTarget(attacker, 'griffon')).toBe(hitsAir.has(attacker));
+  });
+
+  it('лучник — противовоздушная оборона: бонус против летающих', () => {
+    expect(
+      calculateDamage({ type: 'archer', attack: 22 }, { type: 'griffon' }),
+    ).toBe(22 + 6 - 1);
   });
 });

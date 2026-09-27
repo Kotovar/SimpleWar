@@ -5,7 +5,13 @@ import { drawBarracks, drawBase, drawTower } from './drawBuildings';
 import { drawFarm, drawGoldMine, drawSawmill } from './drawEconomyBuildings';
 import { drawArcher, drawSwordsman, drawWorker } from './drawUnits';
 import { drawRider, drawScout, drawSiege, drawSpearman } from './drawNewUnits';
-import { drawForge, drawStable, drawWorkshop } from './drawNewBuildings';
+import {
+  drawForge,
+  drawSanctuary,
+  drawStable,
+  drawWorkshop,
+} from './drawNewBuildings';
+import { drawGriffon, drawHealer, drawMage } from './drawMagicUnits';
 import styles from './styles.module.css';
 
 const DRAW_ENTITY = {
@@ -25,6 +31,10 @@ const DRAW_ENTITY = {
   stable: drawStable,
   workshop: drawWorkshop,
   forge: drawForge,
+  sanctuary: drawSanctuary,
+  mage: drawMage,
+  healer: drawHealer,
+  griffon: drawGriffon,
 } satisfies Record<BuildingType | UnitType, unknown>;
 
 type Props = {

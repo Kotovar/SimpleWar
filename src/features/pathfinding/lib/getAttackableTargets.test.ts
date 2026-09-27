@@ -46,6 +46,7 @@ describe('getAttackableTargets', () => {
       expect.arrayContaining([
         {
           id: nearUnit,
+          type: 'worker',
           x: 2,
           y: 1,
           owner: 'p2',
@@ -53,6 +54,7 @@ describe('getAttackableTargets', () => {
         },
         {
           id: nearBuilding,
+          type: 'base',
           x: 1,
           y: 2,
           owner: 'p2',

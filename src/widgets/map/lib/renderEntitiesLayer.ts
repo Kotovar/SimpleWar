@@ -12,6 +12,7 @@ import {
   drawFarm,
   drawForge,
   drawGoldMine,
+  drawSanctuary,
   drawSawmill,
   drawStable,
   drawTower,
@@ -19,6 +20,9 @@ import {
 } from './drawBuildings';
 import {
   drawArcher,
+  drawGriffon,
+  drawHealer,
+  drawMage,
   drawRider,
   drawScout,
   drawSiege,
@@ -50,6 +54,7 @@ const BUILDING_DRAWERS = {
   stable: drawStable,
   workshop: drawWorkshop,
   forge: drawForge,
+  sanctuary: drawSanctuary,
 } satisfies Record<BuildingType, unknown>;
 
 const UNIT_DRAWERS = {
@@ -60,6 +65,9 @@ const UNIT_DRAWERS = {
   spearman: drawSpearman,
   rider: drawRider,
   siege: drawSiege,
+  mage: drawMage,
+  healer: drawHealer,
+  griffon: drawGriffon,
 } satisfies Record<UnitType, unknown>;
 
 /**

@@ -62,6 +62,17 @@ const clickWithOwnUnit = (
     return;
   }
 
+  // Лечение своего раненого: цель — свой юнит, поэтому раньше выбора.
+  if (
+    commands.heal &&
+    clicked.unit &&
+    isHighlighted(highlights.heal ?? null, x, y)
+  ) {
+    commands.heal({ actor, healerId: unit.id, targetId: clicked.unit.id });
+    resetInteraction(ctx);
+    return;
+  }
+
   if (unit.movePoints > 0 && isHighlighted(highlights.reachable, x, y)) {
     commands.move({ actor, unitId: unit.id, x, y });
     resetInteraction(ctx);

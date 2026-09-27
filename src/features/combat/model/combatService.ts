@@ -7,6 +7,7 @@ import {
   ok,
   reject,
   calculateDamage,
+  canHitTarget,
 } from '@shared/lib';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
@@ -43,8 +44,10 @@ const validateAndAttack = ({
   if (attacker.role !== 'military' && attacker.role !== 'combat') {
     return reject('actionType');
   }
-  // Осадная машина бьёт только подготовленным ударом по клетке.
-  if (attacker.type === 'siege') return reject('actionType');
+  // Осадная машина бьёт только подготовленным ударом, лекарь не атакует.
+  if (attacker.type === 'siege' || attacker.attack <= 0) {
+    return reject('actionType');
+  }
   if (attacker.attackPoints <= 0) return reject('points');
 
   const targetUnit = unitsStore.units[targetId];
@@ -67,6 +70,8 @@ const validateAndAttack = ({
   );
   if (!isCellVisible(sources, target.x, target.y)) return reject('notFound');
   if (!isHostile(actor, target.owner)) return reject('target');
+  // Матрица «земля / воздух»: не всякий атакующий достаёт летающего.
+  if (!canHitTarget(attacker.type, target.type)) return reject('target');
   const distance =
     Math.abs(attacker.x - target.x) + Math.abs(attacker.y - target.y);
   if (distance > attacker.attackRange) return reject('distance');

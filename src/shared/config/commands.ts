@@ -14,7 +14,8 @@ export type CommandType =
   | 'repair'
   | 'clearForest'
   | 'demolish'
-  | 'prepareStrike';
+  | 'prepareStrike'
+  | 'heal';
 
 /** Последствия действий, которые журнал записывает помимо самих команд. */
 export type GameOutcomeType =

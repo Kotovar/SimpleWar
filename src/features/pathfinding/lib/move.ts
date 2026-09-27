@@ -1,12 +1,12 @@
 import type { CommandResult, ParticipantId } from '@shared/config';
-import { getMoveCost, isHostile, ok, reject } from '@shared/lib';
+import { getMoveCost, isFlyingType, isHostile, ok, reject } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand } from '@entities/journals';
+import { createLandingCheck, createUnitMovementGrid } from './air';
 import {
-  createKnownMovementGrid,
   TURN_UNKNOWN_COST,
   getActorVisibility,
   isVisibleTo,
@@ -64,14 +64,18 @@ const validateAndMove = ({
     return reject('occupied');
   }
 
+  const flying = isFlyingType(unit.type);
   // Маршрут строится по известной карте; цена — сумма цен входа.
+  // Летающему нужна клетка, где по известным сведениям можно сесть.
+  if (flying && !createLandingCheck(actor)({ x, y })) return reject('occupied');
   const route = getPath(
     unit,
     { x, y },
-    createKnownMovementGrid(actor, TURN_UNKNOWN_COST),
+    createUnitMovementGrid(unit, actor, TURN_UNKNOWN_COST),
   );
   if (route.cost === Infinity) return reject('path');
   if (route.cost > unit.movePoints) return reject('points');
+  if (flying) return flyAlong(actor, unitId, route.path);
 
   // Идём по клетке: каждый шаг обновляет обзор. Перед обнаруженной
   // преградой или при появлении нового врага движение останавливается;
@@ -97,6 +101,39 @@ const validateAndMove = ({
   // Первая клетка маршрута всегда в обзоре, поэтому отказ здесь ничего
   // не раскрывает о скрытом мире.
   return steps > 0 ? ok : reject('path');
+};
+
+/**
+ * Полёт по клеткам: над занятыми клетками юнит пролетает, не
+ * останавливаясь; садится только на свободную. Обзор обновляется на каждой
+ * посадке, новый враг останавливает полёт. Если конечная клетка оказалась
+ * занята скрытым объектом, юнит остаётся на последней свободной клетке и
+ * платит только за пройденное до неё.
+ */
+const flyAlong = (
+  actor: ParticipantId,
+  unitId: string,
+  path: { x: number; y: number }[],
+): CommandResult => {
+  const { moveUnit } = useUnitsStore.getState();
+  let pending = 0;
+  let landed = 0;
+  let seen = getSeenEnemies(actor);
+  for (const step of path.slice(1)) {
+    pending += 1;
+    if (isCellOccupied(step.x, step.y)) continue;
+    const current = useUnitsStore.getState().units[unitId];
+    if (!current || pending > current.movePoints) break;
+    moveUnit(unitId, step.x, step.y, pending);
+    pending = 0;
+    landed++;
+
+    const now = getSeenEnemies(actor);
+    const spotted = [...now].some(id => !seen.has(id));
+    seen = now;
+    if (spotted) break;
+  }
+  return landed > 0 ? ok : reject('path');
 };
 
 /**

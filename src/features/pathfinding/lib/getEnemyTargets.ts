@@ -1,10 +1,11 @@
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
-import type { Owner } from '@shared/config';
+import type { BuildingType, Owner, UnitType } from '@shared/config';
 import { getShelteredIds, isHostile } from '@shared/lib';
 
 type Attackable = {
   id: string;
+  type: UnitType | BuildingType;
   x: number;
   y: number;
   owner: Owner;
@@ -30,6 +31,7 @@ export const getEnemyTargets = (owner: Owner): Attackable[] => {
     .filter(unit => isHostile(owner, unit.owner) && !sheltered.has(unit.id))
     .map(unit => ({
       id: unit.id,
+      type: unit.type,
       x: unit.x,
       y: unit.y,
       owner: unit.owner,
@@ -40,6 +42,7 @@ export const getEnemyTargets = (owner: Owner): Attackable[] => {
     .filter(building => isHostile(owner, building.owner))
     .map(building => ({
       id: building.id,
+      type: building.type,
       x: building.x,
       y: building.y,
       owner: building.owner,

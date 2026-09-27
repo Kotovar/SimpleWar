@@ -11,12 +11,20 @@ import { calculateDamage } from '@shared/lib';
 import { createBuilding } from '@entities/buildings';
 import { createUnit } from '@entities/units';
 
-const NEW_UNITS: UnitType[] = ['scout', 'spearman', 'rider', 'siege'];
+const NEW_UNITS: UnitType[] = [
+  'scout',
+  'spearman',
+  'rider',
+  'siege',
+  'mage',
+  'healer',
+  'griffon',
+];
 
-describe('состав S14', () => {
-  it('7 юнитов и 9 зданий в конфигурации', () => {
-    expect(Object.keys(UNITS_CONFIG)).toHaveLength(7);
-    expect(Object.keys(BUILDINGS_CONFIG)).toHaveLength(9);
+describe('состав S14–S14b', () => {
+  it('10 юнитов и 10 зданий в конфигурации — состав MVP', () => {
+    expect(Object.keys(UNITS_CONFIG)).toHaveLength(10);
+    expect(Object.keys(BUILDINGS_CONFIG)).toHaveLength(10);
   });
 
   it('каждый юнит нанимается ровно в одном здании', () => {
@@ -33,6 +41,9 @@ describe('состав S14', () => {
       spearman: 'barracks',
       rider: 'stable',
       siege: 'workshop',
+      mage: 'sanctuary',
+      healer: 'sanctuary',
+      griffon: 'sanctuary',
     });
   });
 

@@ -8,7 +8,11 @@ import type {
   UnitType,
 } from '@shared/config';
 import type { MoveCommand } from '@features/pathfinding';
-import type { AttackCommand, PrepareStrikeCommand } from '@features/combat';
+import type {
+  AttackCommand,
+  HealCommand,
+  PrepareStrikeCommand,
+} from '@features/combat';
 import type { BuildCommand } from '@features/build';
 import type { SpawnCommand } from '@features/spawn';
 import type { ClearForestCommand } from '@features/workers';
@@ -39,6 +43,8 @@ export type MapClickContext = {
     clearable?: Position[] | null;
     /** Клетки прицела осадной машины. */
     strike?: Position[] | null;
+    /** Свои раненые, которых может вылечить выбранный лекарь. */
+    heal?: Position[] | null;
   };
   /** Игровые команды — те же, что вызывает ИИ. */
   commands: {
@@ -48,6 +54,7 @@ export type MapClickContext = {
     spawn: (command: SpawnCommand) => CommandResult;
     clearForest?: (command: ClearForestCommand) => CommandResult;
     prepareStrike?: (command: PrepareStrikeCommand) => CommandResult;
+    heal?: (command: HealCommand) => CommandResult;
   };
   /** Изменение выбора и подсветки в интерфейсе. */
   ui: {

@@ -5,7 +5,7 @@ export const drawMovement = (
   cellX: number,
   cellY: number,
   cellSize: number,
-  type: 'free' | 'enemy' | 'produce' | 'strike',
+  type: 'free' | 'enemy' | 'produce' | 'strike' | 'heal',
   /** Фаза пульсации цели атаки от 0 до 1. */
   pulse = 0,
 ) => {
@@ -23,6 +23,19 @@ export const drawMovement = (
     ctx.fillStyle = 'rgba(226, 244, 255, 0.55)';
     ctx.beginPath();
     ctx.arc(16, 16, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (type === 'heal') {
+    // Свой раненый юнит, которого можно вылечить: зелёный крест в углу,
+    // отличается и от цели атаки, и от клеток хода.
+    ctx.strokeStyle = 'rgba(111, 191, 115, 0.9)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(2, 2, 28, 28);
+    ctx.fillStyle = '#6fbf73';
+    ctx.strokeStyle = '#1c221e';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.rect(24, 2.5, 3, 8);
+    ctx.rect(21.5, 5, 8, 3);
     ctx.fill();
   } else if (type === 'strike') {
     // Клетки, куда осадная машина может подготовить удар.

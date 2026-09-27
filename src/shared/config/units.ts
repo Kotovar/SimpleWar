@@ -9,7 +9,10 @@ export type MilitaryType =
   | 'scout'
   | 'spearman'
   | 'rider'
-  | 'siege';
+  | 'siege'
+  | 'mage'
+  | 'healer'
+  | 'griffon';
 
 /** Список гражданских юнитов. */
 export type CivilType = 'worker';
@@ -159,6 +162,51 @@ export const MILITARY_UNITS_CONFIG: Record<
     cost: { gold: 150, wood: 150 },
     preparedStrike: null,
   },
+  // Магическая атака: броня не защищает, здания держат магию хорошо.
+  mage: {
+    maxHp: 50,
+    sightRange: 3,
+    attack: 20,
+    movePoints: 0,
+    maxMovePoints: 3,
+    attackPoints: 0,
+    attackRange: 3,
+    maxAttackPoints: 1,
+    requiresLimit: 2,
+    cost: { gold: 120, wood: 80 },
+    preparedStrike: null,
+  },
+  /**
+   * Не атакует: боевое действие тратит на лечение своего юнита
+   * (`HEALING`); `attackRange` — дальность лечения.
+   */
+  healer: {
+    maxHp: 45,
+    sightRange: 3,
+    attack: 0,
+    movePoints: 0,
+    maxMovePoints: 3,
+    attackPoints: 0,
+    attackRange: 2,
+    maxAttackPoints: 1,
+    requiresLimit: 2,
+    cost: { gold: 90, wood: 60 },
+    preparedStrike: null,
+  },
+  // Летает над водой, горами и лесом; бьёт землю и воздух.
+  griffon: {
+    maxHp: 85,
+    sightRange: 4,
+    attack: 17,
+    movePoints: 0,
+    maxMovePoints: 5,
+    attackPoints: 0,
+    attackRange: 1,
+    maxAttackPoints: 1,
+    requiresLimit: 3,
+    cost: { gold: 150, wood: 120 },
+    preparedStrike: null,
+  },
 };
 
 /** Статический конфиг гражданских юнитов. */
@@ -184,6 +232,7 @@ export const CIVIL_UNITS_CONFIG: Record<
       'stable',
       'workshop',
       'forge',
+      'sanctuary',
     ],
     requiresLimit: 1,
     cost: { gold: 40, wood: 40 },

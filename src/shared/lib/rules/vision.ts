@@ -2,17 +2,26 @@ import {
   HILL_SIGHT_BONUS,
   type Cell,
   type Owner,
+  type BuildingType,
   type Position,
+  type UnitType,
 } from '@shared/config';
+import { isFlyingType } from './damage';
 
 /** Объект, дающий обзор: позиция, владелец и радиус из конфигурации типа. */
-export type Viewer = Position & { owner: Owner; sightRange: number };
+export type Viewer = Position & {
+  owner: Owner;
+  sightRange: number;
+  /** Тип объекта: летающему холм обзора не добавляет. */
+  type?: UnitType | BuildingType;
+};
 
 /** Источник обзора с итоговым радиусом. */
 export type SightSource = Position & { radius: number };
 
 /**
- * Итоговый радиус обзора: наземный объект на холме видит дальше.
+ * Итоговый радиус обзора: наземный объект на холме видит дальше,
+ * летающий — нет.
  * Бонус одинаков для всех сторон и зависит только от клетки источника.
  *
  * @param viewer - Юнит или здание.
@@ -20,7 +29,11 @@ export type SightSource = Position & { radius: number };
  */
 export const getSightRadius = (viewer: Viewer, grid: Cell[][]) =>
   viewer.sightRange +
-  (grid[viewer.y]?.[viewer.x]?.type === 'hill' ? HILL_SIGHT_BONUS : 0);
+  // Летающему холм обзора не добавляет: он и так над местностью.
+  (grid[viewer.y]?.[viewer.x]?.type === 'hill' &&
+  !(viewer.type && isFlyingType(viewer.type))
+    ? HILL_SIGHT_BONUS
+    : 0);
 
 /**
  * Источники обзора участника: все его живые юниты и здания.

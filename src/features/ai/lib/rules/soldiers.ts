@@ -1,3 +1,4 @@
+import { canHitTarget } from '@shared/lib';
 import type {
   BuildingType,
   MilitaryUnit,
@@ -72,7 +73,9 @@ export const M01: AiRule = {
     return swordsmen(ctx).flatMap((unit): Candidate[] => {
       const inRange = danger.filter(
         enemy =>
-          manhattan(enemy, unit) <= unit.attackRange && !isDoomed(ctx, enemy),
+          manhattan(enemy, unit) <= unit.attackRange &&
+          canHitTarget(unit.type, enemy.type) &&
+          !isDoomed(ctx, enemy),
       );
       if (inRange.length && canAttack(unit)) {
         return [
@@ -82,7 +85,11 @@ export const M01: AiRule = {
           },
         ];
       }
-      const target = nearest(unit, danger);
+      // За целью, которую не достать (воздух), не гоняться.
+      const target = nearest(
+        unit,
+        danger.filter(enemy => canHitTarget(unit.type, enemy.type)),
+      );
       const cell = target && approach(ctx, unit, target);
       return cell
         ? [

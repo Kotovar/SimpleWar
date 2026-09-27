@@ -3,6 +3,7 @@ import {
   OWNER_NAME,
   TERRAIN_NAME,
   UNITS_NAME,
+  HEALING,
   SIEGE_STRIKE,
   type Building,
   type Cell,
@@ -100,7 +101,33 @@ const CellDetails = ({ cell }: { cell: Cell }) => (
   </>
 );
 
-const AttackDetails = ({ entity }: { entity: AttackStats }) => (
+const AttackDetails = ({ entity }: { entity: AttackStats }) => {
+  const heal = HEALING[entity.type as keyof typeof HEALING];
+  // Лекарь не атакует: его боевое действие — лечение.
+  if (heal) {
+    return (
+      <>
+        <div>
+          <dt>Лечения</dt>
+          <dd className={styles.AttackPoints}>
+            {entity.attackPoints} / {entity.maxAttackPoints}
+          </dd>
+        </div>
+        <div>
+          <dt>Дальность лечения</dt>
+          <dd>{entity.attackRange}</dd>
+        </div>
+        <div>
+          <dt>Лечение</dt>
+          <dd>+{heal.amount} HP своему юниту</dd>
+        </div>
+      </>
+    );
+  }
+  return <AttackStatsList entity={entity} />;
+};
+
+const AttackStatsList = ({ entity }: { entity: AttackStats }) => (
   <>
     <div>
       <dt>Атаки</dt>

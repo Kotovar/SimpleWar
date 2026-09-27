@@ -12,7 +12,8 @@ export type BuildingType =
   | 'tower'
   | 'stable'
   | 'workshop'
-  | 'forge';
+  | 'forge'
+  | 'sanctuary';
 
 /** Частичный набор ресурсов, которые здание производит за ход. */
 export type Income = Partial<Cost>;
@@ -84,7 +85,10 @@ export type Building =
   | ResearchBuilding;
 
 export const PRODUCTION_BUILDINGS_CONFIG: Record<
-  Extract<BuildingType, 'base' | 'barracks' | 'stable' | 'workshop'>,
+  Extract<
+    BuildingType,
+    'base' | 'barracks' | 'stable' | 'workshop' | 'sanctuary'
+  >,
   Omit<ProductionBuilding, InstanceKeys>
 > = {
   base: {
@@ -121,6 +125,16 @@ export const PRODUCTION_BUILDINGS_CONFIG: Record<
     cost: { gold: 140, wood: 180 },
     requiredField: 'grass',
     spawningUnits: ['siege'],
+    spawnPoints: 0,
+    maxSpawnPoints: 1,
+  },
+  // Хрупкое место найма мага, лекаря и грифона.
+  sanctuary: {
+    maxHp: 120,
+    sightRange: 2,
+    cost: { gold: 160, wood: 140 },
+    requiredField: 'grass',
+    spawningUnits: ['mage', 'healer', 'griffon'],
     spawnPoints: 0,
     maxSpawnPoints: 1,
   },

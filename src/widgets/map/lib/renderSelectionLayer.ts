@@ -1,4 +1,10 @@
-import type { Building, Position, Unit } from '@shared/config';
+import {
+  HEALING,
+  type Building,
+  type Position,
+  type Unit,
+  type UnitType,
+} from '@shared/config';
 import { calculateDamage } from '@shared/lib';
 import type { Selection } from '@features/selection';
 import {
@@ -16,6 +22,8 @@ type Options = {
   path?: MovePath | null;
   /** Цели, доступные выбранной сущности прямо сейчас. */
   attackableTargets?: Position[] | null;
+  /** Свои раненые, которых может вылечить выбранный лекарь. */
+  healTargets?: Position[] | null;
   /** Фаза пульсации выделения от 0 до 1. */
   pulse?: number;
 };
@@ -26,7 +34,7 @@ export const renderSelectionLayer = (
   units: Record<string, Unit>,
   selection: Selection | null,
   cellSize: number,
-  { hover, path, attackableTargets, pulse = 0 }: Options = {},
+  { hover, path, attackableTargets, healTargets, pulse = 0 }: Options = {},
 ) => {
   if (hover) drawHoverHighlight(ctx, hover.x, hover.y, cellSize);
 
@@ -85,6 +93,27 @@ export const renderSelectionLayer = (
   const aimed =
     hover &&
     attackableTargets?.some(({ x, y }) => x === hover.x && y === hover.y);
+  // Ожидаемое лечение: «+N», не выше недостающего HP.
+  const healing =
+    hover && healTargets?.some(({ x, y }) => x === hover.x && y === hover.y);
+  if (hover && healing && attacker && 'attack' in attacker) {
+    const target = Object.values(units).find(
+      u => u.x === hover.x && u.y === hover.y,
+    );
+    const amount = HEALING[attacker.type as UnitType]?.amount ?? 0;
+    if (target) {
+      drawDamagePreview(
+        ctx,
+        hover.x,
+        hover.y,
+        cellSize,
+        Math.min(amount, target.maxHp - target.hp),
+        false,
+        'heal',
+      );
+    }
+  }
+
   if (hover && aimed && attacker && 'attack' in attacker) {
     const target =
       Object.values(units).find(u => u.x === hover.x && u.y === hover.y) ??

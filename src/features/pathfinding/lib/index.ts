@@ -7,3 +7,4 @@ export * from './getAttackableTargets';
 export * from './getCellsAround';
 export * from './move';
 export * from './createKnownMovementGrid';
+export * from './air';

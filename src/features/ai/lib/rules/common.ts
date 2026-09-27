@@ -9,6 +9,7 @@ import {
 import {
   blocksLastPassage,
   calculateDamage,
+  canHitTarget,
   type AccessMap,
 } from '@shared/lib';
 import type { AiTask } from '@entities/ai-memories';
@@ -45,9 +46,13 @@ export const moveTo = (
 /** Видимые враги в дальности атаки. Память о врагах целью не бывает. */
 export const targetsInRange = (
   ctx: AiContext,
-  from: Position,
+  from: Position & { type: UnitType | BuildingType },
   range: number,
-): EnemyView[] => ctx.enemies.filter(enemy => manhattan(enemy, from) <= range);
+): EnemyView[] =>
+  ctx.enemies.filter(
+    enemy =>
+      manhattan(enemy, from) <= range && canHitTarget(from.type, enemy.type),
+  );
 
 /** Сколько урона уже запланировано по цели в этом ходу. */
 export const planned = (ctx: AiContext, id: string) =>

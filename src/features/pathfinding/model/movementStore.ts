@@ -1,18 +1,19 @@
 import { create } from 'zustand';
 import { gameEvents, withDevtools } from '@shared/lib';
-import type { Position } from '@shared/config';
+import { HEALING, type Position } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import {
-  getReachableCells,
-  createKnownMovementGrid,
   TURN_UNKNOWN_COST,
   getAttackableTargets,
+  getUnitReachableCells,
 } from '../lib';
 
 interface MovementState {
   reachableCells: Position[] | null;
   attackableTargets: Position[] | null;
+  /** Свои раненые юниты, которых выбранный лекарь может вылечить. */
+  healTargets: Position[] | null;
 
   calculateActionHighlights: (unitId: string) => void;
   resetStore: () => void;
@@ -22,6 +23,7 @@ export const useMovementStore = create<MovementState>()(
   withDevtools('movement', set => ({
     reachableCells: null,
     attackableTargets: null,
+    healTargets: null,
 
     // Для юнита считает клетки движения и цели атаки; для башни — только цели.
     calculateActionHighlights: unitId => {
@@ -33,27 +35,44 @@ export const useMovementStore = create<MovementState>()(
 
       // Клетки движения — по известной владельцу карте: скрытые юниты
       // и скрытые изменения рельефа подсветку не меняют.
+      // Летающему — пролёт и посадка на свободную клетку.
       const reachable = unit
-        ? getReachableCells(
-            createKnownMovementGrid(unit.owner, TURN_UNKNOWN_COST),
-            unit.x,
-            unit.y,
-            unit.movePoints,
-          )
+        ? getUnitReachableCells(unit, unit.owner, TURN_UNKNOWN_COST)
         : null;
+
+      // Лекарь вместо атаки лечит своих раненых в дальности.
+      const heal = unit?.role === 'military' && HEALING[unit.type];
+      const healable =
+        unit?.role === 'military' && heal && unit.attackPoints > 0
+          ? Object.values(units)
+              .filter(
+                other =>
+                  other.id !== unit.id &&
+                  other.owner === unit.owner &&
+                  other.hp < other.maxHp &&
+                  Math.abs(other.x - unit.x) + Math.abs(other.y - unit.y) <=
+                    unit.attackRange,
+              )
+              .map(({ x, y }) => ({ x, y }))
+          : null;
 
       const attackable =
         (entity.role === 'military' || entity.role === 'combat') &&
         entity.type !== 'siege' &&
+        entity.attack > 0 &&
         entity.attackPoints > 0
-          ? getAttackableTargets(entity, entity.attackRange, entity.owner).map(
-              enemy => ({ x: enemy.x, y: enemy.y }),
-            )
+          ? getAttackableTargets(
+              entity,
+              entity.attackRange,
+              entity.owner,
+              entity.type,
+            ).map(enemy => ({ x: enemy.x, y: enemy.y }))
           : null;
 
       set(state => {
         state.reachableCells = reachable;
         state.attackableTargets = attackable;
+        state.healTargets = healable;
       });
     },
 
@@ -61,6 +80,7 @@ export const useMovementStore = create<MovementState>()(
       set(state => {
         state.reachableCells = null;
         state.attackableTargets = null;
+        state.healTargets = null;
       });
     },
   })),

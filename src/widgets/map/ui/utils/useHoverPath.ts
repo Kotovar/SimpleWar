@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type { Owner, Position, Unit } from '@shared/config';
 import type { Selection } from '@features/selection';
 import {
-  createKnownMovementGrid,
+  createUnitMovementGrid,
   getPath,
   TURN_UNKNOWN_COST,
 } from '@features/pathfinding';
@@ -36,7 +36,7 @@ export const useHoverPath = (
     const route = getPath(
       unit,
       hover,
-      createKnownMovementGrid(humanId, TURN_UNKNOWN_COST),
+      createUnitMovementGrid(unit, humanId, TURN_UNKNOWN_COST),
     );
     return route.path.length > 1 ? route : null;
   }, [hover, humanId, reachableCells, selection, units]);

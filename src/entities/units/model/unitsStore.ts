@@ -17,6 +17,8 @@ type UnitsState = {
   moveUnit: (id: string, x: number, y: number, cost: number) => void;
   getUnitAt: (x: number, y: number) => Unit | null;
   damageUnit: (id: string, damage: number) => void;
+  /** Лечение живого юнита: HP не выше максимума. */
+  healUnit: (id: string, amount: number) => void;
   changeAttackPoints: (id: string) => void;
   changeBuildPoints: (id: string) => void;
   /** Назначает рабочего на рудник или лесопилку; `null` снимает назначение. */
@@ -83,6 +85,12 @@ export const useUnitsStore = create<UnitsState>()(
         gameEvents.emit({ type: 'UNIT_DESTROYED', unit, owner: unit.owner });
       }
     },
+
+    healUnit: (id, amount) =>
+      set(state => {
+        const unit = state.units[id];
+        if (unit) unit.hp = Math.min(unit.maxHp, unit.hp + amount);
+      }),
 
     getUnitAt: (x, y) => {
       return (

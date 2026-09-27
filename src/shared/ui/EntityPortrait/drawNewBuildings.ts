@@ -97,3 +97,31 @@ export const drawForge = (
   );
   ctx.restore();
 };
+
+/** Святилище: храм с куполом и светящимся окном — место найма магии. */
+export const drawSanctuary = (
+  ctx: CanvasRenderingContext2D,
+  cellX: number,
+  cellY: number,
+  cellSize: number,
+  owner: Owner,
+  scale: number = 1,
+) => {
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
+  const team = TEAM_MARKERS[owner];
+  rect(ctx, '#e6e1d3', 6, 14, 20, 11);
+  sideShadow(ctx, 22, 14.6, 3.4, 9.8);
+  // Колонны.
+  for (const x of [7.5, 12, 18.5, 23]) rect(ctx, '#f6f2e6', x, 15, 1.6, 10);
+  // Купол стороны.
+  ctx.fillStyle = team.color;
+  ctx.beginPath();
+  ctx.arc(16, 14, 7, Math.PI, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  rect(ctx, '#e8d9a8', 15.2, 4, 1.6, 3.5);
+  // Светящийся вход.
+  shape(ctx, '#c9a8ff', [14, 25, 14, 19, 16, 17.5, 18, 19, 18, 25]);
+  ctx.restore();
+};

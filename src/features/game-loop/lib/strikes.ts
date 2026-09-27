@@ -1,5 +1,5 @@
 import type { ParticipantId } from '@shared/config';
-import { calculateDamage, gameEvents } from '@shared/lib';
+import { calculateDamage, gameEvents, isFlyingType } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
@@ -8,8 +8,8 @@ import { useJournalStore } from '@entities/journals';
 
 /**
  * Исполняет подготовленные удары осадных машин участника — шаг 8 порядка
- * хода, в начале его следующего хода. Урон получает каждый объект на
- * клетке, включая свои и рабочего внутри здания; лес становится полем.
+ * хода, в начале его следующего хода. Урон получает каждый наземный
+ * объект на клетке, включая свои и рабочего внутри здания; лес становится полем.
  * Удар однократный: отметка снимается сразу.
  *
  * @param owner - Участник, чей ход начался.
@@ -25,8 +25,9 @@ export const executePreparedStrikes = (owner: ParticipantId) => {
     const { x, y } = siege.preparedStrike;
     useUnitsStore.getState().setPreparedStrike(siege.id, null);
 
+    // Воздух ударом не поражается.
     const units = Object.values(useUnitsStore.getState().units).filter(
-      unit => unit.x === x && unit.y === y,
+      unit => unit.x === x && unit.y === y && !isFlyingType(unit.type),
     );
     const building = useBuildingsStore.getState().getBuildingAt(x, y);
     const hits: string[] = [];
