@@ -55,7 +55,7 @@ describe('W10: освободить проход', () => {
     expect(W10.evaluate(ctx)).toEqual([]);
   });
 
-  it('уступает проход застрявшей ударной группе', () => {
+  it('не отводит рабочего, если группа может пройти через него', () => {
     const worker = own('worker', 2, 1);
     const { ctx } = scene({
       map: ['^^^^^^^^', '........', '^^^.^^^^', '^^^^^^^^'],
@@ -70,12 +70,6 @@ describe('W10: освободить проход', () => {
       },
     });
 
-    expect(W10.evaluate(ctx)).toMatchObject([
-      {
-        ruleId: 'W10',
-        actorId: worker.id,
-        action: { type: 'move', x: 3, y: 2 },
-      },
-    ]);
+    expect(W10.evaluate(ctx)).toEqual([]);
   });
 });

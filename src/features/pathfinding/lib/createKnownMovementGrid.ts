@@ -16,7 +16,7 @@ import {
   getKnownCellType,
   getParticipantKnowledge,
 } from '@entities/perceptions';
-import { isCellOccupied } from './isCellOccupied';
+import { blocksGroundTransit } from './isCellOccupied';
 
 /** Наименьшая цена входа: оценка неизвестной клетки для приказа на ход. */
 export const TURN_UNKNOWN_COST = 1;
@@ -58,7 +58,8 @@ export const isVisibleTo = (actor: ParticipantId, x: number, y: number) => {
  * Цены входа по известной участнику карте. Видимые клетки — настоящая
  * местность и занятость; разведанные — запомненная местность и снимки
  * зданий; неизвестные — предположение о проходе. Скрытые юниты
- * и изменения мира на маршрут не влияют.
+ * и изменения мира на маршрут не влияют. Свои юниты не мешают транзиту;
+ * остановка на занятой клетке проверяется отдельно.
  *
  * @param actor - Участник, планирующий маршрут.
  * @param unknownCost - Предполагаемая цена неизвестной клетки: повышенная
@@ -84,7 +85,7 @@ export const createKnownMovementGrid = (
     row.map((cell, x) => {
       const index = y * width + x;
       if (visible[index]) {
-        return isCellOccupied(x, y) ? 0 : getMoveCost(cell);
+        return blocksGroundTransit(x, y, actor) ? 0 : getMoveCost(cell);
       }
       const known = getKnownCellType(knowledge, x, y);
       if (!known) return unknownCost;

@@ -17,9 +17,9 @@ export const createAirGrid = (): MovementGrid =>
   useMapStore.getState().grid.map(row => row.map(() => 1));
 
 /**
- * Может ли летающий остановиться на клетке по известным участнику
+ * Может ли юнит остановиться на клетке по известным участнику
  * сведениям: видимая — без объекта, вне обзора — без запомненного здания.
- * Скрытая занятость не раскрывается: полёт остановится раньше.
+ * Скрытая занятость не раскрывается: движение остановится раньше.
  *
  * @param actor - Участник.
  */
@@ -53,8 +53,8 @@ export const createUnitMovementGrid = (
     : createKnownMovementGrid(actor, unknownCost);
 
 /**
- * Клетки хода юнита по его профилю: у летающего — в пределах очков и
- * только те, где по известным сведениям можно приземлиться.
+ * Клетки хода юнита по его профилю: только свободные точки остановки
+ * в пределах очков; свои юниты остаются доступными для транзита.
  */
 export const getUnitReachableCells = (
   unit: Unit,
@@ -67,7 +67,6 @@ export const getUnitReachableCells = (
     unit.y,
     unit.movePoints,
   );
-  if (!isFlyingType(unit.type)) return cells;
   const canLand = createLandingCheck(actor);
   return cells.filter(canLand);
 };

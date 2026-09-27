@@ -1,3 +1,4 @@
+import type { ParticipantId } from '@shared/config';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
 
@@ -13,4 +14,17 @@ export const isCellOccupied = (x: number, y: number): boolean => {
   const building = useBuildingsStore.getState().getBuildingAt(x, y);
 
   return !!unit || !!building;
+};
+
+/** Наземный транзит перекрывают здания и чужие юниты; свои пропускают. */
+export const blocksGroundTransit = (
+  x: number,
+  y: number,
+  actor: ParticipantId,
+) => {
+  const unit = useUnitsStore.getState().getUnitAt(x, y);
+  return (
+    !!useBuildingsStore.getState().getBuildingAt(x, y) ||
+    (!!unit && unit.owner !== actor)
+  );
 };

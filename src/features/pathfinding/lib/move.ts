@@ -12,7 +12,7 @@ import {
   isVisibleTo,
 } from './createKnownMovementGrid';
 import { getPath } from './getPath';
-import { isCellOccupied } from './isCellOccupied';
+import { blocksGroundTransit, isCellOccupied } from './isCellOccupied';
 
 /** Приказ движения: кто, каким юнитом и в какую клетку. */
 export type MoveCommand = {
@@ -50,7 +50,7 @@ const validateAndMove = ({
   const turnRejection = getTurnRejection(actor);
   if (turnRejection) return reject(turnRejection);
 
-  const { units, moveUnit } = useUnitsStore.getState();
+  const { units } = useUnitsStore.getState();
   const unit = units[unitId];
   if (!unit) return reject('notFound');
   if (unit.owner !== actor) return reject('owner');
@@ -75,65 +75,45 @@ const validateAndMove = ({
   );
   if (route.cost === Infinity) return reject('path');
   if (route.cost > unit.movePoints) return reject('points');
-  if (flying) return flyAlong(actor, unitId, route.path);
-
-  // Идём по клетке: каждый шаг обновляет обзор. Перед обнаруженной
-  // преградой или при появлении нового врага движение останавливается;
-  // тратятся только очки реально пройденных клеток.
-  let steps = 0;
-  let seen = getSeenEnemies(actor);
-  for (const step of route.path.slice(1)) {
-    const cell = getCell(step.x, step.y);
-    const cost = cell ? getMoveCost(cell) : 0;
-    const current = useUnitsStore.getState().units[unitId];
-    if (!cost || !current || cost > current.movePoints) break;
-    if (isCellOccupied(step.x, step.y)) break;
-
-    moveUnit(unitId, step.x, step.y, cost);
-    steps++;
-
-    const now = getSeenEnemies(actor);
-    const spotted = [...now].some(id => !seen.has(id));
-    seen = now;
-    if (spotted) break;
-  }
-
-  // Первая клетка маршрута всегда в обзоре, поэтому отказ здесь ничего
-  // не раскрывает о скрытом мире.
-  return steps > 0 ? ok : reject('path');
+  return moveAlong(actor, unitId, route.path, flying);
 };
 
 /**
- * Полёт по клеткам: над занятыми клетками юнит пролетает, не
- * останавливаясь; садится только на свободную. Обзор обновляется на каждой
- * посадке, новый враг останавливает полёт. Если конечная клетка оказалась
- * занята скрытым объектом, юнит остаётся на последней свободной клетке и
- * платит только за пройденное до неё.
+ * Проходит маршрут, фиксируя позицию только на свободных клетках.
+ * Наземный проходит сквозь своих по цене рельефа, летающий — над любыми
+ * объектами по цене 1. Цена транзитных клеток списывается вместе с шагом
+ * на свободную; при преграде или нехватке очков остаёмся на последней
+ * свободной клетке. Новый враг останавливает движение после такого шага.
  */
-const flyAlong = (
+const moveAlong = (
   actor: ParticipantId,
   unitId: string,
   path: { x: number; y: number }[],
+  flying: boolean,
 ): CommandResult => {
   const { moveUnit } = useUnitsStore.getState();
+  const { getCell } = useMapStore.getState();
   let pending = 0;
-  let landed = 0;
+  let steps = 0;
   let seen = getSeenEnemies(actor);
   for (const step of path.slice(1)) {
-    pending += 1;
-    if (isCellOccupied(step.x, step.y)) continue;
+    const cell = getCell(step.x, step.y);
+    const cost = cell ? (flying ? 1 : getMoveCost(cell)) : 0;
     const current = useUnitsStore.getState().units[unitId];
-    if (!current || pending > current.movePoints) break;
+    if (!cost || !current || pending + cost > current.movePoints) break;
+    if (!flying && blocksGroundTransit(step.x, step.y, actor)) break;
+    pending += cost;
+    if (isCellOccupied(step.x, step.y)) continue;
+
     moveUnit(unitId, step.x, step.y, pending);
     pending = 0;
-    landed++;
-
+    steps++;
     const now = getSeenEnemies(actor);
     const spotted = [...now].some(id => !seen.has(id));
     seen = now;
     if (spotted) break;
   }
-  return landed > 0 ? ok : reject('path');
+  return steps > 0 ? ok : reject('path');
 };
 
 /**

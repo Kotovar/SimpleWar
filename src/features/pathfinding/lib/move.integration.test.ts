@@ -6,6 +6,7 @@ import { useMapStore } from '@entities/maps';
 import { useGameLoopStore } from '@entities/games';
 import { useJournalStore } from '@entities/journals';
 import { move } from './move';
+import { getUnitReachableCells } from './air';
 import { createKnownMovementGrid } from './createKnownMovementGrid';
 
 const units = () => useUnitsStore.getState();
@@ -105,4 +106,96 @@ describe('движение под туманом', () => {
     // Вода открывается на подходе: юнит встаёт перед ней.
     expect(units().units[worker]).toMatchObject({ x: 3, movePoints: 4 });
   });
+});
+
+describe('проход через своих', () => {
+  it('выходит из окружения своими юнитами', () => {
+    const grid: Cell[][] = Array.from({ length: 5 }, (_, y) =>
+      Array.from({ length: 5 }, (_, x) => ({
+        x,
+        y,
+        type: 'grass',
+        isWalkable: true,
+      })),
+    );
+    useMapStore.setState({ grid });
+    const worker = units().spawnUnit('worker', 2, 2, 'p1', true)!;
+    for (const [x, y] of [
+      [1, 2],
+      [3, 2],
+      [2, 1],
+      [2, 3],
+    ]) {
+      units().spawnUnit('swordsman', x, y, 'p1');
+    }
+    expect(
+      getUnitReachableCells(units().units[worker], 'p1', 1),
+    ).toContainEqual({ x: 4, y: 2 });
+    expect(move({ actor: 'p1', unitId: worker, x: 4, y: 2 }).ok).toBe(true);
+    expect(units().units[worker]).toMatchObject({ x: 4, y: 2, movePoints: 2 });
+  });
+
+  it('выходит из коридора через двух своих без совместного размещения', () => {
+    const worker = readyWorker(0);
+    const first = readyWorker(1);
+    const second = readyWorker(2);
+    const overlaps: boolean[] = [];
+    const unsubscribe = useUnitsStore.subscribe(state => {
+      const positions = Object.values(state.units).map(u => `${u.x},${u.y}`);
+      overlaps.push(new Set(positions).size !== positions.length);
+    });
+    try {
+      expect(move({ actor: 'p1', unitId: worker, x: 3, y: 0 }).ok).toBe(true);
+      expect(units().units[worker]).toMatchObject({ x: 3, movePoints: 1 });
+      expect(units().units[first].x).toBe(1);
+      expect(units().units[second].x).toBe(2);
+      expect(overlaps).not.toContain(true);
+    } finally {
+      unsubscribe();
+    }
+  });
+
+  it('подсвечивает свободную клетку за своим, но не самого своего', () => {
+    const worker = readyWorker(0);
+    readyWorker(1);
+    const reachable = getUnitReachableCells(units().units[worker], 'p1', 1);
+    expect(reachable).toContainEqual({ x: 2, y: 0 });
+    expect(reachable).not.toContainEqual({ x: 1, y: 0 });
+    expect(move({ actor: 'p1', unitId: worker, x: 1, y: 0 })).toMatchObject({
+      code: 'occupied',
+    });
+  });
+
+  it('считает цену рельефа под своим и требует очков до свободной клетки', () => {
+    const worker = readyWorker(0);
+    readyWorker(1);
+    useMapStore.getState().setCell(1, 0, { type: 'swamp', isWalkable: true });
+    expect(move({ actor: 'p1', unitId: worker, x: 2, y: 0 }).ok).toBe(true);
+    expect(units().units[worker]).toMatchObject({ x: 2, movePoints: 1 });
+    expect(move({ actor: 'p1', unitId: worker, x: 0, y: 0 })).toMatchObject({
+      code: 'points',
+    });
+    expect(units().units[worker]).toMatchObject({ x: 2, movePoints: 1 });
+  });
+
+  it.each(['enemy', 'building', 'water'] as const)(
+    'не проходит через %s',
+    obstacle => {
+      const worker = readyWorker(0);
+      if (obstacle === 'enemy') units().spawnUnit('worker', 1, 0, 'p2');
+      else if (obstacle === 'building') {
+        readyWorker(1);
+        useBuildingsStore.getState().spawnBuilding('mine', 1, 0, 'p1');
+      } else {
+        readyWorker(1);
+        useMapStore
+          .getState()
+          .setCell(1, 0, { type: 'water', isWalkable: false });
+      }
+      expect(move({ actor: 'p1', unitId: worker, x: 2, y: 0 })).toMatchObject({
+        code: 'path',
+      });
+      expect(units().units[worker]).toMatchObject({ x: 0, movePoints: 4 });
+    },
+  );
 });

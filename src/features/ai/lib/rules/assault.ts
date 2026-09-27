@@ -99,7 +99,7 @@ const closestReachable = (
   cost.forEach((price, key) => {
     const cell = fromKey(key, width);
     const score = manhattan(cell, target) * 100 + price;
-    if (price > 0 && score < bestScore) {
+    if (price > 0 && !ctx.occupied(cell.x, cell.y) && score < bestScore) {
       best = cell;
       bestScore = score;
     }

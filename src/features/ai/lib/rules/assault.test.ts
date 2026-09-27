@@ -104,7 +104,7 @@ describe('M04: занятые подходы к цели', () => {
     ]);
   });
 
-  it('отставший подходит ближе, пока подходы заняты', () => {
+  it('отставший наступает через своих к свободной клетке атаки', () => {
     const late = own('swordsman', 4, 4);
     const { ctx } = scene({
       map: pocket,
@@ -115,7 +115,9 @@ describe('M04: занятые подходы к цели', () => {
 
     const [move] = M04.evaluate(ctx).filter(c => c.actorId === late.id);
 
-    expect(move.reason).toBe('подходы заняты: подхожу ближе');
+    expect(move.reason).toBe('наступаю на цель');
+    const destination = cellOf(move.action);
+    expect(ctx.occupied(destination.x, destination.y)).toBe(false);
     expect(manhattan(cellOf(move.action), advance.target)).toBeLessThan(
       manhattan(late, advance.target),
     );

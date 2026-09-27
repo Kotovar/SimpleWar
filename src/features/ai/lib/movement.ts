@@ -16,13 +16,15 @@ const TURN_UNKNOWN = 1;
 export const turnMoves = (ctx: AiContext, unit: Unit): CostedCell[] => {
   if (unit.movePoints <= 0) return [];
   const { cost, width } = findCheapestPaths(
-    ctx.grid(TURN_UNKNOWN),
+    ctx.grid(TURN_UNKNOWN, true),
     unit,
     unit.movePoints,
   );
   const cells: CostedCell[] = [];
   cost.forEach((spent, key) => {
-    if (spent > 0) cells.push({ ...fromKey(key, width), cost: spent });
+    const cell = fromKey(key, width);
+    if (spent > 0 && !ctx.occupied(cell.x, cell.y))
+      cells.push({ ...cell, cost: spent });
   });
   return cells;
 };
@@ -39,7 +41,8 @@ export const pathsFrom = (
   const cached = ctx.cache.get(cacheKey) as
     | ReturnType<typeof findCheapestPaths>
     | undefined;
-  const paths = cached ?? findCheapestPaths(ctx.grid(UNKNOWN_MOVE_COST), unit);
+  const paths =
+    cached ?? findCheapestPaths(ctx.grid(UNKNOWN_MOVE_COST, true), unit);
   ctx.cache.set(cacheKey, paths);
   return paths;
 };
@@ -64,6 +67,7 @@ export const stepToward = (
 
   let best: number | undefined;
   for (const goal of goals) {
+    if (ctx.occupied(goal.x, goal.y)) continue;
     const key = cellKey(goal.x, goal.y, width);
     const total = cost.get(key);
     if (total === undefined || total === 0) continue;
@@ -79,14 +83,14 @@ export const stepToward = (
   path.reverse();
 
   // Цена хода считается как в команде: неизвестное — по цене поля.
-  const turnGrid = ctx.grid(TURN_UNKNOWN);
+  const turnGrid = ctx.grid(TURN_UNKNOWN, true);
   let spent = 0;
   let next: Position | null = null;
   for (const key of path.slice(1)) {
     const { x, y } = fromKey(key, width);
     spent += turnGrid[y][x];
     if (spent > unit.movePoints) break;
-    next = { x, y };
+    if (!ctx.occupied(x, y)) next = { x, y };
   }
   return next ? { next, total: cost.get(best)! } : null;
 };

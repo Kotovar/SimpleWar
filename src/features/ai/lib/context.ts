@@ -52,8 +52,8 @@ export type AiContext = {
   inside: (p: Position) => boolean;
   /** Клетка занята своим объектом, видимым врагом или известным зданием. */
   occupied: (x: number, y: number) => boolean;
-  /** Цены входа по известной карте; неизвестное — `unknownCost`. */
-  grid: (unknownCost: number) => MovementGrid;
+  /** Цены входа; для маршрута `throughOwn` разрешает транзит через своих. */
+  grid: (unknownCost: number, throughOwn?: boolean) => MovementGrid;
   /** Сумма урона, который враги могут нанести по клетке в их ход. */
   threatAt: (p: Position) => number;
   /** Граница разведки: известные проходимые клетки у неизвестных. */
@@ -93,24 +93,34 @@ export const buildContext = (
 
   const blocked = new Set<number>();
   const block = ({ x, y }: Position) => blocked.add(cellKey(x, y, width));
-  obs.ownUnits.forEach(block);
   obs.ownBuildings.forEach(block);
   enemies.forEach(block);
   remembered.filter(({ kind }) => kind === 'building').forEach(block);
-  const occupied = (x: number, y: number) => blocked.has(cellKey(x, y, width));
+  const ownCells = new Set(
+    obs.ownUnits.map(({ x, y }) => cellKey(x, y, width)),
+  );
+  const occupied = (x: number, y: number) => {
+    const key = cellKey(x, y, width);
+    return blocked.has(key) || ownCells.has(key);
+  };
 
-  const grids = new Map<number, MovementGrid>();
-  const grid = (unknownCost: number) => {
-    const cached = grids.get(unknownCost);
+  const grids = new Map<string, MovementGrid>();
+  const grid = (unknownCost: number, throughOwn = false) => {
+    const cacheKey = `${unknownCost}:${throughOwn}`;
+    const cached = grids.get(cacheKey);
     if (cached) return cached;
     const next = Array.from({ length: height }, (_, y) =>
       Array.from({ length: width }, (_, x) => {
-        if (occupied(x, y)) return 0;
+        if (
+          blocked.has(cellKey(x, y, width)) ||
+          (!throughOwn && ownCells.has(cellKey(x, y, width)))
+        )
+          return 0;
         const type = known(x, y);
         return type ? (MOVE_COST[type] ?? 0) : unknownCost;
       }),
     );
-    grids.set(unknownCost, next);
+    grids.set(cacheKey, next);
     return next;
   };
 
