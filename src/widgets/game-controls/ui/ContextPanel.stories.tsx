@@ -104,6 +104,12 @@ export const DamagedSwordsman: Story = {
   },
 };
 
+export const Healer: Story = { args: { unit: unit('healer') } };
+
+export const HealerNoActions: Story = {
+  args: { unit: unit('healer', 'p1', { attackPoints: 0, movePoints: 0 }) },
+};
+
 export const EnemyArcher: Story = { args: { unit: unit('archer', 'p2') } };
 
 export const Base: Story = { args: { building: building('base') } };
@@ -128,6 +134,18 @@ export const BarracksNoResources: Story = {
 export const Tower: Story = { args: { building: building('tower') } };
 
 export const Mine: Story = { args: { building: building('mine') } };
+
+export const Sawmill: Story = { args: { building: building('sawmill') } };
+
+export const Farm: Story = { args: { building: building('farm') } };
+
+export const Stable: Story = { args: { building: building('stable') } };
+
+export const Workshop: Story = { args: { building: building('workshop') } };
+
+export const Sanctuary: Story = { args: { building: building('sanctuary') } };
+
+export const Forge: Story = { args: { building: building('forge') } };
 
 export const EnemyBase: Story = {
   args: { building: building('base', 'p2', { hp: 5 }) },

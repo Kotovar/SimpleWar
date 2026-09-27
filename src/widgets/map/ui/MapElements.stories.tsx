@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import type { ParticipantKnowledge } from '@entities/perceptions';
 import { createBuilding } from '@entities/buildings';
 import { createUnit } from '@entities/units';
 import {
@@ -22,6 +23,7 @@ import {
   drawTerrainHighlight,
   drawSwamp,
   renderEntitiesLayer,
+  renderFogLayer,
   renderMovementLayer,
   renderSelectionLayer,
   renderTerrainLayer,
@@ -240,6 +242,7 @@ const OVERLAYS: Record<string, Tile[]> = {
   // Один момент анимации для всех: число урона поднимается со временем.
   Эффекты: [
     { label: 'Получил урон', damage: 3, lethal: false },
+    { label: 'Вылечен', healing: 7 },
     { label: 'Уничтожен', damage: 5, lethal: true },
   ].map(({ label, ...effect }) => ({
     label,
@@ -274,6 +277,39 @@ const MAP = [
 const GRID = MAP.map((row, y) =>
   row.split('').map((char, x) => toCell(LEGEND[char], x, y)),
 );
+
+const FOG_GRID = Array.from({ length: 5 }, (_, y) =>
+  Array.from({ length: 8 }, (_, x) => toCell(x < 3 ? 'forest' : 'grass', x, y)),
+);
+
+const FOG_KNOWLEDGE: ParticipantKnowledge = {
+  width: 8,
+  height: 5,
+  visible: Uint8Array.from(
+    Array.from({ length: 40 }, (_, index) => {
+      const x = index % 8;
+      const y = Math.floor(index / 8);
+      return Math.abs(x - 5) + Math.abs(y - 2) <= 2 ? 1 : 0;
+    }),
+  ),
+  terrain: Uint8Array.from(
+    Array.from({ length: 40 }, (_, index) => {
+      const x = index % 8;
+      return x < 7 ? (x < 3 ? 6 : 1) : 0;
+    }),
+  ),
+  contacts: {},
+};
+
+const drawFog: Draw = (ctx, size) => {
+  renderTerrainLayer(ctx, FOG_GRID, size, FOG_GRID[0].length);
+  renderFogLayer(ctx, FOG_KNOWLEDGE, size, {
+    x0: 0,
+    y0: 0,
+    x1: FOG_KNOWLEDGE.width,
+    y1: FOG_KNOWLEDGE.height,
+  });
+};
 
 const archer = {
   ...createUnit('archer', 4, 3, 'p1', true)!,
@@ -360,5 +396,12 @@ export const SampleMap: Story = {
       cellSize={cellSize}
       draw={drawSampleMap}
     />
+  ),
+};
+
+export const FogOfWar: Story = {
+  name: 'Туман войны',
+  render: ({ cellSize }) => (
+    <Scene columns={8} rows={5} cellSize={cellSize} draw={drawFog} />
   ),
 };

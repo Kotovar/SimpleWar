@@ -153,6 +153,8 @@ export const playTurn = async (deps: AiTurnDeps): Promise<AiTurnResult> => {
       }
     }
     if (deps.yieldControl && turn.step % config.yieldEvery === 0) {
+      // Между командами отдаём управление UI и затем собираем новое наблюдение.
+      // react-doctor-disable-next-line async-await-in-loop -- Ход ИИ выполняется последовательно.
       await deps.yieldControl();
     }
   }
