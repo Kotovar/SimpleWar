@@ -107,12 +107,41 @@ const useKnownSelection = () => {
   return { selection, cell, unit, building, isUnknownCell };
 };
 
+/** Сведения и действия для выбранного объекта с учётом видимости. */
+const SelectionDetails = () => {
+  const { selection, cell, unit, building, isUnknownCell } =
+    useKnownSelection();
+  const { humanId } = useGameLoopSelectors();
+
+  return (
+    <>
+      {isUnknownCell && <p className={styles.Hint}>Клетка не разведана.</p>}
+      {(cell || unit || building) && (
+        <>
+          <SelectedEntityInfo cell={cell} unit={unit} building={building} />
+          {unit?.role === 'civil' && unit.owner === humanId && (
+            <WorkerJobs unit={unit} />
+          )}
+          {unit && <WorkerBuildOptions unit={unit} />}
+          {unit?.role === 'military' &&
+            unit.type === 'siege' &&
+            unit.owner === humanId && <SiegeStrike unit={unit} />}
+          {building && <UnitOptions building={building} />}
+          {building && building.owner === humanId && (
+            <BuildingManage building={building} />
+          )}
+        </>
+      )}
+
+      {selection === null && <EmptySelection />}
+    </>
+  );
+};
+
 export const PhaseInProgress = ({ minimap }: Props) => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  const { selection, cell, unit, building, isUnknownCell } =
-    useKnownSelection();
   const { clearSelection } = useSelectionSelectors();
   const { resetStore: clearMovement } = useMovementStore();
   const { resetStore: clearHighlight } = useHighlightStore();
@@ -161,25 +190,7 @@ export const PhaseInProgress = ({ minimap }: Props) => {
           {collapsed ? 'Показать панель' : 'Свернуть панель'}
         </button>
         {minimap}
-        {isUnknownCell && <p className={styles.Hint}>Клетка не разведана.</p>}
-        {(cell || unit || building) && (
-          <>
-            <SelectedEntityInfo cell={cell} unit={unit} building={building} />
-            {unit?.role === 'civil' && unit.owner === humanId && (
-              <WorkerJobs unit={unit} />
-            )}
-            {unit && <WorkerBuildOptions unit={unit} />}
-            {unit?.role === 'military' &&
-              unit.type === 'siege' &&
-              unit.owner === humanId && <SiegeStrike unit={unit} />}
-            {building && <UnitOptions building={building} />}
-            {building && building.owner === humanId && (
-              <BuildingManage building={building} />
-            )}
-          </>
-        )}
-
-        {selection === null && <EmptySelection />}
+        <SelectionDetails />
         <DebugPanel />
       </aside>
 

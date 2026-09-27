@@ -86,8 +86,9 @@ export const planOperation = (
     alarm.length > 0 || memory.strategy === 'G10' || memory.strategy === 'G01';
   let garrison = memory.garrison.filter(id => alive.has(id));
   if (wantsGarrison && base && garrison.length < config.garrisonSize) {
+    const garrisonIds = new Set(garrison);
     const free = ctx.military
-      .filter(({ id }) => !garrison.includes(id))
+      .filter(({ id }) => !garrisonIds.has(id))
       .sort((a, b) => manhattan(a, base) - manhattan(b, base));
     garrison = [
       ...garrison,

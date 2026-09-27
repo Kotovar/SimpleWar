@@ -85,20 +85,20 @@ export const calculateTurnIncome = (
   units: Unit[],
 ): { income: Resources; miners: string[] } => {
   const income: Resources = { gold: 0, wood: 0 };
-  const miners: string[] = [];
+  const miners = new Set<string>();
 
   for (const building of buildings) {
     if (!building.income) continue;
     if (building.role === 'resource') {
       const worker = findServingWorker(building, units);
-      if (!worker || worker.buildPoints <= 0 || miners.includes(worker.id)) {
+      if (!worker || worker.buildPoints <= 0 || miners.has(worker.id)) {
         continue;
       }
-      miners.push(worker.id);
+      miners.add(worker.id);
     }
     income.gold += building.income.gold ?? 0;
     income.wood += building.income.wood ?? 0;
   }
 
-  return { income, miners };
+  return { income, miners: [...miners] };
 };
