@@ -4,6 +4,7 @@ import {
   type Cell,
   type Participant,
 } from '@shared/config';
+import { gameEvents } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useEconomyStore } from '@entities/economies';
@@ -12,7 +13,7 @@ import { useMapStore } from '@entities/maps';
 import { useKnowledgeStore } from '@entities/perceptions';
 import { useJournalStore } from '@entities/journals';
 import { attack, prepareStrike } from '@features/combat';
-import { initGameLoopEvents, nextTurn } from '@features/game-loop';
+import { initGameLoopEvents, nextTurn, surrender } from '@features/game-loop';
 import { getObservation, initVisibilitySystem } from '@features/visibility';
 import { initPopulationSystem } from '@app/system';
 
@@ -97,6 +98,92 @@ describe('подготовленный удар осады', () => {
     round();
     expect(hp(target)).toBe(110 - 12);
   });
+
+  it.each([
+    { x: 5, y: 2 },
+    { x: 4, y: 3 },
+  ])(
+    'уничтоженная предыдущим ударом машина не бьёт в $x,$y и не меняет журнал',
+    cell => {
+      start(THREE);
+      const first = siegeAt(1, 2);
+      const second = siegeAt(3, 2);
+      units().damageUnit(second, units().units[second].hp - 1);
+      const target = units().spawnUnit('worker', 5, 2, 'p2')!;
+      expect(prepareStrike({ actor: 'p1', unitId: first, x: 3, y: 2 }).ok).toBe(
+        true,
+      );
+      expect(prepareStrike({ actor: 'p1', unitId: second, ...cell }).ok).toBe(
+        true,
+      );
+
+      round();
+
+      expect(units().units[second]).toBeUndefined();
+      expect.soft(hp(target)).toBe(25);
+      expect.soft(useMapStore.getState().getCell(4, 3)?.type).toBe('forest');
+      expect
+        .soft(
+          useJournalStore.getState().entries.filter(e => e.type === 'strike'),
+        )
+        .toEqual([
+          expect.objectContaining({
+            details: expect.objectContaining({ x: 3, y: 2 }),
+          }),
+        ]);
+    },
+  );
+
+  it.each(['nextTurn', 'surrender'] as const)(
+    '%s: очки юнитов и зданий восстановлены уже в момент удара нового игрока',
+    transition => {
+      start(THREE.map(p => ({ ...p, controller: 'human' })));
+      const siege = units().spawnUnit('siege', 1, 2, 'p2')!;
+      units().setPreparedStrike(siege, { x: 4, y: 2 });
+      const tower = buildings().spawnBuilding('tower', 2, 4, 'p2')!;
+      buildings().changeAttackPoints(tower);
+      const target = units().spawnUnit('worker', 4, 2, 'p3')!;
+      units().damageUnit(target, 24);
+      const atStrike: unknown[] = [];
+      const unsubscribe = gameEvents.subscribe(event => {
+        if (event.type !== 'UNIT_DESTROYED' || event.unit.id !== target) return;
+        atStrike.push({
+          unit: units().units[siege],
+          building: buildings().buildings[tower],
+          activePlayer: useGameLoopStore.getState().activePlayer,
+        });
+      });
+      try {
+        expect(
+          (transition === 'nextTurn' ? nextTurn : surrender)('p1').ok,
+        ).toBe(true);
+      } finally {
+        unsubscribe();
+      }
+
+      expect(hp(target)).toBeUndefined();
+      expect(atStrike).toEqual([
+        {
+          unit: expect.objectContaining({
+            movePoints: units().units[siege].maxMovePoints,
+            attackPoints: 1,
+            preparedStrike: null,
+          }),
+          building: expect.objectContaining({ attackPoints: 1 }),
+          activePlayer: 'p2',
+        },
+      ]);
+      expect(
+        useJournalStore.getState().entries.filter(e => e.type === 'strike'),
+      ).toHaveLength(1);
+      nextTurn('p2');
+      nextTurn('p3');
+      if (transition === 'nextTurn') nextTurn('p1');
+      expect(
+        useJournalStore.getState().entries.filter(e => e.type === 'strike'),
+      ).toHaveLength(1);
+    },
+  );
 
   it('цель, ушедшая с клетки, урона не получает', () => {
     start(THREE);

@@ -1,4 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vite-plus/test';
 import type { Participant } from '@shared/config';
 import { initPopulationSystem } from '@app/system/population';
 import { useAiMemoryStore } from '@entities/ai-memories';
@@ -44,6 +51,8 @@ beforeEach(() => {
   initVisibilitySystem();
 });
 
+afterEach(() => vi.restoreAllMocks());
+
 describe('runAITurn', () => {
   it('устаревший запуск прекращается, не завершая ход и не сохраняя память', async () => {
     start();
@@ -68,6 +77,74 @@ describe('runAITurn', () => {
     });
     expect(useAiMemoryStore.getState().byParticipant.p2).toBe(before);
   });
+
+  it.each([0, 3, 7])(
+    'сид %i: 10 ходов без циклов перемещения и исчерпания лимита',
+    async seed => {
+      let id = 0;
+      vi.spyOn(crypto, 'randomUUID').mockImplementation(
+        () => `00000000-0000-4000-8000-${String(++id).padStart(12, '0')}`,
+      );
+      resetGame();
+      useSettingsStore.setState({
+        mapGenerationMode: 'fixed',
+        customSeed: seed,
+      });
+      expect(initializeGame()).toBe(true);
+      useGameLoopStore.getState().startGame();
+      let commands = 0;
+      for (let round = 0; round < 10; round++) {
+        expect(nextTurn('p1').ok).toBe(true);
+        useJournalStore.getState().clearDecisions();
+        const paths = new Map(
+          Object.values(useUnitsStore.getState().units)
+            .filter(u => u.owner === 'p2')
+            .map(u => [
+              u.id,
+              { points: u.movePoints, cells: new Set([`${u.x},${u.y}`]) },
+            ]),
+        );
+        const violations: string[] = [];
+        let lastStep = 0;
+        const unsubscribe = useJournalStore.subscribe(({ decisions }) => {
+          const decision = decisions.at(-1);
+          if (!decision || decision.step === lastStep) return;
+          lastStep = decision.step;
+          if (
+            decision.result !== 'ok' ||
+            !decision.action.startsWith('движение') ||
+            !decision.actorId
+          )
+            return;
+          const unit = useUnitsStore.getState().units[decision.actorId];
+          const path = paths.get(decision.actorId);
+          if (!unit || !path) return;
+          const cell = `${unit.x},${unit.y}`;
+          if (path.cells.has(cell) || unit.movePoints >= path.points) {
+            violations.push(JSON.stringify(decisions));
+          }
+          path.cells.add(cell);
+          path.points = unit.movePoints;
+        });
+        try {
+          const result = await runAITurn('p2', { yieldControl: noWait });
+          expect(result).not.toBeNull();
+          if (!result) throw new Error('Ход ИИ не запущен');
+          expect(result.cancelled).toBe(false);
+          expect(result.reason).not.toBe('предел команд за ход');
+          commands += result.commands;
+        } finally {
+          unsubscribe();
+        }
+        expect(violations).toEqual([]);
+        expect(useGameLoopStore.getState()).toMatchObject({
+          activePlayer: 'p1',
+          currentTurn: round + 2,
+        });
+      }
+      expect(commands).toBeGreaterThan(0);
+    },
+  );
 
   it('два ИИ планируют раздельно: своя память и свои записи решений', async () => {
     start(THREE);

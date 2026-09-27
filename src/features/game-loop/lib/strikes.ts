@@ -20,8 +20,9 @@ export const executePreparedStrikes = (owner: ParticipantId) => {
       unit.owner === owner && unit.role === 'military' && unit.preparedStrike,
   );
 
-  for (const siege of sieges) {
-    if (siege.role !== 'military' || !siege.preparedStrike) continue;
+  for (const { id } of sieges) {
+    const siege = useUnitsStore.getState().units[id];
+    if (siege?.role !== 'military' || !siege.preparedStrike) continue;
     const { x, y } = siege.preparedStrike;
     useUnitsStore.getState().setPreparedStrike(siege.id, null);
 

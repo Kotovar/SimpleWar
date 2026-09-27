@@ -3,6 +3,7 @@ import { gameEvents } from '@shared/lib';
 import { getAliveParticipants, useGameLoopStore } from '@entities/games';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
+import { executePreparedStrikes } from '../lib/strikes';
 
 /**
  * Выводит участника из партии — единственный путь для потери ратуши и сдачи.
@@ -25,12 +26,13 @@ export const eliminateParticipant = (owner: ParticipantId) => {
   const before = useGameLoopStore.getState().activePlayer;
   useGameLoopStore.getState().eliminate(owner);
 
-  // Выбыл активный: ход перешёл без nextTurn, очки новому активному
-  // восстанавливаем здесь же. Доход выбывшему не начисляется.
+  // Выбыл активный: начало хода как в nextTurn — очки, затем удары.
+  // Доход выбывшему не начисляется.
   const { activePlayer, phase: after } = useGameLoopStore.getState();
   if (after === 'inProgress' && activePlayer !== before) {
     useUnitsStore.getState().resetUnitsForNewTurn(activePlayer);
     useBuildingsStore.getState().resetBuildingsForNewTurn(activePlayer);
+    executePreparedStrikes(activePlayer);
   }
 
   gameEvents.emit({ type: 'PARTICIPANT_ELIMINATED', owner, turn });
