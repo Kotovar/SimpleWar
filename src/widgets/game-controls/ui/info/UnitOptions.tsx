@@ -1,12 +1,15 @@
 import { EntityPortrait, GoldIcon, PopulationIcon, WoodIcon } from '@shared/ui';
 import {
+  HEALING,
+  SIEGE_STRIKE,
   UNITS_CONFIG,
   UNITS_NAME,
   type Building,
   type CellType,
   type UnitType,
 } from '@shared/config';
-import { canSpawnUnit, getCombatTraits } from '@shared/lib';
+import { canSpawnUnit, getCombatProfile } from '@shared/lib';
+import { DamageBadges, DefenseBadges, FlightBadge } from './CombatBadges';
 import { useUnitsSelectors } from '@entities/units';
 import { useEconomySelectors } from '@entities/economies';
 import { useHighlightStore } from '@features/pathfinding';
@@ -16,6 +19,12 @@ import styles from './OptionCards.styles.module.css';
 
 type Props = {
   building: Building;
+};
+
+/** Есть ли у типа защита, которую стоит показать. */
+const hasDefense = (type: UnitType) => {
+  const { armor, magicResist } = getCombatProfile(type);
+  return armor + magicResist > 0;
 };
 
 export const UnitOptions = ({ building }: Props) => {
@@ -94,15 +103,27 @@ export const UnitOptions = ({ building }: Props) => {
           );
 
           const { occupied, max } = populationCap[owner];
+          const heal = HEALING[spawnType]?.amount;
+          const range =
+            spawnType === 'siege'
+              ? `${SIEGE_STRIKE.minRange}–${SIEGE_STRIKE.maxRange}`
+              : 'attackRange' in config && config.attackRange;
           const stats = [
             `${config.maxHp} HP`,
-            'attack' in config && `урон ${config.attack}`,
-            'attackRange' in config && `дальность ${config.attackRange}`,
+            heal
+              ? `лечение +${heal} HP`
+              : 'attack' in config && `урон ${config.attack}`,
+            range && `дальность ${range}`,
             `ход ${config.maxMovePoints}`,
-            ...getCombatTraits(spawnType),
           ]
             .filter(Boolean)
             .join(' · ');
+          const damage = 'attack' in config && !heal && (
+            <>
+              урон {config.attack}
+              <DamageBadges type={spawnType} />
+            </>
+          );
 
           return (
             <button
@@ -143,7 +164,19 @@ export const UnitOptions = ({ building }: Props) => {
                     {requiresLimit === 1 ? 'слот' : 'слота'}
                   </span>
                 </span>
-                <span className={styles.Info}>{stats}</span>
+                <span className={styles.Info}>
+                  {config.maxHp} HP · {damage || `лечение +${heal} HP`}
+                  {range && ` · дальность ${range}`} · ход{' '}
+                  {config.maxMovePoints}
+                  <FlightBadge type={spawnType} />
+                  {hasDefense(spawnType) && (
+                    <>
+                      {' '}
+                      · защита
+                      <DefenseBadges type={spawnType} />
+                    </>
+                  )}
+                </span>
                 {!check.canSpawn && (
                   <span className={styles.Reason}>{check.message}</span>
                 )}

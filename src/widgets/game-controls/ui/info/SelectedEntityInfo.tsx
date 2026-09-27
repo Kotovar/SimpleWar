@@ -10,8 +10,9 @@ import {
   type Unit,
 } from '@shared/config';
 import { EntityPortrait, TerrainPortrait } from '@shared/ui';
-import { getCombatTraits, getMoveCost } from '@shared/lib';
+import { getCombatProfile, getMoveCost } from '@shared/lib';
 import { useGameLoopSelectors } from '@features/game-loop';
+import { DamageBadges, DefenseBadges, FlightBadge } from './CombatBadges';
 import styles from './SelectedEntityInfo.styles.module.css';
 
 type Props = {
@@ -119,7 +120,7 @@ const AttackDetails = ({ entity }: { entity: AttackStats }) => {
         </div>
         <div>
           <dt>Лечение</dt>
-          <dd>+{heal.amount} HP своему юниту</dd>
+          <dd>+{heal.amount} HP</dd>
         </div>
       </>
     );
@@ -139,22 +140,36 @@ const AttackStatsList = ({ entity }: { entity: AttackStats }) => (
       <dt>Радиус атаки</dt>
       <dd>
         {entity.type === 'siege'
-          ? `${SIEGE_STRIKE.minRange}–${SIEGE_STRIKE.maxRange}, удар по клетке`
+          ? `${SIEGE_STRIKE.minRange}–${SIEGE_STRIKE.maxRange}`
           : entity.attackRange}
       </dd>
     </div>
     <div>
       <dt>Урон</dt>
-      <dd>{entity.attack}</dd>
+      <dd>
+        {entity.attack}
+        <DamageBadges type={entity.type} />
+      </dd>
     </div>
-    {getCombatTraits(entity.type).length > 0 && (
+    {entity.type === 'siege' && (
       <div>
         <dt>Особенности</dt>
-        <dd>{getCombatTraits(entity.type).join(', ')}</dd>
+        <dd>заряжаемый удар</dd>
       </div>
     )}
   </>
 );
+
+/** Защита от физического и магического урона, если она есть. */
+const DefenseRow = ({ type }: { type: Unit['type'] | Building['type'] }) =>
+  getCombatProfile(type).armor + getCombatProfile(type).magicResist > 0 ? (
+    <div>
+      <dt>Защита</dt>
+      <dd>
+        <DefenseBadges type={type} />
+      </dd>
+    </div>
+  ) : null;
 
 const UnitDetails = ({ unit }: { unit: Unit }) => (
   <>
@@ -162,8 +177,10 @@ const UnitDetails = ({ unit }: { unit: Unit }) => (
       <dt>Движение</dt>
       <dd className={styles.MovePoints}>
         {unit.movePoints} / {unit.maxMovePoints}
+        <FlightBadge type={unit.type} />
       </dd>
     </div>
+    <DefenseRow type={unit.type} />
     {unit.role === 'civil' ? (
       <div>
         <dt>Очки строительства</dt>
@@ -177,21 +194,20 @@ const UnitDetails = ({ unit }: { unit: Unit }) => (
   </>
 );
 
-const BuildingDetails = ({ building }: { building: Building }) => {
-  if (building.role === 'production') {
-    return (
+const BuildingDetails = ({ building }: { building: Building }) => (
+  <>
+    <DefenseRow type={building.type} />
+    {building.role === 'production' && (
       <div>
         <dt>Очки производства</dt>
         <dd className={styles.BuildPoints}>
           {building.spawnPoints} / {building.maxSpawnPoints}
         </dd>
       </div>
-    );
-  }
-
-  if (building.role === 'combat') return <AttackDetails entity={building} />;
-  return null;
-};
+    )}
+    {building.role === 'combat' && <AttackDetails entity={building} />}
+  </>
+);
 
 export const SelectedEntityInfo = ({ cell, unit, building }: Props) => {
   const entity = unit ?? building;

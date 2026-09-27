@@ -1,6 +1,5 @@
 import {
   ARMOR,
-  CATEGORY_AGAINST,
   DAMAGE_TYPE,
   FLYING_UNITS,
   HEALING,
@@ -56,27 +55,37 @@ export const calculateDamage = (
   return Math.max(1, attacker.attack + bonus - defense);
 };
 
-/**
- * Боевые особенности типа для карточек: броня и бонусы против категорий.
- *
- * @returns Строки вроде «броня 2», «+16 против конницы».
- */
-export const getCombatTraits = (type: UnitType | BuildingType): string[] => {
-  const armor = ARMOR[type] ?? 0;
-  const bonuses = Object.entries(DAMAGE_BONUS[type as MilitaryType] ?? {}).map(
-    ([category, value]) =>
-      `+${value} против ${CATEGORY_AGAINST[category as TargetCategory]}`,
-  );
-  const resist = MAGIC_RESIST[type] ?? 0;
-  const heal = HEALING[type as UnitType];
-  const hitsAir = HITS_AIR.includes(type) && type !== 'griffon';
-  return [
-    ...(DAMAGE_TYPE[type] === 'magic' ? ['магический урон'] : []),
-    ...(heal ? [`лечит +${heal.amount} HP своему юниту`] : []),
-    ...(isFlyingType(type) ? ['летает, бьёт землю и воздух'] : []),
-    ...(hitsAir ? ['бьёт воздух'] : []),
-    ...(armor ? [`броня ${armor}`] : []),
-    ...(resist ? [`маг. защита ${resist}`] : []),
-    ...bonuses,
-  ];
+/** Боевые свойства типа для карточек: всё, что показывается иконками. */
+export type CombatProfile = {
+  damageType: 'physical' | 'magic';
+  /** Бонусы урона против категорий цели. */
+  bonuses: { category: TargetCategory; value: number }[];
+  /** Физическая защита (броня). */
+  armor: number;
+  magicResist: number;
+  /** Летает сам. */
+  flies: boolean;
+  /** Может атаковать воздушные цели. */
+  hitsAir: boolean;
+  /** Сколько HP возвращает лечением; `0` — не лечит. */
+  heal: number;
 };
+
+/**
+ * Боевой профиль типа: тип урона, бонусы, защита, полёт, лечение.
+ *
+ * @param type - Тип юнита или здания.
+ */
+export const getCombatProfile = (
+  type: UnitType | BuildingType,
+): CombatProfile => ({
+  damageType: DAMAGE_TYPE[type] ?? 'physical',
+  bonuses: Object.entries(DAMAGE_BONUS[type as MilitaryType] ?? {}).map(
+    ([category, value]) => ({ category: category as TargetCategory, value }),
+  ),
+  armor: ARMOR[type] ?? 0,
+  magicResist: MAGIC_RESIST[type] ?? 0,
+  flies: isFlyingType(type),
+  hitsAir: HITS_AIR.includes(type),
+  heal: HEALING[type as UnitType]?.amount ?? 0,
+});

@@ -9,7 +9,7 @@ import {
 import {
   calculateDamage,
   canHitTarget,
-  getCombatTraits,
+  getCombatProfile,
   getTargetCategory,
 } from './damage';
 
@@ -62,12 +62,22 @@ describe('категории и особенности', () => {
     expect(getTargetCategory('rider')).toBe('cavalry');
   });
 
-  it('описывает броню и бонусы для карточек', () => {
-    expect(getCombatTraits('spearman')).toEqual([
-      'броня 2',
-      '+16 против конницы',
-    ]);
-    expect(getCombatTraits('swordsman')).toEqual([]);
+  it('профиль для карточек: бонусы, защита, воздух', () => {
+    expect(getCombatProfile('spearman')).toMatchObject({
+      armor: 2,
+      bonuses: [{ category: 'cavalry', value: 16 }],
+      hitsAir: false,
+    });
+    expect(getCombatProfile('mage')).toMatchObject({
+      damageType: 'magic',
+      magicResist: 4,
+      hitsAir: true,
+    });
+    expect(getCombatProfile('griffon')).toMatchObject({
+      flies: true,
+      hitsAir: true,
+    });
+    expect(getCombatProfile('healer').heal).toBe(20);
   });
 });
 
