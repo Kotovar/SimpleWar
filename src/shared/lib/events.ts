@@ -6,7 +6,13 @@ type GameEvent =
   /** Выбывание уже применено; `turn` — ход, в котором оно произошло. */
   | { type: 'PARTICIPANT_ELIMINATED'; owner: ParticipantId; turn: number }
   | { type: 'BUILDING_SPAWNED'; building: Building; owner: ParticipantId }
-  | { type: 'BUILDING_DESTROYED'; building: Building; owner: ParticipantId }
+  | {
+      type: 'BUILDING_DESTROYED';
+      building: Building;
+      owner: ParticipantId;
+      /** Снесено владельцем, а не разрушено уроном. */
+      demolished?: boolean;
+    }
   | { type: 'UNIT_SPAWNED'; unit: Unit; owner: ParticipantId }
   | { type: 'UNIT_DESTROYED'; unit: Unit; owner: ParticipantId };
 

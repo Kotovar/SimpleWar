@@ -1,20 +1,36 @@
 import { useEffect } from 'react';
 import { AI_TURN_DELAY_MS } from '@shared/config';
-import { initGameLoopEvents, useGameLoopSelectors } from '@features/game-loop';
+import {
+  initGameLoopEvents,
+  nextTurn,
+  useGameLoopSelectors,
+} from '@features/game-loop';
 import { initVisibilitySystem } from '@features/visibility';
+import { initBattleStats, useSandboxStore } from '@features/sandbox';
 import { Map, Minimap } from '@widgets/map';
-import { initializeGame } from '@widgets/start-game';
+import { initializeGame, initializeSandbox } from '@widgets/start-game';
 import { GameControls } from '@widgets/game-controls';
 import { initJournalSystem, initPopulationSystem } from '@app/system';
 import { runAITurn } from '@app/game/ai';
 import styles from './styles.module.css';
 
+/** Пауза перед ходом в ускоренном режиме тестирования, мс. */
+const FAST_TURN_DELAY_MS = 30;
+
 export const Game = () => {
   const { activePlayer, activeController, phase, startGame } =
     useGameLoopSelectors();
+  const sandbox = useSandboxStore(state => state.enabled);
+  const paused = useSandboxStore(state => state.paused);
+  const fast = useSandboxStore(state => state.fast);
 
   const handleStartGame = () => {
-    if (initializeGame()) startGame();
+    if (!sandbox) {
+      if (initializeGame()) startGame();
+      return;
+    }
+    const started = initializeSandbox(useSandboxStore.getState().scenario);
+    if (started) startGame(started.participants);
   };
 
   useEffect(() => {
@@ -22,17 +38,24 @@ export const Game = () => {
     initPopulationSystem();
     initJournalSystem();
     initVisibilitySystem();
+    initBattleStats();
   }, []);
 
   useEffect(() => {
-    if (activeController !== 'ai' || phase !== 'inProgress') return;
+    if (phase !== 'inProgress' || !activeController) return;
+    if (activeController === 'human' || (sandbox && paused)) return;
 
+    // Пассивная сторона режима тестирования сразу передаёт ход.
+    const play =
+      activeController === 'passive'
+        ? () => nextTurn(activePlayer)
+        : () => void runAITurn(activePlayer);
     const timer = setTimeout(
-      () => void runAITurn(activePlayer),
-      AI_TURN_DELAY_MS,
+      play,
+      sandbox && fast ? FAST_TURN_DELAY_MS : AI_TURN_DELAY_MS,
     );
     return () => clearTimeout(timer);
-  }, [activePlayer, activeController, phase]);
+  }, [activePlayer, activeController, phase, sandbox, paused, fast]);
 
   return (
     <main className={phase === 'inProgress' ? styles.Main : styles.Setup}>

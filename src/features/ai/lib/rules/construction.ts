@@ -1,8 +1,9 @@
-import { MAX_POPULATION_LIMIT, REPAIR } from '@shared/config';
+import { REPAIR } from '@shared/config';
 import type { AiRule, Candidate } from '../../model/types';
 import type { AiContext } from '../context';
 import { roleWishes } from '../composition';
-import { affordable, isNear, nearest } from '../facts';
+import { isNear, nearest } from '../facts';
+import { affordable } from '../saving';
 import { manhattan } from '../geometry';
 import { standCells, stepToward } from '../movement';
 import { isFree, moveTo, taskOf } from './common';
@@ -14,35 +15,8 @@ import {
   pickBuildSite,
 } from './building';
 
-const hasTask = (ctx: AiContext, ruleId: string) =>
+export const hasTask = (ctx: AiContext, ruleId: string) =>
   ctx.memory.tasks.some(task => task.ruleId === ruleId);
-
-/** W06: следующий найм упрётся в население — построить ферму у базы. */
-export const W06: AiRule = {
-  id: 'W06',
-  group: 'build',
-  title: 'Ферма',
-  evaluate: ctx => {
-    const continued = continueBuilds(ctx, 'W06', 'build', 58);
-    if (continued.length) return continued;
-    const { occupied, max } = ctx.obs.population;
-    if (max - occupied >= 3 || max >= MAX_POPULATION_LIMIT) return [];
-    if (hasTask(ctx, 'W06')) return [];
-    const site = pickBuildSite(ctx, 'farm', 4);
-    const worker = site && nearestIdleWorker(ctx, site);
-    if (!site || !worker) return [];
-    return buildStep(
-      ctx,
-      'W06',
-      'build',
-      worker,
-      'farm',
-      site,
-      55,
-      `население ${occupied}/${max}: строю ферму`,
-    );
-  },
-};
 
 /**
  * W07: стратегии нужно производство или защита — казармы, при угрозе

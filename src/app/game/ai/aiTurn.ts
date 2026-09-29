@@ -20,6 +20,7 @@ import {
   unassignWorker,
 } from '@features/workers';
 import { playTurn, type AiAction } from '@features/ai';
+import { useSandboxStore } from '@features/sandbox';
 
 /**
  * Исполняет действие ИИ теми же командами, что и интерфейс человека.
@@ -65,6 +66,9 @@ const seedFor = (actor: ParticipantId) =>
   ((useMapStore.getState().seed ?? 0) * 31 + PARTICIPANT_IDS.indexOf(actor)) >>>
   0;
 
+/** Ходы ИИ, которые сейчас считаются: `партия:ход:участник`. */
+const running = new Set<string>();
+
 /** Отдать управление браузеру между порциями работы ИИ. */
 const nextTask = () => new Promise<void>(resolve => setTimeout(resolve, 0));
 
@@ -82,16 +86,24 @@ export const runAITurn = async (
 ) => {
   const gameId = useJournalStore.getState().gameId;
   const turn = useGameLoopStore.getState().currentTurn;
+  const key = `${gameId}:${turn}:${actor}`;
+  // Тот же ход уже считается (перезапуск таймера): второй запуск не нужен.
+  if (running.has(key)) return null;
   const isCancelled = () => {
     const loop = useGameLoopStore.getState();
+    const sandbox = useSandboxStore.getState();
     return (
       useJournalStore.getState().gameId !== gameId ||
       loop.phase !== 'inProgress' ||
       loop.activePlayer !== actor ||
-      loop.currentTurn !== turn
+      loop.currentTurn !== turn ||
+      // Пауза режима тестирования останавливает и уже идущий ход; после
+      // «Продолжить» ход планируется заново с текущего положения.
+      (sandbox.enabled && sandbox.paused)
     );
   };
   if (isCancelled()) return null;
+  running.add(key);
 
   const memories = useAiMemoryStore.getState();
   const result = await playTurn({
@@ -103,7 +115,7 @@ export const runAITurn = async (
     record: decision =>
       useJournalStore.getState().recordDecision({ ...decision, actor, turn }),
     yieldControl,
-  });
+  }).finally(() => running.delete(key));
 
   // Память отменённого запуска не сохраняется в новую партию.
   if (useJournalStore.getState().gameId === gameId) {

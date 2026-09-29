@@ -7,6 +7,7 @@ import {
   resourceSites,
   scarceResource,
 } from '../facts';
+import { expansionWanted } from '../saving';
 import { manhattan } from '../geometry';
 import { standCells, stepToward } from '../movement';
 import { bestMove, isFree, moveTo, taskOf } from './common';
@@ -162,7 +163,12 @@ export const W05: AiRule = {
       const type = resource === 'gold' ? 'mine' : 'sawmill';
       const own = ctx.obs.ownBuildings.some(b => b.type === type);
       // Ресурса хватает на ближайшие траты — новая добыча не нужна.
-      if (own && ctx.obs.stock[resource] >= nextCosts[resource]) continue;
+      if (
+        own &&
+        ctx.obs.stock[resource] >= nextCosts[resource] &&
+        !expansionWanted(ctx, type)
+      )
+        continue;
       // Пока есть простаивающее место этого типа, новое не строим.
       if (idleWorkplaces(ctx).some(b => b.type === type)) continue;
       const site = nearest(

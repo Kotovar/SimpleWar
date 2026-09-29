@@ -85,7 +85,9 @@
 `pnpm smoke` — 10 раундов ИИ против пассивного игрока со снимком в
 `/tmp/simplewar-ai-turn-smoke.json`. Партия ИИ до разрушения ратуши
 пассивного игрока — `pnpm vp test run scripts/ai-match-smoke.test.ts`
-(итоги по раундам в `/tmp/simplewar-ai-match-smoke.json`).
+(итоги по раундам в `/tmp/simplewar-ai-match-smoke.json`). Прогон баланса
+режима тестирования по сидам — `pnpm vp test run scripts/sandbox-balance.test.ts`:
+сценарий задаётся в файле, итоги боёв — в `/tmp/simplewar-sandbox-balance.json`.
 Состояние партии находится в `entities/games`, запуск — в
 `widgets/start-game/lib/initializeGame.ts`. Для изменений документации достаточно
 проверить ссылки и форматирование только затронутых Markdown-файлов.

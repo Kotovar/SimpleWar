@@ -7,7 +7,8 @@ import {
 import { isBuildableTerrain } from '@shared/lib';
 import type { Candidate } from '../../model/types';
 import type { AiContext } from '../context';
-import { affordable, isNear } from '../facts';
+import { isNear } from '../facts';
+import { affordable } from '../saving';
 import { manhattan, tieBreak } from '../geometry';
 import { standCells, stepToward } from '../movement';
 import { isFree, taskOf, wouldBlock } from './common';

@@ -23,6 +23,7 @@ import {
   DebugPanel,
   SiegeStrike,
 } from './info';
+import { SandboxControls } from './sandbox';
 import styles from './styles.module.css';
 
 const LEGEND = [
@@ -197,6 +198,7 @@ export const PhaseInProgress = ({ minimap }: Props) => {
         </button>
         {minimap}
         <SelectionDetails />
+        <SandboxControls />
         <DebugPanel />
       </aside>
 

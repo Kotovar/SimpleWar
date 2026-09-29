@@ -9,13 +9,8 @@ import {
 import { isBuildableTerrain } from '@shared/lib';
 import type { AiRule, Candidate } from '../../model/types';
 import type { AiContext } from '../context';
-import {
-  affordable,
-  desiredArmy,
-  desiredWorkers,
-  nearest,
-  nextRecruit,
-} from '../facts';
+import { desiredArmy, desiredWorkers, nearest, nextRecruit } from '../facts';
+import { affordable } from '../saving';
 import { roleWishes } from '../composition';
 import { around, manhattan, tieBreak } from '../geometry';
 import { hasRoom } from '../movement';

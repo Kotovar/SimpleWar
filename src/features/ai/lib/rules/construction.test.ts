@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { foe, grass, own, ownBuilding, scene } from '../scene.test-utils';
-import { W06, W07, W08, W09 } from './construction';
+import { W07, W08, W09 } from './construction';
+import { W06 } from './farms';
 
 describe('W06: ферма', () => {
   it('строит ферму, когда население почти исчерпано', () => {

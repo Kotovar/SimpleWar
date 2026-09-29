@@ -4,8 +4,11 @@ export const PARTICIPANT_IDS = ['p1', 'p2', 'p3', 'p4'] as const;
 /** ID участника партии. */
 export type ParticipantId = (typeof PARTICIPANT_IDS)[number];
 
-/** Кто отдаёт приказы участнику. */
-export type Controller = 'human' | 'ai';
+/**
+ * Кто отдаёт приказы участнику. `passive` — только в режиме тестирования:
+ * сторона сразу завершает ход.
+ */
+export type Controller = 'human' | 'ai' | 'passive';
 
 /** Участник партии: владелец объектов и ресурсов с одним способом управления. */
 export type Participant = {

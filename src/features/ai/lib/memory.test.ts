@@ -3,7 +3,8 @@ import { BUILDINGS_CONFIG } from '@shared/config';
 import type { AiTask } from '@entities/ai-memories';
 import type { Candidate } from '../model/types';
 import { buildContext } from './context';
-import { affordable, scarceResource } from './facts';
+import { scarceResource } from './facts';
+import { affordable } from './saving';
 import { applyOutcome, createTurnState, refreshMemory } from './memory';
 import { grass, own, ownBuilding, scene } from './scene.test-utils';
 

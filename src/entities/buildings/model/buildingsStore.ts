@@ -97,6 +97,7 @@ export const useBuildingsStore = create<BuildingsState>()(
         type: 'BUILDING_DESTROYED',
         building,
         owner: building.owner,
+        demolished: true,
       });
     },
 

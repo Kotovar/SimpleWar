@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { savingGoals } from './facts';
+import { savingGoals } from './saving';
 import { foe, grass, own, ownBuilding, scene } from './scene.test-utils';
 import { N01, N02 } from './rules/production';
 

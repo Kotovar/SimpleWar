@@ -1,0 +1,89 @@
+.Setup,
+.Report,
+.Controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--text);
+}
+
+.Title {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.Check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.Table {
+  border-collapse: collapse;
+  font-size: 0.85rem;
+
+  & th,
+  & td {
+    padding: 3px 8px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  & thead th {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  & thead select {
+    display: block;
+    margin-top: 4px;
+  }
+
+  & input[type='number'],
+  & select {
+    width: 84px;
+    padding: 3px 6px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface-sunken);
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.Buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  & button {
+    padding: 6px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface-sunken);
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  & button[aria-pressed='true'] {
+    border-color: var(--accent);
+  }
+}
+
+.Secondary {
+  align-self: center;
+  padding: 8px 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.Hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}

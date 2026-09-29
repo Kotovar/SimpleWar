@@ -4,6 +4,8 @@ import { MAP_PRESET_LABELS, MAP_PRESETS } from '@shared/config';
 import { isValidSeed } from '@entities/maps';
 import { useSettingsSelectors } from '@entities/settings';
 import { useGameLoopSelectors } from '@features/game-loop';
+import { useSandboxStore } from '@features/sandbox';
+import { SandboxSetup } from './sandbox';
 import styles from './styles.module.css';
 
 type Props = {
@@ -27,6 +29,8 @@ export const PhaseSetup = ({ onStartGame }: Props) => {
   } = useSettingsSelectors();
 
   const { startError } = useGameLoopSelectors();
+  const sandbox = useSandboxStore(state => state.enabled);
+  const setSandbox = useSandboxStore(state => state.setEnabled);
 
   // Текст поля хранится отдельно от стора: неверный ввод остаётся в поле
   // как есть и подсвечивается. После неудачного старта с пустым вводом
@@ -46,6 +50,30 @@ export const PhaseSetup = ({ onStartGame }: Props) => {
 
   return (
     <div className={styles.Wrapper}>
+      <section className={styles.Section}>
+        <div className={styles.Label}>Режим</div>
+        <div className={styles.ButtonGroup}>
+          <button
+            className={clsx(styles.ToggleButton, {
+              [styles.Active]: !sandbox,
+            })}
+            aria-pressed={!sandbox}
+            onClick={() => setSandbox(false)}
+          >
+            Обычная партия
+          </button>
+          <button
+            className={clsx(styles.ToggleButton, {
+              [styles.Active]: sandbox,
+            })}
+            aria-pressed={sandbox}
+            onClick={() => setSandbox(true)}
+          >
+            Тестирование баланса
+          </button>
+        </div>
+      </section>
+
       <section className={styles.Section}>
         <div className={styles.Label}>Размер карты</div>
         <div className={clsx(styles.ButtonGroup, styles.SizeGroup)}>
@@ -116,6 +144,13 @@ export const PhaseSetup = ({ onStartGame }: Props) => {
           </div>
         )}
       </section>
+
+      {sandbox && (
+        <section className={styles.Section}>
+          <div className={styles.Label}>Состав сторон</div>
+          <SandboxSetup />
+        </section>
+      )}
 
       <section className={styles.Section}>
         {startError && (

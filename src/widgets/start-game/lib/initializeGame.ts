@@ -74,8 +74,16 @@ const fallbackMap = (
   return grid;
 };
 
-/** Подготавливает карту и стартовые объекты, если карта прошла оценку. */
-export const initializeGame = (participants = DEFAULT_PARTICIPANTS) => {
+/**
+ * Подготавливает карту и стартовые объекты, если карта прошла оценку.
+ *
+ * @param participants - Участники партии.
+ * @param options.emptyField - Поле без рельефа (режим тестирования S15a).
+ */
+export const initializeGame = (
+  participants = DEFAULT_PARTICIPANTS,
+  { emptyField = false }: { emptyField?: boolean } = {},
+) => {
   const { gridColumns, gridRows, mapGenerationMode, customSeed } =
     useSettingsStore.getState();
   const { spawnBuilding, buildings } = useBuildingsStore.getState();
@@ -144,7 +152,11 @@ export const initializeGame = (participants = DEFAULT_PARTICIPANTS) => {
   };
 
   try {
-    for (let attempt = 0; attempt < MAP_ATTEMPTS; attempt++) {
+    for (
+      let attempt = 0;
+      attempt < (emptyField ? 0 : MAP_ATTEMPTS);
+      attempt++
+    ) {
       const seed =
         initialSeed > Number.MAX_SAFE_INTEGER - attempt
           ? attempt - (Number.MAX_SAFE_INTEGER - initialSeed) - 1
@@ -160,7 +172,8 @@ export const initializeGame = (participants = DEFAULT_PARTICIPANTS) => {
 
     const grid = fallbackMap(gridColumns, gridRows, starts);
     if (evaluateMap(grid, starts).ok) {
-      useMapStore.getState().setGrid(grid, initialSeed, true);
+      // Пустое поле выбрано явно — это не резервная карта.
+      useMapStore.getState().setGrid(grid, initialSeed, !emptyField);
       spawnStarts();
       return true;
     }

@@ -12,3 +12,4 @@ export * from './debug';
 export * from './vision';
 export * from './ai';
 export * from './combat';
+export * from './sandbox';
