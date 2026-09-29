@@ -71,8 +71,8 @@ export const T02 = towerRule(
 );
 
 /**
- * T03: враг бьёт по обороне — приоритетно по нему. Осадных машин пока нет
- * (S14): правило берёт любого врага, достающего до своих зданий.
+ * T03: осада угрожает обороне — видимое орудие первым (налёт на орудие
+ * S15), затем любой враг, достающий до своих зданий.
  */
 export const T03 = towerRule(
   'T03',
@@ -80,6 +80,7 @@ export const T03 = towerRule(
   75,
   'бью врага, достающего до зданий',
   (ctx, _t, targets) =>
+    targets.find(e => e.type === 'siege') ??
     targets.find(
       e =>
         e.armed && ctx.obs.ownBuildings.some(b => manhattan(b, e) <= e.range),

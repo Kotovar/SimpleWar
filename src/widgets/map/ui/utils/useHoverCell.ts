@@ -22,12 +22,14 @@ export const useHoverCell = (view: MapView, isInteractive: boolean) => {
   const rows = useSettingsStore(state => state.gridRows);
   const reachableCells = useMovementStore(state => state.reachableCells);
   const attackableTargets = useMovementStore(state => state.attackableTargets);
+  const healTargets = useMovementStore(state => state.healTargets);
   const spawnableCells = useHighlightStore(state => state.spawnableCells);
   const buildableCells = useProduceCells();
 
   const cursor = (() => {
     if (!isInteractive || !hover) return styles.CursorIdle;
     if (contains(attackableTargets, hover)) return styles.CursorAttack;
+    if (contains(healTargets, hover)) return styles.CursorHeal;
     if (contains(buildableCells, hover) || contains(spawnableCells, hover)) {
       return styles.CursorBuild;
     }

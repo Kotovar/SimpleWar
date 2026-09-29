@@ -1,5 +1,9 @@
 import { UNKNOWN_MOVE_COST, type Position, type Unit } from '@shared/config';
-import { findCheapestPaths } from '@shared/lib';
+import {
+  findCheapestPaths,
+  isFlyingType,
+  type MovementGrid,
+} from '@shared/lib';
 import type { CostedCell } from '../model/types';
 import { mobileCells } from './approach';
 import type { AiContext } from './context';
@@ -9,6 +13,31 @@ import { cellKey, fromKey } from './geometry';
 const TURN_UNKNOWN = 1;
 
 /**
+ * Цены входа по профилю юнита: летающему — пролёт по цене 1 над любой
+ * клеткой (как `createAirGrid` команды), наземному — известная карта.
+ */
+export const gridFor = (
+  ctx: AiContext,
+  unit: Unit,
+  unknownCost: number,
+): MovementGrid => {
+  if (!isFlyingType(unit.type)) return ctx.grid(unknownCost, true);
+  const cached = ctx.cache.get('air') as MovementGrid | undefined;
+  const air =
+    cached ??
+    Array.from({ length: ctx.height }, () => Array(ctx.width).fill(1));
+  ctx.cache.set('air', air);
+  return air;
+};
+
+/**
+ * Можно ли закончить ход на клетке: свободна по знаниям и без публичной
+ * отметки удара — под удар юнит без причины не встаёт.
+ */
+const canStop = (ctx: AiContext, { x, y }: Position) =>
+  !ctx.occupied(x, y) && !ctx.struck({ x, y });
+
+/**
  * Клетки, куда юнит дойдёт в этом ходу по известной карте.
  *
  * @returns Клетки с ценой пути; стартовая не входит.
@@ -16,15 +45,14 @@ const TURN_UNKNOWN = 1;
 export const turnMoves = (ctx: AiContext, unit: Unit): CostedCell[] => {
   if (unit.movePoints <= 0) return [];
   const { cost, width } = findCheapestPaths(
-    ctx.grid(TURN_UNKNOWN, true),
+    gridFor(ctx, unit, TURN_UNKNOWN),
     unit,
     unit.movePoints,
   );
   const cells: CostedCell[] = [];
   cost.forEach((spent, key) => {
     const cell = fromKey(key, width);
-    if (spent > 0 && !ctx.occupied(cell.x, cell.y))
-      cells.push({ ...cell, cost: spent });
+    if (spent > 0 && canStop(ctx, cell)) cells.push({ ...cell, cost: spent });
   });
   return cells;
 };
@@ -42,7 +70,7 @@ export const pathsFrom = (
     | ReturnType<typeof findCheapestPaths>
     | undefined;
   const paths =
-    cached ?? findCheapestPaths(ctx.grid(UNKNOWN_MOVE_COST, true), unit);
+    cached ?? findCheapestPaths(gridFor(ctx, unit, UNKNOWN_MOVE_COST), unit);
   ctx.cache.set(cacheKey, paths);
   return paths;
 };
@@ -83,14 +111,14 @@ export const stepToward = (
   path.reverse();
 
   // Цена хода считается как в команде: неизвестное — по цене поля.
-  const turnGrid = ctx.grid(TURN_UNKNOWN, true);
+  const turnGrid = gridFor(ctx, unit, TURN_UNKNOWN);
   let spent = 0;
   let next: Position | null = null;
   for (const key of path.slice(1)) {
     const { x, y } = fromKey(key, width);
     spent += turnGrid[y][x];
     if (spent > unit.movePoints) break;
-    if (!ctx.occupied(x, y)) next = { x, y };
+    if (canStop(ctx, { x, y })) next = { x, y };
   }
   return next ? { next, total: cost.get(best)! } : null;
 };

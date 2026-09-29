@@ -16,23 +16,34 @@ import {
   nearest,
   nextRecruit,
 } from '../facts';
+import { roleWishes } from '../composition';
 import { around, manhattan, tieBreak } from '../geometry';
 import { hasRoom } from '../movement';
 import { isFree } from './common';
 
-/** Свободная клетка для новобранца: поле или холм, без угрозы. */
+/** Срочная оборона базы (G01). */
+const urgent = (ctx: AiContext) => ctx.memory.strategy === 'G01';
+
+/**
+ * Свободная клетка для новобранца: поле или холм, не под отметкой удара,
+ * без угрозы (при G01 — с наименьшей угрозой).
+ */
 const spawnCell = (ctx: AiContext, building: Building, toward?: Position) => {
   const cells = around(building).filter(
     cell =>
       ctx.inside(cell) &&
       isBuildableTerrain('grass', ctx.known(cell.x, cell.y) ?? 'water') &&
       !ctx.occupied(cell.x, cell.y) &&
-      ctx.threatAt(cell) === 0 &&
+      !ctx.struck(cell) &&
+      // При срочной обороне безопасных клеток у осаждённой базы нет:
+      // лучше защитник под угрозой, чем никакого.
+      (urgent(ctx) || ctx.threatAt(cell) === 0) &&
       hasRoom(ctx, cell),
   );
   const goal = toward ?? { x: ctx.width / 2, y: ctx.height / 2 };
   return cells.sort(
     (a, b) =>
+      ctx.threatAt(a) - ctx.threatAt(b) ||
       manhattan(a, goal) - manhattan(b, goal) ||
       tieBreak(`${a.x},${a.y}`, ctx.memory.seed) -
         tieBreak(`${b.x},${b.y}`, ctx.memory.seed),
@@ -52,7 +63,7 @@ const turnsToAfford = (ctx: AiContext, cost: Cost) =>
     }),
   );
 
-const canHire = (
+export const canHire = (
   ctx: AiContext,
   building: ProductionBuilding,
   type: UnitType,
@@ -68,7 +79,7 @@ const canHire = (
   );
 };
 
-const hire = (
+export const hire = (
   ctx: AiContext,
   ruleId: string,
   group: Candidate['group'],
@@ -97,7 +108,7 @@ const hire = (
   ];
 };
 
-const producers = (ctx: AiContext) =>
+export const producers = (ctx: AiContext) =>
   ctx.obs.ownBuildings.filter(
     (b): b is ProductionBuilding => b.role === 'production',
   );
@@ -139,6 +150,13 @@ export const N02: AiRule = {
     const lack = desiredArmy(ctx) - ctx.military.length;
     const urgent = ctx.memory.strategy === 'G01';
     if (lack <= 0 && !urgent) return [];
+    // Нужная роль с готовым зданием найма пока не по карману, но скоро
+    // накопится — не тратить бюджет на мечника (её наймёт N03).
+    const role = roleWishes(ctx).find(wish =>
+      ctx.obs.ownBuildings.some(({ type }) => type === wish.producer),
+    );
+    const wait = role ? turnsToAfford(ctx, UNITS_CONFIG[role.type].cost) : 0;
+    if (!urgent && wait > 0 && wait <= WAIT_TURNS) return [];
     const preferred = nextRecruit(ctx);
     // Лучника ждём, только если он накопится за несколько ходов.
     const wanted =

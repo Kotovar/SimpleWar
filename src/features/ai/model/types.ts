@@ -16,6 +16,8 @@ import type { AiContext } from '../lib/context';
 export type AiAction =
   | { type: 'move'; unitId: string; x: number; y: number }
   | { type: 'attack'; attackerId: string; targetId: string }
+  | { type: 'heal'; healerId: string; targetId: string }
+  | { type: 'prepareStrike'; unitId: string; x: number; y: number }
   | {
       type: 'build';
       workerId: string;

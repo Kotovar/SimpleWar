@@ -8,13 +8,15 @@ import {
   type MilitaryUnit,
   type Position,
   type Unit,
+  type UnitType,
 } from '@shared/config';
 import { calculateTurnIncome, type MovementGrid } from '@shared/lib';
 import type { AiMemory } from '@entities/ai-memories';
 import type { Observation, RememberedContact } from '@entities/perceptions';
 import type { TurnState } from '../model/types';
-import { cellKey, manhattan, sides } from './geometry';
+import { cellKey, sides } from './geometry';
 import { statsOf } from './stats';
+import { createThreat } from './threat';
 
 /** Видимый враг или контакт с публичными боевыми свойствами. */
 export type EnemyView = Omit<RememberedContact, 'seenTurn' | 'confidence'> & {
@@ -54,8 +56,14 @@ export type AiContext = {
   occupied: (x: number, y: number) => boolean;
   /** Цены входа; для маршрута `throughOwn` разрешает транзит через своих. */
   grid: (unknownCost: number, throughOwn?: boolean) => MovementGrid;
-  /** Сумма урона, который враги могут нанести по клетке в их ход. */
-  threatAt: (p: Position) => number;
+  /**
+   * Сумма урона, который враги могут нанести по клетке в их ход, плюс
+   * урон публичной отметки удара осады. С `target` — только враги,
+   * способные поразить этот тип (воздух бьют не все).
+   */
+  threatAt: (p: Position, target?: UnitType) => number;
+  /** На клетке публичная отметка подготовленного удара любой стороны. */
+  struck: (p: Position) => boolean;
   /** Граница разведки: известные проходимые клетки у неизвестных. */
   frontier: Position[];
   /** Кэш расчётов шага: пути юнитов считаются один раз. */
@@ -124,15 +132,7 @@ export const buildContext = (
     return next;
   };
 
-  const threats = [...enemies, ...remembered].filter(({ armed }) => armed);
-  const threatAt = (p: Position) =>
-    threats.reduce(
-      (sum, enemy) =>
-        manhattan(enemy, p) <= enemy.move + enemy.range
-          ? sum + enemy.attack * enemy.certainty
-          : sum,
-      0,
-    );
+  const { threatAt, struck } = createThreat(obs, [...enemies, ...remembered]);
 
   const frontier: Position[] = [];
   for (let y = 0; y < height; y++) {
@@ -181,6 +181,7 @@ export const buildContext = (
     occupied,
     grid,
     threatAt,
+    struck,
     frontier,
     cache: new Map(),
   };

@@ -45,6 +45,10 @@ const describe = (action: AiAction) => {
       return `движение в (${action.x}, ${action.y})`;
     case 'attack':
       return `атака ${short(action.targetId)}`;
+    case 'heal':
+      return `лечение ${short(action.targetId)}`;
+    case 'prepareStrike':
+      return `подготовка удара по (${action.x}, ${action.y})`;
     case 'build':
       return `стройка ${action.buildingType} в (${action.x}, ${action.y})`;
     case 'spawn':

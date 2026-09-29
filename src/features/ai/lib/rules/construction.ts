@@ -1,6 +1,7 @@
 import { MAX_POPULATION_LIMIT, REPAIR } from '@shared/config';
 import type { AiRule, Candidate } from '../../model/types';
 import type { AiContext } from '../context';
+import { roleWishes } from '../composition';
 import { affordable, isNear, nearest } from '../facts';
 import { manhattan } from '../geometry';
 import { standCells, stepToward } from '../movement';
@@ -69,8 +70,14 @@ export const W07: AiRule = {
     ).length;
     // Золото копится быстрее найма в одних казармах — вторые казармы.
     const moreBarracks = barracks < 2 && ctx.obs.stock.gold >= 250;
+    // Здание найма для нужной роли, которой негде нанять.
+    const producer = roleWishes(ctx).find(wish => !has(wish.producer));
     const type =
-      barracks === 0 || moreBarracks ? 'barracks' : wantsTower ? 'tower' : null;
+      barracks === 0 || moreBarracks
+        ? 'barracks'
+        : wantsTower
+          ? 'tower'
+          : (producer?.producer ?? null);
     if (!type) return [];
     const site = pickBuildSite(
       ctx,
@@ -90,7 +97,9 @@ export const W07: AiRule = {
       type === 'barracks' ? 52 : 48,
       type === 'barracks'
         ? 'нужны казармы для армии'
-        : 'угроза с направления: строю башню',
+        : type === 'tower'
+          ? 'угроза с направления: строю башню'
+          : `${producer?.reason}: строю ${type}`,
     );
   },
 };

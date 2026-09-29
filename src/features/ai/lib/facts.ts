@@ -8,8 +8,8 @@ import {
 import { findServingWorker } from '@shared/lib';
 import type { AiContext, EnemyView } from './context';
 import { manhattan } from './geometry';
+import { roleWishes } from './composition';
 import { standCells } from './movement';
-import { powerOf } from './stats';
 
 export { isNear, nearest } from './geometry';
 
@@ -38,28 +38,6 @@ export const resourceSites = (
       ctx.threatAt(cell) === 0 &&
       standCells(ctx, cell).length > 0,
   );
-
-/** Своя сила: военные юниты и башни. */
-export const ownPower = (ctx: AiContext) =>
-  [...ctx.obs.ownUnits, ...ctx.obs.ownBuildings].reduce(
-    (sum, entity) => sum + powerOf(entity.type, entity.hp),
-    0,
-  );
-
-/**
- * Сила врага по видимым и запомненным объектам с весом достоверности; пока
- * армия врага не видна, закладывается половина своей силы.
- */
-export const enemyPower = (ctx: AiContext) => {
-  const known = [...ctx.enemies, ...ctx.remembered].reduce(
-    (sum, enemy) => sum + powerOf(enemy.type, enemy.hp) * enemy.certainty,
-    0,
-  );
-  const seenArmed = [...ctx.enemies, ...ctx.remembered].some(
-    ({ armed, kind }) => armed && kind === 'unit',
-  );
-  return seenArmed ? known : Math.max(known, ownPower(ctx) * 0.5);
-};
 
 /** Вооружённые видимые враги в радиусе тревоги у ратуши. */
 export const baseAlarm = (ctx: AiContext): EnemyView[] => {
@@ -106,7 +84,7 @@ export const desiredArmy = (ctx: AiContext) =>
 /** Кого нанять следующим: лучника при мечниках ≥ 2 × лучники + 1. */
 export const nextRecruit = (ctx: AiContext): 'swordsman' | 'archer' => {
   const swords = ctx.military.filter(({ type }) => type === 'swordsman');
-  const archers = ctx.military.length - swords.length;
+  const archers = ctx.military.filter(({ type }) => type === 'archer').length;
   return swords.length >= archers * 2 + 1 ? 'archer' : 'swordsman';
 };
 
@@ -138,6 +116,8 @@ export const scarceResource = (ctx: AiContext): 'gold' | 'wood' => {
   return lack('wood') > lack('gold') ? 'wood' : 'gold';
 };
 
+const NOTHING: Cost = { gold: 0, wood: 0 };
+
 /** Цель накопления: ключ покупки и её цена. */
 export type SavingGoal = { key: string; cost: Cost };
 
@@ -150,6 +130,11 @@ export const savingGoals = (ctx: AiContext): SavingGoal[] => {
   const has = (type: string) =>
     ctx.obs.ownBuildings.some(building => building.type === type);
   const { occupied, max } = ctx.obs.population;
+  // Роли по составу врага: здание найма и сам юнит тоже копятся, иначе
+  // каждый свободный золотой уходит на мечника.
+  const roles = has('barracks') ? roleWishes(ctx) : [];
+  const producer = roles.find(wish => !has(wish.producer));
+  const recruit = roles.find(wish => has(wish.producer));
   const wishes: [string, boolean, Cost][] = [
     [
       'mine',
@@ -163,11 +148,17 @@ export const savingGoals = (ctx: AiContext): SavingGoal[] => {
       BUILDINGS_CONFIG.sawmill.cost,
     ],
     ['barracks', !has('barracks'), BUILDINGS_CONFIG.barracks.cost],
+    [
+      producer?.producer ?? 'producer',
+      // Пока есть кого нанять в готовых зданиях, копим на юнита, не на здание.
+      !!producer && !recruit && ctx.military.length >= 3,
+      producer ? BUILDINGS_CONFIG[producer.producer].cost : NOTHING,
+    ],
     ['farm', max - occupied < 3 && max < 30, BUILDINGS_CONFIG.farm.cost],
     [
       'army',
       ctx.military.length < desiredArmy(ctx),
-      UNITS_CONFIG[nextRecruit(ctx)].cost,
+      UNITS_CONFIG[recruit?.type ?? nextRecruit(ctx)].cost,
     ],
   ];
   return wishes

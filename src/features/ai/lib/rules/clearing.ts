@@ -8,7 +8,7 @@ import { standCells } from '../movement';
 import { idleWorkers } from './building';
 
 /** Цена пути от базы до цели с учётом клетки, будто она расчищена. */
-const pathCost = (
+export const pathCost = (
   ctx: AiContext,
   from: Position,
   goal: Position,

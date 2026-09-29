@@ -1,15 +1,14 @@
 import type { StrategyId } from '@shared/config';
 import type { AiMemory } from '@entities/ai-memories';
 import type { StrategyScore } from '../model/types';
+import { battleRatio, enemyPower, ownPower } from './composition';
 import type { AiContext } from './context';
 import {
   baseAlarm,
   desiredArmy,
   desiredWorkers,
-  enemyPower,
   enemyTarget,
   idleWorkplaces,
-  ownPower,
   resourceSites,
   scarceResource,
 } from './facts';
@@ -133,11 +132,7 @@ export const STRATEGIES: Record<StrategyId, Evaluator> = {
     if (!group.length || (phase !== 'advance' && phase !== 'engage')) {
       return { score: 0, reason: 'группа не в бою' };
     }
-    const own = group.reduce((sum, unit) => sum + unit.hp * unit.attack, 0);
-    const foes = ctx.enemies
-      .filter(enemy => enemy.armed)
-      .reduce((sum, enemy) => sum + enemy.hp * enemy.attack, 0);
-    const ratio = foes > 0 ? own / foes : 2;
+    const ratio = battleRatio(ctx, group);
     return ratio < ctx.config.retreatRatio
       ? { score: 85, reason: `проигрываем бой: ${ratio.toFixed(2)}` }
       : { score: 0, reason: `соотношение в бою ${ratio.toFixed(2)}` };

@@ -1,11 +1,12 @@
-import type {
-  Building,
-  BuildingType,
-  CellType,
-  Position,
-  Resources,
-  Unit,
-  UnitType,
+import {
+  UNITS_CONFIG,
+  type Building,
+  type BuildingType,
+  type CellType,
+  type Position,
+  type Resources,
+  type Unit,
+  type UnitType,
 } from '@shared/config';
 import { createUnit } from '@entities/units';
 import { createBuilding } from '@entities/buildings';
@@ -73,8 +74,7 @@ export const foe = (
   y: number,
   patch: { hp?: number; id?: string } = {},
 ): Observation['visibleEnemies'][number] => {
-  const kind =
-    type in { worker: 1, swordsman: 1, archer: 1 } ? 'unit' : 'building';
+  const kind = type in UNITS_CONFIG ? 'unit' : 'building';
   const maxHp =
     kind === 'unit'
       ? createUnit(type as UnitType, 0, 0, 'p1', false)!.maxHp
@@ -112,6 +112,8 @@ type SceneSpec = {
   memory?: Partial<AiMemory>;
   /** Клетки вне обзора: `x,y`. */
   hidden?: string[];
+  /** Публичные отметки подготовленных ударов. */
+  strikes?: Position[];
 };
 
 /**
@@ -150,7 +152,7 @@ export const scene = (
     visible,
     resources,
     contacts: spec.contacts ?? [],
-    strikes: [],
+    strikes: spec.strikes ?? [],
   };
   const memory = { ...createAiMemory(7), ...spec.memory };
   return { ctx: buildContext(obs, memory, createTurnState()), obs, memory };

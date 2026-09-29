@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import type { StrategyId } from '@shared/config';
 import type { RememberedContact } from '@entities/perceptions';
 import type { StrategyScore } from '../model/types';
-import { enemyPower } from './facts';
+import { enemyPower } from './composition';
 import { foe, grass, own, ownBuilding, scene } from './scene.test-utils';
 import { chooseStrategy, evaluateStrategies } from './strategy';
 

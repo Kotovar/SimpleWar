@@ -20,7 +20,12 @@ const scoutStep = (
     ? standCells(ctx, target)
     : [target];
   const step = stepToward(ctx, unit, goals);
-  if (!step) return [];
+  // Разведка не входит под известный удар: иначе R06 уводит назад.
+  if (
+    !step ||
+    ctx.threatAt(step.next, unit.type) > ctx.threatAt(unit, unit.type)
+  )
+    return [];
   return [
     moveTo(ruleId, unit, step.next, score, reason, {
       group: 'scout',
@@ -43,11 +48,18 @@ const spareScout = (ctx: AiContext, near: Position) => {
     .filter(
       unit =>
         isFree(ctx, unit.id) &&
+        // Осада и лекарь в разведку не ходят: медленны или беззащитны.
+        unit.type !== 'siege' &&
+        unit.type !== 'healer' &&
         !garrison.has(unit.id) &&
         !taskOf(ctx, unit.id) &&
         unit.movePoints > 0,
     )
-    .sort((a, b) => manhattan(a, near) - manhattan(b, near))[0];
+    .sort(
+      (a, b) =>
+        Number(b.type === 'scout') - Number(a.type === 'scout') ||
+        manhattan(a, near) - manhattan(b, near),
+    )[0];
 };
 
 /**

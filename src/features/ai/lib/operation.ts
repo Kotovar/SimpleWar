@@ -1,9 +1,10 @@
 import type { MilitaryUnit, Position } from '@shared/config';
 import type { AiOperation } from '@entities/ai-memories';
 import type { AiContext } from './context';
-import { baseAlarm, enemyPower, enemyTarget, nearest } from './facts';
+import { enemyPower } from './composition';
+import { baseAlarm, enemyTarget, nearest } from './facts';
 import { manhattan, tieBreak } from './geometry';
-import { powerOf } from './stats';
+import { effectiveness, powerOf } from './stats';
 
 /** Юниты, занятые задачей (разведка): в группы они не входят. */
 const taskedUnits = (ctx: AiContext) =>
@@ -110,8 +111,10 @@ export const planOperation = (
   });
 
   const alarmPower = alarm.reduce((s, e) => s + powerOf(e.type, e.hp), 0);
+  // Гарнизон, не поражающий нападающих (воздух), защитой не считается.
+  const alarmTypes = alarm.map(({ type }) => type);
   const defense = garrisonUnits(ctxWithGarrison).reduce(
-    (s, u) => s + powerOf(u.type, u.hp),
+    (s, u) => s + powerOf(u.type, u.hp) * effectiveness(u.type, alarmTypes),
     0,
   );
   const serious = alarm.length > 0 && alarmPower > defense;

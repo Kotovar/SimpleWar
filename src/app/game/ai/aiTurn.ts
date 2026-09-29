@@ -10,7 +10,7 @@ import { createAiMemory, useAiMemoryStore } from '@entities/ai-memories';
 import { nextTurn } from '@features/game-loop';
 import { getObservation } from '@features/visibility';
 import { move } from '@features/pathfinding';
-import { attack } from '@features/combat';
+import { attack, heal, prepareStrike } from '@features/combat';
 import { build, demolish } from '@features/build';
 import { spawn } from '@features/spawn';
 import {
@@ -37,6 +37,10 @@ export const executeAiAction = (
       return move({ actor, ...action });
     case 'attack':
       return attack({ actor, ...action });
+    case 'heal':
+      return heal({ actor, ...action });
+    case 'prepareStrike':
+      return prepareStrike({ actor, ...action });
     case 'build':
       return build({ actor, ...action });
     case 'spawn':
