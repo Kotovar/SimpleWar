@@ -147,6 +147,18 @@ describe('задачи и резервы', () => {
     expect(refreshMemory(ctx).memory.tasks.map(({ id }) => id)).toEqual(['ok']);
   });
 
+  it('исполнитель на площадке не закрывает свою задачу стройки', () => {
+    // Рабочий, снятый с добычи, вышел прямо на площадку фермы.
+    const worker = own('worker', 5, 2);
+    const { ctx } = scene({
+      map: grass(8, 4),
+      units: [worker],
+      memory: { tasks: [buildTask(worker.id, { reviewTurn: 12 })] },
+    });
+
+    expect(refreshMemory(ctx).memory.tasks).toHaveLength(1);
+  });
+
   it('накопление: цель ниже по важности не тратит отложенное на более важную', () => {
     const map = ['........', '.g......', '........', '........'];
     const { ctx } = scene({

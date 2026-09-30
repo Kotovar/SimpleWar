@@ -1,5 +1,12 @@
 import { writeFileSync } from 'node:fs';
-import { beforeEach, describe, expect, it } from 'vite-plus/test';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vite-plus/test';
 import { MAP_PRESETS, type SandboxScenario } from '@shared/config';
 import { initPopulationSystem } from '@app/system/population';
 import { runAITurn } from '../src/app/game/ai/aiTurn';
@@ -9,6 +16,7 @@ import { initGameLoopEvents, resetGame } from '@features/game-loop';
 import { initVisibilitySystem } from '@features/visibility';
 import { initBattleStats, useSandboxStore } from '@features/sandbox';
 import { initializeSandbox } from '@widgets/start-game';
+import { AI_RULES } from '@features/ai';
 
 /**
  * Замер S15b без браузера: длительность хода ИИ и самая длинная непрерывная
@@ -61,7 +69,33 @@ beforeEach(() => {
 
 type TurnTiming = { total: number; longestChunk: number; yields: number };
 
+/** Время правил за прогон: сумма и самый долгий вызов, мс. */
+const ruleTime = new Map<string, { total: number; max: number }>();
+const originals = AI_RULES.map(rule => rule.evaluate);
+
+/** Обёртка замера на время прогона; вне замера правила не тронуты. */
+const timeRules = () =>
+  AI_RULES.forEach((rule, i) => {
+    rule.evaluate = ctx => {
+      const start = performance.now();
+      const result = originals[i](ctx);
+      const spent = performance.now() - start;
+      const entry = ruleTime.get(rule.id) ?? { total: 0, max: 0 };
+      ruleTime.set(rule.id, {
+        total: entry.total + spent,
+        max: Math.max(entry.max, spent),
+      });
+      return result;
+    };
+  });
+
+const untimeRules = () =>
+  AI_RULES.forEach((rule, i) => {
+    rule.evaluate = originals[i];
+  });
+
 const measure = async (map: { cols: number; rows: number }) => {
+  ruleTime.clear();
   resetGame();
   useSettingsStore.setState({
     mapGenerationMode: 'fixed',
@@ -107,10 +141,17 @@ const measure = async (map: { cols: number; rows: number }) => {
       turns.reduce((sum, turn) => sum + turn.total, 0) / turns.length,
     ),
     maxChunkMs: max('longestChunk'),
+    heaviestRules: [...ruleTime]
+      .sort((a, b) => b[1].total - a[1].total)
+      .slice(0, 6)
+      .map(([id, t]) => `${id} ${Math.round(t.total)}/${Math.round(t.max)}`),
   };
 };
 
 describe.skipIf(!process.env.AI_TIMING)('ai turn timing', () => {
+  beforeAll(timeRules);
+  afterAll(untimeRules);
+
   it('замер длительности хода и порций на больших картах', async () => {
     const results = [];
     for (const map of Object.values(maps)) results.push(await measure(map));

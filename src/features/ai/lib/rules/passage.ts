@@ -37,11 +37,12 @@ const stepAside = (
     .filter(cell => !avoid(cell))
     .sort((a, b) => a.cost - b.cost)[0];
 
-/**
- * Первый свой юнит на пути застрявшего: путь строится так, будто свои
- * юниты проходимы, — только тогда видно, кто именно загородил проход.
- */
-const blockerOnPath = (ctx: AiContext, unit: Unit, goal: Position) => {
+/** Сетка шага, где свои подвижные юниты проходимы с наценкой; в кэше шага. */
+const passableOwnGrid = (ctx: AiContext) => {
+  const cached = ctx.cache.get('passableOwn') as
+    | { own: Map<number, Unit>; grid: number[][] }
+    | undefined;
+  if (cached) return cached;
   const mobile = mobileCells(ctx);
   const own = new Map(
     ctx.obs.ownUnits
@@ -55,6 +56,17 @@ const blockerOnPath = (ctx: AiContext, unit: Unit, goal: Position) => {
       return type ? (MOVE_COST[type] ?? 0) + 2 : 3;
     }),
   );
+  const result = { own, grid };
+  ctx.cache.set('passableOwn', result);
+  return result;
+};
+
+/**
+ * Первый свой юнит на пути застрявшего: путь строится так, будто свои
+ * юниты проходимы, — только тогда видно, кто именно загородил проход.
+ */
+const blockerOnPath = (ctx: AiContext, unit: Unit, goal: Position) => {
+  const { own, grid } = passableOwnGrid(ctx);
   const { cost, previous, width } = findCheapestPaths(grid, unit);
   let key: number | undefined = cellKey(goal.x, goal.y, width);
   if (!cost.has(key)) return null;

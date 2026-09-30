@@ -55,6 +55,45 @@ describe('W10: освободить проход', () => {
     expect(W10.evaluate(ctx)).toEqual([]);
   });
 
+  it('уступает проход группе, застрявшей в коридоре за своими', () => {
+    // Свободный карман рядом с мечником не ведёт к цели: путь — только
+    // через рабочих в коридоре.
+    const blocker = own('worker', 1, 2);
+    const { ctx } = scene({
+      map: [
+        '^^^^^^^^^',
+        '^..^^^^^^',
+        '^..^^^^^^',
+        '^.^^^^^^^',
+        '^.^^^^^^^',
+        '^.^^^^^^^',
+        '^.......^',
+        '^^^^^^^^^',
+      ],
+      units: [
+        own('swordsman', 1, 1, { movePoints: 3 }),
+        blocker,
+        own('worker', 1, 3),
+        own('worker', 1, 4),
+      ],
+      memory: {
+        operation: {
+          phase: 'gather',
+          rally: { x: 7, y: 6 },
+          target: null,
+          since: 0,
+        },
+      },
+    });
+
+    expect(W10.evaluate(ctx)).toMatchObject([
+      {
+        actorId: blocker.id,
+        action: { type: 'move', unitId: blocker.id, x: 2, y: 2 },
+      },
+    ]);
+  });
+
   it('не отводит рабочего, если группа может пройти через него', () => {
     const worker = own('worker', 2, 1);
     const { ctx } = scene({

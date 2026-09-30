@@ -19,8 +19,11 @@ const isTaskAlive = (ctx: AiContext, task: AiMemory['tasks'][number]) => {
   if (!unit || task.reviewTurn < ctx.obs.turn) return false;
   const { x, y } = task.target;
   if (task.kind === 'build') {
-    // Площадку заняли (построено или стоит объект) — задача закрыта.
-    return !ctx.occupied(x, y);
+    // Площадку заняли (построено или стоит объект) — задача закрыта. Сам
+    // исполнитель на площадке не закрывает её: рабочий, снятый с добычи,
+    // может выйти прямо на неё и затем отойти.
+    const onSite = unit.x === x && unit.y === y;
+    return onSite || !ctx.occupied(x, y);
   }
   // Разведка закончена, когда цель больше не граница или юнит пришёл.
   const stillFrontier = ctx.frontier.some(c => c.x === x && c.y === y);

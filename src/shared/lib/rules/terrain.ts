@@ -36,16 +36,11 @@ export const isBuildableTerrain = (
   type: CellType,
 ) => type === required || (required === 'grass' && type === 'hill');
 
-const STEPS = [
-  [1, 0],
-  [-1, 0],
-  [0, 1],
-  [0, -1],
-] as const;
-
 /**
  * Самые дешёвые пути от клетки по сетке цен (Дейкстра с корзинами:
- * цены целые и положительные). Стартовая клетка может быть занята.
+ * сетка прямоугольная, цены целые неотрицательные, `0` — войти нельзя).
+ * Стартовая клетка может быть занята. Поиск идёт по типизированным
+ * массивам, результат — в `Map`.
  *
  * @param costs - Цены входа в клетки.
  * @param start - Стартовая клетка.
@@ -59,35 +54,53 @@ export const findCheapestPaths = (
   maxCost = Infinity,
 ) => {
   const width = costs[0]?.length ?? 0;
+  const height = costs.length;
   const cost = new Map<number, number>();
   const previous = new Map<number, number>();
-  const inside = (x: number, y: number) =>
-    Number.isInteger(x) && Number.isInteger(y) && costs[y]?.[x] !== undefined;
-  if (!inside(start.x, start.y)) return { cost, previous, width };
+  const inside =
+    Number.isInteger(start.x) &&
+    Number.isInteger(start.y) &&
+    costs[start.y]?.[start.x] !== undefined;
+  if (!inside) return { cost, previous, width };
 
+  // -1 — клетка не достигнута.
+  const best = new Int32Array(width * height).fill(-1);
+  const from = new Int32Array(width * height).fill(-1);
   const startKey = start.y * width + start.x;
-  cost.set(startKey, 0);
+  best[startKey] = 0;
   const buckets: number[][] = [[startKey]];
+  // Порядок первого обнаружения клеток: так же, как вставка в `Map`.
+  const found = [startKey];
+
+  const relax = (key: number, current: number, nx: number, ny: number) => {
+    const enter = costs[ny][nx];
+    if (!enter) return;
+    const next = current + enter;
+    const nextKey = ny * width + nx;
+    if (next > maxCost || (best[nextKey] !== -1 && next >= best[nextKey])) {
+      return;
+    }
+    if (best[nextKey] === -1) found.push(nextKey);
+    best[nextKey] = next;
+    from[nextKey] = key;
+    (buckets[next] ??= []).push(nextKey);
+  };
 
   for (let current = 0; current < buckets.length; current++) {
     for (const key of buckets[current] ?? []) {
-      if (cost.get(key) !== current) continue;
+      if (best[key] !== current) continue;
       const x = key % width;
       const y = (key - x) / width;
-
-      for (const [dx, dy] of STEPS) {
-        const enter = costs[y + dy]?.[x + dx];
-        if (!enter) continue;
-        const next = current + enter;
-        const nextKey = (y + dy) * width + x + dx;
-        if (next > maxCost || next >= (cost.get(nextKey) ?? Infinity)) {
-          continue;
-        }
-        cost.set(nextKey, next);
-        previous.set(nextKey, key);
-        (buckets[next] ??= []).push(nextKey);
-      }
+      if (x + 1 < width) relax(key, current, x + 1, y);
+      if (x > 0) relax(key, current, x - 1, y);
+      if (y + 1 < height) relax(key, current, x, y + 1);
+      if (y > 0) relax(key, current, x, y - 1);
     }
+  }
+
+  for (const key of found) {
+    cost.set(key, best[key]);
+    if (from[key] !== -1) previous.set(key, from[key]);
   }
 
   return { cost, previous, width };

@@ -20,6 +20,35 @@ describe('W06: ферма', () => {
     });
   });
 
+  it('рабочий на площадке своей фермы сначала отходит, а не строит', () => {
+    const worker = own('worker', 5, 7);
+    const { ctx } = scene({
+      map: grass(10, 10),
+      units: [worker],
+      buildings: [ownBuilding('base', 5, 5)],
+      population: { max: 10, occupied: 8 },
+      memory: {
+        tasks: [
+          {
+            id: 't1',
+            kind: 'build',
+            ruleId: 'W06',
+            unitId: worker.id,
+            target: { x: 5, y: 7 },
+            buildingType: 'farm',
+            reserve: { gold: 60, wood: 160 },
+            createdTurn: 5,
+            reviewTurn: 12,
+          },
+        ],
+      },
+    });
+
+    const [candidate] = W06.evaluate(ctx);
+
+    expect(candidate?.action.type).toBe('move');
+  });
+
   it('не строит ферму при запасе населения', () => {
     const { ctx } = scene({
       map: grass(10, 10),
