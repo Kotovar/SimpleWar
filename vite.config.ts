@@ -148,6 +148,19 @@ export default defineConfig({
   },
   plugins: lazyPlugins(() => [react()]),
 
+  // Гайдбук — отдельная статическая страница рядом с игрой (ссылка в меню).
+  build: {
+    rolldownOptions: {
+      input: {
+        main: path.resolve(import.meta.dirname, 'index.html'),
+        guidebook: path.resolve(
+          import.meta.dirname,
+          'docs/guidebook/index.html',
+        ),
+      },
+    },
+  },
+
   resolve: {
     alias: {
       '@app': path.resolve(import.meta.dirname, './src/app'),

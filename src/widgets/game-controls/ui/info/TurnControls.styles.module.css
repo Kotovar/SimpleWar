@@ -151,3 +151,10 @@
     background-color: var(--surface-strong);
   }
 }
+
+/* Ссылка на гайдбук выглядит как пункт меню. */
+.Dropdown a.MenuButton {
+  display: block;
+  box-sizing: border-box;
+  text-decoration: none;
+}

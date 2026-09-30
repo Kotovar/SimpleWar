@@ -300,6 +300,16 @@
   }
 }
 
+.GuideLink {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: var(--text);
+  }
+}
+
 .SeedWarning {
   font-size: 0.8rem;
   color: var(--text-muted);

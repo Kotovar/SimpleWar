@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { GUIDEBOOK_URL } from '@shared/config';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { useDebugStore } from '@entities/settings';
 import styles from './TurnControls.styles.module.css';
@@ -60,6 +61,18 @@ export const TurnControls = ({ onNextTurn, onReset }: Props) => {
           >
             {isDebug ? 'Выключить режим отладки' : 'Режим отладки'}
           </button>
+          <a
+            className={styles.MenuButton}
+            href={GUIDEBOOK_URL}
+            target='_blank'
+            rel='noopener'
+            aria-label='Гайдбук (откроется в новой вкладке)'
+            onClick={() => {
+              if (menu.current) menu.current.open = false;
+            }}
+          >
+            Гайдбук <span aria-hidden='true'>↗</span>
+          </a>
           <button
             className={styles.DangerButton}
             onClick={() => {

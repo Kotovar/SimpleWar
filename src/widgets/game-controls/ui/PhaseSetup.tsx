@@ -1,6 +1,6 @@
 import { useState, type ChangeEvent } from 'react';
 import clsx from 'clsx';
-import { MAP_PRESET_LABELS, MAP_PRESETS } from '@shared/config';
+import { GUIDEBOOK_URL, MAP_PRESET_LABELS, MAP_PRESETS } from '@shared/config';
 import { isValidSeed } from '@entities/maps';
 import { useSettingsSelectors } from '@entities/settings';
 import { useGameLoopSelectors } from '@features/game-loop';
@@ -161,6 +161,15 @@ export const PhaseSetup = ({ onStartGame }: Props) => {
         <button className={styles.PrimaryButton} onClick={onStartGame}>
           Начать игру
         </button>
+        <a
+          className={styles.GuideLink}
+          href={GUIDEBOOK_URL}
+          target='_blank'
+          rel='noopener'
+          aria-label='Гайдбук: как устроена игра (откроется в новой вкладке)'
+        >
+          Гайдбук: как устроена игра <span aria-hidden='true'>↗</span>
+        </a>
       </section>
     </div>
   );

@@ -4,263 +4,987 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>SimpleWar — возможности игры и срез разработки</title>
+<title>Simple Wars — гайдбук</title>
+<link rel="icon" href="data:,">
 <style>
 :root{
-  --bg:#0b1010;--bg2:#101716;--panel:#141d1b;--panel2:#192421;--panel3:#0f1716;
-  --line:#31413b;--line2:#485a51;--text:#e8e4d8;--muted:#a8b0a8;--gold:#d4bc78;
-  --green:#8ead78;--green2:#5f7e58;--blue:#76a7bd;--red:#c76f62;--violet:#9b8bc0;
-  --amber:#c79c5c;--shadow:0 18px 60px #0008;--rail:236px;--radius:6px;
+  --bg:#0c1111;--panel:#141c1b;--line:#2e3d37;--line2:#44564c;
+  --text:#e7e3d6;--muted:#a3ada5;--dim:#7f8b83;--gold:#d6be7a;
+  --blue:#78a9c0;--amber:#cda064;
+  --rail:220px;--r:6px;
 }
-*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:18px}body{margin:0;background:
-radial-gradient(900px 560px at 75% -5%,#2a49352e,transparent 67%),
-radial-gradient(700px 500px at 5% 20%,#70562a18,transparent 70%),
-linear-gradient(180deg,#0b1110,#090e0e 50%,#0a0f0f);color:var(--text);font:15px/1.62 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
-body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.14;background-image:linear-gradient(#ffffff06 1px,transparent 1px),linear-gradient(90deg,#ffffff05 1px,transparent 1px);background-size:32px 32px;mask-image:linear-gradient(to bottom,#000,transparent 78%)}
-a{color:var(--blue);text-underline-offset:3px}button,select,input{font:inherit;color:inherit}.shell{max-width:1900px;margin:auto;padding:18px 28px 80px;display:grid;grid-template-columns:var(--rail) minmax(0,1fr);gap:32px}.rail{position:sticky;top:18px;align-self:start;height:calc(100vh - 36px);overflow:auto;border:1px solid var(--line);background:#0d1514f2;box-shadow:var(--shadow)}
-.brand{padding:19px 18px 16px;border-bottom:1px solid var(--line);font-family:Georgia,serif;color:var(--gold);font-size:19px;letter-spacing:.04em}.brand small{display:block;margin-top:7px;color:var(--muted);font:10px/1.35 ui-sans-serif,system-ui;letter-spacing:.15em;text-transform:uppercase}.rail nav{padding:12px 10px;display:grid;gap:2px}.rail nav a{display:block;padding:7px 9px;border-left:2px solid transparent;color:#9fa9a1;text-decoration:none;font-size:12px}.rail nav a:hover,.rail nav a.active{border-left-color:var(--gold);background:#fff7;color:var(--text)}.rail-foot{margin:8px 18px 18px;padding-top:13px;border-top:1px solid var(--line);font-size:10px;color:#819087}.rail-foot code{color:#b6c1b8}
-main{min-width:0;max-width:1530px}.hero{position:relative;overflow:hidden;min-height:520px;border:1px solid #52655a;background:linear-gradient(120deg,#172421 0%,#111918 57%,#1d241c 100%);box-shadow:var(--shadow);padding:48px 48px 38px}.hero:before{content:"";position:absolute;right:-20px;top:-80px;width:520px;height:520px;background:radial-gradient(circle,#d4bc781c 0 1px,transparent 2px),repeating-radial-gradient(circle,#d4bc780d 0 1px,transparent 2px 34px);border-radius:50%;opacity:.65}.hero:after{content:"";position:absolute;right:75px;bottom:-115px;width:500px;height:280px;border:1px solid #73816b38;transform:rotate(-8deg);background:repeating-linear-gradient(0deg,transparent 0 30px,#ffffff08 31px),repeating-linear-gradient(90deg,transparent 0 30px,#ffffff07 31px)}
-.kicker{color:var(--gold);font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}.hero h1,.section-head h2,h3,h4{font-family:Georgia,"Times New Roman",serif;font-weight:500}.hero h1{position:relative;z-index:1;margin:12px 0 16px;max-width:900px;font-size:clamp(48px,6vw,82px);line-height:.98;letter-spacing:-.045em;color:#f2ecda}.hero h1 span{display:block;margin-top:16px;font:600 16px/1.3 ui-sans-serif,system-ui;color:#b8c6bc;letter-spacing:.08em;text-transform:uppercase}.hero-copy{position:relative;z-index:1;max-width:820px;color:#c8d0c8;font-size:18px}.hero-meta{position:relative;z-index:1;display:flex;gap:8px;flex-wrap:wrap;margin-top:23px}.pill,.status,.tag{display:inline-flex;align-items:center;border:1px solid var(--line);background:#0b1111a8;padding:4px 9px;font-size:10px;letter-spacing:.06em}.pill.gold{border-color:#8d7846;color:#ecd28e}.hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:1.25fr .75fr;gap:14px;margin-top:34px}.hero-state{border:1px solid var(--line);background:#08100fc4;padding:16px 18px}.hero-state strong{display:block;margin:4px 0 6px;font:20px/1.25 Georgia,serif}.hero-state p{margin:0;color:var(--muted);font-size:12px}.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border:1px solid var(--line);background:var(--line);gap:1px;margin-top:1px}.stat{background:var(--panel);min-height:92px;padding:13px}.stat b{display:block;color:var(--gold);font:29px/1 Georgia,serif;margin-bottom:7px}.stat span{color:var(--muted);font-size:10px;line-height:1.35;display:block}.notice{margin-top:17px;border-left:3px solid var(--blue);background:#132126;padding:12px 15px;color:#c8d2cf;font-size:12px}.notice.warn{border-left-color:var(--amber);background:#241e15}.notice strong{color:var(--text)}
-section{margin-top:70px;scroll-margin-top:18px}.section-head{display:flex;justify-content:space-between;align-items:end;gap:28px;padding-bottom:13px;margin-bottom:20px;border-bottom:1px solid var(--line)}.section-head h2{margin:5px 0 0;font-size:clamp(29px,3vw,42px);color:#eee7d3}.section-head p{max-width:570px;margin:0;color:var(--muted);font-size:12px}.eyebrow{color:var(--gold);font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}h3{font-size:23px;margin:0 0 10px;color:#e5dfca}h4{font-size:17px;margin:0 0 7px;color:#d6c48d}p{margin:0 0 12px}.muted{color:var(--muted)}.small{font-size:12px}.mono,code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#bcc6bd}.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.panel{border:1px solid var(--line);background:linear-gradient(145deg,#17211f,#111817);padding:19px;min-width:0}.panel.flat{background:var(--panel3)}.panel.accent{border-top:2px solid var(--gold)}
-.loop{display:grid;grid-template-columns:repeat(7,minmax(100px,1fr));gap:7px;align-items:stretch}.loop-step{position:relative;min-height:112px;border:1px solid var(--line);background:#101816;padding:13px 11px}.loop-step b{display:block;color:var(--gold);font:22px Georgia,serif}.loop-step strong{display:block;margin:7px 0 3px;font-size:12px}.loop-step span{font-size:10px;color:var(--muted)}.loop-step:not(:last-child):after{content:"→";position:absolute;right:-10px;top:42%;z-index:3;color:var(--gold);font-size:17px;background:var(--bg);padding:0 2px}.branch-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:13px}.branch{border-left:2px solid var(--green);background:#fff6;padding:11px}.branch:nth-child(2){border-left-color:var(--blue)}.branch:nth-child(3){border-left-color:var(--red)}.branch:nth-child(4){border-left-color:var(--violet)}.branch b{display:block;font-size:11px}.branch span{font-size:10px;color:var(--muted)}
-.cap-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.cap{border:1px solid var(--line);background:#121b19;padding:15px;min-height:150px}.cap .num{font:27px Georgia,serif;color:var(--gold)}.cap h3{font-size:17px;margin:6px 0}.cap p{font-size:11px;color:var(--muted)}
-.status{font-weight:800}.status.done{border-color:#55775e;color:#bcdab9;background:#24392b}.status.partial{border-color:#8d7848;color:#ecd28e;background:#42381f}.status.plan{border-color:#667078;color:#c1c9c6;background:#2f3738}.status.off{border-color:#855d59;color:#e0a39c;background:#3b2422}.matrix-filter{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:10px 0}.matrix-filter select{background:#101817;border:1px solid var(--line);padding:7px 9px}.table-wrap{overflow:auto;border:1px solid var(--line)}table{width:100%;border-collapse:collapse;background:#111817;font-size:11px}th,td{padding:10px 11px;border-bottom:1px solid #ffffff11;text-align:left;vertical-align:top}th{position:sticky;top:0;background:#1a2521;color:var(--gold);font-size:10px;letter-spacing:.05em;z-index:2}td:first-child{min-width:145px;color:#e5dfce}tr:last-child td{border-bottom:0}.matrix tr[hidden]{display:none}
-.map-shell{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(320px,.65fr);gap:16px}.map-card{border:1px solid #506153;background:#0b1210;padding:14px}.map-toolbar{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}.button{border:1px solid #5b6b61;background:#17231f;padding:7px 10px;cursor:pointer}.button:hover,.button:focus-visible{border-color:var(--gold);outline:none}.battle-map{position:relative;display:grid;grid-template-columns:repeat(12,1fr);aspect-ratio:12/7;border:1px solid #394b40;background:#1f3c28;overflow:hidden}.cell{position:relative;border:1px solid #ffffff0b;background:#345336}.cell.hill{background:linear-gradient(135deg,#45543a,#2d4730)}.cell.swamp{background:#36463e}.cell.forest{background:repeating-linear-gradient(110deg,#18331e 0 5px,#214627 6px 11px)}.cell.water{background:linear-gradient(135deg,#1f4652,#173944)}.cell.mountain{background:linear-gradient(135deg,#4b504b,#2e3431)}.cell.gold{background:radial-gradient(circle at 55% 45%,#b99a50 0 8%,#6d5930 9% 17%,#3a4930 18%)}.cell.fogged{filter:brightness(.28) saturate(.45)}.cell.unseen{background:#080d0d!important}.token{position:absolute;inset:18%;border:2px solid #dce8df;border-radius:50%;display:grid;place-items:center;font-size:9px;font-weight:800;box-shadow:0 2px 8px #000c}.token.p1{background:#315f78}.token.p2{background:#823d3d}.token.base{border-radius:3px;inset:11%}.cell.mem:after{content:"?";position:absolute;right:3px;top:0;color:#e9d89a;font-weight:800}.vision-ring{position:absolute;border:1px dashed #a9d0b766;pointer-events:none}.map-legend{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;font-size:10px;color:var(--muted)}.legend-chip{display:flex;align-items:center;gap:5px}.dot{width:10px;height:10px;border:1px solid #88948d;background:#345336}.dot.hill{background:#45543a}.dot.swamp{background:#36463e}.dot.forest{background:#193820}.dot.gold{background:#9e8245}.dot.water{background:#1f4652}.dot.mountain{background:#4b504b}.map-side .metric{display:grid;grid-template-columns:110px 1fr;gap:6px 9px;font-size:11px;margin-top:10px}.map-side dt{color:var(--muted)}.map-side dd{margin:0}.knowledge{display:grid;gap:8px;margin-top:14px}.knowledge div{padding:10px;border-left:2px solid var(--blue);background:#ffffff05}.knowledge b{display:block;font-size:11px}.knowledge span{font-size:10px;color:var(--muted)}
-.roster-controls{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}.chip{border:1px solid var(--line);background:#101817;padding:6px 9px;font-size:10px;cursor:pointer}.chip.active{border-color:var(--gold);color:#f1dda0}.roster{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.unit-card,.building-card{border:1px solid var(--line);background:#131c1a;min-width:0;overflow:hidden}.portrait{height:95px;position:relative;background:linear-gradient(145deg,#263a30,#101715);display:grid;place-items:center;border-bottom:1px solid var(--line)}.portrait .glyph{font:42px Georgia,serif;color:#c7d0c4;text-shadow:0 3px 18px #000}.portrait:after{content:"";position:absolute;inset:10px;border:1px solid #ffffff12}.card-body{padding:12px}.card-body h3{font-size:17px;margin:0 0 3px}.role{font-size:9px;letter-spacing:.08em;color:var(--gold);text-transform:uppercase}.card-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 8px;margin-top:9px;font-size:10px}.card-stats span{color:var(--muted)}.card-stats b{color:#d7ddd3;font-weight:600}.traits{display:flex;flex-wrap:wrap;gap:4px;margin-top:9px}.traits span{font-size:9px;border:1px solid #405047;padding:2px 5px;color:#bfc9c0}.unit-card[hidden]{display:none}.buildings{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.building-card .portrait{height:78px;background:linear-gradient(145deg,#28352c,#141b18)}
-.economy-flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}.eco-node{border:1px solid var(--line);background:#111916;padding:13px;position:relative}.eco-node:not(:last-child):after{content:"→";position:absolute;right:-9px;top:45%;color:var(--gold);z-index:2}.eco-node b{display:block;color:var(--gold);font-size:12px}.eco-node span{font-size:10px;color:var(--muted)}.worker-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}.worker-actions div{border-top:2px solid var(--green);background:#ffffff06;padding:10px}.worker-actions b{display:block;font-size:11px}.worker-actions span{font-size:10px;color:var(--muted)}
-.combat-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}.formula{padding:13px 15px;border:1px solid #657056;background:#101714;color:#e6d7ad;font:13px/1.6 ui-monospace,monospace}.combat-traits{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}.combat-traits div{border-left:2px solid var(--red);background:#fff6;padding:10px}.combat-traits b{display:block;font-size:11px}.combat-traits span{font-size:10px;color:var(--muted)}.air-matrix{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:1px;background:var(--line);border:1px solid var(--line);font-size:10px}.air-matrix div{background:#111916;padding:7px}.air-matrix .head{color:var(--gold);background:#1a2521;font-weight:700}.yes{color:#aed4ae}.no{color:#d49a94}.siege-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:17px;margin-top:14px}.siege-step{position:relative;border:1px solid var(--line);background:#111916;padding:12px}.siege-step:not(:last-child):after{content:"→";position:absolute;right:-14px;top:37%;color:var(--gold)}.siege-step b{display:block;color:var(--gold);font:18px Georgia,serif}.siege-step span{font-size:10px;color:var(--muted)}
-.ai-layout{display:grid;grid-template-columns:1fr .9fr;gap:16px}.ai-pipeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:12px 0}.ai-node{position:relative;border:1px solid var(--line);background:#101817;padding:10px;text-align:center;font-size:10px}.ai-node:not(:last-child):after{content:"→";position:absolute;right:-8px;top:35%;z-index:2;color:var(--gold)}.ai-node b{display:block;color:var(--gold);font-size:11px}.strategy-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.strategy{border:1px solid var(--line);background:#111916;padding:9px 10px;cursor:pointer}.strategy.active{border-color:var(--gold);background:#1d2118}.strategy b{font-size:10px;color:var(--gold)}.strategy span{font-size:10px}.strategy-detail{min-height:172px;border:1px solid var(--line);background:#0f1715;padding:15px}.strategy-detail h3{font-size:20px}.strategy-detail p{font-size:11px;color:var(--muted)}.ai-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}.ai-facts div{border-left:2px solid var(--blue);background:#fff6;padding:9px}.ai-facts b{display:block;font-size:11px}.ai-facts span{font-size:9px;color:var(--muted)}
-.ui-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.ui-card{border:1px solid var(--line);background:#121a18;padding:14px}.ui-card h3{font-size:18px}.ui-card ul{margin:0;padding-left:17px;color:var(--muted);font-size:11px}.ui-card li{margin:4px 0}.debug-demo{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.debug-panel{border:1px solid #526056;background:#0d1513;padding:12px}.debug-row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #ffffff0c;font-size:10px}.debug-row:last-child{border-bottom:0}.toggle{display:inline-block;width:27px;height:14px;border:1px solid #5d6e62;background:#244a31;position:relative}.toggle:after{content:"";position:absolute;width:10px;height:10px;right:1px;top:1px;background:#c9d6ca}.log{font:9px/1.6 ui-monospace,monospace;color:#aeb9b0}.log b{color:#d7c88c}
-.dev-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.dev-stat{border:1px solid var(--line);background:#111916;padding:13px}.dev-stat b{display:block;font:25px Georgia,serif;color:var(--gold)}.dev-stat span{font-size:10px;color:var(--muted)}.source-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}.tag{font-family:ui-monospace,monospace;color:#aeb9af;letter-spacing:0}.source-block{margin-top:14px;border-top:1px solid #ffffff12;padding-top:10px}.source-block summary{cursor:pointer;color:var(--muted);font-size:10px}
-.footer{margin-top:70px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:10px}.top-btn{position:fixed;right:18px;bottom:18px;width:36px;height:36px;border:1px solid var(--line2);background:#111a18d9;display:none;place-items:center;cursor:pointer;z-index:10}.top-btn.show{display:grid}.top-btn:focus-visible{outline:2px solid var(--gold)}
-@media(max-width:1280px){.shell{grid-template-columns:200px minmax(0,1fr);gap:20px;padding-inline:18px}.roster,.buildings{grid-template-columns:repeat(3,minmax(0,1fr))}.stats{grid-template-columns:repeat(3,1fr)}.loop{grid-template-columns:repeat(4,1fr)}.loop-step:nth-child(4):after{display:none}.cap-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:900px){.shell{display:block;padding:10px 12px 50px}.rail{position:relative;height:auto;top:auto;margin-bottom:12px}.rail nav{display:flex;overflow:auto}.rail nav a{white-space:nowrap}.rail-foot{display:none}.hero{padding:30px 24px;min-height:0}.hero-grid,.grid2,.map-shell,.combat-grid,.ai-layout,.debug-demo{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.roster,.buildings{grid-template-columns:repeat(2,1fr)}.economy-flow{grid-template-columns:repeat(3,1fr)}.eco-node:nth-child(3):after{display:none}.ui-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:620px){.section-head{align-items:start;flex-direction:column}.stats,.cap-grid,.grid3,.dev-stats,.ui-grid,.worker-actions{grid-template-columns:1fr 1fr}.loop,.economy-flow,.ai-pipeline,.siege-flow{grid-template-columns:1fr}.loop-step:after,.eco-node:after,.ai-node:after,.siege-step:after{display:none}.roster,.buildings{grid-template-columns:1fr}.battle-map{grid-template-columns:repeat(12,28px);overflow:auto}.strategy-list{grid-template-columns:1fr}.hero h1{font-size:46px}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
-@media print{body{background:#fff;color:#111}.shell{display:block;max-width:none;padding:0}.rail,.map-toolbar,.roster-controls,.top-btn{display:none!important}.hero,.panel,.unit-card,.building-card,.cap,.dev-stat{break-inside:avoid;box-shadow:none;background:#fff;color:#111}.hero h1,.section-head h2,h3{color:#111}.muted,.hero-copy,.section-head p{color:#444}.status,.tag,.pill{color:#222;background:#fff}section{margin-top:34px}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:16px}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+a{color:var(--blue);text-underline-offset:3px}
+img{max-width:100%;display:block}
+h1,h2,h3,h4{font-family:Georgia,"Times New Roman",serif;font-weight:500;line-height:1.2;color:#efe9d8}
+h2{font-size:clamp(26px,2.6vw,36px);margin:4px 0 0}
+h3{font-size:20px;margin:0 0 8px}
+h4{font-size:16px;margin:0 0 6px;color:var(--gold)}
+p{margin:0 0 12px}
+ul{margin:0 0 12px;padding-left:18px}
+li{margin:3px 0}
+kbd{font:12px ui-monospace,monospace;border:1px solid var(--line2);border-bottom-width:2px;border-radius:4px;padding:1px 6px;background:#1b2522;color:#e6e0cf;white-space:nowrap}
+.muted{color:var(--muted)}.small{font-size:13px}
+.shell{max-width:1640px;margin:auto;padding:16px 24px 64px;display:grid;grid-template-columns:var(--rail) minmax(0,1fr);gap:32px}
+
+/* Навигация */
+.rail{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow:auto;border:1px solid var(--line);background:#0f1716;border-radius:var(--r)}
+.brand{padding:16px;border-bottom:1px solid var(--line);font:600 18px Georgia,serif;letter-spacing:.04em;color:var(--gold)}
+.brand small{display:block;margin-top:4px;font:11px ui-sans-serif,system-ui;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.rail nav{padding:8px;display:grid;gap:1px}
+.rail nav a{display:flex;gap:8px;padding:6px 8px;border-left:2px solid transparent;color:#a9b3ab;text-decoration:none;font-size:13px;border-radius:0 4px 4px 0}
+.rail nav a span{color:var(--dim);font:11px ui-monospace,monospace;min-width:18px;padding-top:2px}
+.rail nav a:hover,.rail nav a.active{border-left-color:var(--gold);background:#ffffff08;color:var(--text)}
+
+main{min-width:0;max-width:1240px}
+section{margin-top:64px;scroll-margin-top:16px}
+.head{display:flex;justify-content:space-between;align-items:end;gap:24px;border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:20px}
+.head p{max-width:520px;margin:0;color:var(--muted);font-size:14px}
+.eyebrow{color:var(--gold);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+
+/* Первый экран */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:28px;align-items:center;padding:28px;border:1px solid var(--line2);border-radius:var(--r);background:linear-gradient(135deg,#17221f,#101716)}
+.hero h1{font-size:clamp(38px,4.4vw,56px);margin:8px 0 12px;letter-spacing:-.02em}
+.hero .lead{font-size:17px;color:#cdd4cc;max-width:560px}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-top:18px}
+.facts div{background:#111918;padding:10px 12px}
+.facts b{display:block;font:24px/1.1 Georgia,serif;color:var(--gold)}
+.facts span{font-size:12px;color:var(--muted)}
+
+/* Скриншоты */
+figure{margin:0}
+.shot{border:1px solid var(--line);border-radius:var(--r);background:#0a0f0f;overflow:hidden}
+.shot button{all:unset;display:block;cursor:zoom-in;width:100%}
+.shot button:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.shot img{width:100%;height:auto}
+.shot img.narrow{width:auto;max-width:min(100%,420px);margin:auto}
+.shot figcaption{padding:9px 12px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);background:#111817}
+.src{display:inline-block;margin-right:6px;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;vertical-align:1px}
+.src.game{background:#24392b;color:#bfe0bb;border:1px solid #4d7456}
+.src.debug{background:#3b2a22;color:#f0b9a4;border:1px solid #80594a}
+.src.sandbox{background:#2f2a3d;color:#cbbcf0;border:1px solid #625886}
+.src.sb{background:#1f2f3a;color:#a9d0e4;border:1px solid #466779}
+
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.eco{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:start}
+.eco>:first-child{grid-row:span 2}
+.split{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px;align-items:start}
+.panel{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:16px 18px;min-width:0}
+.panel.note{border-left:3px solid var(--blue);background:#121d20}
+.panel.warn{border-left:3px solid var(--amber);background:#1e1a13}
+.stack>*+*{margin-top:14px}
+
+/* Цепочки шагов */
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin:0;padding:0;list-style:none}
+.flow li{flex:1 1 130px;margin:0;position:relative;border:1px solid var(--line);border-radius:var(--r);background:#111918;padding:10px 12px}
+.flow li b{display:block;font-size:13px;color:var(--gold)}
+.flow li span{font-size:12px;color:var(--muted)}
+.flow li:not(:last-child)::after{content:"→";position:absolute;right:-9px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:14px;z-index:1}
+
+/* Таблицы */
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r)}
+table{width:100%;border-collapse:collapse;font-size:13px;background:#111817}
+th,td{padding:8px 10px;border-bottom:1px solid #ffffff10;text-align:left;vertical-align:top}
+th{background:#1a2521;color:var(--gold);font-size:11px;letter-spacing:.05em;font-weight:600;white-space:nowrap}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:#ffffff05}
+.terrain-dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;border:1px solid #0006}
+
+/* Карточки */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.card{display:grid;grid-template-columns:56px minmax(0,1fr);gap:4px 12px;align-items:center;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:12px}
+.card[hidden]{display:none}
+.card img{width:56px;height:56px;border-radius:6px;background:#0c1312}
+.card h3{font-size:17px;margin:2px 0 0}
+.role{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.card dl{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,auto);justify-content:space-between;gap:2px 10px;margin:8px 0 0;font-size:12px}
+.card dt{color:var(--dim);font-size:11px}
+.card dd{margin:0 0 4px;color:#dfe4dc;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card p{grid-column:1/-1;margin:6px 0 0;font-size:12px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.chip{border:1px solid var(--line2);border-radius:999px;background:#111918;color:var(--text);padding:4px 11px;font:inherit;font-size:12px;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--gold);color:#f3dfa3;background:#211f15}
+.chip:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* Калькулятор урона */
+.calc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.calc label{display:block;font-size:12px;color:var(--muted);margin-bottom:10px}
+.calc select{display:block;width:100%;margin-top:4px;background:#0f1716;color:var(--text);border:1px solid var(--line2);border-radius:4px;padding:7px 8px;font:inherit}
+.formula{font:14px/1.7 ui-monospace,monospace;color:#ecdcae;background:#0f1614;border:1px solid #57614d;border-radius:var(--r);padding:12px 14px;overflow-x:auto}
+.result{font:44px/1 Georgia,serif;color:var(--gold);margin:6px 0}
+.result small{font:13px ui-sans-serif,system-ui;color:var(--muted);margin-left:8px}
+.why{font-size:13px;color:var(--muted)}
+.yes{color:#b3d9ae}.no{color:#e0a197}
+
+/* Статусы */
+.status{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:.06em;white-space:nowrap;font-family:ui-sans-serif,system-ui}
+.status.done{background:#24392b;color:#bfe0bb}
+.status.part{background:#3f361e;color:#efd58f}
+.status.plan{background:#2c3334;color:#c6cdca}
+.status-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.status-cols ul{padding-left:16px;font-size:14px}
+.status-cols li{margin:6px 0}
+.status-cols li b{color:#ece6d4;font-weight:600}
+
+/* ИИ */
+.strategies{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.strategy{all:unset;box-sizing:border-box;cursor:pointer;border:1px solid var(--line);border-radius:4px;background:#111918;padding:7px 10px;font-size:13px}
+.strategy b{color:var(--gold);font:12px ui-monospace,monospace;margin-right:6px}
+.strategy[aria-pressed="true"]{border-color:var(--gold);background:#1e2118}
+.strategy:focus-visible{outline:2px solid var(--gold)}
+.strategy-detail{min-height:110px}
+.families{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.family{border:1px solid var(--line);border-radius:var(--r);background:#111918;padding:10px 12px}
+.family b{color:#ece6d4;font-size:14px}
+.family .n{float:right;font:12px ui-monospace,monospace;color:var(--gold)}
+.family span:not(.n){display:block;font-size:12px;color:var(--muted);margin-top:4px}
+
+/* Лайтбокс */
+dialog{border:1px solid var(--line2);border-radius:var(--r);background:#0b1010;color:var(--text);padding:0;max-width:96vw;max-height:94vh}
+dialog::backdrop{background:#000c}
+dialog img{max-width:min(96vw,1700px);max-height:calc(94vh - 60px);width:auto;height:auto;margin:auto}
+dialog p{margin:0;padding:10px 14px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);max-width:1100px}
+dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;border:1px solid #fff4;border-radius:4px;padding:4px 10px;font:inherit;cursor:pointer}
+
+.footer{margin-top:64px;padding-top:14px;border-top:1px solid var(--line);color:var(--dim);font-size:12px}
+.top{position:fixed;right:16px;bottom:16px;width:38px;height:38px;border:1px solid var(--line2);border-radius:50%;background:#111a18e6;color:var(--text);cursor:pointer;display:none;font-size:16px}
+.top.show{display:block}
+
+@media (max-width:1180px){
+  .hero,.split{grid-template-columns:1fr}
+  .grid3{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:900px){
+  .shell{display:block;padding:0 14px 48px}
+  .rail{position:sticky;top:0;z-index:5;max-height:none;margin:0 -14px 14px;border-radius:0;border-width:0 0 1px}
+  .brand{display:none}
+  .rail nav{display:flex;overflow-x:auto;padding:6px}
+  .rail nav a{white-space:nowrap;border-left:0;border-bottom:2px solid transparent;border-radius:4px}
+  .rail nav a:hover,.rail nav a.active{border-bottom-color:var(--gold)}
+  html{scroll-padding-top:56px}
+  section{scroll-margin-top:56px}
+  .grid2,.calc,.status-cols,.eco{grid-template-columns:1fr}
+  .eco>:first-child{grid-row:auto}
+  .head{flex-direction:column;align-items:start;gap:8px}
+  .hero{padding:18px}
+}
+@media (max-width:600px){
+  .grid3,.strategies{grid-template-columns:1fr}
+  .facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .flow li:not(:last-child)::after{display:none}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
 </head>
 <body>
 <div class="shell">
-<aside class="rail" aria-label="Навигация по справочнику">
-  <div class="brand">SIMPLEWAR<small>Capabilities · development codex</small></div>
+<aside class="rail" aria-label="Разделы гайдбука">
+  <div class="brand">Simple Wars<small>Гайдбук игрока</small></div>
   <nav id="nav">
-    <a href="#overview">Обзор</a><a href="#loop">Игровой цикл</a><a href="#status">Статус систем</a>
-    <a href="#world">Карта и туман</a><a href="#economy">Экономика</a><a href="#buildings">Здания</a>
-    <a href="#units">Юниты</a><a href="#combat">Бой</a><a href="#ai">ИИ</a><a href="#interface">Интерфейс</a>
-    <a href="#debug">Отладка</a><a href="#quality">Качество кода</a><a href="#future">Что ещё впереди</a>
+    <a href="#overview"><span>01</span>Об игре</a>
+    <a href="#start"><span>02</span>Начало партии</a>
+    <a href="#map"><span>03</span>Карта</a>
+    <a href="#camera"><span>04</span>Камера</a>
+    <a href="#fog"><span>05</span>Туман войны</a>
+    <a href="#economy"><span>06</span>Экономика</a>
+    <a href="#buildings"><span>07</span>Здания</a>
+    <a href="#units"><span>08</span>Юниты</a>
+    <a href="#combat"><span>09</span>Бой</a>
+    <a href="#roles"><span>10</span>Особые роли</a>
+    <a href="#siege"><span>11</span>Осада</a>
+    <a href="#ai"><span>12</span>Противник-ИИ</a>
+    <a href="#interface"><span>13</span>Интерфейс</a>
+    <a href="#debug"><span>14</span>Режим отладки</a>
+    <a href="#sandbox"><span>15</span>Тест баланса</a>
+    <a href="#status"><span>16</span>Что готово</a>
   </nav>
-  <div class="rail-foot">Срез ветки <code>develop</code><br><code>0536f4d0</code> · 27.09.2026<br>Данные сверены с кодом и актуальными docs.</div>
 </aside>
+
 <main>
+<!-- 01. Об игре -->
 <header class="hero" id="overview">
-  <div class="kicker">Браузерная пошаговая стратегия · текущая реализация</div>
-  <h1>SimpleWar<span>развитие базы · разведка · экономика · тактический бой · честный ИИ</span></h1>
-  <p class="hero-copy">Игра уже содержит замкнутый стратегический каркас: процедурную карту, экономику с рабочими, строительство и найм, туман войны с памятью сторон, разные классы войск, физический и магический бой, осаду, лечение, полёт, полноценный ИИ-противник и завершение партии уничтожением ратуши.</p>
-  <div class="hero-meta"><span class="pill gold">develop · 0536f4d0</span><span class="pill">React 19.3</span><span class="pill">TypeScript 7</span><span class="pill">Zustand + Immer</span><span class="pill">Canvas</span><span class="pill">Vite+</span></div>
-  <div class="hero-grid">
-    <div class="hero-state"><div class="eyebrow">Что уже можно сыграть</div><strong>Человек против ИИ — от генерации мира до победы или поражения</strong><p>Обычный UI запускает дуэль p1 vs p2. Ядро уже умеет 2–4 участников программно, но настройка нескольких соперников пока не вынесена в пользовательский интерфейс.</p></div>
-    <div class="hero-state"><div class="eyebrow">Главная граница версии</div><strong>MVP ещё не завершён</strong><p>Нет исследований, сохранений партии, кампании и сети. ИИ уже играет сам, но его расширенная тактика для новых ролей, профили и уровни сложности ещё впереди.</p></div>
+  <div>
+    <div class="eyebrow">Пошаговая стратегия в браузере</div>
+    <h1>Simple Wars</h1>
+    <p class="lead">Разведайте карту, наладьте добычу золота и дерева, отстройте базу и соберите армию. Побеждает тот, кто разрушит вражескую ратушу. Противник — компьютер, который видит мир так же ограниченно, как и вы.</p>
+    <div class="facts" aria-label="Игра в цифрах">
+      <div><b>10</b><span>типов юнитов</span></div>
+      <div><b>10</b><span>типов зданий</span></div>
+      <div><b>7</b><span>типов местности</span></div>
+      <div><b>6</b><span>размеров карты, до 100×100</span></div>
+      <div><b>2</b><span>ресурса: золото и дерево</span></div>
+      <div><b>71</b><span>правило поведения ИИ</span></div>
+    </div>
   </div>
-  <div class="stats" aria-label="Ключевые числа текущей версии">
-    <div class="stat"><b>10</b><span>типов юнитов</span></div><div class="stat"><b>10</b><span>типов зданий, включая ратушу</span></div>
-    <div class="stat"><b>7</b><span>типов местности</span></div><div class="stat"><b>6</b><span>пресетов карты до 100×100</span></div>
-    <div class="stat"><b>12</b><span>стратегических состояний ИИ</span></div><div class="stat"><b>34</b><span>правила в активном реестре ИИ</span></div>
-  </div>
-  <div class="notice warn"><strong>О точности.</strong> Корневой README отстаёт от текущего кода и всё ещё описывает ИИ как «передающий ход». В этом справочнике при конфликте приоритет отдан текущему исходному коду и <code>docs/README.md</code> от 26.09.2026.</div>
+  <figure class="shot">
+    <button type="button"><img src="assets/screenshots/combat-hero.png" alt="Бой: выбранный грифон и превью урона −16 по вражескому всаднику" width="780" height="720"></button>
+    <figcaption><span class="src sandbox">Игра · тест баланса</span> Грифон выбран: ромб — дальность атаки, «−16» над всадником — урон ещё до удара.</figcaption>
+  </figure>
 </header>
 
-<section id="loop">
- <div class="section-head"><div><div class="eyebrow">01 · Основной цикл</div><h2>Как устроена партия</h2></div><p>Игровой цикл уже проходит путь от настройки карты до результата матча. Ниже — фактический flow текущей реализации.</p></div>
- <div class="panel">
-  <div class="loop">
-   <div class="loop-step"><b>01</b><strong>Настройка</strong><span>Размер карты, случайный или фиксированный сид.</span></div>
-   <div class="loop-step"><b>02</b><strong>Старт</strong><span>Ратуша, рабочий, 200 золота, 120 дерева.</span></div>
-   <div class="loop-step"><b>03</b><strong>Разведка</strong><span>Туман войны, память карты и контактов.</span></div>
-   <div class="loop-step"><b>04</b><strong>Экономика</strong><span>Рудники, лесопилки, фермы, рабочие.</span></div>
-   <div class="loop-step"><b>05</b><strong>Армия</strong><span>Стройка производств и найм 10 типов юнитов.</span></div>
-   <div class="loop-step"><b>06</b><strong>Бой</strong><span>Манёвры, атаки, башни, магия, лечение, осада.</span></div>
-   <div class="loop-step"><b>07</b><strong>Исход</strong><span>Уничтожение ратуши → победа/поражение → новая партия.</span></div>
+<section aria-labelledby="loop-title" style="margin-top:28px">
+  <h3 id="loop-title">Ход партии</h3>
+  <ol class="flow">
+    <li><b>Разведка</b><span>Карта скрыта туманом: ищите ресурсы и врага.</span></li>
+    <li><b>Экономика</b><span>Рабочие в рудниках и лесопилках дают доход.</span></li>
+    <li><b>Строительство</b><span>Фермы, казармы, башни и здания найма.</span></li>
+    <li><b>Армия</b><span>Девять боевых ролей: от разведчика до грифона.</span></li>
+    <li><b>Столкновение</b><span>Манёвр, фокус огня, лечение, осада.</span></li>
+    <li><b>Ратуша врага</b><span>Её разрушение выводит сторону из игры.</span></li>
+  </ol>
+  <div class="grid3" style="margin-top:14px">
+    <div class="panel"><h4>Одни правила для всех</h4><p class="small muted" style="margin:0">Компьютер отдаёт те же приказы, что и игрок, и подчиняется тем же проверкам. Никаких бонусов и обхода тумана.</p></div>
+    <div class="panel"><h4>Без случайностей в бою</h4><p class="small muted" style="margin:0">Урон считается по формуле без разброса и без ответного удара, а игра показывает результат ещё до атаки.</p></div>
+    <div class="panel"><h4>Одна цель</h4><p class="small muted" style="margin:0">Сторона, потерявшая ратушу, выбывает — её оставшиеся войска и здания исчезают. Последний оставшийся побеждает.</p></div>
   </div>
-  <div class="branch-row"><div class="branch"><b>Развитие</b><span>Расширять добычу и лимит населения.</span></div><div class="branch"><b>Разведка</b><span>Искать ресурсы, контакты и базу противника.</span></div><div class="branch"><b>Давление</b><span>Рейды, дальний бой, башни, ударная группа.</span></div><div class="branch"><b>Контригра</b><span>Защита базы, ремонт, отступление, скрытая информация.</span></div></div>
- </div>
- <div class="cap-grid" style="margin-top:14px">
-  <div class="cap"><div class="num">2–4</div><h3>Участника в ядре</h3><p>Модель очереди и стартовые углы рассчитаны на p1–p4. Пользовательский старт пока создаёт обычную партию человек против одного ИИ.</p></div>
-  <div class="cap"><div class="num">1</div><h3>Общий набор правил</h3><p>Человек и ИИ вызывают те же игровые команды. Это снижает риск «особых правил» для компьютерного соперника.</p></div>
-  <div class="cap"><div class="num">0 RNG</div><h3>В формуле урона</h3><p>Урон детерминирован: атака + бонус против категории − соответствующая защита, минимум 1.</p></div>
-  <div class="cap"><div class="num">1 цель</div><h3>Победы</h3><p>Уничтожить ратушу противника. Выбывшая сторона удаляется из партии; последний живой участник побеждает.</p></div>
- </div>
- <details class="source-block"><summary>Источники</summary><div class="source-list"><span class="tag">docs/mechanics.md</span><span class="tag">src/features/game-loop/</span><span class="tag">src/widgets/start-game/</span><span class="tag">src/widgets/game-controls/</span></div></details>
 </section>
 
-<section id="status">
- <div class="section-head"><div><div class="eyebrow">02 · Состояние проекта</div><h2>Матрица возможностей</h2></div><p>«Реализовано» означает, что механика есть в текущем коде. «Частично» — рабочая база есть, но пользовательский или контентный цикл ещё не завершён.</p></div>
- <div class="matrix-filter"><div class="muted small">Фильтр по зрелости системы</div><select id="matrixFilter"><option value="all">Все</option><option value="done">Реализовано</option><option value="partial">Частично</option><option value="off">Не реализовано</option></select></div>
- <div class="table-wrap"><table class="matrix"><thead><tr><th>Система</th><th>Статус</th><th>Что работает сейчас</th><th>Граница</th></tr></thead><tbody>
-  <tr data-status="done"><td>Генерация карты</td><td><span class="status done">РЕАЛИЗОВАНО</span></td><td>Seeded terrain, симметрия, ресурсы у стартов, проверка проходимости и fallback после 10 попыток.</td><td>Баланс параметров ещё предполагает отдельный проход.</td></tr>
-  <tr data-status="done"><td>Камера и мини-карта</td><td><span class="status done">РЕАЛИЗОВАНО</span></td><td>Zoom к курсору, drag, WASD/стрелки, fit world, focus base, viewport rendering, мини-карта.</td><td>Мобильная/планшетная полировка не является законченной отдельной целью.</td></tr>
-  <tr data-status="done"><td>Туман войны</td><td><span class="status done">РЕАЛИЗОВАНО</span></td><td>Своя видимость и память каждой стороны, снимки зданий, старение контактов, защита от утечек.</td><td>Полный обзор доступен только как debug-view и не меняет знания ИИ.</td></tr>
-  <tr data-status="done"><td>Экономика</td><td><span class="status done">РЕАЛИЗОВАНО</span></td><td>Золото, дерево, рабочие места, доход, ремонт, фермы и лимит населения.</td><td>Нет содержания армии, еды и истощения ресурсов.</td></tr>
-  <tr data-status="done"><td>Строительство</td><td><span class="status done">РЕАЛИЗОВАНО</span></td><td>9 строящихся рабочим зданий + стартовая ратуша, требования к местности и проверка последнего прохода.</td><td>Кузница пока не запускает исследования.</td></tr>
-  <tr data-status="done"><td>Найм</td><td><span class="status done">РЕАЛИЗОВАНО</span></td><td>10 типов юнитов, стоимость, население, spawn points и подсветка доступных клеток.</td><td>Новый юнит начинает без очков действий до следующего хода.</td></tr>
-  <tr data-status="done"><td>Бой</td><td><span class="status done">РЕАЛИЗОВАНО</span></td><td>Физический/магический урон, броня, бонусы по категориям, башни, preview урона, уничтожение.</td><td>Нет случайного разброса и контратаки — это правило текущего дизайна, не пробел.</td></tr>
-  <tr data-status="done"><td>Особые роли</td><td><span class="status done">РЕАЛИЗОВАНО</span></td><td>Лечение, полёт, «земля/воздух», подготовленный осадный удар по клетке.</td><td>ИИ ещё не использует весь новый состав и не контрит отметки осады.</td></tr>
-  <tr data-status="partial"><td>ИИ</td><td><span class="status partial">ЧАСТИЧНО</span></td><td>Наблюдение, память, 12 стратегических состояний, 34 правила, экономика, разведка, атака, защита, журнал решений.</td><td>Первый набор весов; нет профилей/сложности и тактики новых ролей S15.</td></tr>
-  <tr data-status="partial"><td>Мульти-участники</td><td><span class="status partial">ЧАСТИЧНО</span></td><td>Ядро, стартовые позиции и очередь поддерживают 2–4 стороны.</td><td>Обычный экран настройки запускает только p1 vs p2.</td></tr>
-  <tr data-status="partial"><td>Управление и feedback</td><td><span class="status partial">ЧАСТИЧНО</span></td><td>Контекстные карточки, подсветки, path preview, damage preview, confirm dialogs, AI banner, результат партии.</td><td>Нет автодвижения на несколько ходов, rally points, сводки событий и кнопки сдачи.</td></tr>
-  <tr data-status="off"><td>Исследования</td><td><span class="status off">НЕ РЕАЛИЗОВАНО</span></td><td>Кузница уже существует как research-building.</td><td>Нет технологий, прогресса исследований и их эффектов.</td></tr>
-  <tr data-status="off"><td>Сохранение / загрузка</td><td><span class="status off">НЕ РЕАЛИЗОВАНО</span></td><td>Состояние партии живёт в памяти приложения.</td><td>Слоты, автосейв и импорт/экспорт — этап S20.</td></tr>
-  <tr data-status="off"><td>Кампания / сеть</td><td><span class="status off">НЕ РЕАЛИЗОВАНО</span></td><td>Текущая игра — отдельный матч.</td><td>Кампания и сетевой режим находятся за границей текущего кода/MVP.</td></tr>
- </tbody></table></div>
+<!-- 02. Начало -->
+<section id="start">
+  <div class="head"><div><div class="eyebrow">02 · Начало</div><h2>Настройка и первый ход</h2></div><p>На стартовом экране выбираются режим, размер карты и способ генерации. Гайдбук открывается ссылкой под кнопкой «Начать игру» и из меню партии.</p></div>
+  <div class="split">
+    <figure class="shot">
+      <button type="button"><img src="assets/screenshots/game-first-turn.png" alt="Первый ход: ратуша, рабочий и туман войны вокруг" width="1600" height="900"></button>
+      <figcaption><span class="src game">Игра</span> Первый ход на карте 30×30: видна только область вокруг ратуши и рабочего. Справа — мини-карта, подсказки и управление.</figcaption>
+    </figure>
+    <div class="stack">
+      <figure class="shot">
+        <button type="button"><img src="assets/screenshots/start-screen.png" alt="Стартовый экран с выбором режима, размера карты и генерации" width="660" height="600"></button>
+        <figcaption><span class="src game">Игра</span> Стартовый экран.</figcaption>
+      </figure>
+      <div class="panel">
+        <h4>С чем вы начинаете</h4>
+        <ul class="small" style="margin:0">
+          <li>Ратуша в углу карты и один рабочий.</li>
+          <li><b>200 золота</b> и <b>120 дерева</b>.</li>
+          <li>Лимит населения — <b>10</b>, рабочий уже занимает 1 место.</li>
+          <li>Обычная партия — вы против одного компьютерного противника.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
 </section>
 
-<section id="world">
- <div class="section-head"><div><div class="eyebrow">03 · Мир</div><h2>Карта, камера и туман войны</h2></div><p>Карта не просто фон для юнитов: генератор проверяет проходимость, ресурсы и стартовую справедливость, а каждая сторона хранит собственную картину мира.</p></div>
- <div class="grid2">
-  <div class="panel"><h3>Процедурный мир</h3><p class="muted small">Шесть пресетов: 15×15, 24×24, 30×30, 40×40, 100×60 и 100×100. Мир воспроизводится парой <code>seed + generator version 4</code>.</p><div class="table-wrap"><table><thead><tr><th>Местность</th><th>Ход</th><th>Что означает</th></tr></thead><tbody><tr><td>Поле</td><td>1</td><td>Базовая проходимая и строительная клетка.</td></tr><tr><td>Холм</td><td>2</td><td>Можно идти/строить; +1 к обзору наземных источников.</td></tr><tr><td>Болото</td><td>2</td><td>Проходимо, но стройка запрещена.</td></tr><tr><td>Лес</td><td>—</td><td>Непроходим; место лесопилки; рабочий может расчистить.</td></tr><tr><td>Золото</td><td>—</td><td>Непроходимая жила под рудник.</td></tr><tr><td>Гора</td><td>—</td><td>Преграда для земли; грифон перелетает.</td></tr><tr><td>Вода</td><td>—</td><td>Преграда для земли; грифон перелетает и может сесть.</td></tr></tbody></table></div></div>
-  <div class="panel"><h3>Что знает сторона</h3><div class="knowledge"><div><b>VISIBLE</b><span>Текущая реальная клетка и видимые объекты.</span></div><div><b>EXPLORED / MEMORY</b><span>Запомненный рельеф и снимок здания вне обзора; скрытые изменения не «телепатируются».</span></div><div><b>CONTACT</b><span>Вражеский юнит помнится как контакт: свежий → устаревший после 1 круга → забывается после 3.</span></div><div><b>UNKNOWN</b><span>Неразведанная клетка не раскрывает настоящий рельеф и скрытые препятствия.</span></div></div><div class="notice"><strong>ИИ видит то же ограниченное наблюдение.</strong> Координаты чужих баз, скрытые объекты и чужие ресурсы не передаются в <code>getObservation()</code>.</div></div>
- </div>
- <div class="map-shell" style="margin-top:15px">
-  <div class="map-card"><div class="map-toolbar"><div><h3 style="margin:0">Схема принципа видимости</h3><span class="muted small">Не runtime-screenshot; интерактивная иллюстрация правил.</span></div><button class="button" id="fogToggle" aria-pressed="true">Показать полный слой</button></div><div class="battle-map" id="battleMap" aria-label="Схема карты и тумана войны"></div><div class="map-legend"><span class="legend-chip"><i class="dot"></i> поле</span><span class="legend-chip"><i class="dot hill"></i> холм</span><span class="legend-chip"><i class="dot swamp"></i> болото</span><span class="legend-chip"><i class="dot forest"></i> лес</span><span class="legend-chip"><i class="dot gold"></i> золото</span><span class="legend-chip"><i class="dot water"></i> вода</span><span class="legend-chip"><i class="dot mountain"></i> гора</span></div></div>
-  <aside class="panel map-side"><div class="eyebrow">Камера</div><h3>Мир больше viewport</h3><dl class="metric"><dt>Zoom</dt><dd>6–64 px / клетку</dd><dt>Шаг</dt><dd>×1.15</dd><dt>Drag</dt><dd>ПКМ / СКМ / Space+ЛКМ</dd><dt>Клавиши</dt><dd>WASD, стрелки, +/−</dd><dt>Кнопки</dt><dd>100%, вся карта, к базе</dd><dt>Рендер</dt><dd>видимая область + запас</dd></dl><p class="muted small">Мини-карта показывает тот же слой знаний и позволяет кликом/drag переносить камеру без отдачи приказа.</p></aside>
- </div>
- <details class="source-block"><summary>Источники</summary><div class="source-list"><span class="tag">docs/mechanics.md</span><span class="tag">src/shared/config/map.ts</span><span class="tag">src/shared/config/vision.ts</span><span class="tag">src/entities/maps/</span><span class="tag">src/entities/perceptions/</span><span class="tag">src/widgets/map/</span></div></details>
+<!-- 03. Карта -->
+<section id="map">
+  <div class="head"><div><div class="eyebrow">03 · Мир</div><h2>Процедурная карта</h2></div><p>Каждая карта создаётся заново. Её можно повторить, указав тот же сид — целое число на стартовом экране.</p></div>
+  <div class="split">
+    <figure class="shot">
+      <button type="button"><img src="assets/screenshots/map-terrain.png" alt="Вся карта 30×30 без тумана: озёра, горы, леса, золото" width="1210" height="806"></button>
+      <figcaption><span class="src debug">Игра · отладка, туман отключён</span> Карта 30×30, сид 43. Рельеф зеркален относительно центра: база в левом верхнем углу получает те же условия, что и в правом нижнем.</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Местность</th><th class="num">Цена хода</th><th>Что значит</th></tr></thead>
+          <tbody>
+            <tr><td><i class="terrain-dot" style="background:#6aa052"></i>Поле</td><td class="num">1</td><td>Движение, стройка, найм.</td></tr>
+            <tr><td><i class="terrain-dot" style="background:#8a9a5a"></i>Холм</td><td class="num">2</td><td>Как поле, но дороже. Наземный юнит или здание на холме видит на 1 клетку дальше.</td></tr>
+            <tr><td><i class="terrain-dot" style="background:#6c7a55"></i>Болото</td><td class="num">2</td><td>Проходимо, строить нельзя.</td></tr>
+            <tr><td><i class="terrain-dot" style="background:#2f5a33"></i>Лес</td><td class="num">—</td><td>Преграда. Место для лесопилки; рабочий может расчистить.</td></tr>
+            <tr><td><i class="terrain-dot" style="background:#c49b45"></i>Золото</td><td class="num">—</td><td>Преграда. Место для рудника.</td></tr>
+            <tr><td><i class="terrain-dot" style="background:#8b928d"></i>Гора</td><td class="num">—</td><td>Преграда для наземных войск.</td></tr>
+            <tr><td><i class="terrain-dot" style="background:#3f84c0"></i>Вода</td><td class="num">—</td><td>Преграда для наземных войск.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted">Двигаться можно только по четырём направлениям, без диагоналей. Грифон пролетает над любой клеткой за 1 очко.</p>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="panel">
+      <h3>Размеры</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Пресет</th><th class="num">Клеток</th></tr></thead>
+        <tbody>
+          <tr><td>Маленькая</td><td class="num">15 × 15</td></tr>
+          <tr><td>Средняя</td><td class="num">24 × 24</td></tr>
+          <tr><td>Большая (по умолчанию)</td><td class="num">30 × 30</td></tr>
+          <tr><td>Огромная</td><td class="num">40 × 40</td></tr>
+          <tr><td>Широкая</td><td class="num">100 × 60</td></tr>
+          <tr><td>Гигантская</td><td class="num">100 × 100</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="panel">
+      <h3>Честный старт</h3>
+      <ul class="small" style="margin:0">
+        <li>Рельеф строится из шума с изгибами: заливы, проливы, полуострова. Половины карты зеркальны и плавно сходятся у диагонали.</li>
+        <li>Вокруг каждой ратуши расчищается равнина, рядом ставятся золото и лес.</li>
+        <li>Генератор проверяет, что у баз есть выходы, пути к ресурсам и между базами, а дорога к ближайшим золоту и лесу у сторон отличается не больше чем на 4 очка хода.</li>
+        <li>Болота занимают узкую полосу низин — не больше 10% карты.</li>
+        <li>Если карта не проходит проверку, пробуются сиды «сид + 1», «сид + 2»… до 10 попыток, затем берётся проверенная резервная раскладка. Результат всё равно повторяется по сиду.</li>
+      </ul>
+    </div>
+  </div>
+  <figure class="shot" style="margin-top:16px">
+    <button type="button"><img class="narrow" src="assets/screenshots/sb-terrain-variants.png" alt="Варианты рисунка клеток: леса, горы, золото, холмы, болота" width="540" height="870"></button>
+    <figcaption><span class="src sb">Игровой рендер</span> Варианты рисунка клеток — те же функции отрисовки, что на карте. Вариант выбирается по координатам клетки, поэтому рисунок не «прыгает» при прокрутке и масштабе.</figcaption>
+  </figure>
 </section>
 
+<!-- 04. Камера -->
+<section id="camera">
+  <div class="head"><div><div class="eyebrow">04 · Обзор</div><h2>Камера и мини-карта</h2></div><p>Мир может быть намного больше экрана — до 100×100 клеток. Камера показывает его часть, мини-карта — весь целиком.</p></div>
+  <div class="split">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Действие</th><th>Как</th></tr></thead>
+        <tbody>
+          <tr><td>Выбрать / приказать</td><td><kbd>ЛКМ</kbd> по юниту, зданию или подсвеченной клетке</td></tr>
+          <tr><td>Снять выбор</td><td>Повторный клик по выбранному</td></tr>
+          <tr><td>Перетащить карту</td><td><kbd>ПКМ</kbd> или <kbd>СКМ</kbd>, <kbd>Пробел</kbd> + <kbd>ЛКМ</kbd>; обычная <kbd>ЛКМ</kbd> — после сдвига на 5 px (приказ при этом не отдаётся)</td></tr>
+          <tr><td>Масштаб</td><td>Колесо — к точке под курсором; <kbd>+</kbd> / <kbd>−</kbd>; от 6 до 64 px на клетку</td></tr>
+          <tr><td>Сдвиг</td><td><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> или стрелки</td></tr>
+          <tr><td>Кнопки поверх карты (справа внизу)</td><td>«−», масштаб в % (клик — сброс к 100%), «+», «Вся карта», «К базе»</td></tr>
+          <tr><td>Мини-карта</td><td>Клик или перетаскивание переносит камеру, не меняя выбор</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="stack">
+      <figure class="shot">
+        <button type="button"><img src="assets/screenshots/minimap.png" alt="Мини-карта с рамкой камеры" width="330" height="190"></button>
+        <figcaption><span class="src sandbox">Игра · тест баланса</span> Мини-карта рисует то, что знает ваша сторона: неразведанное закрыто, рамка — видимая область.</figcaption>
+      </figure>
+      <p class="small muted">Новая партия начинается с камерой у вашей ратуши. Если экран уже 900 px, панель уходит под карту и сворачивается кнопкой.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 05. Туман -->
+<section id="fog">
+  <div class="head"><div><div class="eyebrow">05 · Информация</div><h2>Туман войны</h2></div><p>Каждая сторона видит только то, что рядом с её юнитами и зданиями, и помнит то, что видела раньше. Это касается и компьютерного противника.</p></div>
+  <div class="grid2">
+    <figure class="shot">
+      <button type="button"><img src="assets/screenshots/fog-of-war.png" alt="Карта с туманом: видимые, разведанные и неизвестные клетки" width="1600" height="900"></button>
+      <figcaption><span class="src debug">Тест баланса · отладка</span> Как видит мир синяя сторона: яркие клетки видны сейчас, затемнённые разведаны раньше, чёрные не разведаны.</figcaption>
+    </figure>
+    <figure class="shot">
+      <button type="button"><img src="assets/screenshots/fog-off.png" alt="Та же позиция с отключённым туманом" width="1600" height="900"></button>
+      <figcaption><span class="src debug">Тот же момент · туман отключён</span> Полный обзор из режима отладки: база и армия красных всё это время были за туманом.</figcaption>
+    </figure>
+  </div>
+  <div class="split" style="margin-top:16px">
+    <div class="stack">
+      <div class="table-wrap"><table>
+        <thead><tr><th>Клетка</th><th>Что вы видите</th></tr></thead>
+        <tbody>
+          <tr><td><b>Видна</b></td><td>Настоящая местность и все объекты на ней.</td></tr>
+          <tr><td><b>Разведана</b></td><td>Рельеф таким, каким вы его видели в последний раз. Чужие здания — «снимком» с пометкой «?» и без полоски здоровья. Скрытая стройка или разрушение снимок не меняют.</td></tr>
+          <tr><td><b>Неизвестна</b></td><td>Сплошная темнота: даже рельеф не раскрывается.</td></tr>
+        </tbody>
+      </table></div>
+      <div class="panel">
+        <h4>Обзор и память</h4>
+        <ul class="small" style="margin:0">
+          <li>Обзор — ромб вокруг каждого вашего юнита и здания (шаги по клеткам без диагоналей); холм даёт наземным +1.</li>
+          <li>Вражеский юнит, ушедший в туман, запоминается как контакт: если его не видно дольше одного круга ходов, сведения устаревают, дольше трёх — забываются.</li>
+          <li>Память о здании живёт, пока вы снова не посмотрите на это место.</li>
+          <li>Уход врага в туман не выглядит как гибель: эффектов вне обзора нет, а выбор вражеского объекта снимается.</li>
+          <li>Атаковать можно только видимую цель, строить и нанимать — только на видимой клетке.</li>
+        </ul>
+      </div>
+    </div>
+    <figure class="shot">
+      <button type="button"><img src="assets/screenshots/fog-memory.png" alt="Запомненные вражеские здания со знаком вопроса в разведанной зоне" width="535" height="530"></button>
+      <figcaption><span class="src debug">Тест баланса · отладка</span> Грифон слетал к базе красных и вернулся. Казармы, конюшня и башня остались в памяти — снимками со знаком «?».</figcaption>
+    </figure>
+  </div>
+  <div class="panel note" style="margin-top:16px">
+    <h4>Как знание доходит до экрана и до ИИ</h4>
+    <ol class="flow" style="margin-top:8px">
+      <li><b>Мир</b><span>Настоящее положение всех объектов.</span></li>
+      <li><b>Знания стороны</b><span>Что видно сейчас + что запомнено.</span></li>
+      <li><b>Наблюдение</b><span>Свои объекты, видимые враги, известный рельеф и контакты.</span></li>
+      <li><b>Экран игрока и решения ИИ</b><span>Оба работают с одним и тем же ограниченным наблюдением.</span></li>
+    </ol>
+    <p class="small muted" style="margin:10px 0 0">Ни карта, ни мини-карта, ни панель, ни курсор не получают скрытые объекты — их отбрасывают раньше, чем начинается рисование.</p>
+  </div>
+</section>
+
+<!-- 06. Экономика -->
 <section id="economy">
- <div class="section-head"><div><div class="eyebrow">04 · Экономика</div><h2>Ресурсы, рабочие и население</h2></div><p>Экономика строится вокруг двух ресурсов и физического присутствия рабочих в добывающих зданиях.</p></div>
- <div class="panel"><div class="economy-flow"><div class="eco-node"><b>Старт</b><span>200 золота · 120 дерева · лимит 10.</span></div><div class="eco-node"><b>Ратуша</b><span>+3 золота и +2 дерева каждый свой ход без рабочего.</span></div><div class="eco-node"><b>Рабочий</b><span>Входит в соседний рудник/лесопилку и занимает рабочее место.</span></div><div class="eco-node"><b>Добыча</b><span>+15 золота или дерева в конце хода за рабочее действие.</span></div><div class="eco-node"><b>Развитие</b><span>Фермы увеличивают cap; армия и здания расходуют накопленное.</span></div></div><div class="worker-actions"><div><b>Строительство</b><span>Одна рабочая стройка за ход, если есть build point.</span></div><div><b>Ремонт</b><span>+40 HP за 10 золота + 20 дерева.</span></div><div><b>Расчистка</b><span>Соседний лес → поле; дерева в награду нет.</span></div><div><b>Добыча</b><span>Рабочий внутри здания защищён самим зданием.</span></div></div></div>
- <div class="grid3" style="margin-top:13px"><div class="panel flat"><h3>Население</h3><p class="small muted">Ратуша даёт 10 мест, ферма +5, общий потолок — 30. Стоимость юнита: 1–3 места в зависимости от типа.</p></div><div class="panel flat"><h3>Idle feedback</h3><p class="small muted">Рудник/лесопилка без рабочего помечаются жёлтым «!», с рабочим — зелёной отметкой. Верхняя панель показывает ожидаемый доход.</p></div><div class="panel flat"><h3>Без тупика экономики</h3><p class="small muted">Ратуша всегда даёт небольшой пассивный доход: даже после потери рабочих игрок может накопить на нового.</p></div></div>
+  <div class="head"><div><div class="eyebrow">06 · Ресурсы</div><h2>Экономика и рабочие</h2></div><p>Доход приносят здания, в которых работает рабочий. Рабочий физически заходит в рудник или лесопилку — это важно и для обороны.</p></div>
+  <div class="eco">
+    <figure class="shot">
+      <button type="button"><img src="assets/screenshots/eco-1-build.png" alt="Выбран рабочий и карточка рудника, подсвечена клетка золота" width="1040" height="642"></button>
+      <figcaption><span class="src debug">Игра · отладка</span> 1. Рабочий у золотой жилы, выбрана карточка «Золотой рудник» — клетка для стройки подсвечена.</figcaption>
+    </figure>
+    <figure class="shot">
+      <button type="button"><img src="assets/screenshots/eco-2-idle.png" alt="Рудник без рабочего с жёлтым восклицательным знаком" width="1040" height="442"></button>
+      <figcaption><span class="src debug">Игра · отладка</span> 2. Рудник построен, но пуст: жёлтый «!» на здании и значок у плашки золота.</figcaption>
+    </figure>
+    <figure class="shot">
+      <button type="button"><img src="assets/screenshots/eco-3-working.png" alt="Рабочий внутри рудника, доход вырос до +18 в ход" width="1040" height="442"></button>
+      <figcaption><span class="src debug">Игра · отладка</span> 3. Ход 2: после «Работать» рабочий внутри (зелёная отметка у рудника), доход +18/ход. Золота 83: в первый ход рабочий строил, поэтому добычи ещё не было.</figcaption>
+    </figure>
+  </div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="panel">
+      <h3>Доход</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Источник</th><th>За ход</th><th>Условие</th></tr></thead>
+        <tbody>
+          <tr><td>Ратуша</td><td>+3 золота, +2 дерева</td><td>Всегда: даже без рабочих можно накопить на нового.</td></tr>
+          <tr><td>Золотой рудник</td><td>+15 золота</td><td>Внутри рабочий, и его рабочее действие в этот ход не потрачено.</td></tr>
+          <tr><td>Лесопилка</td><td>+15 дерева</td><td>То же самое.</td></tr>
+        </tbody>
+      </table></div>
+      <p class="small muted" style="margin:10px 0 0">Доход начисляется в конце вашего хода. Одно здание — одно рабочее место. Если рабочий в этот ход строил, чинил или расчищал лес, добычи нет, но назначение сохраняется.</p>
+    </div>
+    <div class="panel">
+      <h3>Что умеет рабочий</h3>
+      <ul class="small">
+        <li><b>Строить</b> — одно здание за ход.</li>
+        <li><b>Работать</b> — войти в соседний (включая диагональ) рудник или лесопилку. Внутри рабочий укрыт: удар получает здание, враг его не видит.</li>
+        <li><b>Снять с работы</b> — выйти на соседнюю свободную клетку. Любой шаг тоже выводит рабочего наружу.</li>
+        <li><b>Чинить</b> — +40 HP зданию за 10 золота и 20 дерева.</li>
+        <li><b>Расчистить лес</b> — соседняя клетка леса становится полем. Дерево не выдаётся.</li>
+      </ul>
+      <p class="small muted" style="margin:0">Любое своё здание, кроме ратуши, можно снести после подтверждения — ресурсы не возвращаются. Стройку, которая по известной вам карте перекрыла бы последний проход к зданию или ратуше, игра не разрешит.</p>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:14px">
+    <h3>Население</h3>
+    <p class="small">Лимит складывается из ратуши (10 мест) и ферм (+5 каждая), но не больше <b>30</b>. Рабочий и разведчик занимают 1 место; мечник, лучник, копейщик, маг и лекарь — 2; всадник, осадная машина и грифон — 3. Разрушенная ферма уменьшает лимит, но юниты не исчезают — просто нельзя нанимать новых.</p>
+    <p class="small muted" style="margin:0">Содержания армии, еды и истощения месторождений в игре нет.</p>
+  </div>
 </section>
 
+<!-- 07. Здания -->
 <section id="buildings">
- <div class="section-head"><div><div class="eyebrow">05 · Контент</div><h2>10 типов зданий</h2></div><p>Девять типов строит рабочий; ратуша создаётся на старте. Карточки ниже отражают текущие численные конфиги ветки develop.</p></div>
- <div class="buildings" id="buildingRoster"></div>
- <div class="notice"><strong>Кузница — исключение.</strong> Она уже является отдельным типом здания и строится, но технологии и интерфейс исследований ещё не реализованы.</div>
- <details class="source-block"><summary>Источники</summary><div class="source-list"><span class="tag">src/shared/config/buildings.ts</span><span class="tag">docs/buildings.md</span><span class="tag">src/features/build/</span><span class="tag">WorkerBuildOptions.tsx</span></div></details>
+  <div class="head"><div><div class="eyebrow">07 · База</div><h2>Здания</h2></div><p>Девять типов строит рабочий, ратуша есть с начала партии. Цена — золото (з) и дерево (д). У всех зданий магическая защита 10: магия плохо разрушает постройки.</p></div>
+  <div class="cards">
+    <article class="card"><img src="assets/screenshots/portraits/base.png" alt="" width="56" height="56"><div><div class="role">сердце базы</div><h3>Ратуша</h3></div>
+      <dl><dt>HP</dt><dt>Цена</dt><dt>Обзор</dt><dd>700</dd><dd>стартовая</dd><dd>4</dd></dl>
+      <p>+3 золота и +2 дерева в ход, 10 мест населения. Нанимает рабочих и разведчиков. Её потеря — поражение.</p></article>
+    <article class="card"><img src="assets/screenshots/portraits/mine.png" alt="" width="56" height="56"><div><div class="role">ресурсы · на золоте</div><h3>Золотой рудник</h3></div>
+      <dl><dt>HP</dt><dt>Цена</dt><dt>Обзор</dt><dd>130</dd><dd>120 з</dd><dd>3</dd></dl>
+      <p>+15 золота в ход с рабочим внутри.</p></article>
+    <article class="card"><img src="assets/screenshots/portraits/sawmill.png" alt="" width="56" height="56"><div><div class="role">ресурсы · в лесу</div><h3>Лесопилка</h3></div>
+      <dl><dt>HP</dt><dt>Цена</dt><dt>Обзор</dt><dd>90</dd><dd>60 з · 80 д</dd><dd>3</dd></dl>
+      <p>+15 дерева в ход с рабочим внутри.</p></article>
+    <article class="card"><img src="assets/screenshots/portraits/farm.png" alt="" width="56" height="56"><div><div class="role">снабжение</div><h3>Ферма</h3></div>
+      <dl><dt>HP</dt><dt>Цена</dt><dt>Обзор</dt><dd>70</dd><dd>60 з · 160 д</dd><dd>3</dd></dl>
+      <p>+5 к лимиту населения.</p></article>
+    <article class="card"><img src="assets/screenshots/portraits/barracks.png" alt="" width="56" height="56"><div><div class="role">найм · на поле</div><h3>Казармы</h3></div>
+      <dl><dt>HP</dt><dt>Цена</dt><dt>Обзор</dt><dd>150</dd><dd>80 з · 140 д</dd><dd>3</dd></dl>
+      <p>Мечник, лучник, копейщик.</p></article>
+    <article class="card"><img src="assets/screenshots/portraits/tower.png" alt="" width="56" height="56"><div><div class="role">оборона · на поле</div><h3>Башня</h3></div>
+      <dl><dt>HP</dt><dt>Цена</dt><dt>Обзор</dt><dd>180</dd><dd>150 з · 200 д</dd><dd>4</dd></dl>
+      <p>Стреляет сама: урон 20, дальность 3, раз в ход. Бьёт и наземные, и воздушные цели.</p></article>
+    <article class="card"><img src="assets/screenshots/portraits/stable.png" alt="" width="56" height="56"><div><div class="role">найм · на поле</div><h3>Конюшня</h3></div>
+      <dl><dt>HP</dt><dt>Цена</dt><dt>Обзор</dt><dd>160</dd><dd>120 з · 160 д</dd><dd>3</dd></dl>
+      <p>Всадник.</p></article>
+    <article class="card"><img src="assets/screenshots/portraits/workshop.png" alt="" width="56" height="56"><div><div class="role">найм · на поле</div><h3>Мастерская</h3></div>
+      <dl><dt>HP</dt><dt>Цена</dt><dt>Обзор</dt><dd>150</dd><dd>140 з · 180 д</dd><dd>3</dd></dl>
+      <p>Осадная машина.</p></article>
+    <article class="card"><img src="assets/screenshots/portraits/sanctuary.png" alt="" width="56" height="56"><div><div class="role">найм · на поле</div><h3>Святилище</h3></div>
+      <dl><dt>HP</dt><dt>Цена</dt><dt>Обзор</dt><dd>120</dd><dd>160 з · 140 д</dd><dd>3</dd></dl>
+      <p>Маг, лекарь, грифон. Самое хрупкое из зданий найма.</p></article>
+    <article class="card"><img src="assets/screenshots/portraits/forge.png" alt="" width="56" height="56"><div><div class="role">исследования · на поле</div><h3>Кузница</h3></div>
+      <dl><dt>HP</dt><dt>Цена</dt><dt>Обзор</dt><dd>140</dd><dd>100 з · 150 д</dd><dd>3</dd></dl>
+      <p><span class="status part">ПОКА БЕЗ ФУНКЦИИ</span> Строится, но исследований в игре ещё нет.</p></article>
+  </div>
+  <figure class="shot" style="margin-top:16px">
+    <button type="button"><img src="assets/screenshots/base-overview.png" alt="База синих со всеми зданиями и всеми юнитами" width="1600" height="900"></button>
+    <figcaption><span class="src sandbox">Игра · тест баланса</span> Все 10 зданий и все 10 юнитов на одной базе. Точки у юнитов — оставшиеся очки движения и действия. Состав расставлен режимом тестирования, поэтому население 24/15 — выше лимита.</figcaption>
+  </figure>
 </section>
 
+<!-- 08. Юниты -->
 <section id="units">
- <div class="section-head"><div><div class="eyebrow">06 · Армия</div><h2>10 юнитов и разные роли</h2></div><p>Состав уже выходит за рамки «мечник + лучник»: есть разведка, контр-юниты, кавалерия, осада, магия, лечение и полёт.</p></div>
- <div class="roster-controls" id="unitFilters"><button class="chip active" data-filter="all">Все</button><button class="chip" data-filter="civil">Рабочие</button><button class="chip" data-filter="infantry">Пехота</button><button class="chip" data-filter="ranged">Стрелки</button><button class="chip" data-filter="cavalry">Конница</button><button class="chip" data-filter="siege">Осада</button><button class="chip" data-filter="flying">Воздух</button></div>
- <div class="roster" id="unitRoster"></div>
- <details class="source-block"><summary>Источники</summary><div class="source-list"><span class="tag">src/shared/config/units.ts</span><span class="tag">src/shared/config/combat.ts</span><span class="tag">docs/units.md</span><span class="tag">UnitOptions.tsx</span></div></details>
+  <div class="head"><div><div class="eyebrow">08 · Армия</div><h2>Юниты</h2></div><p>Новобранец появляется рядом с местом найма и начинает действовать со следующего хода. Цена — золото / дерево; «атака» — урон · дальность.</p></div>
+  <div class="chips" id="unitFilter" role="group" aria-label="Фильтр юнитов">
+    <button class="chip" type="button" data-f="all" aria-pressed="true">Все</button>
+    <button class="chip" type="button" data-f="base" aria-pressed="false">Ратуша</button>
+    <button class="chip" type="button" data-f="barracks" aria-pressed="false">Казармы</button>
+    <button class="chip" type="button" data-f="stable" aria-pressed="false">Конюшня</button>
+    <button class="chip" type="button" data-f="workshop" aria-pressed="false">Мастерская</button>
+    <button class="chip" type="button" data-f="sanctuary" aria-pressed="false">Святилище</button>
+    <button class="chip" type="button" data-f="air" aria-pressed="false">Бьёт по воздуху</button>
+  </div>
+  <div class="cards" id="unitCards">
+    <article class="card" data-b="base"><img src="assets/screenshots/portraits/worker.png" alt="" width="56" height="56"><div><div class="role">экономика</div><h3>Рабочий</h3></div>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>25</dd><dd>4</dd><dd>3</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>—</dd><dd>1</dd><dd>40 / 40</dd></dl>
+      <p>Строит, добывает, чинит, расчищает лес. Не сражается.</p></article>
+    <article class="card" data-b="base"><img src="assets/screenshots/portraits/scout.png" alt="" width="56" height="56"><div><div class="role">разведка · пехота</div><h3>Разведчик</h3></div>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>45</dd><dd>5</dd><dd>6</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>6 · 1</dd><dd>1</dd><dd>50 / 20</dd></dl>
+      <p>Самый дальний обзор в игре. В бою слаб.</p></article>
+    <article class="card" data-b="barracks"><img src="assets/screenshots/portraits/swordsman.png" alt="" width="56" height="56"><div><div class="role">линия · пехота</div><h3>Мечник</h3></div>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>110</dd><dd>3</dd><dd>3</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>18 · 1</dd><dd>2</dd><dd>90 / 0</dd></dl>
+      <p>Крепкий и дешёвый, без дерева. По воздуху не бьёт.</p></article>
+    <article class="card" data-b="barracks" data-air><img src="assets/screenshots/portraits/archer.png" alt="" width="56" height="56"><div><div class="role">дальний бой · стрелки</div><h3>Лучник</h3></div>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>55</dd><dd>3</dd><dd>4</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>22 · 3</dd><dd>2</dd><dd>110 / 120</dd></dl>
+      <p>+6 против летающих. Хрупок вблизи.</p></article>
+    <article class="card" data-b="barracks"><img src="assets/screenshots/portraits/spearman.png" alt="" width="56" height="56"><div><div class="role">против конницы · пехота</div><h3>Копейщик</h3></div>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>100</dd><dd>3</dd><dd>3</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>14 · 1</dd><dd>2</dd><dd>70 / 40</dd></dl>
+      <p>Броня 2, +16 против конницы.</p></article>
+    <article class="card" data-b="stable"><img src="assets/screenshots/portraits/rider.png" alt="" width="56" height="56"><div><div class="role">рейды · конница</div><h3>Всадник</h3></div>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>90</dd><dd>5</dd><dd>4</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>16 · 1</dd><dd>3</dd><dd>120 / 60</dd></dl>
+      <p>Броня 1, +10 против стрелков и рабочих.</p></article>
+    <article class="card" data-b="workshop"><img src="assets/screenshots/portraits/siege.png" alt="" width="56" height="56"><div><div class="role">осада</div><h3>Осадная машина</h3></div>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>70</dd><dd>2</dd><dd>2</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>12 · 2–5</dd><dd>3</dd><dd>150 / 150</dd></dl>
+      <p>Бьёт только подготовленным ударом по клетке. +40 против зданий.</p></article>
+    <article class="card" data-b="sanctuary" data-air><img src="assets/screenshots/portraits/mage.png" alt="" width="56" height="56"><div><div class="role">магия · стрелки</div><h3>Маг</h3></div>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>50</dd><dd>3</dd><dd>3</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>20 маг. · 3</dd><dd>2</dd><dd>120 / 80</dd></dl>
+      <p>Магический урон: броня не защищает. Маг. защита 4.</p></article>
+    <article class="card" data-b="sanctuary"><img src="assets/screenshots/portraits/healer.png" alt="" width="56" height="56"><div><div class="role">поддержка · стрелки</div><h3>Лекарь</h3></div>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>45</dd><dd>3</dd><dd>3</dd><dt>Лечение</dt><dt>Место</dt><dt>Цена</dt><dd>+20 · 2</dd><dd>2</dd><dd>90 / 60</dd></dl>
+      <p>Не атакует. Лечит другого своего юнита. Маг. защита 4.</p></article>
+    <article class="card" data-b="sanctuary" data-air><img src="assets/screenshots/portraits/griffon.png" alt="" width="56" height="56"><div><div class="role">воздух · летающие</div><h3>Грифон</h3></div>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>85</dd><dd>5 полёт</dd><dd>4</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>17 · 1</dd><dd>3</dd><dd>150 / 120</dd></dl>
+      <p>Летает над водой, горами и лесом. Броня 1. Бьёт и землю, и воздух.</p></article>
+  </div>
+  <details class="panel" style="margin-top:14px">
+    <summary style="cursor:pointer;color:var(--gold)">Подробная таблица характеристик</summary>
+    <div class="table-wrap" style="margin-top:12px"><table>
+      <thead><tr><th>Юнит</th><th>Найм</th><th class="num">HP</th><th class="num">Ход</th><th class="num">Обзор</th><th class="num">Атака</th><th class="num">Дальн.</th><th class="num">Место</th><th class="num">Цена</th><th>Категория</th><th>Защита и бонусы</th></tr></thead>
+      <tbody>
+        <tr><td>Рабочий</td><td>Ратуша</td><td class="num">25</td><td class="num">4</td><td class="num">3</td><td class="num">—</td><td class="num">—</td><td class="num">1</td><td class="num">40 / 40</td><td>рабочие</td><td>—</td></tr>
+        <tr><td>Разведчик</td><td>Ратуша</td><td class="num">45</td><td class="num">5</td><td class="num">6</td><td class="num">6</td><td class="num">1</td><td class="num">1</td><td class="num">50 / 20</td><td>пехота</td><td>—</td></tr>
+        <tr><td>Мечник</td><td>Казармы</td><td class="num">110</td><td class="num">3</td><td class="num">3</td><td class="num">18</td><td class="num">1</td><td class="num">2</td><td class="num">90 / 0</td><td>пехота</td><td>—</td></tr>
+        <tr><td>Лучник</td><td>Казармы</td><td class="num">55</td><td class="num">3</td><td class="num">4</td><td class="num">22</td><td class="num">3</td><td class="num">2</td><td class="num">110 / 120</td><td>стрелки</td><td>+6 летающие</td></tr>
+        <tr><td>Копейщик</td><td>Казармы</td><td class="num">100</td><td class="num">3</td><td class="num">3</td><td class="num">14</td><td class="num">1</td><td class="num">2</td><td class="num">70 / 40</td><td>пехота</td><td>броня 2; +16 конница</td></tr>
+        <tr><td>Всадник</td><td>Конюшня</td><td class="num">90</td><td class="num">5</td><td class="num">4</td><td class="num">16</td><td class="num">1</td><td class="num">3</td><td class="num">120 / 60</td><td>конница</td><td>броня 1; +10 стрелки и рабочие</td></tr>
+        <tr><td>Осадная машина</td><td>Мастерская</td><td class="num">70</td><td class="num">2</td><td class="num">2</td><td class="num">12</td><td class="num">2–5</td><td class="num">3</td><td class="num">150 / 150</td><td>осада</td><td>+40 здания</td></tr>
+        <tr><td>Маг</td><td>Святилище</td><td class="num">50</td><td class="num">3</td><td class="num">3</td><td class="num">20 маг.</td><td class="num">3</td><td class="num">2</td><td class="num">120 / 80</td><td>стрелки</td><td>маг. защита 4</td></tr>
+        <tr><td>Лекарь</td><td>Святилище</td><td class="num">45</td><td class="num">3</td><td class="num">3</td><td class="num">+20 HP</td><td class="num">2</td><td class="num">2</td><td class="num">90 / 60</td><td>стрелки</td><td>маг. защита 4</td></tr>
+        <tr><td>Грифон</td><td>Святилище</td><td class="num">85</td><td class="num">5 полёт</td><td class="num">4</td><td class="num">17</td><td class="num">1</td><td class="num">3</td><td class="num">150 / 120</td><td>летающие</td><td>броня 1</td></tr>
+      </tbody>
+    </table></div>
+    <p class="small muted" style="margin:10px 0 0">У каждого военного юнита одно действие атаки (или лечения) за ход. Юнит, у которого не осталось ни движения, ни целей в досягаемости, на карте приглушается.</p>
+  </details>
 </section>
 
+<!-- 09. Бой -->
 <section id="combat">
- <div class="section-head"><div><div class="eyebrow">07 · Тактика</div><h2>Бой: детерминированные правила и контр-роли</h2></div><p>Система боя уже различает категории цели, физическую и магическую защиту, наземные/воздушные цели и специальные действия.</p></div>
- <div class="combat-grid">
-  <div class="panel"><h3>Формула урона</h3><div class="formula">damage = max(1, attack + categoryBonus − defenseForDamageType)</div><div class="combat-traits"><div><b>Физический урон</b><span>Снижается бронёй. Броня есть у копейщика, всадника и грифона.</span></div><div><b>Магический урон</b><span>Маг игнорирует броню, но встречает magic resist. У зданий сопротивление 10.</span></div><div><b>Без рандома</b><span>Нет разброса урона и ответного удара. Preview показывает ожидаемое значение заранее.</span></div><div><b>Смерть</b><span>HP ≤ 0 удаляет объект; погибший юнит освобождает лимит населения.</span></div></div></div>
-  <div class="panel"><h3>Кто бьёт воздух</h3><div class="air-matrix"><div class="head">Источник</div><div class="head">Земля</div><div class="head">Воздух</div><div>Мечник / копейщик / всадник / разведчик</div><div class="yes">да</div><div class="no">нет</div><div>Лучник</div><div class="yes">да</div><div class="yes">да · +6</div><div>Маг</div><div class="yes">да</div><div class="yes">да</div><div>Грифон</div><div class="yes">да</div><div class="yes">да</div><div>Башня</div><div class="yes">да</div><div class="yes">да</div><div>Осада</div><div class="yes">клетка</div><div class="no">нет</div></div><p class="muted small" style="margin-top:10px">Лекарь не атакует: его боевое действие лечит +20 HP своего другого юнита в дальности 2.</p></div>
- </div>
- <div class="panel" style="margin-top:14px"><h3>Подготовленный удар осады</h3><div class="siege-flow"><div class="siege-step"><b>1</b><span>Выбрать клетку на расстоянии 2–5 по Manhattan.</span></div><div class="siege-step"><b>2</b><span>Потратить боевое действие. Отметку цели видят все, орудие не раскрывается.</span></div><div class="siege-step"><b>3</b><span>Дождаться начала следующего своего хода. Гибель или движение орудия отменяют удар.</span></div><div class="siege-step"><b>4</b><span>Урон получает всё наземное на клетке, включая своих; лес превращается в поле.</span></div></div></div>
- <div class="grid3" style="margin-top:13px"><div class="panel flat"><h3>Грифон</h3><p class="small muted">Каждая клетка полёта стоит 1. Перелетает воду, горы, лес и занятые клетки; останавливается только на свободной.</p></div><div class="panel flat"><h3>Контр-юниты</h3><p class="small muted">Копейщик +16 против конницы; всадник +10 против стрелков/рабочих; лучник +6 против летающих; осада +40 против зданий.</p></div><div class="panel flat"><h3>Preview</h3><p class="small muted">Путь, цена движения, допустимые цели и ожидаемый урон показываются до команды; смертельный удар выделяется отдельно.</p></div></div>
+  <div class="head"><div><div class="eyebrow">09 · Тактика</div><h2>Бой</h2></div><p>Урон полностью предсказуем. Подберите атакующего и цель — калькулятор считает по тем же правилам, что и игра.</p></div>
+  <div class="formula">урон = max(1, атака + бонус против категории цели − защита цели от этого типа урона)</div>
+  <div class="calc panel" style="margin-top:14px">
+    <div>
+      <label>Кто атакует<select id="atk"></select></label>
+      <label>Цель<select id="tgt"></select></label>
+      <p class="why" id="why"></p>
+    </div>
+    <div aria-live="polite">
+      <div class="eyebrow">Результат</div>
+      <div class="result" id="dmg">—</div>
+      <p class="why" id="kills"></p>
+    </div>
+  </div>
+  <div class="grid3" style="margin-top:14px">
+    <div class="panel">
+      <h4>Физический и магический урон</h4>
+      <p class="small muted" style="margin:0">Физический урон уменьшается бронёй (копейщик 2, всадник 1, грифон 1). Магический — только у мага — броню игнорирует, но уменьшается магической защитой: у мага и лекаря 4, у всех зданий 10.</p>
+    </div>
+    <div class="panel">
+      <h4>Категории целей</h4>
+      <p class="small muted" style="margin:0">Пехота (мечник, копейщик, разведчик), стрелки (лучник, маг, лекарь), конница, осада, рабочие, летающие, здания. Бонусы: копейщик +16 против конницы, всадник +10 против стрелков и рабочих, лучник +6 против летающих, осада +40 против зданий.</p>
+    </div>
+    <div class="panel">
+      <h4>Кто бьёт воздух</h4>
+      <p class="small muted" style="margin:0">По грифону могут бить только <span class="yes">лучник, маг, грифон и башня</span>. <span class="no">Мечник, копейщик, всадник, разведчик и осада</span> — нет.</p>
+    </div>
+  </div>
+  <p class="small muted" style="margin-top:12px">Ответного удара и разброса нет. Юнит или здание с HP 0 и ниже уничтожается, погибший юнит освобождает место в лимите населения.</p>
 </section>
 
+<!-- 10. Роли -->
+<section id="roles">
+  <div class="head"><div><div class="eyebrow">10 · Состав</div><h2>Особые роли</h2></div><p>Каждый тип войск закрывает свою задачу и имеет свой ответ.</p></div>
+  <div class="grid3">
+    <div class="panel"><h4>Разведчик</h4><p class="small muted" style="margin:0">Обзор 6 и 5 очков хода. Нанимается в ратуше с первого хода — лучший способ найти ресурсы и вражескую базу.</p></div>
+    <div class="panel"><h4>Копейщик против конницы</h4><p class="small muted" style="margin:0">Всадник наносит копейщику 16 − 2 = 14, копейщик всаднику — 14 + 16 − 1 = 29. Пара копейщиков у базы — надёжный ответ на рейды.</p></div>
+    <div class="panel"><h4>Рейды всадников</h4><p class="small muted" style="margin:0">5 очков хода и +10 против стрелков и рабочих: лучник теряет 26 HP из 55, рабочий гибнет с одного удара. Но рабочий внутри рудника недосягаем — удар примет здание.</p></div>
+    <div class="panel"><h4>Маг</h4><p class="small muted" style="margin:0">20 магического урона сквозь любую броню и выстрел по воздуху. Против зданий слаб: 20 − 10 = 10.</p></div>
+    <div class="panel"><h4>Лекарь</h4><p class="small muted" style="margin:0">Вместо атаки — +20 HP другому своему юниту на расстоянии до 2 клеток (не выше максимума). Держите его за строем: у него всего 45 HP.</p></div>
+    <div class="panel"><h4>Грифон</h4><p class="small muted" style="margin:0">Каждая клетка полёта стоит 1 очко; пролетает воду, горы, лес и занятые клетки, останавливается только на свободной. Наземная пехота его не достаёт.</p></div>
+  </div>
+  <figure class="shot" style="margin-top:16px">
+    <button type="button"><img src="assets/screenshots/griffon-flight.png" alt="Маршрут грифона над горами к озеру, цена 5" width="1600" height="900"></button>
+    <figcaption><span class="src sandbox">Игра · тест баланса</span> Зона полёта грифона включает воду и горы. Пунктир — маршрут над горами к озеру, цифра — цена хода.</figcaption>
+  </figure>
+</section>
+
+<!-- 11. Осада -->
+<section id="siege">
+  <div class="head"><div><div class="eyebrow">11 · Особая механика</div><h2>Подготовленный удар осады</h2></div><p>Осадная машина не стреляет сразу: она наводится на клетку, а удар случается в начале её следующего хода. У противника есть ход, чтобы ответить.</p></div>
+  <ol class="flow">
+    <li><b>1 · Прицел</b><span>Разведанная клетка на расстоянии 2–5. Тратится действие, движение до конца хода закончено.</span></li>
+    <li><b>2 · Отметка</b><span>Прицел на клетке видят все стороны, даже сквозь туман. Само орудие — нет.</span></li>
+    <li><b>3 · Ход врага</b><span>Можно увести войска с клетки или уничтожить орудие — тогда удар отменится.</span></li>
+    <li><b>4 · Удар</b><span>В начале следующего хода владельца. Урон — всему наземному на клетке, в том числе своим.</span></li>
+  </ol>
+  <div class="grid2" style="margin-top:16px">
+    <figure class="shot">
+      <button type="button"><img src="assets/screenshots/siege-aim.png" alt="Осадная машина выбирает клетку в кольце дальности 2–5" width="1600" height="900"></button>
+      <figcaption><span class="src sandbox">Игра · тест баланса</span> Прицеливание: подсвечено кольцо клеток на расстоянии 2–5, в панели — «Подготовить удар».</figcaption>
+    </figure>
+    <figure class="shot">
+      <button type="button"><img src="assets/screenshots/siege-marker.png" alt="Красный прицел на выбранной клетке, орудие приглушено" width="1600" height="900"></button>
+      <figcaption><span class="src sandbox">Игра · тест баланса</span> Отметка удара поставлена. Орудие приглушено — действие на этот ход потрачено.</figcaption>
+    </figure>
+  </div>
+  <div class="panel" style="margin-top:14px">
+    <ul class="small" style="margin:0">
+      <li>Цель — клетка, а не юнит: ушедший юнит урона не получит. Летающих удар не задевает.</li>
+      <li>Урон по общей формуле: 12 минус броня по войскам, 12 + 40 = 52 по зданию. Рабочий внутри здания на этой клетке тоже получает урон.</li>
+      <li>Лес на клетке удара превращается в поле — так можно прорубить проход.</li>
+      <li>Если удар пришёлся по невидимой вам клетке, журнал отметит сам удар, но не покажет, в кого он попал.</li>
+      <li>Компьютер тоже видит отметки: уводит с них наземные войска, не строит и не нанимает под ними, а его башня среди врагов, угрожающих зданиям, в первую очередь бьёт замеченное орудие.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 12. ИИ -->
 <section id="ai">
- <div class="section-head"><div><div class="eyebrow">08 · Компьютерный противник</div><h2>ИИ видит мир через туман и объясняет решения</h2></div><p>Это не скрипт «передать ход»: текущий ИИ собирает собственное наблюдение, хранит память, выбирает стратегию и последовательно выполняет общие игровые команды.</p></div>
- <div class="panel"><div class="ai-pipeline"><div class="ai-node"><b>Наблюдение</b>свои объекты, видимые враги, известный рельеф</div><div class="ai-node"><b>Память</b>контакты, задачи, операция, seed</div><div class="ai-node"><b>Стратегия</b>G01–G12, оценки и hysteresis</div><div class="ai-node"><b>Правило</b>34 активных кандидата действий</div><div class="ai-node"><b>Команда</b>тот же command layer, что у игрока</div></div><div class="ai-facts"><div><b>До 80 команд / ход</b><span>Жёсткий предел от зависания.</span></div><div><b>6 отказов подряд</b><span>После этого ИИ завершает цикл.</span></div><div><b>Yield каждые 8 шагов</b><span>Интерфейс получает управление во время длинного хода.</span></div></div></div>
- <div class="ai-layout" style="margin-top:14px"><div><div class="strategy-list" id="strategyList"></div></div><aside class="strategy-detail" id="strategyDetail"><div class="eyebrow">Стратегия</div><h3>Выберите G01–G12</h3><p>Нажмите на стратегию слева, чтобы увидеть её назначение и текущий статус.</p></aside></div>
- <div class="notice warn"><strong>Граница текущего ИИ.</strong> G12 «Исследования» существует в модели стратегий, но всегда получает 0, потому что S16 ещё не реализован. Кроме того, ИИ пока не использует новые юниты S14–S14b и не реагирует уходом из-под публичной отметки осады — это запланировано в S15.</div>
- <details class="source-block"><summary>Источники</summary><div class="source-list"><span class="tag">src/features/ai/lib/playTurn.ts</span><span class="tag">src/features/ai/lib/strategy.ts</span><span class="tag">src/features/ai/lib/rules/index.ts</span><span class="tag">src/shared/config/ai.ts</span><span class="tag">src/entities/perceptions/</span></div></details>
+  <div class="head"><div><div class="eyebrow">12 · Противник</div><h2>Как думает компьютер</h2></div><p>ИИ не читает скрытый мир. Он получает то же ограниченное наблюдение, что и игрок, помнит увиденное, выбирает стратегию и отдаёт обычные приказы — по одному за раз.</p></div>
+  <ol class="flow">
+    <li><b>Наблюдение</b><span>Свои объекты, видимые враги, известный рельеф, отметки ударов.</span></li>
+    <li><b>Память</b><span>Контакты с «весом доверия», задачи, план.</span></li>
+    <li><b>Стратегия</b><span>Одна из G01–G11 по оценке ситуации (G12 зарезервирована).</span></li>
+    <li><b>Правила</b><span>Каждое предлагает действия с оценкой полезности.</span></li>
+    <li><b>Выбор</b><span>Лучшее предложение с учётом веса стратегии.</span></li>
+    <li><b>Приказ</b><span>Тот же, что у игрока. Затем — новое наблюдение.</span></li>
+  </ol>
+  <div class="split" style="margin-top:16px">
+    <figure class="shot">
+      <button type="button"><img src="assets/screenshots/ai-knowledge.png" alt="Карта глазами ИИ на 16-м ходу: известен только правый нижний угол" width="782" height="784"></button>
+      <figcaption><span class="src debug">Игра · отладка, «смотреть глазами» красных</span> Всё, что компьютер знает о карте 30×30 на 16-м ходу. Где база игрока, ему неизвестно — её придётся искать.</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="panel note">
+        <h4>Без подглядывания</h4>
+        <p class="small" style="margin:0">Координаты баз, скрытые юниты, чужие ресурсы и отключение тумана в отладке на решения ИИ не влияют. Невидимого юнита он атаковать не может — по памяти только двигается и проверяет. Исключение то же, что у игрока: осада может навести удар на разведанную клетку с запомненным зданием.</p>
+      </div>
+      <div class="panel">
+        <h4>Стратегии</h4>
+        <div class="strategies" id="strategies"></div>
+        <div class="strategy-detail" id="strategyDetail" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </div>
+  <h3 style="margin-top:22px">71 правило поведения</h3>
+  <p class="small muted">Правила сгруппированы по ролям. Стратегия усиливает или ослабляет группы правил: экономику, стройку, найм, разведку, наступление, оборону. Обычно стратегия держится не меньше 3 ходов и меняется только при заметном перевесе новой; срочная оборона включается сразу, а стратегия, потерявшая смысл, сменяется без ожидания.</p>
+  <div class="families">
+    <div class="family"><b>Рабочие</b><span class="n">10</span><span>Эвакуация от угрозы, добыча, поиск ресурса, новые рудники и лесопилки, ферма, здания найма и башня, ремонт, освобождение прохода.</span></div>
+    <div class="family"><b>Экономика и найм</b><span class="n">4</span><span>Полезная расчистка леса, найм рабочих, найм армии, найм новых ролей под известный состав врага.</span></div>
+    <div class="family"><b>Мечники</b><span class="n">6</span><span>Перехват у базы, сопровождение, сбор ударной группы, наступление, фокус огня, отход раненого.</span></div>
+    <div class="family"><b>Лучники</b><span class="n">7</span><span>Огневая позиция, добивание, выбор цели, укрытие за пехотой, путь к последнему контакту, оборонительный огонь, отход.</span></div>
+    <div class="family"><b>Башни</b><span class="n">5</span><span>Защита ратуши, добивание, угроза зданиям (орудие — в приоритете), прикрытие рабочих, ожидание.</span></div>
+    <div class="family"><b>Разведчик</b><span class="n">6</span><span>Разведка границы, поиск ресурса, проверка контактов и флангов, наблюдение у отметки удара, уклонение.</span></div>
+    <div class="family"><b>Копейщик</b><span class="n">5</span><span>Перехват конницы, заслон, удержание подхода, место в группе, отход.</span></div>
+    <div class="family"><b>Всадник</b><span class="n">6</span><span>Рейд по рабочим, удар во фланг, перехват быстрых врагов, преследование, проверка фланга, разрыв контакта.</span></div>
+    <div class="family"><b>Осада</b><span class="n">6</span><span>Движение с группой, удар по зданию, огневая позиция, ожидание прикрытия, защита орудия, удар по лесу, чтобы сократить путь.</span></div>
+    <div class="family"><b>Маг</b><span class="n">4</span><span>Магическая атака, подход под прикрытием, противовоздушная защита, отход.</span></div>
+    <div class="family"><b>Лекарь</b><span class="n">4</span><span>Лечение, подход к раненому, отход, сопровождение группы.</span></div>
+    <div class="family"><b>Грифон</b><span class="n">4</span><span>Воздушная разведка, рейд, перехват, уход от противовоздушной обороны.</span></div>
+    <div class="family"><b>Общие</b><span class="n">4</span><span>Уход с клетки под отметкой удара, разведка границ, проверка старых контактов, гарнизон.</span></div>
+  </div>
+  <div class="grid2" style="margin-top:16px">
+    <figure class="shot">
+      <button type="button"><img src="assets/screenshots/ai-decisions.png" alt="Журнал решений ИИ: правила, основания, альтернативы" width="1600" height="900"></button>
+      <figcaption><span class="src debug">Тест баланса · отладка, журнал «Решения ИИ»</span> Ход 9: грифон красных атакует всадника, раненый всадник «разрывает контакт», маг отходит («уязвим: отхожу»). Для каждого шага — стратегия, основания и оценки альтернатив.</figcaption>
+    </figure>
+    <div class="panel">
+      <h4>Что заметно в игре</h4>
+      <ul class="small">
+        <li>Копит ресурсы на две ближайшие важные покупки и не тратит отложенное на мелочи.</li>
+        <li>Собирает ударную группу у ратуши (4 бойца, для рейда — 2), а если сбор затянулся на 8 ходов — выступает меньшим составом.</li>
+        <li>Подбирает войска под известного врага: копейщиков против конницы, магов против летающих, грифона — если не видит у вас защиты от воздуха.</li>
+        <li>Сравнивает силы с учётом брони, магии и «кто кого может ударить»: мечники против грифона защитой не считаются.</li>
+        <li>Отводит раненых, прикрывает стрелков и рабочих, отступает из проигрываемого боя.</li>
+        <li>Выбор стратегии зависит только от сида и увиденного; среди равных по оценке действий выбор может отличаться от партии к партии.</li>
+      </ul>
+      <p class="small muted" style="margin:0">За ход ИИ отдаёт не больше 80 приказов; пока он думает, вверху висит баннер «Ход противника».</p>
+    </div>
+  </div>
 </section>
 
+<!-- 13. Интерфейс -->
 <section id="interface">
- <div class="section-head"><div><div class="eyebrow">09 · UX</div><h2>Управление и визуальная обратная связь</h2></div><p>Canvas отвечает за карту и объекты, DOM — за панели, настройки и действия. Большинство состояний игрок видит до совершения команды.</p></div>
- <div class="ui-grid">
-  <div class="ui-card"><h3>Выбор и действия</h3><ul><li>ЛКМ: выбор или выполнение действия.</li><li>Подсветки движения, стройки, найма и целей.</li><li>Повторный клик снимает выбор.</li><li>Контекстная панель юнита/здания/клетки.</li></ul></div>
-  <div class="ui-card"><h3>Навигация по миру</h3><ul><li>Zoom к курсору и кнопками.</li><li>Drag несколькими способами.</li><li>WASD и стрелки.</li><li>Fit map, focus base и кликабельная мини-карта.</li></ul></div>
-  <div class="ui-card"><h3>Предпросмотр</h3><ul><li>Маршрут и стоимость движения.</li><li>Граница дальности атаки.</li><li>Ожидаемый урон / лечение.</li><li>Причина недоступности карточки.</li></ul></div>
-  <div class="ui-card"><h3>Состояние экономики</h3><ul><li>Золото, дерево и доход / ход.</li><li>Население и предел.</li><li>Предупреждение о простаивающей добыче.</li><li>Стоимость и дефицит прямо в карточках.</li></ul></div>
-  <div class="ui-card"><h3>Анимации карты</h3><ul><li>Плавное перемещение.</li><li>Spawn/build pop + пыль/искры.</li><li>Damage flash и эффект гибели.</li><li>Пульсация выбора; учитывает prefers-reduced-motion.</li></ul></div>
-  <div class="ui-card"><h3>Завершение</h3><ul><li>AI-turn banner.</li><li>Confirm для сброса и сноса.</li><li>Экран победы / поражения / ничьей.</li><li>Количество ходов и старт новой партии.</li></ul></div>
- </div>
+  <div class="head"><div><div class="eyebrow">13 · Удобство</div><h2>Интерфейс и подсказки</h2></div><p>Карта рисуется слоями: рельеф → объекты → туман → подсветки и курсор → эффекты. Всё, что можно сделать, игра подсвечивает до приказа.</p></div>
+  <div class="split">
+    <figure class="shot">
+      <button type="button"><img src="assets/screenshots/movement-path.png" alt="Рабочий выбран: зона хода, пунктир маршрута и цена 4" width="1600" height="900"></button>
+      <figcaption><span class="src debug">Игра · отладка</span> Выбран рабочий: светлая область — куда можно дойти, пунктир — маршрут к клетке под курсором, «4» — цена. В панели — здоровье, очки и доступные постройки.</figcaption>
+    </figure>
+    <figure class="shot">
+      <button type="button"><img class="narrow" src="assets/screenshots/sb-map-overlays.png" alt="Подсветки, выделение, полосы здоровья, очки действий и эффекты" width="560" height="750"></button>
+      <figcaption><span class="src sb">Игровой рендер</span> Подсветки хода, стройки и атаки, выделение, полосы здоровья, очки действий и эффекты урона, лечения и гибели.</figcaption>
+    </figure>
+  </div>
+  <div class="grid3" style="margin-top:16px">
+    <div class="panel"><h4>Перед приказом</h4><ul class="small" style="margin:0"><li>Зона хода, стройки и найма — одной областью с контуром.</li><li>Цели атаки — красными уголками.</li><li>Маршрут и его цена под курсором.</li><li>Граница дальности атаки.</li><li>Ожидаемый урон над целью.</li></ul></div>
+    <div class="panel"><h4>Состояние</h4><ul class="small" style="margin:0"><li>Золото, дерево и доход за ход.</li><li>Население и предел.</li><li>Точки очков хода и действия у юнита.</li><li>Приглушение тех, кому нечего делать.</li><li>«!» на пустом руднике и лесопилке.</li></ul></div>
+    <div class="panel"><h4>Анимации</h4><ul class="small" style="margin:0"><li>Плавный переезд юнитов.</li><li>Появление постройки и новобранца с кольцом цвета стороны, пылью и искрами.</li><li>Вспышка с числом урона и эффект гибели.</li><li>Пульсация выделения; отключается системной настройкой «уменьшить движение».</li></ul></div>
+  </div>
+  <div class="grid3" style="margin-top:16px;align-items:start">
+    <figure class="shot">
+      <button type="button"><img src="assets/screenshots/sb-barracks-panel.png" alt="Карточки найма в казармах с ценой, местом в лимите и характеристиками" width="680" height="1230"></button>
+      <figcaption><span class="src sb">Панель игры</span> Карточки найма: цена, место в лимите, характеристики и бонусы. Если чего-то не хватает, карточка называет причину.</figcaption>
+    </figure>
+    <div class="stack">
+      <figure class="shot">
+        <button type="button"><img src="assets/screenshots/sb-victory.png" alt="Экран победы" width="660" height="290"></button>
+        <figcaption><span class="src sb">Экран игры</span> Победа: число ходов и кнопка новой игры.</figcaption>
+      </figure>
+      <figure class="shot">
+        <button type="button"><img src="assets/screenshots/sb-defeat.png" alt="Экран поражения" width="660" height="290"></button>
+        <figcaption><span class="src sb">Экран игры</span> Поражение. Если не осталось никого — ничья.</figcaption>
+      </figure>
+    </div>
+    <div class="panel">
+      <h4>Меню партии</h4>
+      <ul class="small" style="margin:0">
+        <li><b>Режим отладки</b> — см. раздел 14.</li>
+        <li><b>Гайдбук</b> — эта страница в новой вкладке.</li>
+        <li><b>Сбросить игру</b> — с подтверждением.</li>
+      </ul>
+      <p class="small muted" style="margin:10px 0 0">Снос здания тоже спрашивает подтверждение.</p>
+    </div>
+  </div>
 </section>
 
+<!-- 14. Отладка -->
 <section id="debug">
- <div class="section-head"><div><div class="eyebrow">10 · Инструменты разработчика</div><h2>Debug mode прямо в игре</h2></div><p>Отладка не просто снимает ограничения: она позволяет смотреть на мир глазами разных участников и разбирать решения ИИ.</p></div>
- <div class="debug-demo"><div class="debug-panel"><h3>Настройки отладки</h3><div class="debug-row"><span>Отключить туман</span><i class="toggle"></i></div><div class="debug-row"><span>Смотреть глазами участника</span><span>p1 / p2 / p3 / p4</span></div><div class="debug-row"><span>Бесплатное строительство</span><i class="toggle"></i></div><div class="debug-row"><span>Строительство за один ход</span><i class="toggle"></i></div><div class="debug-row"><span>Бесплатный найм</span><i class="toggle"></i></div><div class="debug-row"><span>Метаданные карты</span><span>seed · generator v4 · fallback</span></div></div><div class="debug-panel"><h3>Журнал решений ИИ</h3><div class="log"><b>Красные · ход 17 · G08 / M03</b><br>движение ударной группы → ok<br>Основания: ownPower=…, enemyPower=…, score=…<br><br><b>Красные · ход 17 · T02</b><br>атака видимой цели → ok<br>Альтернативы: W08 42; A03 36; T02 58<br><br>Фильтры: участник · ход · rule ID · unit/task</div></div></div>
- <div class="notice"><strong>Важно:</strong> «Отключить туман» меняет только отображение. Увиденное в debug-view не записывается в знания стороны, а ИИ продолжает принимать решения на основании собственного ограниченного наблюдения.</div>
+  <div class="head"><div><div class="eyebrow">14 · Для любопытных</div><h2>Режим отладки</h2></div><p>Включается в меню партии. Позволяет увидеть весь мир, посмотреть глазами противника и прочитать его решения.</p></div>
+  <div class="split">
+    <div class="panel">
+      <ul class="small">
+        <li><b>Сид и версия генератора</b> — чтобы повторить карту. Если использована резервная раскладка, это тоже видно.</li>
+        <li><b>Отключить туман</b> — показывает весь мир и все объекты.</li>
+        <li><b>Смотреть глазами</b> — туман и память любой стороны, в том числе ИИ.</li>
+        <li><b>Исключения</b> для выбранной стороны или для всех: бесплатное строительство, бесплатный найм и «строительство за один ход» (пока ничего не меняет: здания и так появляются сразу).</li>
+        <li><b>Решения ИИ</b> — журнал последних 400 решений с фильтрами по стороне, ходу, правилу и юниту.</li>
+      </ul>
+      <div class="panel warn">
+        <p class="small" style="margin:0"><b>Обзор в отладке меняет только вид.</b> Увиденное в полном обзоре не становится «разведанным», решения ИИ считаются как обычно, а скрытые цели по-прежнему нельзя атаковать. Исключения — другое дело: они действительно меняют правила для выбранной стороны. В партии при этом горит отметка «Отладка».</p>
+      </div>
+    </div>
+    <figure class="shot">
+      <button type="button"><img class="narrow" src="assets/screenshots/debug-panel.png" alt="Панель отладки: сид, генератор, туман, исключения, журнал" width="319" height="447"></button>
+      <figcaption><span class="src debug">Игра · отладка</span> Панель отладки внизу боковой панели.</figcaption>
+    </figure>
+  </div>
 </section>
 
-<section id="quality">
- <div class="section-head"><div><div class="eyebrow">11 · Техническая зрелость</div><h2>Проверки и структура проекта</h2></div><p>Разработка ведётся как приложение с отдельными доменными слоями, unit/integration regression tests и визуальными stories.</p></div>
- <div class="dev-stats"><div class="dev-stat"><b>77</b><span>test-файлов в текущем tree</span></div><div class="dev-stat"><b>15</b><span>integration test-файлов</span></div><div class="dev-stat"><b>7</b><span>Storybook stories</span></div><div class="dev-stat"><b>271</b><span>src TS/TSX файлов без тестов/stories</span></div></div>
- <div class="grid2" style="margin-top:13px"><div class="panel"><h3>Стек</h3><div class="source-list"><span class="tag">React 19.3</span><span class="tag">TypeScript 7</span><span class="tag">Zustand 5</span><span class="tag">Immer 11</span><span class="tag">Canvas</span><span class="tag">pathfinding</span><span class="tag">simplex-noise</span><span class="tag">Vite+</span><span class="tag">Vitest</span><span class="tag">Storybook 10</span></div><p class="muted small" style="margin-top:11px">Дополнительно используются Steiger/FSD checks, React Doctor/Fallow, Husky и commitlint.</p></div><div class="panel"><h3>Что тестируется</h3><p class="small muted">Генерация карты и распределение местности, команды, экономика, видимость, magic/flight, siege, исход партии, AI-turn и AI-match smoke, правила ИИ, pathfinding, UI-вычисления и регрессии скрытой информации.</p><p class="small muted">Наличие теста не считается доказательством идеального баланса: баланс и полная приёмка партий вынесены в поздние этапы roadmap.</p></div></div>
- <details class="source-block"><summary>Источники и инструменты</summary><div class="source-list"><span class="tag">package.json</span><span class="tag">scripts/*.test.ts</span><span class="tag">src/**/*.test.ts(x)</span><span class="tag">.storybook/</span><span class="tag">steiger.config.mjs</span><span class="tag">doctor.config.json</span></div></details>
+<!-- 15. Тест баланса -->
+<section id="sandbox">
+  <div class="head"><div><div class="eyebrow">15 · Режим</div><h2>Тестирование баланса</h2></div><p>Второй режим на стартовом экране: соберите любые армии и посмотрите, чем закончится их встреча — в том числе в бою компьютера против компьютера.</p></div>
+  <div class="split">
+    <div class="panel">
+      <ul class="small">
+        <li>Для каждой из двух сторон: кто управляет — человек (не больше одного), ИИ или пассивная сторона, которая просто передаёт ход.</li>
+        <li>Число юнитов каждого типа (до 20), зданий (до 5, кроме ратуши) и стартовые запасы.</li>
+        <li>Можно взять пустое поле без рельефа.</li>
+        <li>Всё расставляется у своей ратуши; то, что не поместилось, перечисляется в панели.</li>
+        <li>В партии: отметка «Тест», «Пауза», «Быстро» (пауза перед ходом ИИ 30 мс вместо 0,6 с) и «Итог в JSON» — победитель, число ходов, потери и полученный урон по типам.</li>
+      </ul>
+      <p class="small muted" style="margin:0">Большинство боевых скриншотов гайдбука сняты в этом режиме — он позволяет быстро собрать нужную сцену.</p>
+    </div>
+    <figure class="shot">
+      <button type="button"><img class="narrow" src="assets/screenshots/sandbox-setup.png" alt="Настройка составов сторон в режиме тестирования баланса" width="640" height="1000"></button>
+      <figcaption><span class="src game">Игра</span> Составы сторон.</figcaption>
+    </figure>
+  </div>
+  <figure class="shot" style="margin-top:16px">
+    <button type="button"><img class="narrow" src="assets/screenshots/sandbox-report.png" alt="Итог боя ИИ против ИИ: оставшиеся объекты, потери, урон и запасы сторон" width="642" height="952"></button>
+    <figcaption><span class="src sandbox">Игра · тест баланса</span> Итог боя компьютера против компьютера на карте 15×15: 52 хода, победили красные. По каждой стороне — что осталось, потери, полученный урон по типам и запасы.</figcaption>
+  </figure>
 </section>
 
-<section id="future">
- <div class="section-head"><div><div class="eyebrow">12 · Следующие слои</div><h2>Чего пока нет в текущей игре</h2></div><p>Этот раздел отделяет существующий код от roadmap. Он не является самостоятельной рекомендацией — только срезом планов репозитория.</p></div>
- <div class="grid3">
-  <div class="panel accent"><span class="status off">БЛИЖАЙШИЙ ПРОБЕЛ</span><h3 style="margin-top:11px">Исследования</h3><p class="small muted">Кузница уже есть, но пять технологий, прогресс исследования, UI и выбор исследований ИИ ещё отсутствуют.</p></div>
-  <div class="panel accent"><span class="status partial">ДОПОЛНИТЬ</span><h3 style="margin-top:11px">Тактика новых ролей</h3><p class="small muted">Новые войска уже доступны игроку; AI tactics для копейщика, кавалерии, осады, магии, лечения и полёта — отдельный этап S15.</p></div>
-  <div class="panel accent"><span class="status partial">ДОПОЛНИТЬ</span><h3 style="margin-top:11px">Профили и сложность ИИ</h3><p class="small muted">Стратегии работают, но профили поведения и стартовые пресеты сложности ещё не реализованы.</p></div>
-  <div class="panel"><span class="status off">S19</span><h3 style="margin-top:11px">Расширенное управление</h3><p class="small muted">Автодвижение на несколько ходов, удержание/пропуск, rally points, итог событий, surrender UI и часть горячих клавиш.</p></div>
-  <div class="panel"><span class="status off">S20</span><h3 style="margin-top:11px">Сохранения</h3><p class="small muted">Ручные слоты, автосейв, восстановление полного состояния, диагностический export/import.</p></div>
-  <div class="panel"><span class="status plan">ПОСЛЕ MVP</span><h3 style="margin-top:11px">Расширение игры</h3><p class="small muted">Полноценный multi-opponent UI, команды, расы; ещё дальше — сеть, кампания, дипломатия, редактор карт, морские войска и сложная логистика.</p></div>
- </div>
- <div class="notice warn"><strong>Roadmap не используется как чек-лист фактической готовности.</strong> Таблица <code>docs/ROADMAP.md</code> всё ещё содержит незакрытые чекбоксы даже для уже присутствующих в коде систем. Для статуса выше использованы текущий код и <code>docs/README.md</code>, а roadmap — только для направления будущих этапов.</div>
- <details class="source-block" open><summary>Ключевые источники анализа</summary><div class="source-list"><span class="tag">README.md</span><span class="tag">docs/README.md</span><span class="tag">docs/mechanics.md</span><span class="tag">docs/units.md</span><span class="tag">docs/buildings.md</span><span class="tag">docs/ROADMAP.md</span><span class="tag">src/shared/config/*</span><span class="tag">src/features/*</span><span class="tag">src/entities/*</span><span class="tag">src/widgets/*</span></div></details>
+<!-- 16. Статус -->
+<section id="status">
+  <div class="head"><div><div class="eyebrow">16 · Развитие</div><h2>Что уже есть и что впереди</h2></div><p>Игра в разработке. Здесь разделено: что работает сейчас, что работает частично и что только запланировано.</p></div>
+  <div class="status-cols">
+    <div class="panel">
+      <h3><span class="status done">ГОТОВО</span></h3>
+      <ul>
+        <li><b>Карты</b> шести размеров с сидом и проверкой честного старта.</li>
+        <li><b>Камера</b> с масштабом, перетаскиванием, клавишами и мини-картой.</li>
+        <li><b>Туман войны</b> с памятью о местности, зданиях и врагах.</li>
+        <li><b>Экономика</b>: добыча рабочими, ремонт, снос, расчистка леса, население.</li>
+        <li><b>10 зданий</b> и <b>10 юнитов</b>, включая магию, лечение и полёт.</li>
+        <li><b>Бой</b> с бронёй, магической защитой и бонусами против категорий.</li>
+        <li><b>Подготовленный удар осады</b> с публичной отметкой.</li>
+        <li><b>ИИ-противник</b>, который использует все роли и видит мир через туман.</li>
+        <li><b>Режим отладки</b> и журнал решений ИИ.</li>
+        <li><b>Тестирование баланса</b>, включая бой ИИ против ИИ.</li>
+        <li>Победа, поражение и новая партия.</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3><span class="status part">ЧАСТИЧНО</span></h3>
+      <ul>
+        <li><b>Кузница</b> строится, но исследований пока нет.</li>
+        <li><b>ИИ</b> работает с первыми, ещё не выверенными настройками. Нет выбора характера и уровня сложности; стратегия «Исследования» не используется; осада не выбирает узкие проходы для удара.</li>
+        <li><b>Несколько противников</b>: игра рассчитана на 2–4 стороны, но экран настройки пока создаёт только дуэль.</li>
+        <li><b>Сдача</b>: правило в игре есть, а кнопки нет — чтобы выйти из партии, используйте «Сбросить игру».</li>
+        <li><b>Узкие экраны</b>: при ширине до 900 px панель уходит под карту; отдельной адаптации под телефоны нет.</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3><span class="status plan">ЗАПЛАНИРОВАНО</span></h3>
+      <ul>
+        <li><b>Исследования</b>: пять улучшений в кузнице.</li>
+        <li><b>Характеры ИИ</b> и стартовые уровни сложности.</li>
+        <li><b>Сохранения</b>: слоты и автосохранение.</li>
+        <li><b>Приказы</b>: движение на несколько ходов, пропуск и удержание, точки сбора.</li>
+        <li><b>Сводка событий</b> за ход, кнопка сдачи, подсказки.</li>
+        <li><b>Музыка и звуки.</b></li>
+        <li>Позже: выбор нескольких противников, команды, две расы; ещё дальше — сетевая игра, кампания, дипломатия, редактор карт, флот.</li>
+      </ul>
+    </div>
+  </div>
 </section>
 
-<footer class="footer">SimpleWar · development codex · ветка <code>develop</code> · commit <code>0536f4d0eb0fe902f8462f1352f92258968741b5</code> · данные репозитория проверены 29.09.2026. Схемы карты и debug-панели в этом документе — иллюстрации механик, а не runtime screenshots.</footer>
+<footer class="footer">Simple Wars · гайдбук игрока. Скриншоты сняты в текущей версии игры. Подпись показывает, откуда кадр: «Игра» — обычная партия, «Тест баланса» — режим тестирования, «Отладка» — с включённым режимом отладки, «Игровой рендер», «Панель игры», «Экран игры» — отдельный элемент, нарисованный тем же кодом, что и в игре.</footer>
 </main>
 </div>
-<button class="top-btn" id="topBtn" aria-label="Наверх">↑</button>
+
+<dialog id="lightbox" aria-label="Увеличенный скриншот">
+  <button type="button" id="lbClose">Закрыть ✕</button>
+  <img id="lbImg" alt="">
+  <p id="lbCap"></p>
+</dialog>
+<button class="top" id="toTop" type="button" aria-label="Наверх">↑</button>
+
 <script>
-const units=[
- {id:'worker',name:'Рабочий',cat:'civil',role:'экономика',hp:25,move:4,sight:3,range:'—',attack:'—',pop:1,cost:'40 / 40',glyph:'W',traits:['строит','добывает','ремонт','расчистка']},
- {id:'scout',name:'Разведчик',cat:'infantry',role:'разведка',hp:45,move:5,sight:6,range:1,attack:6,pop:1,cost:'50 / 20',glyph:'S',traits:['обзор 6','быстрый']},
- {id:'swordsman',name:'Мечник',cat:'infantry',role:'линия',hp:110,move:3,sight:3,range:1,attack:18,pop:2,cost:'90 / 0',glyph:'M',traits:['110 HP','ближний бой']},
- {id:'archer',name:'Лучник',cat:'ranged',role:'дальний бой',hp:55,move:3,sight:4,range:3,attack:22,pop:2,cost:'110 / 120',glyph:'A',traits:['бьёт воздух','+6 vs flying']},
- {id:'spearman',name:'Копейщик',cat:'infantry',role:'контр-конница',hp:100,move:3,sight:3,range:1,attack:14,pop:2,cost:'70 / 40',glyph:'P',traits:['броня 2','+16 vs cavalry']},
- {id:'rider',name:'Всадник',cat:'cavalry',role:'рейд',hp:90,move:5,sight:4,range:1,attack:16,pop:3,cost:'120 / 60',glyph:'R',traits:['броня 1','+10 ranged/civil']},
- {id:'siege',name:'Осадная машина',cat:'siege',role:'осада',hp:70,move:2,sight:2,range:'2–5',attack:12,pop:3,cost:'150 / 150',glyph:'Ω',traits:['удар по клетке','+40 vs buildings']},
- {id:'mage',name:'Маг',cat:'ranged',role:'магический урон',hp:50,move:3,sight:3,range:3,attack:'20 маг.',pop:2,cost:'120 / 80',glyph:'✦',traits:['magic resist 4','бьёт воздух']},
- {id:'healer',name:'Лекарь',cat:'ranged',role:'поддержка',hp:45,move:3,sight:3,range:2,attack:'heal +20',pop:2,cost:'90 / 60',glyph:'+',traits:['magic resist 4','не атакует']},
- {id:'griffon',name:'Грифон',cat:'flying',role:'воздух',hp:85,move:5,sight:4,range:1,attack:17,pop:3,cost:'150 / 120',glyph:'G',traits:['полёт','броня 1','бьёт воздух']}
-];
-const buildings=[
- {name:'Ратуша',glyph:'⌂',hp:700,cost:'0 / 0',sight:4,role:'старт · доход · найм',extra:'+3 золота · +2 дерева · +10 населения · рабочий/разведчик'},
- {name:'Золотой рудник',glyph:'Au',hp:130,cost:'120 / 0',sight:3,role:'ресурсы',extra:'+15 золота с рабочим · строится на золоте'},
- {name:'Лесопилка',glyph:'L',hp:90,cost:'60 / 80',sight:3,role:'ресурсы',extra:'+15 дерева с рабочим · строится в лесу'},
- {name:'Ферма',glyph:'F',hp:70,cost:'60 / 160',sight:3,role:'снабжение',extra:'+5 к лимиту населения'},
- {name:'Казармы',glyph:'K',hp:150,cost:'80 / 140',sight:3,role:'производство',extra:'мечник · лучник · копейщик'},
- {name:'Башня',glyph:'T',hp:180,cost:'150 / 200',sight:4,role:'оборона',extra:'урон 20 · дальность 3 · 1 атака/ход'},
- {name:'Конюшня',glyph:'C',hp:160,cost:'120 / 160',sight:3,role:'производство',extra:'всадник'},
- {name:'Мастерская',glyph:'W',hp:150,cost:'140 / 180',sight:3,role:'производство',extra:'осадная машина'},
- {name:'Кузница',glyph:'⚒',hp:140,cost:'100 / 150',sight:3,role:'research shell',extra:'строится · исследования ещё отсутствуют'},
- {name:'Святилище',glyph:'✧',hp:120,cost:'160 / 140',sight:3,role:'производство',extra:'маг · лекарь · грифон'}
-];
-const strategies=[
- ['G01','Срочная оборона','Немедленно перехватывает управление стратегией, если рядом с ратушей обнаружена угроза.'],
- ['G02','Восстановить добычу','Ищет простаивающие рабочие места и нехватку рабочих, чтобы вернуть поток ресурсов.'],
- ['G03','Расширить добычу','При занятых рабочих местах ищет новые известные золото/лес и расширяет экономику.'],
- ['G04','Армия и население','Сравнивает желаемый размер армии, текущий состав и свободный population cap.'],
- ['G05','Поиск вражеской базы','Повышает приоритет разведки, пока вражеское здание не стало известно.'],
- ['G06','Поиск ресурса','Отправляет разведку искать ресурс, если нужный тип ещё не найден.'],
- ['G07','Проверка старого контакта','Возвращается к устаревшим контактам, чтобы подтвердить или опровергнуть память.'],
- ['G08','Наступление','Оценивает соотношение сил и готовность ударной группы; переходит к атаке при достаточном преимуществе.'],
- ['G09','Рейд','Ищет уязвимых рабочих при отсутствии вооружённой защиты рядом.'],
- ['G10','Гарнизон и башня','Реагирует на направление угрозы у подходов к базе и усиливает оборону.'],
- ['G11','Отход и перегруппировка','Сравнивает силы своей группы и врага в бою; отступает при плохом соотношении.'],
- ['G12','Исследования','Каркас стратегии уже есть, но сейчас всегда имеет score 0: механика исследований ещё отсутствует.']
-];
-function renderUnits(filter='all'){
- const root=document.getElementById('unitRoster');root.innerHTML='';
- units.forEach(u=>{const card=document.createElement('article');card.className='unit-card';card.dataset.cat=u.cat;if(filter!=='all'&&u.cat!==filter)card.hidden=true;card.innerHTML=`<div class="portrait"><span class="glyph">${u.glyph}</span></div><div class="card-body"><div class="role">${u.role}</div><h3>${u.name}</h3><div class="card-stats"><span>HP <b>${u.hp}</b></span><span>ход <b>${u.move}</b></span><span>обзор <b>${u.sight}</b></span><span>дальность <b>${u.range}</b></span><span>действие <b>${u.attack}</b></span><span>население <b>${u.pop}</b></span><span>цена G/W <b>${u.cost}</b></span></div><div class="traits">${u.traits.map(t=>`<span>${t}</span>`).join('')}</div></div>`;root.append(card)})
-}
-function renderBuildings(){const root=document.getElementById('buildingRoster');buildings.forEach(b=>{const card=document.createElement('article');card.className='building-card';card.innerHTML=`<div class="portrait"><span class="glyph">${b.glyph}</span></div><div class="card-body"><div class="role">${b.role}</div><h3>${b.name}</h3><div class="card-stats"><span>HP <b>${b.hp}</b></span><span>обзор <b>${b.sight}</b></span><span>цена G/W <b>${b.cost}</b></span></div><p class="small muted" style="margin-top:8px">${b.extra}</p></div>`;root.append(card)})}
-function renderStrategies(){const list=document.getElementById('strategyList'),detail=document.getElementById('strategyDetail');strategies.forEach((s,i)=>{const el=document.createElement('button');el.className='strategy';el.innerHTML=`<b>${s[0]}</b> <span>${s[1]}</span>`;el.onclick=()=>{document.querySelectorAll('.strategy').forEach(x=>x.classList.remove('active'));el.classList.add('active');detail.innerHTML=`<div class="eyebrow">${s[0]}</div><h3>${s[1]}</h3><p>${s[2]}</p><div class="source-list"><span class="tag">strategy.ts</span><span class="tag">AI_CONFIG</span></div>`};list.append(el);if(i===0)el.click()})}
-const terrain=['grass','grass','hill','forest','forest','grass','grass','water','water','grass','mountain','grass','grass','swamp','grass','forest','grass','gold','grass','water','grass','grass','hill','grass','forest','grass','grass','grass','swamp','water','water','grass','grass','grass','gold','grass','hill','hill','grass','forest','grass','mountain','grass','grass','grass','grass','forest','grass','forest','grass','grass','water','water','grass','grass','grass','hill','grass','grass','gold','grass','grass','forest','grass','grass','swamp','grass','grass','hill','grass','water','grass','grass','grass','forest','grass','mountain','grass','grass','grass','grass','grass','forest','forest','hill'];
-function renderMap(full=false){const root=document.getElementById('battleMap');root.innerHTML='';for(let y=0;y<7;y++)for(let x=0;x<12;x++){const i=y*12+x;const cell=document.createElement('div');const t=terrain[i%terrain.length];cell.className=`cell ${t}`;const d=Math.abs(x-2)+Math.abs(y-3);if(!full){if(d>4){cell.classList.add('unseen')}else if(d>2){cell.classList.add('fogged');if((x+y)%5===0)cell.classList.add('mem')}}if(x===2&&y===3)cell.innerHTML='<span class="token p1">S</span>';if(x===1&&y===4)cell.innerHTML='<span class="token p1 base">B</span>';if((full||d<=2)&&x===5&&y===2)cell.innerHTML='<span class="token p2">E</span>';if((full||d<=2)&&x===6&&y===1)cell.innerHTML='<span class="token p2 base">B</span>';root.append(cell)}}
-renderUnits();renderBuildings();renderStrategies();renderMap(false);
-document.getElementById('unitFilters').addEventListener('click',e=>{const b=e.target.closest('button[data-filter]');if(!b)return;document.querySelectorAll('#unitFilters .chip').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderUnits(b.dataset.filter)});
-document.getElementById('matrixFilter').addEventListener('change',e=>{document.querySelectorAll('.matrix tbody tr').forEach(r=>r.hidden=e.target.value!=='all'&&r.dataset.status!==e.target.value)});
-let fog=true;document.getElementById('fogToggle').addEventListener('click',e=>{fog=!fog;e.currentTarget.setAttribute('aria-pressed',String(fog));e.currentTarget.textContent=fog?'Показать полный слой':'Вернуть туман';renderMap(!fog)});
-const links=[...document.querySelectorAll('#nav a')],sections=links.map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);if('IntersectionObserver'in window){const o=new IntersectionObserver(entries=>entries.forEach(en=>{if(!en.isIntersecting)return;links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+en.target.id))}),{rootMargin:'-15% 0px -72%'});sections.forEach(s=>o.observe(s))}
-const topBtn=document.getElementById('topBtn');addEventListener('scroll',()=>topBtn.classList.toggle('show',scrollY>900),{passive:true});topBtn.onclick=()=>scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+(function () {
+  // Лайтбокс для скриншотов.
+  var lb = document.getElementById('lightbox'), lbImg = document.getElementById('lbImg'), lbCap = document.getElementById('lbCap');
+  document.querySelectorAll('.shot button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var img = b.querySelector('img'), cap = b.parentElement.querySelector('figcaption');
+      lbImg.src = img.currentSrc || img.src; lbImg.alt = img.alt;
+      var tag = cap && cap.querySelector('.src');
+      lbCap.textContent = cap ? (tag ? tag.textContent + ' · ' : '') + cap.textContent.replace(tag ? tag.textContent : '', '').trim() : '';
+      lb.showModal();
+    });
+  });
+  document.getElementById('lbClose').onclick = function () { lb.close(); };
+  lb.addEventListener('click', function (e) { if (e.target === lb) lb.close(); });
+
+  // Фильтр юнитов.
+  var chips = document.querySelectorAll('#unitFilter .chip');
+  chips.forEach(function (c) {
+    c.addEventListener('click', function () {
+      chips.forEach(function (x) { x.setAttribute('aria-pressed', String(x === c)); });
+      var f = c.dataset.f;
+      document.querySelectorAll('#unitCards .card').forEach(function (card) {
+        card.hidden = !(f === 'all' || (f === 'air' ? card.hasAttribute('data-air') : card.dataset.b === f));
+      });
+    });
+  });
+
+  // Калькулятор урона: значения совпадают с настройками игры.
+  var U = {
+    worker: {n: 'Рабочий', hp: 25, cat: 'civil'},
+    scout: {n: 'Разведчик', hp: 45, atk: 6, cat: 'infantry'},
+    swordsman: {n: 'Мечник', hp: 110, atk: 18, cat: 'infantry'},
+    archer: {n: 'Лучник', hp: 55, atk: 22, cat: 'ranged', air: 1, bonus: {flying: 6}},
+    spearman: {n: 'Копейщик', hp: 100, atk: 14, cat: 'infantry', armor: 2, bonus: {cavalry: 16}},
+    rider: {n: 'Всадник', hp: 90, atk: 16, cat: 'cavalry', armor: 1, bonus: {ranged: 10, civil: 10}},
+    siege: {n: 'Осадная машина', hp: 70, atk: 12, cat: 'siege', strike: 1, bonus: {building: 40}},
+    mage: {n: 'Маг', hp: 50, atk: 20, cat: 'ranged', air: 1, magic: 1, mres: 4},
+    healer: {n: 'Лекарь', hp: 45, cat: 'ranged', mres: 4, heal: 1},
+    griffon: {n: 'Грифон', hp: 85, atk: 17, cat: 'flying', armor: 1, air: 1, flying: 1},
+    tower: {n: 'Башня', atk: 20, air: 1}
+  };
+  var B = {base: ['Ратуша', 700], mine: ['Золотой рудник', 130], sawmill: ['Лесопилка', 90], farm: ['Ферма', 70], barracks: ['Казармы', 150], tower: ['Башня', 180], stable: ['Конюшня', 160], workshop: ['Мастерская', 150], forge: ['Кузница', 140], sanctuary: ['Святилище', 120]};
+  var CAT = {infantry: 'пехота', ranged: 'стрелки', cavalry: 'конница', siege: 'осада', civil: 'рабочие', flying: 'летающие', building: 'здания'};
+  var atk = document.getElementById('atk'), tgt = document.getElementById('tgt');
+  function add(parent, value, text) { var o = document.createElement('option'); o.value = value; o.textContent = text; parent.appendChild(o); }
+  ['swordsman', 'archer', 'spearman', 'rider', 'scout', 'mage', 'griffon', 'siege', 'healer', 'tower'].forEach(function (k) { add(atk, k, U[k].n); });
+  var gu = document.createElement('optgroup'); gu.label = 'Юниты'; tgt.appendChild(gu);
+  ['worker', 'scout', 'swordsman', 'archer', 'spearman', 'rider', 'siege', 'mage', 'healer', 'griffon'].forEach(function (k) { add(gu, 'u:' + k, U[k].n); });
+  var gb = document.createElement('optgroup'); gb.label = 'Здания'; tgt.appendChild(gb);
+  Object.keys(B).forEach(function (k) { add(gb, 'b:' + k, B[k][0]); });
+  atk.value = 'spearman'; tgt.value = 'u:rider';
+  function plural(n) {
+    if (n % 10 === 1 && n % 100 !== 11) return 'удар';
+    if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) return 'удара';
+    return 'ударов';
+  }
+  function calc() {
+    var a = U[atk.value], tv = tgt.value.split(':');
+    var t = tv[0] === 'u' ? U[tv[1]] : {n: B[tv[1]][0], hp: B[tv[1]][1], cat: 'building', mres: 10};
+    var out = document.getElementById('dmg'), why = document.getElementById('why'), kills = document.getElementById('kills');
+    kills.textContent = '';
+    if (a.heal) { out.textContent = '—'; why.textContent = 'Лекарь не атакует: его действие — +20 HP своему юниту в пределах 2 клеток.'; return; }
+    if (t.flying && !a.air) {
+      out.innerHTML = '<span class="no">нельзя</span>';
+      why.textContent = a.strike ? 'Удар осады поражает только наземные объекты на клетке.' : a.n + ' не может атаковать воздушные цели.';
+      return;
+    }
+    var bonus = (a.bonus && a.bonus[t.cat]) || 0;
+    var def = a.magic ? (t.mres || 0) : (t.armor || 0);
+    var d = Math.max(1, a.atk + bonus - def);
+    out.innerHTML = d + '<small>урона</small>';
+    why.textContent = 'Атака ' + a.atk + (a.magic ? ' (магическая)' : ' (физическая)') +
+      (bonus ? ' + ' + bonus + ' против категории «' + CAT[t.cat] + '»' : '') +
+      ' − ' + (a.magic ? 'маг. защита ' : 'броня ') + def + '.' +
+      (a.strike ? ' Урон наносится подготовленным ударом по клетке.' : '');
+    var n = Math.ceil(t.hp / d);
+    kills.textContent = t.n + ': ' + t.hp + ' HP — ' + n + ' ' + plural(n) + ' до уничтожения.';
+  }
+  atk.onchange = tgt.onchange = calc;
+  calc();
+
+  // Стратегии ИИ.
+  var S = [
+    ['G01', 'Срочная оборона', 'У ратуши враги. Включается сразу, минуя удержание текущего плана: всё внимание обороне и найму.'],
+    ['G02', 'Восстановить добычу', 'Простаивают рудники и лесопилки или не хватает рабочих — вернуть поток ресурсов.'],
+    ['G03', 'Расширить добычу', 'Есть свободные безопасные площадки у золота или леса — строить новые рудники и лесопилки.'],
+    ['G04', 'Армия и население', 'Армия меньше нужной — строить здания найма и фермы, нанимать.'],
+    ['G05', 'Поиск вражеской базы', 'Ни одно вражеское здание не известно — важность разведки растёт с каждым ходом.'],
+    ['G06', 'Поиск ресурса', 'Нужный ресурс ещё не найден — искать его.'],
+    ['G07', 'Проверка старого контакта', 'Есть устаревшие сведения о врагах — пойти и проверить.'],
+    ['G08', 'Наступление', 'Своя сила заметно больше известной силы врага и группа собрана — атаковать.'],
+    ['G09', 'Рейд', 'Видны беззащитные рабочие врага — ударить по экономике.'],
+    ['G10', 'Гарнизон и башня', 'Вооружённые враги у подходов к базе — держать гарнизон, строить башню со стороны угрозы.'],
+    ['G11', 'Отход и перегруппировка', 'Группа проигрывает бой — отступить.'],
+    ['G12', 'Исследования', 'Зарезервирована на будущее: исследований в игре пока нет, стратегия не выбирается.']
+  ];
+  var list = document.getElementById('strategies'), det = document.getElementById('strategyDetail');
+  S.forEach(function (s, i) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'strategy'; b.setAttribute('aria-pressed', 'false');
+    b.innerHTML = '<b>' + s[0] + '</b>' + s[1];
+    b.onclick = function () {
+      list.querySelectorAll('.strategy').forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+      b.setAttribute('aria-pressed', 'true');
+      det.innerHTML = '<div class="eyebrow">' + s[0] + (s[0] === 'G12' ? ' · не используется' : '') + '</div><h4 style="margin-top:4px">' + s[1] + '</h4><p class="small muted" style="margin:0">' + s[2] + '</p>';
+    };
+    list.appendChild(b);
+    if (i === 0) b.click();
+  });
+
+  // Подсветка текущего раздела в навигации.
+  var links = Array.prototype.slice.call(document.querySelectorAll('#nav a'));
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        links.forEach(function (a) {
+          var on = a.getAttribute('href') === '#' + e.target.id;
+          a.classList.toggle('active', on);
+          if (on && a.scrollIntoView && window.innerWidth <= 900) a.scrollIntoView({block: 'nearest', inline: 'nearest'});
+        });
+      });
+    }, {rootMargin: '-10% 0px -75%'});
+    links.forEach(function (a) { var s = document.querySelector(a.getAttribute('href')); if (s) io.observe(s); });
+  }
+  var top = document.getElementById('toTop');
+  addEventListener('scroll', function () { top.classList.toggle('show', scrollY > 900); }, {passive: true});
+  top.onclick = function () { scrollTo({top: 0}); };
+})();
 </script>
 </body>
 </html>
