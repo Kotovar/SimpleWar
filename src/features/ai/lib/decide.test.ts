@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import type { AiRule, Candidate } from '../model/types';
 import { actionKey, decideStep } from './decide';
-import { grass, scene } from './scene.test-utils';
+import { grass, own, scene } from './scene.test-utils';
 
 describe('выбор действия шага', () => {
   const offer =
@@ -45,6 +45,34 @@ describe('выбор действия шага', () => {
 
     expect(decideStep(ctx, [tiedA, tiedB]).chosen?.ruleId).toBe(first);
     expect(decideStep(ctx, [tiedB, tiedA]).chosen?.ruleId).toBe(first);
+  });
+
+  it('равенство разрешается по типу и клетке, а не по ID объектов', () => {
+    // Равные предложения для каждого своего юнита: выбор решает жребий.
+    const moveEach = rule('M', 'economy', ctx =>
+      ctx.obs.ownUnits.map(unit => ({
+        ruleId: 'M',
+        group: 'economy' as const,
+        actorId: unit.id,
+        action: { type: 'move' as const, unitId: unit.id, x: unit.x, y: 3 },
+        score: 50,
+        reason: 'тест',
+      })),
+    );
+    const chosenCell = (suffix: number) => {
+      const { ctx } = scene({
+        map: grass(6, 6),
+        units: [0, 1, 2, 3].map(x =>
+          own('swordsman', x, 1, { id: `unit_${suffix}_${x}` }),
+        ),
+      });
+      const action = decideStep(ctx, [moveEach]).chosen?.action;
+      return action?.type === 'move' ? action.x : null;
+    };
+
+    const cells = new Set(Array.from({ length: 20 }, (_, i) => chosenCell(i)));
+
+    expect(cells.size).toBe(1);
   });
 
   it('пропускает отклонённое в этом ходу действие и закончившего ход', () => {

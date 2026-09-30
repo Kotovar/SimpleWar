@@ -146,6 +146,9 @@ export default defineConfig({
     sortPackageJson: false,
     ignorePatterns: ['coverage', '**/*.html'],
   },
+  // GitHub Pages отдаёт сайт проекта из /SimpleWar/; локально — из корня.
+  base: process.env.GITHUB_ACTIONS ? '/SimpleWar/' : '/',
+
   plugins: lazyPlugins(() => [react()]),
 
   // Гайдбук — отдельная статическая страница рядом с игрой (ссылка в меню).

@@ -22,6 +22,13 @@ export type AiTurnDeps = {
   record?: (decision: Omit<AiDecisionInput, 'actor' | 'turn'>) => void;
   /** Отдаёт управление браузеру между порциями работы. */
   yieldControl?: () => Promise<void>;
+  /**
+   * Пауза перед очередным шагом: Promise, пока ход приостановлен, иначе
+   * `null`. Состояние хода и память сохраняются, продолжение — тот же цикл.
+   */
+  waitWhilePaused?: () => Promise<void> | null;
+  /** Часы для бюджета порции; в тестах подменяются. */
+  now?: () => number;
   memory: AiMemory;
   rules?: AiRule[];
   config?: typeof AI_CONFIG;
@@ -72,6 +79,8 @@ const describe = (action: AiAction) => {
  * Ход ИИ: наблюдение → выбор одного действия → команда → новое наблюдение.
  * Ограничен числом команд и отказов подряд; отклонённое действие в этом
  * ходу не повторяется. Отменённый запуск не завершает ход за другого.
+ * Управление браузеру отдаётся по бюджету времени порции, пауза ждёт
+ * перед шагом, не теряя состояния хода.
  *
  * @returns Память после хода, число команд и причина завершения.
  */
@@ -83,8 +92,26 @@ export const playTurn = async (deps: AiTurnDeps): Promise<AiTurnResult> => {
   let commands = 0;
   let failures = 0;
   let reason = 'предел команд за ход';
+  const now = deps.now ?? (() => performance.now());
+  let chunkStart = now();
+
+  /**
+   * Ждёт, пока пауза снята: пауза могла снова начаться за время ожидания.
+   * Вызывается только при паузе — без неё шаг идёт в той же задаче.
+   */
+  const whilePaused = async (first: Promise<void>) => {
+    let paused: Promise<void> | null | undefined = first;
+    while (paused) {
+      // react-doctor-disable-next-line async-await-in-loop -- Пауза держит тот же ход.
+      await paused;
+      paused = deps.waitWhilePaused?.();
+    }
+    chunkStart = now();
+  };
 
   while (commands < config.maxCommandsPerTurn) {
+    const paused = deps.waitWhilePaused?.();
+    if (paused) await whilePaused(paused);
     if (deps.isCancelled())
       return { memory, commands, reason: 'отменено', cancelled: true };
     turn.step++;
@@ -156,13 +183,17 @@ export const playTurn = async (deps: AiTurnDeps): Promise<AiTurnResult> => {
         break;
       }
     }
-    if (deps.yieldControl && turn.step % config.yieldEvery === 0) {
-      // Между командами отдаём управление UI и затем собираем новое наблюдение.
+    if (deps.yieldControl && now() - chunkStart >= config.yieldBudgetMs) {
+      // Порция исчерпана: отдаём управление UI, новое наблюдение — после паузы.
       // react-doctor-disable-next-line async-await-in-loop -- Ход ИИ выполняется последовательно.
       await deps.yieldControl();
+      chunkStart = now();
     }
   }
 
+  // Пауза, нажатая на последнем перерыве, не должна завершить ход.
+  const pausedAtEnd = deps.waitWhilePaused?.();
+  if (pausedAtEnd) await whilePaused(pausedAtEnd);
   if (deps.isCancelled())
     return { memory, commands, reason: 'отменено', cancelled: true };
   deps.endTurn();

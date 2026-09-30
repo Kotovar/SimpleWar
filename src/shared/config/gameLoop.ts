@@ -30,3 +30,9 @@ export type Phase = 'setup' | 'deployment' | 'inProgress' | 'gameOver';
  * поэтому двойной клик не завершает следующий ход человека.
  */
 export const AI_TURN_DELAY_MS = 600;
+
+/**
+ * Перерыв между порциями хода ИИ, мс: браузер успевает отрисовать кадр.
+ * В ускоренном режиме тестирования — без задержки.
+ */
+export const AI_YIELD_BREAK_MS = 16;

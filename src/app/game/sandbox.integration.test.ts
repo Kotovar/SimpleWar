@@ -36,6 +36,11 @@ const scenario: SandboxScenario = {
   ],
 };
 
+/** Дать выполниться отложенным задачам и таймерам нулевой задержки. */
+const afterTasks = async () => {
+  for (let i = 0; i < 5; i++) await new Promise(r => setTimeout(r, 0));
+};
+
 const owned = (owner: string) =>
   [
     ...Object.values(useUnitsStore.getState().units),
@@ -159,7 +164,7 @@ describe('режим тестирования баланса', () => {
     expect(useSandboxStore.getState().stats.p1).toBeUndefined();
   });
 
-  it('пауза останавливает идущий ход ИИ, не передавая ход', async () => {
+  it('пауза приостанавливает ход ИИ, продолжение завершает тот же ход', async () => {
     const started = initializeSandbox({
       ...scenario,
       sides: [scenario.sides[1], scenario.sides[0]],
@@ -169,31 +174,133 @@ describe('режим тестирования баланса', () => {
 
     // «Пауза» нажата после первого решения ИИ — посреди хода.
     const off = useJournalStore.subscribe(state => {
-      if (state.decisions.length) useSandboxStore.setState({ paused: true });
+      if (state.decisions.length === 1)
+        useSandboxStore.setState({ paused: true });
     });
-    const result = await runAITurn('p1', {
-      yieldControl: () => Promise.resolve(),
-    });
+    const running = runAITurn('p1', { yieldControl: () => Promise.resolve() });
+    await afterTasks();
     off();
 
-    expect(result?.cancelled).toBe(true);
+    expect(useJournalStore.getState().decisions).toHaveLength(1);
     expect(useGameLoopStore.getState().activePlayer).toBe('p1');
+
+    useSandboxStore.setState({ paused: false });
+    const result = await running;
+
+    expect(result?.cancelled).toBe(false);
+    expect(useGameLoopStore.getState().activePlayer).toBe('p2');
+    // Шаги продолжают тот же ход, а не начинают его заново.
+    const steps = useJournalStore.getState().decisions.map(d => d.step);
+    expect(steps).toEqual(steps.map((_, i) => i + 1));
   });
 
-  it('второй запуск того же хода ИИ не начинается', async () => {
+  it('сброс во время паузы останавливает ход ИИ', async () => {
+    const started = initializeSandbox({
+      ...scenario,
+      sides: [scenario.sides[1], scenario.sides[0]],
+    })!;
+    useGameLoopStore.getState().startGame(started.participants);
+    useSandboxStore.setState({ paused: true });
+
+    const running = runAITurn('p1', { yieldControl: () => Promise.resolve() });
+    await afterTasks();
+    resetGame();
+
+    expect((await running)?.cancelled).toBe(true);
+    useSandboxStore.setState({ paused: false });
+  });
+
+  it('повторный вызов того же хода ИИ возвращает идущий запуск', async () => {
     const started = initializeSandbox({
       ...scenario,
       sides: [scenario.sides[1], scenario.sides[0]],
     })!;
     useGameLoopStore.getState().startGame(started.participants);
     useSandboxStore.setState({ paused: false });
+    const noWait = () => Promise.resolve();
 
-    const [first, second] = await Promise.all([
-      runAITurn('p1', { yieldControl: () => Promise.resolve() }),
-      runAITurn('p1', { yieldControl: () => Promise.resolve() }),
-    ]);
+    // Повторный вход из подписчика стора посреди хода — тот же запуск.
+    // Подписка до запуска: начало хода выполняется синхронно в вызове.
+    const reentered: Promise<unknown>[] = [];
+    const off = useJournalStore.subscribe(() => {
+      reentered.push(runAITurn('p1', { yieldControl: noWait }));
+    });
+    const first = runAITurn('p1', { yieldControl: noWait });
+    const second = runAITurn('p1', { yieldControl: noWait });
+    const result = await first;
+    off();
 
-    expect(first).not.toBeNull();
-    expect(second).toBeNull();
+    expect(second).toBe(first);
+    expect(reentered.length).toBeGreaterThan(0);
+    for (const call of reentered) expect(call).toBe(first);
+    const steps = useJournalStore.getState().decisions.map(d => d.step);
+    expect(steps).toEqual(steps.map((_, i) => i + 1));
+    expect(result!.commands).toBeLessThanOrEqual(steps.length);
+    // Ход завершён: новый вызов для него не начинается.
+    expect(await runAITurn('p1', { yieldControl: noWait })).toBeNull();
   });
+
+  it('тот же сценарий и сид дают тот же бой при любой скорости', async () => {
+    const battle: SandboxScenario = {
+      emptyField: true,
+      sides: [
+        {
+          controller: 'ai',
+          units: { swordsman: 3, archer: 2, rider: 1, griffon: 1 },
+          buildings: { barracks: 1 },
+          stock: { gold: 300, wood: 300 },
+        },
+        {
+          controller: 'ai',
+          units: { swordsman: 3, spearman: 2, mage: 1, healer: 1 },
+          buildings: { barracks: 1 },
+          stock: { gold: 300, wood: 300 },
+        },
+      ],
+    };
+    const fight = async (yieldControl: () => Promise<void>) => {
+      resetGame();
+      // Сброс партии сбрасывает и настройки карты: сид задаётся заново.
+      useSettingsStore.setState({
+        mapGenerationMode: 'fixed',
+        customSeed: 5,
+        gridColumns: 16,
+        gridRows: 16,
+      });
+      const started = initializeSandbox(battle)!;
+      useGameLoopStore.getState().startGame(started.participants);
+      // ID объектов случайны: в записи они заменяются типом и клеткой.
+      const place = (id: string) => {
+        const entity = [
+          ...Object.values(useUnitsStore.getState().units),
+          ...Object.values(useBuildingsStore.getState().buildings),
+        ].find(e => e.id.startsWith(id));
+        return entity ? `${entity.type}@${entity.x},${entity.y}` : 'gone';
+      };
+      // Журнал хранит последние записи: копим все решения по мере записи.
+      const decisions: string[] = [];
+      const off = useJournalStore.subscribe((state, prev) => {
+        const d = state.decisions.at(-1);
+        if (!d || d === prev.decisions.at(-1)) return;
+        const action = d.action.replace(/(unit|building)_[\w-]+/g, place);
+        const actor = d.actorId ? place(d.actorId) : '—';
+        decisions.push(
+          `${d.actor}:${d.turn}:${d.step}:${d.ruleId}:${actor}:${action}:${d.result}`,
+        );
+      });
+      for (let i = 0; i < 24; i++) {
+        const loop = useGameLoopStore.getState();
+        if (loop.phase !== 'inProgress') break;
+        await runAITurn(loop.activePlayer, { yieldControl });
+      }
+      off();
+      return { report: collectReport(), decisions };
+    };
+
+    const immediate = await fight(() => Promise.resolve());
+    const slow = await fight(() => new Promise(r => setTimeout(r, 0)));
+
+    expect(immediate.decisions.length).toBeGreaterThan(24);
+    expect(slow).toEqual(immediate);
+  }, 60_000);
 });

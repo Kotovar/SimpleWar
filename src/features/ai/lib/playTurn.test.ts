@@ -132,17 +132,111 @@ describe('цикл хода ИИ', () => {
     expect(turn.endTurn).not.toHaveBeenCalled();
   });
 
-  it('отдаёт управление браузеру порциями', async () => {
+  it('отдаёт управление браузеру по бюджету времени порции', async () => {
     const yieldControl = vi.fn(() => Promise.resolve());
+    // Часы спрашиваются раз за шаг и после перерыва: шаг — 5 мс.
+    let clock = 0;
     const turn = deps({
       rules: [mover('R1')],
       yieldControl,
-      config: { ...AI_CONFIG, maxCommandsPerTurn: 6, yieldEvery: 2 },
+      now: () => (clock += 5),
+      config: { ...AI_CONFIG, maxCommandsPerTurn: 6, yieldBudgetMs: 8 },
     });
 
     await playTurn(turn);
 
+    // Бюджет 8 мс исчерпывается каждые два шага.
     expect(yieldControl).toHaveBeenCalledTimes(3);
+  });
+
+  it('пауза ждёт перед шагом и продолжает тот же ход', async () => {
+    let release = () => {};
+    let paused: Promise<void> | null = null;
+    const execute = vi.fn<Execute>(() => {
+      // Пауза нажата после первой команды.
+      if (execute.mock.calls.length === 1) {
+        paused = new Promise(resolve => {
+          release = () => {
+            paused = null;
+            resolve();
+          };
+        });
+      }
+      return { ok: true };
+    });
+    const turn = deps({
+      rules: [mover('R1', step => step)],
+      execute,
+      waitWhilePaused: () => paused,
+      config: { ...AI_CONFIG, maxCommandsPerTurn: 3 },
+    });
+
+    const running = playTurn(turn);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(turn.endTurn).not.toHaveBeenCalled();
+
+    release();
+    const result = await running;
+
+    expect(result).toMatchObject({ commands: 3, cancelled: false });
+    // Шаги продолжаются с того же места: клетки 1, 2, 3 без повтора.
+    expect(execute.mock.calls.map(([action]) => action)).toEqual(
+      [1, 2, 3].map(x => ({ type: 'move', unitId: 'u1', x, y: 0 })),
+    );
+    expect(turn.endTurn).toHaveBeenCalledTimes(1);
+  });
+
+  it('пауза после последней команды не завершает ход до продолжения', async () => {
+    let release = () => {};
+    let paused: Promise<void> | null = null;
+    const execute = vi.fn<Execute>(() => {
+      // Пауза нажата на последней команде хода.
+      if (execute.mock.calls.length === 2) {
+        paused = new Promise(resolve => {
+          release = () => {
+            paused = null;
+            resolve();
+          };
+        });
+      }
+      return { ok: true };
+    });
+    const turn = deps({
+      rules: [mover('R1', step => step)],
+      execute,
+      waitWhilePaused: () => paused,
+      config: { ...AI_CONFIG, maxCommandsPerTurn: 2 },
+    });
+
+    const running = playTurn(turn);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(turn.endTurn).not.toHaveBeenCalled();
+
+    release();
+    await running;
+    expect(turn.endTurn).toHaveBeenCalledTimes(1);
+  });
+
+  it('отмена во время паузы не завершает ход', async () => {
+    let cancelled = false;
+    let release = () => {};
+    const paused = new Promise<void>(resolve => {
+      release = resolve;
+    });
+    const turn = deps({
+      rules: [mover('R1')],
+      waitWhilePaused: () => (cancelled ? null : paused),
+      isCancelled: () => cancelled,
+    });
+
+    const running = playTurn(turn);
+    cancelled = true;
+    release();
+
+    expect(await running).toMatchObject({ cancelled: true, commands: 0 });
+    expect(turn.execute).not.toHaveBeenCalled();
+    expect(turn.endTurn).not.toHaveBeenCalled();
   });
 
   it('то же наблюдение и сид дают те же решения, журнал на них не влияет', async () => {
