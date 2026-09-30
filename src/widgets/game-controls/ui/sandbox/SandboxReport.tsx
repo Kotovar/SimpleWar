@@ -1,4 +1,5 @@
 import { BUILDINGS_NAME, OWNER_NAME, UNITS_NAME } from '@shared/config';
+import { GoldIcon, WoodIcon } from '@shared/ui';
 import {
   collectReport,
   useSandboxStore,
@@ -8,11 +9,8 @@ import { downloadReport } from './download';
 import styles from './Sandbox.styles.module.css';
 
 const NAMES: Record<string, string> = { ...UNITS_NAME, ...BUILDINGS_NAME };
-
-const list = (tally: TypeTally) =>
-  Object.entries(tally)
-    .map(([type, value]) => `${NAMES[type] ?? type} ${Math.round(value)}`)
-    .join(', ') || '—';
+const total = (tally: TypeTally) =>
+  Math.round(Object.values(tally).reduce((sum, value) => sum + value, 0));
 
 /** Итог боя режима тестирования на экране конца партии. */
 export const SandboxReport = () => {
@@ -22,43 +20,102 @@ export const SandboxReport = () => {
 
   return (
     <section className={styles.Report} aria-label='Итог боя'>
-      <p className={styles.Hint}>
-        Карта {report.size.cols} × {report.size.rows}, сид {report.seed ?? '—'},
-        ходов {report.turns}. Победитель:{' '}
-        {report.winner ? OWNER_NAME[report.winner] : 'нет'}.
+      <div className={styles.ReportMeta}>
+        <span>
+          Карта{' '}
+          <strong>
+            {report.size.cols} × {report.size.rows}
+          </strong>
+        </span>
+        <span>
+          Сид <strong>{report.seed ?? '—'}</strong>
+        </span>
+      </div>
+      <p className={styles.Winner}>
+        {report.winner
+          ? `Победитель — ${OWNER_NAME[report.winner]}`
+          : 'Ничья — победителя нет'}
       </p>
-      <table className={styles.Table}>
-        <thead>
-          <tr>
-            <th />
-            <th>Осталось</th>
-            <th>Потери</th>
-            <th>Получено урона</th>
-            <th>Запасы</th>
-          </tr>
-        </thead>
-        <tbody>
-          {report.sides.map(side => (
-            <tr key={side.id}>
-              <th scope='row' data-owner={side.id}>
-                {OWNER_NAME[side.id]}
-              </th>
-              <td>{list(side.alive)}</td>
-              <td>{list(side.losses)}</td>
-              <td>{list(side.damage)}</td>
-              <td>
-                {side.stock.gold} / {side.stock.wood}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className={styles.SideReports}>
+        {report.sides.map(side => (
+          <article
+            className={styles.SideReport}
+            key={side.id}
+            data-owner={side.id}
+          >
+            <header className={styles.SideHeading}>
+              <h3>{OWNER_NAME[side.id]}</h3>
+              <span>
+                {side.id === report.winner
+                  ? 'Победа'
+                  : side.eliminated
+                    ? 'Выбыли'
+                    : 'В игре'}
+              </span>
+            </header>
+            <dl className={styles.Summary}>
+              <div>
+                <dt>Осталось объектов</dt>
+                <dd>{total(side.alive)}</dd>
+              </div>
+              <div>
+                <dt>Потеряно объектов</dt>
+                <dd>{total(side.losses)}</dd>
+              </div>
+              <div>
+                <dt>Получено урона</dt>
+                <dd>{total(side.damage)}</dd>
+              </div>
+            </dl>
+            <div className={styles.Stock}>
+              <span>
+                <GoldIcon /> {side.stock.gold} золота
+              </span>
+              <span>
+                <WoodIcon /> {side.stock.wood} дерева
+              </span>
+            </div>
+            <details className={styles.Breakdown}>
+              <summary>Подробности по типам</summary>
+              <table>
+                <caption className={styles.Hint}>
+                  Юниты и здания · урон полученный
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope='col'>Тип</th>
+                    <th scope='col'>Живы</th>
+                    <th scope='col'>Потери</th>
+                    <th scope='col'>Урон</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ...new Set([
+                      ...Object.keys(side.alive),
+                      ...Object.keys(side.losses),
+                      ...Object.keys(side.damage),
+                    ]),
+                  ].map(type => (
+                    <tr key={type}>
+                      <th scope='row'>{NAMES[type] ?? type}</th>
+                      <td>{side.alive[type] ?? 0}</td>
+                      <td>{side.losses[type] ?? 0}</td>
+                      <td>{Math.round(side.damage[type] ?? 0)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </details>
+          </article>
+        ))}
+      </div>
       <button
         type='button'
         className={styles.Secondary}
         onClick={downloadReport}
       >
-        Итог в JSON
+        Скачать итог в JSON
       </button>
     </section>
   );
