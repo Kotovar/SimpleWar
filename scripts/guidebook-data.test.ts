@@ -25,13 +25,6 @@ const html = readFileSync(
   'utf8',
 );
 
-/** Литерал объекта из скрипта страницы: `var NAME = {...};`. */
-const literal = (name: string) => {
-  const match = html.match(new RegExp(`var ${name} = (\\{[\\s\\S]*?\\});`));
-  if (!match) throw new Error(`В гайдбуке нет таблицы ${name}`);
-  return new Function(`return ${match[1]}`)() as Record<string, never>;
-};
-
 type GuideUnit = {
   hp?: number;
   atk?: number;
@@ -43,9 +36,20 @@ type GuideUnit = {
   bonus?: Record<string, number>;
 };
 
+/** Данные калькулятора: JSON-блок `#calc-data` страницы. */
+const calcData = (() => {
+  const match = html.match(
+    /<script type="application\/json" id="calc-data">([\s\S]*?)<\/script>/,
+  );
+  if (!match) throw new Error('В гайдбуке нет блока данных калькулятора');
+  return JSON.parse(match[1]) as {
+    units: Record<string, GuideUnit>;
+    buildings: Record<string, [string, number]>;
+  };
+})();
+
 describe('гайдбук совпадает с настройками игры', () => {
-  const units = literal('U') as Record<string, GuideUnit>;
-  const buildings = literal('B') as Record<string, [string, number]>;
+  const { units, buildings } = calcData;
 
   it('юниты калькулятора', () => {
     for (const [type, unit] of Object.entries(units)) {

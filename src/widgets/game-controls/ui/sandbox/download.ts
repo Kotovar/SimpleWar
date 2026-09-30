@@ -6,9 +6,11 @@ export const downloadReport = () => {
   const blob = new Blob([JSON.stringify(report, null, 2)], {
     type: 'application/json',
   });
+  const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
+  link.href = url;
   link.download = `simplewar-test-${report.seed ?? 'map'}-turn${report.turns}.json`;
   link.click();
-  URL.revokeObjectURL(link.href);
+  // Сразу после клика загрузка может ещё не начаться (Firefox): освобождаем позже.
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 };

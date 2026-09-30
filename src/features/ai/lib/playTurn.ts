@@ -111,6 +111,7 @@ export const playTurn = async (deps: AiTurnDeps): Promise<AiTurnResult> => {
 
   while (commands < config.maxCommandsPerTurn) {
     const paused = deps.waitWhilePaused?.();
+    // react-doctor-disable-next-line async-await-in-loop -- Пауза держит тот же ход: шаги строго по очереди.
     if (paused) await whilePaused(paused);
     if (deps.isCancelled())
       return { memory, commands, reason: 'отменено', cancelled: true };

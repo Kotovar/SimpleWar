@@ -855,6 +855,35 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
 </dialog>
 <button class="top" id="toTop" type="button" aria-label="Наверх">↑</button>
 
+<script type="application/json" id="calc-data">
+{
+  "units": {
+    "worker": {"n": "Рабочий", "hp": 25, "cat": "civil"},
+    "scout": {"n": "Разведчик", "hp": 45, "atk": 6, "cat": "infantry"},
+    "swordsman": {"n": "Мечник", "hp": 110, "atk": 18, "cat": "infantry"},
+    "archer": {"n": "Лучник", "hp": 55, "atk": 22, "cat": "ranged", "air": 1, "bonus": {"flying": 6}},
+    "spearman": {"n": "Копейщик", "hp": 100, "atk": 14, "cat": "infantry", "armor": 2, "bonus": {"cavalry": 16}},
+    "rider": {"n": "Всадник", "hp": 90, "atk": 16, "cat": "cavalry", "armor": 1, "bonus": {"ranged": 10, "civil": 10}},
+    "siege": {"n": "Осадная машина", "hp": 70, "atk": 12, "cat": "siege", "strike": 1, "bonus": {"building": 40}},
+    "mage": {"n": "Маг", "hp": 50, "atk": 20, "cat": "ranged", "air": 1, "magic": 1, "mres": 4},
+    "healer": {"n": "Лекарь", "hp": 45, "cat": "ranged", "mres": 4, "heal": 1},
+    "griffon": {"n": "Грифон", "hp": 85, "atk": 17, "cat": "flying", "armor": 1, "air": 1, "flying": 1},
+    "tower": {"n": "Башня", "atk": 20, "air": 1}
+  },
+  "buildings": {
+    "base": ["Ратуша", 700],
+    "mine": ["Золотой рудник", 130],
+    "sawmill": ["Лесопилка", 90],
+    "farm": ["Ферма", 70],
+    "barracks": ["Казармы", 150],
+    "tower": ["Башня", 180],
+    "stable": ["Конюшня", 160],
+    "workshop": ["Мастерская", 150],
+    "forge": ["Кузница", 140],
+    "sanctuary": ["Святилище", 120]
+  }
+}
+</script>
 <script>
 (function () {
   // Лайтбокс для скриншотов.
@@ -884,20 +913,10 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   });
 
   // Калькулятор урона: значения совпадают с настройками игры.
-  var U = {
-    worker: {n: 'Рабочий', hp: 25, cat: 'civil'},
-    scout: {n: 'Разведчик', hp: 45, atk: 6, cat: 'infantry'},
-    swordsman: {n: 'Мечник', hp: 110, atk: 18, cat: 'infantry'},
-    archer: {n: 'Лучник', hp: 55, atk: 22, cat: 'ranged', air: 1, bonus: {flying: 6}},
-    spearman: {n: 'Копейщик', hp: 100, atk: 14, cat: 'infantry', armor: 2, bonus: {cavalry: 16}},
-    rider: {n: 'Всадник', hp: 90, atk: 16, cat: 'cavalry', armor: 1, bonus: {ranged: 10, civil: 10}},
-    siege: {n: 'Осадная машина', hp: 70, atk: 12, cat: 'siege', strike: 1, bonus: {building: 40}},
-    mage: {n: 'Маг', hp: 50, atk: 20, cat: 'ranged', air: 1, magic: 1, mres: 4},
-    healer: {n: 'Лекарь', hp: 45, cat: 'ranged', mres: 4, heal: 1},
-    griffon: {n: 'Грифон', hp: 85, atk: 17, cat: 'flying', armor: 1, air: 1, flying: 1},
-    tower: {n: 'Башня', atk: 20, air: 1}
-  };
-  var B = {base: ['Ратуша', 700], mine: ['Золотой рудник', 130], sawmill: ['Лесопилка', 90], farm: ['Ферма', 70], barracks: ['Казармы', 150], tower: ['Башня', 180], stable: ['Конюшня', 160], workshop: ['Мастерская', 150], forge: ['Кузница', 140], sanctuary: ['Святилище', 120]};
+  // Данные калькулятора — в JSON-блоке выше: его же сверяет тест с игрой.
+  var calcData = JSON.parse(document.getElementById('calc-data').textContent);
+  var U = calcData.units;
+  var B = calcData.buildings;
   var CAT = {infantry: 'пехота', ranged: 'стрелки', cavalry: 'конница', siege: 'осада', civil: 'рабочие', flying: 'летающие', building: 'здания'};
   var atk = document.getElementById('atk'), tgt = document.getElementById('tgt');
   function add(parent, value, text) { var o = document.createElement('option'); o.value = value; o.textContent = text; parent.appendChild(o); }
@@ -979,7 +998,7 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
         });
       });
     }, {rootMargin: '-10% 0px -75%'});
-    links.forEach(function (a) { var s = document.querySelector(a.getAttribute('href')); if (s) io.observe(s); });
+    links.forEach(function (a) { var s = document.getElementById(a.getAttribute('href').slice(1)); if (s) io.observe(s); });
   }
   var top = document.getElementById('toTop');
   addEventListener('scroll', function () { top.classList.toggle('show', scrollY > 900); }, {passive: true});

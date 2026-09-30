@@ -47,6 +47,7 @@ export const collectReport = (): BattleReport => {
   const units = Object.values(useUnitsStore.getState().units);
   const buildings = Object.values(useBuildingsStore.getState().buildings);
   const resources = useEconomyStore.getState().resources;
+  const eliminated = new Set(loop.eliminated);
   return {
     seed: seed ?? null,
     size: { cols: grid[0]?.length ?? 0, rows: grid.length },
@@ -57,7 +58,7 @@ export const collectReport = (): BattleReport => {
     sides: loop.participants.map(({ id, controller }) => ({
       id,
       controller,
-      eliminated: loop.eliminated.includes(id),
+      eliminated: eliminated.has(id),
       stock: { ...resources[id] },
       alive: count(
         [...units, ...buildings]
