@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { EntityPortrait, GoldIcon, PopulationIcon, WoodIcon } from '@shared/ui';
 import {
   HEALING,
@@ -28,6 +29,7 @@ const hasDefense = (type: UnitType) => {
 };
 
 export const UnitOptions = ({ building }: Props) => {
+  const [showDetails, setShowDetails] = useState(false);
   const { resources, populationCap } = useEconomySelectors();
   const { humanId } = useGameLoopSelectors();
   const { owner } = building;
@@ -68,7 +70,7 @@ export const UnitOptions = ({ building }: Props) => {
   const selected = spawningTypes.find(type => type === selectedUnitForSpawn);
 
   return (
-    <section className={styles.Section}>
+    <section className={styles.Section} data-details={showDetails}>
       <header className={styles.Header}>
         <h4 className={styles.Title}>Нанять юнита</h4>
         <span
@@ -88,6 +90,15 @@ export const UnitOptions = ({ building }: Props) => {
           Повторный клик по карточке отменит выбор.
         </p>
       )}
+
+      <button
+        type='button'
+        className={styles.DetailsToggle}
+        aria-pressed={showDetails}
+        onClick={() => setShowDetails(value => !value)}
+      >
+        {showDetails ? 'Скрыть характеристики' : 'Показать характеристики'}
+      </button>
 
       <div className={styles.List}>
         {spawningTypes.map(spawnType => {
@@ -134,7 +145,11 @@ export const UnitOptions = ({ building }: Props) => {
               aria-pressed={selectedUnitForSpawn === spawnType}
               title={[check.message, stats].filter(Boolean).join('. ')}
             >
-              <EntityPortrait type={spawnType} owner={building.owner} />
+              <EntityPortrait
+                type={spawnType}
+                owner={building.owner}
+                size={32}
+              />
               <span className={styles.Content}>
                 <span className={styles.Name}>
                   {name}
@@ -143,16 +158,18 @@ export const UnitOptions = ({ building }: Props) => {
                 <span className={styles.Costs}>
                   <span
                     className={styles.Cost}
+                    aria-label={`${isFree ? 0 : cost.gold} золота`}
                     data-lacking={payable.gold < cost.gold}
                   >
-                    <GoldIcon /> {isFree ? 0 : cost.gold} золота
+                    <GoldIcon /> {isFree ? 0 : cost.gold}
                   </span>
                   {cost.wood === 0 ? null : (
                     <span
                       className={styles.Cost}
+                      aria-label={`${isFree ? 0 : cost.wood} дерева`}
                       data-lacking={payable.wood < cost.wood}
                     >
-                      <WoodIcon /> {isFree ? 0 : cost.wood} дерева
+                      <WoodIcon /> {isFree ? 0 : cost.wood}
                     </span>
                   )}
                   <span

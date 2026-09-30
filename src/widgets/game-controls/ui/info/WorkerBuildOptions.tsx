@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { EntityPortrait, GoldIcon, WoodIcon } from '@shared/ui';
 import {
   BUILDINGS_CONFIG,
@@ -22,6 +23,7 @@ const PLACE: Partial<Record<CellType, string>> = {
 };
 
 export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
+  const [showDetails, setShowDetails] = useState(false);
   const { resources } = useEconomySelectors();
   const { humanId } = useGameLoopSelectors();
   const { owner } = unit;
@@ -82,7 +84,7 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
     selectedField && PLACE[selectedField] ? ` ${PLACE[selectedField]}` : '';
 
   return (
-    <section className={styles.Section}>
+    <section className={styles.Section} data-details={showDetails}>
       <header className={styles.Header}>
         <h4 className={styles.Title}>Построить здание</h4>
         <span
@@ -102,6 +104,15 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
           Повторный клик по карточке отменит выбор.
         </p>
       )}
+
+      <button
+        type='button'
+        className={styles.DetailsToggle}
+        aria-pressed={showDetails}
+        onClick={() => setShowDetails(value => !value)}
+      >
+        {showDetails ? 'Скрыть характеристики' : 'Показать характеристики'}
+      </button>
 
       <div className={styles.List}>
         {buildableTypes.map(buildingType => {
@@ -125,7 +136,11 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
               aria-pressed={selectedBuildingForSpawn === buildingType}
               title={[check.message, infoText].filter(Boolean).join('. ')}
             >
-              <EntityPortrait type={buildingType} owner={unit.owner} />
+              <EntityPortrait
+                type={buildingType}
+                owner={unit.owner}
+                size={32}
+              />
               <span className={styles.Content}>
                 <span className={styles.Name}>
                   {name}
@@ -134,16 +149,18 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
                 <span className={styles.Costs}>
                   <span
                     className={styles.Cost}
+                    aria-label={`${isFree ? 0 : cost.gold} золота`}
                     data-lacking={payable.gold < cost.gold}
                   >
-                    <GoldIcon /> {isFree ? 0 : cost.gold} золота
+                    <GoldIcon /> {isFree ? 0 : cost.gold}
                   </span>
                   {cost.wood === 0 ? null : (
                     <span
                       className={styles.Cost}
+                      aria-label={`${isFree ? 0 : cost.wood} дерева`}
                       data-lacking={payable.wood < cost.wood}
                     >
-                      <WoodIcon /> {isFree ? 0 : cost.wood} дерева
+                      <WoodIcon /> {isFree ? 0 : cost.wood}
                     </span>
                   )}
                 </span>

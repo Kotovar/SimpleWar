@@ -144,3 +144,64 @@
   font-weight: 600;
   color: var(--danger-strong);
 }
+
+/* Компактный каталог только для строительства и найма. */
+.Section[data-details] {
+  & .List {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  & .Card {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    align-content: start;
+    gap: 6px;
+    padding: 8px;
+  }
+
+  & .Content {
+    display: contents;
+  }
+
+  & .Name {
+    font-size: 0.82rem;
+    overflow-wrap: anywhere;
+  }
+
+  & .Costs,
+  & .Info,
+  & .Reason {
+    grid-column: 1 / -1;
+  }
+
+  & .Costs {
+    gap: 4px 8px;
+  }
+
+  & .Card:only-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.Section[data-details='false'] .Info {
+  display: none;
+}
+
+.DetailsToggle {
+  align-self: flex-start;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.Card:focus-visible,
+.DetailsToggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
