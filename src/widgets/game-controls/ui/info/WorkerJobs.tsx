@@ -101,7 +101,10 @@ export const WorkerJobs = ({ unit }: { unit: CivilUnit }) => {
           <button
             type='button'
             className={styles.Card}
-            onClick={() => unassignWorker({ actor, workerId: unit.id })}
+            onClick={() => {
+              unassignWorker({ actor, workerId: unit.id });
+              refresh();
+            }}
           >
             <span className={styles.Content}>
               <span className={styles.Name}>Снять с работы</span>
@@ -123,13 +126,16 @@ export const WorkerJobs = ({ unit }: { unit: CivilUnit }) => {
                 type='button'
                 className={styles.Card}
                 disabled={!!holder}
-                onClick={() =>
+                onClick={() => {
                   assignWorker({
                     actor,
                     workerId: unit.id,
                     buildingId: building.id,
-                  })
-                }
+                  });
+                  // Рабочий вошёл в здание: подсветка хода больше не нужна.
+                  clearHighlight();
+                  clearMovement();
+                }}
               >
                 <span className={styles.Content}>
                   <span className={styles.Name}>
