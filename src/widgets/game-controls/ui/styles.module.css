@@ -346,3 +346,75 @@
     display: none;
   }
 }
+
+.SetupMenu {
+  gap: 16px;
+
+  & .Section {
+    align-items: stretch;
+  }
+
+  & .Section + .Section {
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  & .ButtonGroup {
+    justify-content: flex-start;
+  }
+
+  & .GuideLink {
+    text-align: center;
+  }
+
+  & button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+}
+
+.ModeGroup {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  & .ToggleButton {
+    align-items: flex-start;
+    text-align: left;
+    gap: 6px;
+    padding: 14px;
+  }
+}
+
+@media (max-width: 520px) {
+  .SizeGroup,
+  .ModeGroup {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ToggleButton {
+    padding: 10px;
+  }
+}
+
+@media (min-width: 1000px) {
+  .SetupMenu[data-sandbox='true'] {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 16px 28px;
+    align-items: start;
+
+    & > .Section:first-child,
+    & > .Section:last-child {
+      grid-column: 1 / -1;
+    }
+
+    & > .Section:nth-child(4) {
+      grid-column: 2;
+      grid-row: 2 / 4;
+    }
+
+    & .SizeGroup {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}

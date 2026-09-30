@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   BUILDINGS_NAME,
   OWNER_NAME,
@@ -29,6 +30,7 @@ const toCount = (text: string, max: number) =>
   Math.min(max, Math.max(0, Math.floor(Number(text) || 0)));
 
 type Row = {
+  category: string;
   key: string;
   label: string;
   max: number;
@@ -38,6 +40,7 @@ type Row = {
 
 const ROWS: Row[] = [
   ...UNIT_TYPES.map(type => ({
+    category: 'Юниты',
     key: type,
     label: UNITS_NAME[type],
     max: SANDBOX_LIMITS.unitsPerType,
@@ -48,6 +51,7 @@ const ROWS: Row[] = [
     }),
   })),
   ...BUILDING_TYPES.map(type => ({
+    category: 'Здания',
     key: type,
     label: BUILDINGS_NAME[type],
     max: SANDBOX_LIMITS.buildingsPerType,
@@ -58,6 +62,7 @@ const ROWS: Row[] = [
     }),
   })),
   ...(['gold', 'wood'] as const).map(key => ({
+    category: 'Ресурсы',
     key,
     label: key === 'gold' ? 'Золото' : 'Древесина',
     max: SANDBOX_LIMITS.stock,
@@ -74,6 +79,7 @@ const ROWS: Row[] = [
  * стороны числами, пустое поле. Ратуша и рабочий выставляются всегда.
  */
 export const SandboxSetup = () => {
+  const [category, setCategory] = useState('Юниты');
   const scenario = useSandboxStore(state => state.scenario);
   const setScenario = useSandboxStore(state => state.setScenario);
 
@@ -96,64 +102,84 @@ export const SandboxSetup = () => {
         Пустое поле без рельефа
       </label>
 
-      <table className={styles.Table}>
-        <thead>
-          <tr>
-            <th />
-            {scenario.sides.map((side, index) => (
-              <th
-                key={PARTICIPANT_IDS[index]}
-                data-owner={PARTICIPANT_IDS[index]}
-              >
-                {OWNER_NAME[PARTICIPANT_IDS[index]]}
-                <select
-                  aria-label={`Управление: ${OWNER_NAME[PARTICIPANT_IDS[index]]}`}
-                  value={side.controller}
-                  onChange={e =>
-                    updateSide(index, {
-                      ...side,
-                      controller: e.target.value as Controller,
-                    })
-                  }
-                >
-                  {CONTROLLERS.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {ROWS.map(row => (
-            <tr key={row.key}>
-              <th scope='row'>{row.label}</th>
+      <div
+        className={styles.Categories}
+        role='group'
+        aria-label='Категория состава'
+      >
+        {['Юниты', 'Здания', 'Ресурсы'].map(item => (
+          <button
+            key={item}
+            type='button'
+            aria-pressed={category === item}
+            onClick={() => setCategory(item)}
+          >
+            {item}
+          </button>
+        ))}
+      </div>
+      <div className={styles.Roster}>
+        <table className={styles.Table} aria-label={category}>
+          <thead>
+            <tr>
+              <th scope='col'>{category}</th>
               {scenario.sides.map((side, index) => (
-                <td key={PARTICIPANT_IDS[index]}>
-                  <input
-                    type='number'
-                    min={0}
-                    max={row.max}
-                    aria-label={`${row.label}: ${OWNER_NAME[PARTICIPANT_IDS[index]]}`}
-                    value={row.get(side)}
+                <th
+                  scope='col'
+                  key={PARTICIPANT_IDS[index]}
+                  data-owner={PARTICIPANT_IDS[index]}
+                >
+                  {OWNER_NAME[PARTICIPANT_IDS[index]]}
+                  <select
+                    aria-label={`Управление: ${OWNER_NAME[PARTICIPANT_IDS[index]]}`}
+                    value={side.controller}
                     onChange={e =>
-                      updateSide(
-                        index,
-                        row.set(side, toCount(e.target.value, row.max)),
-                      )
+                      updateSide(index, {
+                        ...side,
+                        controller: e.target.value as Controller,
+                      })
                     }
-                  />
-                </td>
+                  >
+                    {CONTROLLERS.map(({ value, label }) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {ROWS.filter(row => row.category === category).map(row => (
+              <tr key={row.key}>
+                <th scope='row'>{row.label}</th>
+                {scenario.sides.map((side, index) => (
+                  <td key={PARTICIPANT_IDS[index]}>
+                    <input
+                      data-filled={row.get(side) > 0}
+                      type='number'
+                      min={0}
+                      max={row.max}
+                      aria-label={`${row.label}: ${OWNER_NAME[PARTICIPANT_IDS[index]]}`}
+                      value={row.get(side)}
+                      onChange={e =>
+                        updateSide(
+                          index,
+                          row.set(side, toCount(e.target.value, row.max)),
+                        )
+                      }
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <p className={styles.Hint}>
-        Ратуша и рабочий есть у каждой стороны. Размер карты и сид — выше. Туман
-        можно отключить в режиме отладки.
+        Ратуша и рабочий есть у каждой стороны. Туман можно отключить в режиме
+        отладки.
       </p>
     </div>
   );

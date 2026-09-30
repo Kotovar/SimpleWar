@@ -49,10 +49,13 @@ export const PhaseSetup = ({ onStartGame }: Props) => {
   };
 
   return (
-    <div className={styles.Wrapper}>
+    <div
+      className={clsx(styles.Wrapper, styles.SetupMenu)}
+      data-sandbox={sandbox}
+    >
       <section className={styles.Section}>
         <div className={styles.Label}>Режим</div>
-        <div className={styles.ButtonGroup}>
+        <div className={clsx(styles.ButtonGroup, styles.ModeGroup)}>
           <button
             className={clsx(styles.ToggleButton, {
               [styles.Active]: !sandbox,
@@ -60,7 +63,8 @@ export const PhaseSetup = ({ onStartGame }: Props) => {
             aria-pressed={!sandbox}
             onClick={() => setSandbox(false)}
           >
-            Обычная партия
+            <span className={styles.ToggleTitle}>Обычная партия</span>
+            <span className={styles.ToggleMeta}>Развитие и сражения</span>
           </button>
           <button
             className={clsx(styles.ToggleButton, {
@@ -69,7 +73,10 @@ export const PhaseSetup = ({ onStartGame }: Props) => {
             aria-pressed={sandbox}
             onClick={() => setSandbox(true)}
           >
-            Тестирование баланса
+            <span className={styles.ToggleTitle}>Тестирование баланса</span>
+            <span className={styles.ToggleMeta}>
+              Свой состав каждой стороны
+            </span>
           </button>
         </div>
       </section>
