@@ -14,6 +14,7 @@ import {
 } from './facts';
 import { manhattan, tieBreak } from './geometry';
 import { strikeGroup } from './operation';
+import { researchStrategy } from './researchValue';
 
 type Evaluator = (ctx: AiContext) => Omit<StrategyScore, 'id'>;
 
@@ -137,16 +138,19 @@ export const STRATEGIES: Record<StrategyId, Evaluator> = {
       ? { score: 85, reason: `проигрываем бой: ${ratio.toFixed(2)}` }
       : { score: 0, reason: `соотношение в бою ${ratio.toFixed(2)}` };
   },
-  // Исследований в текущей версии нет (S16): стратегия не выбирается.
-  G12: () => ({ score: 0, reason: 'исследования ещё не реализованы' }),
+  G12: researchStrategy,
 };
 
-/** Оценки всех стратегий. */
+/**
+ * Оценки всех стратегий с прибавкой профиля. Прибавка не включает
+ * неприменимую стратегию (оценка 0) и не трогает срочную оборону G01.
+ */
 export const evaluateStrategies = (ctx: AiContext): StrategyScore[] =>
-  (Object.keys(STRATEGIES) as StrategyId[]).map(id => ({
-    id,
-    ...STRATEGIES[id](ctx),
-  }));
+  (Object.keys(STRATEGIES) as StrategyId[]).map(id => {
+    const { score, reason } = STRATEGIES[id](ctx);
+    const bias = id === 'G01' ? 0 : (ctx.config.strategyBias[id] ?? 0);
+    return { id, reason, score: score > 0 ? Math.max(1, score + bias) : 0 };
+  });
 
 /**
  * Выбирает стратегию с удержанием: срочная оборона (G01) прерывает всё

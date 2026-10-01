@@ -3,5 +3,6 @@ export * from './decide';
 export * from './memory';
 export * from './operation';
 export * from './playTurn';
+export * from './profile';
 export * from './strategy';
 export * from './rules';

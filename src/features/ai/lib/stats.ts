@@ -19,6 +19,12 @@ export type TypeStats = {
   armed: boolean;
 };
 
+/** Тип цели с бонусом защиты от исследований (Строй). */
+export type ArmoredType = {
+  type: UnitType | BuildingType;
+  armorBonus?: number;
+};
+
 const isUnitType = (type: string): type is UnitType => type in UNITS_CONFIG;
 
 /**
@@ -70,21 +76,23 @@ export const powerOf = (type: UnitType | BuildingType, hp: number) => {
  * Без известных целей — 1. Лечение не атака: у лекаря всегда 1.
  *
  * @param type - Тип атакующего.
- * @param targets - Типы известных вооружённых противников.
+ * @param targets - Известные вооружённые противники: тип либо тип с
+ *   бонусом защиты Строя.
  */
 export const effectiveness = (
   type: UnitType | BuildingType,
-  targets: (UnitType | BuildingType)[],
+  targets: (UnitType | BuildingType | ArmoredType)[],
 ) => {
   const { attack } = statsOf(type);
   if (!attack || !targets.length) return 1;
-  const sum = targets.reduce(
-    (total, target) =>
+  const sum = targets.reduce((total, entry) => {
+    const target = typeof entry === 'string' ? { type: entry } : entry;
+    return (
       total +
-      (canHitTarget(type, target)
-        ? calculateDamage({ type, attack }, { type: target }) / attack
-        : 0),
-    0,
-  );
+      (canHitTarget(type, target.type)
+        ? calculateDamage({ type, attack }, target, target.armorBonus) / attack
+        : 0)
+    );
+  }, 0);
   return sum / targets.length;
 };

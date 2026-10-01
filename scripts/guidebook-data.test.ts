@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vite-plus/test';
 import {
+  AI_DIFFICULTY,
   ARMOR,
   BUILDINGS_CONFIG,
   COMBAT_BUILDINGS_CONFIG,
@@ -8,6 +9,7 @@ import {
   DAMAGE_TYPE,
   HITS_AIR,
   MAGIC_RESIST,
+  START_RESOURCES,
   STRATEGY_NAME,
   UNIT_CATEGORY,
   UNITS_CONFIG,
@@ -85,9 +87,20 @@ describe('гайдбук совпадает с настройками игры',
     }
   });
 
+  it('стартовые запасы сложностей ИИ', () => {
+    const start = START_RESOURCES.p2;
+    const { easy, hard } = AI_DIFFICULTY;
+    const gold = (preset: typeof easy) => start.gold + preset.stockBonus.gold;
+    const wood = (preset: typeof easy) => start.wood + preset.stockBonus.wood;
+    expect(html).toContain(
+      `<b>лёгкая</b> — ${gold(easy)} золота и ${wood(easy)} дерева`,
+    );
+    expect(html).toContain(`<b>сложная</b> — ${gold(hard)} и ${wood(hard)}.`);
+  });
+
   it('правила и стратегии ИИ', () => {
     expect(html).toContain(`<b>${AI_RULES.length}</b>`);
-    expect(html).toContain(`${AI_RULES.length} правило поведения`);
+    expect(html).toContain(`${AI_RULES.length} правил`);
     for (const [id, name] of Object.entries(STRATEGY_NAME)) {
       expect(html).toContain(`['${id}', '${name}'`);
     }

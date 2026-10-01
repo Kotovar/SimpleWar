@@ -29,8 +29,11 @@ export type Observation = {
   stock: Resources;
   /** Своё население: занято и предел. */
   population: PopulationCap;
-  /** Враги в обзоре: только наблюдаемые поля. */
-  visibleEnemies: Omit<Contact, 'seenTurn'>[];
+  /**
+   * Враги в обзоре: только наблюдаемые поля. `armorBonus` — видимый бонус
+   * Строя (значок на карте виден всем): копейщик с видимым соседом.
+   */
+  visibleEnemies: (Omit<Contact, 'seenTurn'> & { armorBonus?: number })[];
   /** Известная местность, `knownTerrain[y][x]`; `null` — не разведано. */
   knownTerrain: (CellType | null)[][];
   /** Видимость клеток сейчас, `visible[y][x]`. */
@@ -46,4 +49,6 @@ export type Observation = {
   strikes: Position[];
   /** Изученные участником исследования. */
   researched: ResearchType[];
+  /** Своё текущее исследование в кузнице. */
+  researching: ResearchType | null;
 };

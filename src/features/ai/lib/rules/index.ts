@@ -11,6 +11,9 @@ import { A01, A04, A06 } from './archerMoves';
 import { T01, T02, T03, T04, T05 } from './towers';
 import { N01, N02 } from './production';
 import { N03 } from './recruitment';
+import { N04 } from './research';
+import { P06, W11 } from './researchUse';
+import { O07, R07 } from './hiddenAiming';
 import { G05, G07, G10 } from './scouting';
 import { R01, R02, R03 } from './scouts';
 import { R04, R05, R06 } from './scoutWatch';
@@ -35,6 +38,9 @@ export * from './archerMoves';
 export * from './towers';
 export * from './production';
 export * from './recruitment';
+export * from './research';
+export * from './researchUse';
+export * from './hiddenAiming';
 export * from './scouting';
 export * from './scouts';
 export * from './scoutWatch';
@@ -62,6 +68,7 @@ export const AI_RULES: AiRule[] = [
   W08,
   W09,
   W10,
+  W11,
   X01,
   X02,
   M01,
@@ -88,11 +95,13 @@ export const AI_RULES: AiRule[] = [
   R04,
   R05,
   R06,
+  R07,
   P01,
   P02,
   P03,
   P04,
   P05,
+  P06,
   C01,
   C02,
   C03,
@@ -105,6 +114,7 @@ export const AI_RULES: AiRule[] = [
   O04,
   O05,
   O06,
+  O07,
   H01,
   H02,
   H03,
@@ -120,6 +130,7 @@ export const AI_RULES: AiRule[] = [
   N01,
   N02,
   N03,
+  N04,
   G05,
   G07,
   G10,

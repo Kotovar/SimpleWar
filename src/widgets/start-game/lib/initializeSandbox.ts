@@ -32,10 +32,16 @@ export const initializeSandbox = (
     useGameLoopStore.setState({ startError: error });
     return null;
   }
-  const participants = scenario.sides.map((side, index) => ({
-    id: PARTICIPANT_IDS[index],
-    controller: side.controller,
-  }));
+  const participants = scenario.sides.map(
+    (side, index): Participant => ({
+      id: PARTICIPANT_IDS[index],
+      controller: side.controller,
+      // Запасы задаёт сценарий: сложность не нужна, только профиль.
+      ...(side.controller === 'ai' && side.profile
+        ? { ai: { profile: side.profile, difficulty: 'normal' } }
+        : {}),
+    }),
+  );
   if (!initializeGame(participants, { emptyField: scenario.emptyField })) {
     return null;
   }

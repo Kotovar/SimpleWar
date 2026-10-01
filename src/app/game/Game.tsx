@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { AI_TURN_DELAY_MS } from '@shared/config';
+import { AI_TURN_DELAY_MS, type Participant } from '@shared/config';
+import { useSettingsStore } from '@entities/settings';
 import {
   initGameLoopEvents,
   nextTurn,
@@ -26,7 +27,11 @@ export const Game = () => {
 
   const handleStartGame = () => {
     if (!sandbox) {
-      if (initializeGame()) startGame();
+      const participants: Participant[] = [
+        { id: 'p1', controller: 'human' },
+        { id: 'p2', controller: 'ai', ai: useSettingsStore.getState().aiSetup },
+      ];
+      if (initializeGame(participants)) startGame(participants);
       return;
     }
     const started = initializeSandbox(useSandboxStore.getState().scenario);

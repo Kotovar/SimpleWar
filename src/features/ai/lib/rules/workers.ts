@@ -11,7 +11,8 @@ import { expansionWanted } from '../saving';
 import { manhattan } from '../geometry';
 import { standCells, stepToward } from '../movement';
 import { bestMove, isFree, moveTo, taskOf } from './common';
-import { buildStep, continueBuilds, idleWorkers } from './building';
+import { buildStep, continueBuilds } from './building';
+import { idleWorkers } from './builders';
 
 /** W01: рабочий в известной опасности уходит к защите, бросая работу. */
 export const W01: AiRule = {

@@ -5,25 +5,19 @@ import {
   PARTICIPANT_IDS,
   SANDBOX_LIMITS,
   UNITS_NAME,
-  type Controller,
   type SandboxBuildingType,
   type SandboxScenario,
   type SandboxSide,
   type UnitType,
 } from '@shared/config';
 import { useSandboxStore } from '@features/sandbox';
+import { SideControls } from './SideControls';
 import styles from './Sandbox.styles.module.css';
 
 const UNIT_TYPES = Object.keys(UNITS_NAME) as UnitType[];
 const BUILDING_TYPES = (
   Object.keys(BUILDINGS_NAME) as SandboxBuildingType[]
 ).filter(type => (type as string) !== 'base');
-
-const CONTROLLERS: { value: Controller; label: string }[] = [
-  { value: 'human', label: 'Человек' },
-  { value: 'ai', label: 'ИИ' },
-  { value: 'passive', label: 'Пассивная' },
-];
 
 /** Целое в пределах; пустое поле — 0. */
 const toCount = (text: string, max: number) =>
@@ -130,22 +124,11 @@ export const SandboxSetup = () => {
                   data-owner={PARTICIPANT_IDS[index]}
                 >
                   {OWNER_NAME[PARTICIPANT_IDS[index]]}
-                  <select
-                    aria-label={`Управление: ${OWNER_NAME[PARTICIPANT_IDS[index]]}`}
-                    value={side.controller}
-                    onChange={e =>
-                      updateSide(index, {
-                        ...side,
-                        controller: e.target.value as Controller,
-                      })
-                    }
-                  >
-                    {CONTROLLERS.map(({ value, label }) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
+                  <SideControls
+                    owner={PARTICIPANT_IDS[index]}
+                    side={side}
+                    onChange={next => updateSide(index, next)}
+                  />
                 </th>
               ))}
             </tr>

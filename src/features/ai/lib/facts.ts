@@ -77,8 +77,10 @@ export const desiredWorkers = (ctx: AiContext) => {
 };
 
 /** Желаемый размер армии: растёт со временем партии. */
-export const desiredArmy = (ctx: AiContext) =>
-  Math.min(10, 2 + Math.floor(ctx.obs.turn / 5));
+export const desiredArmy = (ctx: AiContext) => {
+  const { base, every, max } = ctx.config.army;
+  return Math.min(max, base + Math.floor(ctx.obs.turn / every));
+};
 
 /** Кого нанять следующим: лучника при мечниках ≥ 2 × лучники + 1. */
 export const nextRecruit = (ctx: AiContext): 'swordsman' | 'archer' => {

@@ -20,6 +20,7 @@ import { useSettingsStore } from '@entities/settings';
 import { useGameLoopStore } from '@entities/games';
 import { useJournalStore } from '@entities/journals';
 import { failure, reject } from '@shared/lib';
+import { applyAiStart } from './applyAiStart';
 import { evaluateMap, type StartPosition } from './evaluateMap';
 
 /** Углы в порядке слотов: левый верхний, правый нижний, правый верхний, левый нижний. */
@@ -149,6 +150,7 @@ export const initializeGame = (
         index === 0,
       );
     }
+    applyAiStart(participants);
   };
 
   try {

@@ -1,9 +1,11 @@
 import {
   UNITS_CONFIG,
+  type AiProfile,
   type Building,
   type BuildingType,
   type CellType,
   type Position,
+  type ResearchType,
   type Resources,
   type Unit,
   type UnitType,
@@ -14,6 +16,7 @@ import { createAiMemory, type AiMemory } from '@entities/ai-memories';
 import type { Observation, RememberedContact } from '@entities/perceptions';
 import { buildContext, type AiContext } from './context';
 import { createTurnState } from './memory';
+import { profileConfig } from './profile';
 import type { AiAction } from '../model/types';
 
 const TERRAIN: Record<string, CellType> = {
@@ -114,6 +117,10 @@ type SceneSpec = {
   hidden?: string[];
   /** Публичные отметки подготовленных ударов. */
   strikes?: Position[];
+  researched?: ResearchType[];
+  researching?: ResearchType | null;
+  /** Профиль ИИ: настройки через `profileConfig`. */
+  profile?: AiProfile;
 };
 
 /**
@@ -153,10 +160,20 @@ export const scene = (
     resources,
     contacts: spec.contacts ?? [],
     strikes: spec.strikes ?? [],
-    researched: [],
+    researched: spec.researched ?? [],
+    researching: spec.researching ?? null,
   };
   const memory = { ...createAiMemory(7), ...spec.memory };
-  return { ctx: buildContext(obs, memory, createTurnState()), obs, memory };
+  return {
+    ctx: buildContext(
+      obs,
+      memory,
+      createTurnState(),
+      profileConfig(spec.profile),
+    ),
+    obs,
+    memory,
+  };
 };
 
 /** Действия правила кратко: для сравнения в тестах. */

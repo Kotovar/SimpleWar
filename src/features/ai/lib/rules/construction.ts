@@ -1,4 +1,4 @@
-import { REPAIR } from '@shared/config';
+import { BUILDINGS_CONFIG, REPAIR } from '@shared/config';
 import type { AiRule, Candidate } from '../../model/types';
 import type { AiContext } from '../context';
 import { roleWishes } from '../composition';
@@ -7,13 +7,14 @@ import { affordable } from '../saving';
 import { manhattan } from '../geometry';
 import { standCells, stepToward } from '../movement';
 import { isFree, moveTo, taskOf } from './common';
+import { bestResearch } from '../researchValue';
+import { buildStep, continueBuilds, pickBuildSite } from './building';
 import {
-  buildStep,
-  continueBuilds,
+  artelSite,
   idleWorkers,
+  minerToBuild,
   nearestIdleWorker,
-  pickBuildSite,
-} from './building';
+} from './builders';
 
 export const hasTask = (ctx: AiContext, ruleId: string) =>
   ctx.memory.tasks.some(task => task.ruleId === ruleId);
@@ -44,22 +45,49 @@ export const W07: AiRule = {
     ).length;
     // Золото копится быстрее найма в одних казармах — вторые казармы.
     const moreBarracks = barracks < 2 && ctx.obs.stock.gold >= 250;
+    // Кузница: стратегия исследований либо затянувшаяся партия.
+    const wantsForge =
+      !has('forge') &&
+      (ctx.memory.strategy === 'G12' || ctx.obs.turn >= ctx.config.forgeTurn) &&
+      !!bestResearch(ctx);
     // Здание найма для нужной роли, которой негде нанять.
     const producer = roleWishes(ctx).find(wish => !has(wish.producer));
     const type =
-      barracks === 0 || moreBarracks
+      barracks === 0
         ? 'barracks'
         : wantsTower
           ? 'tower'
-          : (producer?.producer ?? null);
+          : wantsForge
+            ? 'forge'
+            : moreBarracks
+              ? 'barracks'
+              : (producer?.producer ?? null);
     if (!type) return [];
-    const site = pickBuildSite(
+    const picked = pickBuildSite(
       ctx,
       type,
       4,
       type === 'tower' ? threat : undefined,
     );
-    const worker = site && nearestIdleWorker(ctx, site);
+    const idle = picked && nearestIdleWorker(ctx, picked);
+    // Башня стоит у угрозы; остальное с Артелью строится с добычи.
+    const artel = idle || type === 'tower' ? null : artelSite(ctx, type);
+    const worker = idle ?? artel?.worker;
+    const site = idle ? picked : artel?.site;
+    // Кузницу некому строить — все на добыче: снять одного (G12).
+    if (!worker && picked && type === 'forge') {
+      return affordable(ctx, BUILDINGS_CONFIG.forge.cost, 'forge')
+        ? minerToBuild(
+            ctx,
+            'W07',
+            'build',
+            'forge',
+            picked,
+            46,
+            'снимаю рабочего строить кузницу',
+          )
+        : [];
+    }
     if (!site || !worker) return [];
     return buildStep(
       ctx,
@@ -73,7 +101,9 @@ export const W07: AiRule = {
         ? 'нужны казармы для армии'
         : type === 'tower'
           ? 'угроза с направления: строю башню'
-          : `${producer?.reason}: строю ${type}`,
+          : type === 'forge'
+            ? 'нужна кузница для исследований'
+            : `${producer?.reason}: строю ${type}`,
     );
   },
 };

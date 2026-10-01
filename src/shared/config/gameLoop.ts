@@ -1,3 +1,5 @@
+import { DEFAULT_AI_SETUP, type AiSetup } from './aiProfiles';
+
 /** ID слотов участников. Слот задаёт цвет и маркер стороны, а не способ управления. */
 export const PARTICIPANT_IDS = ['p1', 'p2', 'p3', 'p4'] as const;
 
@@ -14,12 +16,14 @@ export type Controller = 'human' | 'ai' | 'passive';
 export type Participant = {
   id: ParticipantId; // ponytail: запись на каждый слот, даже неиспользуемый — проще, чем Partial и проверки.
   controller: Controller;
+  /** Профиль и сложность ИИ; у человека нет. */
+  ai?: AiSetup;
 };
 
 /** Состав обычной партии: человек против одного ИИ. */
 export const DEFAULT_PARTICIPANTS: Participant[] = [
   { id: 'p1', controller: 'human' },
-  { id: 'p2', controller: 'ai' },
+  { id: 'p2', controller: 'ai', ai: DEFAULT_AI_SETUP },
 ];
 
 /** Фаза игры. */

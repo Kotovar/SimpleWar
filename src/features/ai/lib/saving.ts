@@ -1,7 +1,15 @@
-import { BUILDINGS_CONFIG, UNITS_CONFIG, type Cost } from '@shared/config';
+import {
+  BUILDINGS_CONFIG,
+  RESEARCH_CONFIG,
+  RESEARCH_TYPES,
+  UNITS_CONFIG,
+  type Cost,
+} from '@shared/config';
 import { roleWishes } from './composition';
 import type { AiContext } from './context';
+import { bestResearch } from './researchValue';
 import {
+  baseAlarm,
   desiredArmy,
   idleWorkplaces,
   nextRecruit,
@@ -34,7 +42,8 @@ export type SavingGoal = { key: string; cost: Cost };
 
 /**
  * Две первые по важности покупки, на которые копит ИИ: рудник → второй
- * рабочий → лесопилка → казармы → ферма → ещё рудник/лесопилка → здание
+ * рабочий → лесопилка → казармы → ферма → ещё рудник/лесопилка → кузница →
+ * исследование → здание
  * найма нужной роли → армия. Их цена откладывается от
  * бюджета остальных правил, иначе мелкие траты не дают накопить на добычу.
  */
@@ -47,6 +56,10 @@ export const savingGoals = (ctx: AiContext): SavingGoal[] => {
   const roles = has('barracks') ? roleWishes(ctx) : [];
   const producer = roles.find(wish => !has(wish.producer));
   const recruit = roles.find(wish => has(wish.producer));
+  const research =
+    has('forge') && !ctx.obs.researching ? bestResearch(ctx) : null;
+  // Кузница и исследование не отнимают резерв, пока нет минимальной обороны.
+  const defended = ctx.military.length >= 2 && !baseAlarm(ctx).length;
   const wishes: [string, boolean, Cost][] = [
     [
       'mine',
@@ -64,6 +77,21 @@ export const savingGoals = (ctx: AiContext): SavingGoal[] => {
     ['farm', max - occupied < 3 && max < 30, BUILDINGS_CONFIG.farm.cost],
     ['mine', expansionWanted(ctx, 'mine'), BUILDINGS_CONFIG.mine.cost],
     ['sawmill', expansionWanted(ctx, 'sawmill'), BUILDINGS_CONFIG.sawmill.cost],
+    // Кузница в затянувшейся партии, пока есть что изучать (G12, W07).
+    [
+      'forge',
+      !has('forge') &&
+        defended &&
+        ctx.obs.turn >= ctx.config.forgeTurn &&
+        ctx.obs.researched.length < RESEARCH_TYPES.length,
+      BUILDINGS_CONFIG.forge.cost,
+    ],
+    // Исследование — после добычи, но до армии, если оборона уже есть.
+    [
+      'research',
+      !!research && defended,
+      research ? RESEARCH_CONFIG[research.type].cost : NOTHING,
+    ],
     [
       producer?.producer ?? 'producer',
       // Пока есть кого нанять в готовых зданиях, копим на юнита, не на здание.

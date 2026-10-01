@@ -12,8 +12,10 @@ import {
   CAMERA_EDGE_MARGIN,
   CELL_SIZE,
   CELL_SIZE_LIMITS,
+  DEFAULT_AI_SETUP,
   MAP_PRESETS,
   TEMP_START_SEED,
+  type AiSetup,
   type Position,
 } from '@shared/config';
 
@@ -31,9 +33,12 @@ type SettingsState = {
 
   mapGenerationMode: MapGenerationMode;
   customSeed: number;
+  /** Профиль и сложность ИИ обычной партии (S17–S17a). */
+  aiSetup: AiSetup;
 
   setMapGenerationMode: (mode: MapGenerationMode) => void;
   setCustomSeed: (seed: number) => void;
+  setAiSetup: (patch: Partial<AiSetup>) => void;
   setGridSize: (columns: number, rows: number) => void;
   /** Масштаб на `steps` шагов к точке экрана; по умолчанию к центру окна. */
   zoomBy: (steps: number, anchor?: Position) => void;
@@ -89,6 +94,7 @@ const DEFAULTS = {
   viewport: { width: 0, height: 0 },
   mapGenerationMode: 'random' as MapGenerationMode,
   customSeed: TEMP_START_SEED,
+  aiSetup: DEFAULT_AI_SETUP,
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -103,6 +109,11 @@ export const useSettingsStore = create<SettingsState>()(
     setCustomSeed: seed =>
       set(state => {
         state.customSeed = seed;
+      }),
+
+    setAiSetup: patch =>
+      set(state => {
+        state.aiSetup = { ...state.aiSetup, ...patch };
       }),
 
     zoomBy: (steps, anchor) =>

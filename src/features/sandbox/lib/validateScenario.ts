@@ -1,4 +1,5 @@
 import {
+  AI_PROFILES,
   BUILDINGS_CONFIG,
   SANDBOX_LIMITS,
   UNITS_CONFIG,
@@ -22,6 +23,9 @@ export const validateScenario = (scenario: SandboxScenario): string | null => {
     return 'Человеком может управлять только одна сторона.';
   for (const [index, side] of scenario.sides.entries()) {
     const name = `Сторона ${index + 1}`;
+    if (side.profile && !(side.profile in AI_PROFILES)) {
+      return `${name}: неизвестный профиль ИИ ${side.profile}.`;
+    }
     for (const [type, count] of Object.entries(side.units)) {
       if (!(type in UNITS_CONFIG)) return `${name}: неизвестный юнит ${type}.`;
       if (!isCount(count, SANDBOX_LIMITS.unitsPerType)) {

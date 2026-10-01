@@ -84,6 +84,17 @@
   width: 100%;
 }
 
+.AiGroup {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  width: 100%;
+
+  & .ToggleButton {
+    gap: 4px;
+  }
+}
+
 .ToggleButton {
   display: flex;
   flex-direction: column;
@@ -391,6 +402,11 @@
   .SizeGroup,
   .ModeGroup {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .AiGroup {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-flow: row;
   }
 
   .ToggleButton {

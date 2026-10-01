@@ -1,9 +1,15 @@
-import { AI_CONFIG, STRATEGY_NAME, type CommandResult } from '@shared/config';
+import {
+  AI_CONFIG,
+  AI_PROFILES,
+  STRATEGY_NAME,
+  type CommandResult,
+} from '@shared/config';
 import type { AiMemory } from '@entities/ai-memories';
 import type { AiDecisionInput } from '@entities/journals';
 import type { Observation } from '@entities/perceptions';
 import type { AiAction, AiRule, Candidate } from '../model/types';
 import { buildContext } from './context';
+import { describe } from './describeAction';
 import { actionKey, decideStep } from './decide';
 import { applyOutcome, createTurnState, refreshMemory } from './memory';
 import { AI_RULES } from './rules';
@@ -41,38 +47,6 @@ export type AiTurnResult = {
   /** Почему ход завершён. */
   reason: string;
   cancelled: boolean;
-};
-
-/** Короткий ID для текста журнала; полный ID остаётся в полях записи. */
-const short = (id: string) => id.slice(0, 13);
-
-const describe = (action: AiAction) => {
-  switch (action.type) {
-    case 'move':
-      return `движение в (${action.x}, ${action.y})`;
-    case 'attack':
-      return `атака ${short(action.targetId)}`;
-    case 'heal':
-      return `лечение ${short(action.targetId)}`;
-    case 'prepareStrike':
-      return `подготовка удара по (${action.x}, ${action.y})`;
-    case 'build':
-      return `стройка ${action.buildingType} в (${action.x}, ${action.y})`;
-    case 'spawn':
-      return `найм ${action.unitType}`;
-    case 'assign':
-      return `на добычу ${short(action.buildingId)}`;
-    case 'unassign':
-      return 'снят с добычи';
-    case 'repair':
-      return `ремонт ${short(action.buildingId)}`;
-    case 'clearForest':
-      return `расчистка (${action.x}, ${action.y})`;
-    case 'demolish':
-      return `снос ${short(action.buildingId)}`;
-    case 'wait':
-      return 'ожидание';
-  }
 };
 
 /**
@@ -125,7 +99,9 @@ export const playTurn = async (deps: AiTurnDeps): Promise<AiTurnResult> => {
     const chosen = decision.chosen;
     const entry = {
       step: turn.step,
-      strategy: `${memory.strategy} ${STRATEGY_NAME[memory.strategy]}`,
+      strategy: `${memory.strategy} ${STRATEGY_NAME[memory.strategy]}${
+        config.profile ? ` · ${AI_PROFILES[config.profile].name}` : ''
+      }`,
       alternatives: decision.alternatives.map(alt => ({
         ruleId: alt.ruleId,
         score: Math.round(alt.weighted),

@@ -1,10 +1,12 @@
 import {
+  FORMATION_ARMOR,
   HITS_AIR,
   type BuildingType,
   type MilitaryUnit,
+  type Unit,
   type UnitType,
 } from '@shared/config';
-import { isFlyingType } from '@shared/lib';
+import { hasFormationNeighbor, isFlyingType } from '@shared/lib';
 import type { AiContext } from './context';
 import { enemyTarget } from './facts';
 import { effectiveness, powerOf } from './stats';
@@ -18,7 +20,18 @@ import { effectiveness, powerOf } from './stats';
 const enemyArmy = (ctx: AiContext) =>
   [...ctx.enemies, ...ctx.remembered]
     .filter(({ armed, kind }) => armed && kind === 'unit')
-    .map(({ type }) => type);
+    .map(({ type, armorBonus }) => ({ type, armorBonus }));
+
+/** Своя прибавка Строя: исследование изучено и рядом свой копейщик. */
+export const ownArmor = (ctx: AiContext, unit: Unit) =>
+  ctx.obs.researched.includes('formation') &&
+  hasFormationNeighbor(unit, ctx.obs.ownUnits)
+    ? FORMATION_ARMOR
+    : 0;
+
+/** Свои юниты как цели врага: тип и бонус Строя. */
+const asTargets = (ctx: AiContext, units: Unit[]) =>
+  units.map(unit => ({ type: unit.type, armorBonus: ownArmor(ctx, unit) }));
 
 /**
  * Своя сила: военные юниты и башни с поправкой на известный состав врага —
@@ -39,7 +52,7 @@ export const ownPower = (ctx: AiContext) => {
  * закладывается половина своей силы.
  */
 export const enemyPower = (ctx: AiContext) => {
-  const army = ctx.military.map(({ type }) => type);
+  const army = asTargets(ctx, ctx.military);
   const known = [...ctx.enemies, ...ctx.remembered].reduce(
     (sum, enemy) =>
       sum +
@@ -129,8 +142,8 @@ export const roleWishes = (ctx: AiContext): RoleWish[] => {
  */
 export const battleRatio = (ctx: AiContext, group: MilitaryUnit[]) => {
   const armed = ctx.enemies.filter(enemy => enemy.armed);
-  const foeTypes = armed.map(({ type }) => type);
-  const ownTypes = group.map(({ type }) => type);
+  const foeTypes = armed.map(({ type, armorBonus }) => ({ type, armorBonus }));
+  const ownTypes = asTargets(ctx, group);
   const own = group.reduce(
     (sum, unit) =>
       sum + unit.hp * unit.attack * effectiveness(unit.type, foeTypes),

@@ -62,7 +62,7 @@ export const planned = (ctx: AiContext, id: string) =>
 export const damageTo = (
   attacker: { type: UnitType | BuildingType; attack: number },
   enemy: EnemyView,
-) => calculateDamage(attacker, enemy);
+) => calculateDamage(attacker, enemy, enemy.armorBonus);
 
 /** Цель погибнет от удара с учётом общего фокуса. */
 export const isKillable = (

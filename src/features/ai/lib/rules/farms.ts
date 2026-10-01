@@ -6,14 +6,8 @@ import {
 } from '@shared/config';
 import type { AiRule, Candidate } from '../../model/types';
 import type { AiContext } from '../context';
-import { manhattan } from '../geometry';
-import {
-  buildStep,
-  continueBuilds,
-  nearestIdleWorker,
-  pickBuildSite,
-} from './building';
-import { isFree, taskOf } from './common';
+import { buildStep, continueBuilds, pickBuildSite } from './building';
+import { artelSite, minerToBuild, nearestIdleWorker } from './builders';
 import { hasTask } from './construction';
 import { affordable } from '../saving';
 
@@ -28,35 +22,18 @@ const freeBuilder = (
   occupied: number,
   max: number,
 ): Candidate[] => {
-  if (max - occupied >= UNITS_CONFIG.worker.requiresLimit || !ctx.base)
-    return [];
+  if (max - occupied >= UNITS_CONFIG.worker.requiresLimit) return [];
   // Ферму не на что строить — рабочий нужнее на добыче.
   if (!affordable(ctx, BUILDINGS_CONFIG.farm.cost, 'farm')) return [];
-  const base = ctx.base;
-  const miner = ctx.workers
-    .filter(w => w.workplaceId && isFree(ctx, w.id) && !taskOf(ctx, w.id))
-    .sort((a, b) => manhattan(a, base) - manhattan(b, base))[0];
-  return miner
-    ? [
-        {
-          ruleId: 'W06',
-          group: 'build',
-          actorId: miner.id,
-          action: { type: 'unassign', workerId: miner.id },
-          score: 55,
-          reason: `население ${occupied}/${max}: снимаю рабочего строить ферму`,
-          // Задача сразу: иначе W02/W03 вернут рабочего на добычу.
-          task: {
-            kind: 'build',
-            ruleId: 'W06',
-            unitId: miner.id,
-            target: site,
-            buildingType: 'farm',
-            reserve: BUILDINGS_CONFIG.farm.cost,
-          },
-        },
-      ]
-    : [];
+  return minerToBuild(
+    ctx,
+    'W06',
+    'build',
+    'farm',
+    site,
+    55,
+    `население ${occupied}/${max}: снимаю рабочего строить ферму`,
+  );
 };
 
 /** W06: следующий найм упрётся в население — построить ферму у базы. */
@@ -70,9 +47,13 @@ export const W06: AiRule = {
     const { occupied, max } = ctx.obs.population;
     if (max - occupied >= 3 || max >= MAX_POPULATION_LIMIT) return [];
     if (hasTask(ctx, 'W06')) return [];
-    const site = pickBuildSite(ctx, 'farm', 4);
+    const picked = pickBuildSite(ctx, 'farm', 4);
+    const idle = picked && nearestIdleWorker(ctx, picked);
+    // Артель: свободных нет — строит рабочий с добычи у своего здания.
+    const artel = idle ? null : artelSite(ctx, 'farm');
+    const worker = idle ?? artel?.worker;
+    const site = idle ? picked : (artel?.site ?? picked);
     if (!site) return [];
-    const worker = nearestIdleWorker(ctx, site);
     if (!worker) return freeBuilder(ctx, site, occupied, max);
     return buildStep(
       ctx,

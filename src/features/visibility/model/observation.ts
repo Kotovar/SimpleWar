@@ -10,7 +10,8 @@ import {
   type Contact,
   type Observation,
 } from '@entities/perceptions';
-import type { ParticipantId } from '@shared/config';
+import { FORMATION_ARMOR, type ParticipantId } from '@shared/config';
+import { hasFormationNeighbor } from '@shared/lib';
 
 export type { Observation, RememberedContact } from '@entities/perceptions';
 
@@ -47,6 +48,17 @@ export const getObservation = (participant: ParticipantId): Observation => {
     contact.seenTurn === turn && visible[contact.y]?.[contact.x];
 
   const economy = useEconomyStore.getState();
+  const research = useResearchStore.getState();
+  const seen = contacts
+    .filter(isVisibleNow)
+    .map(({ seenTurn: _seen, ...enemy }) => enemy);
+  // Строй врага публичен, как значок на карте: по видимым соседям.
+  const visibleEnemies = seen.map(enemy =>
+    research.completed[enemy.owner]?.includes('formation') &&
+    hasFormationNeighbor(enemy, seen)
+      ? { ...enemy, armorBonus: FORMATION_ARMOR }
+      : enemy,
+  );
 
   return {
     participant,
@@ -59,9 +71,7 @@ export const getObservation = (participant: ParticipantId): Observation => {
     ownBuildings: Object.values(useBuildingsStore.getState().buildings).filter(
       isOwn,
     ),
-    visibleEnemies: contacts
-      .filter(isVisibleNow)
-      .map(({ seenTurn: _seen, ...enemy }) => enemy),
+    visibleEnemies,
     knownTerrain,
     visible,
     resources,
@@ -72,6 +82,7 @@ export const getObservation = (participant: ParticipantId): Observation => {
         confidence: getContactConfidence(contact, turn),
       })),
     strikes: Object.values(knowledge?.strikes ?? {}),
-    researched: [...(useResearchStore.getState().completed[participant] ?? [])],
+    researched: [...(research.completed[participant] ?? [])],
+    researching: research.current[participant]?.type ?? null,
   };
 };

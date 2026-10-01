@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
   DEFAULT_SANDBOX,
+  type AiProfile,
   type Cell,
   type SandboxScenario,
 } from '@shared/config';
@@ -57,6 +58,13 @@ describe('validateScenario', () => {
     expect(
       validateScenario(withSide({ units: { archer: 1.5 } })),
     ).not.toBeNull();
+  });
+
+  it('известный профиль ИИ можно, неизвестный — отказ', () => {
+    expect(validateScenario(withSide({ profile: 'defensive' }))).toBeNull();
+    expect(
+      validateScenario(withSide({ profile: 'reckless' as AiProfile })),
+    ).toMatch(/неизвестный профиль/);
   });
 
   it('отрицательные запасы — отказ', () => {

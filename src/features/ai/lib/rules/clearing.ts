@@ -5,7 +5,7 @@ import type { AiContext } from '../context';
 import { baseAlarm, nearest } from '../facts';
 import { around, cellKey, manhattan } from '../geometry';
 import { standCells } from '../movement';
-import { idleWorkers } from './building';
+import { artelMiners, idleWorkers } from './builders';
 
 /** Цена пути от базы до цели с учётом клетки, будто она расчищена. */
 export const pathCost = (
@@ -40,7 +40,7 @@ export const X01: AiRule = {
     const forestSites = ctx.obs.resources.filter(
       ({ type }) => type === 'forest',
     );
-    for (const worker of idleWorkers(ctx)) {
+    for (const worker of [...idleWorkers(ctx), ...artelMiners(ctx)]) {
       if (worker.buildPoints <= 0 || ctx.threatAt(worker) > 0) continue;
       for (const cell of around(worker)) {
         if (ctx.known(cell.x, cell.y) !== 'forest') continue;

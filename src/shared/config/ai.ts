@@ -1,3 +1,5 @@
+import type { AiProfile } from './aiProfiles';
+
 /** Стратегии ИИ из каталога G01–G12. */
 export type StrategyId =
   | 'G01'
@@ -23,7 +25,8 @@ export type RuleGroup =
   | 'hire'
   | 'scout'
   | 'attack'
-  | 'defense';
+  | 'defense'
+  | 'research';
 
 /** Названия стратегий для журнала решений. */
 export const STRATEGY_NAME: Record<StrategyId, string> = {
@@ -41,13 +44,14 @@ export const STRATEGY_NAME: Record<StrategyId, string> = {
   G12: 'Исследования',
 };
 
-const flat = (value: number): Record<RuleGroup, number> => ({
+export const flatWeights = (value: number): Record<RuleGroup, number> => ({
   economy: value,
   build: value,
   hire: value,
   scout: value,
   attack: value,
   defense: value,
+  research: value,
 });
 
 /**
@@ -94,21 +98,36 @@ export const AI_CONFIG = {
   workerScoutRadius: 10,
   /** Расширение добычи: +1 рудник и лесопилка каждые `every` ходов, до `max`. */
   expansion: { every: 20, max: 3 },
+  /** Желаемая армия: `base` + 1 каждые `every` ходов, до `max`. */
+  army: { base: 2, every: 5, max: 10 },
+  /** С какого хода копить на кузницу без стратегии исследований (G12). */
+  forgeTurn: 25,
   /** Выгода расчистки: насколько путь должен стать короче (X01). */
   clearingGain: 4,
+  /** Профиль стратегии (S17); `null` — нейтральные веса. */
+  profile: null as AiProfile | null,
+  /** Прибавка профиля к ненулевой оценке стратегии. */
+  strategyBias: {} as Partial<Record<StrategyId, number>>,
   /** Веса групп правил под каждой стратегией. */
   strategyWeights: {
-    G01: { ...flat(0.6), defense: 2.5, hire: 1.5, economy: 0.4, scout: 0.2 },
-    G02: { ...flat(1), economy: 1.8, build: 1.3, hire: 1.1 },
-    G03: { ...flat(1), economy: 1.4, build: 1.5 },
-    G04: { ...flat(1), hire: 1.7, build: 1.3 },
-    G05: { ...flat(1), scout: 1.8 },
-    G06: { ...flat(1), scout: 1.5, economy: 1.2 },
-    G07: { ...flat(1), scout: 1.5 },
-    G08: { ...flat(1), attack: 1.8, hire: 1.2, scout: 1.2 },
-    G09: { ...flat(1), attack: 1.5 },
-    G10: { ...flat(1), defense: 1.6, build: 1.2 },
-    G11: { ...flat(1), defense: 1.8, attack: 0.5 },
-    G12: flat(1),
+    G01: {
+      ...flatWeights(0.6),
+      defense: 2.5,
+      hire: 1.5,
+      economy: 0.4,
+      scout: 0.2,
+      research: 0.2,
+    },
+    G02: { ...flatWeights(1), economy: 1.8, build: 1.3, hire: 1.1 },
+    G03: { ...flatWeights(1), economy: 1.4, build: 1.5 },
+    G04: { ...flatWeights(1), hire: 1.7, build: 1.3 },
+    G05: { ...flatWeights(1), scout: 1.8 },
+    G06: { ...flatWeights(1), scout: 1.5, economy: 1.2 },
+    G07: { ...flatWeights(1), scout: 1.5 },
+    G08: { ...flatWeights(1), attack: 1.8, hire: 1.2, scout: 1.2 },
+    G09: { ...flatWeights(1), attack: 1.5 },
+    G10: { ...flatWeights(1), defense: 1.6, build: 1.2 },
+    G11: { ...flatWeights(1), defense: 1.8, attack: 0.5 },
+    G12: { ...flatWeights(1), research: 1.8, build: 1.2 },
   } satisfies Record<StrategyId, Record<RuleGroup, number>>,
 };

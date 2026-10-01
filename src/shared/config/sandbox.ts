@@ -1,3 +1,4 @@
+import type { AiProfile } from './aiProfiles';
 import type { BuildingType } from './buildings';
 import type { Resources } from './economy';
 import type { Controller } from './gameLoop';
@@ -12,6 +13,8 @@ export type SandboxBuildingType = Exclude<BuildingType, 'base'>;
  */
 export type SandboxSide = {
   controller: Controller;
+  /** Профиль ИИ (S17); без него — нейтральные настройки. */
+  profile?: AiProfile;
   units: Partial<Record<UnitType, number>>;
   buildings: Partial<Record<SandboxBuildingType, number>>;
   stock: Resources;

@@ -23,7 +23,9 @@ export const R04: AiRule = {
       : ctx.obs.strikes.filter(mark =>
           ctx.obs.ownBuildings.some(b => manhattan(b, mark) <= 6),
         );
-    if (!marks.length && armed.length < 2) return [];
+    // Картография: контакт разведчика живёт дольше — следить и за одиночкой.
+    const cartography = ctx.obs.researched.includes('cartography');
+    if (!marks.length && armed.length < (cartography ? 1 : 2)) return [];
     return scouts(ctx).flatMap((unit): Candidate[] => {
       if (unit.movePoints <= 0 || taskOf(ctx, unit.id)) return [];
       const mark = nearest(unit, marks);
@@ -53,9 +55,16 @@ export const R04: AiRule = {
       );
       return cell
         ? [
-            moveTo('R04', unit, cell, 44, 'наблюдаю за группой врага', {
-              basis: { x: group.x, y: group.y, foes: armed.length },
-            }),
+            moveTo(
+              'R04',
+              unit,
+              cell,
+              cartography ? 52 : 44,
+              'наблюдаю за группой врага',
+              {
+                basis: { x: group.x, y: group.y, foes: armed.length },
+              },
+            ),
           ]
         : [];
     });

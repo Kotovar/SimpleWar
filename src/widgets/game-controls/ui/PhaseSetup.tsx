@@ -5,6 +5,7 @@ import { isValidSeed } from '@entities/maps';
 import { useSettingsSelectors } from '@entities/settings';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { useSandboxStore } from '@features/sandbox';
+import { AiSetupSection } from './AiSetupSection';
 import { SandboxSetup } from './sandbox';
 import styles from './styles.module.css';
 
@@ -151,6 +152,8 @@ export const PhaseSetup = ({ onStartGame }: Props) => {
           </div>
         )}
       </section>
+
+      {!sandbox && <AiSetupSection />}
 
       {sandbox && (
         <section className={styles.Section}>

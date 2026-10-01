@@ -38,6 +38,7 @@
 
   & thead select {
     display: block;
+    width: 128px;
     margin-top: 4px;
   }
 

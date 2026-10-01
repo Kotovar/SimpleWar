@@ -20,8 +20,14 @@ import {
   repair,
   unassignWorker,
 } from '@features/workers';
-import { playTurn, type AiAction, type AiTurnResult } from '@features/ai';
+import {
+  playTurn,
+  profileConfig,
+  type AiAction,
+  type AiTurnResult,
+} from '@features/ai';
 import { useSandboxStore } from '@features/sandbox';
+import { startResearch } from '@features/research';
 
 /**
  * Исполняет действие ИИ теми же командами, что и интерфейс человека.
@@ -57,6 +63,8 @@ export const executeAiAction = (
       return clearForest({ actor, ...action });
     case 'demolish':
       return demolish({ actor, ...action });
+    case 'startResearch':
+      return startResearch({ actor, research: action.research });
     case 'wait':
       return { ok: true };
   }
@@ -139,7 +147,11 @@ export const runAITurn = (
 
   const run = async () => {
     const memories = useAiMemoryStore.getState();
+    const setup = useGameLoopStore
+      .getState()
+      .participants.find(({ id }) => id === actor)?.ai;
     const result = await playTurn({
+      config: profileConfig(setup?.profile),
       memory: memories.byParticipant[actor] ?? createAiMemory(seedFor(actor)),
       observe: () => getObservation(actor),
       execute: action => executeAiAction(actor, action),

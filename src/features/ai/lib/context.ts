@@ -26,6 +26,8 @@ export type EnemyView = Omit<RememberedContact, 'seenTurn' | 'confidence'> & {
   armed: boolean;
   /** Вес знания: 1 — виден сейчас, меньше — по памяти. */
   certainty: number;
+  /** Видимый бонус Строя к физической защите. */
+  armorBonus?: number;
 };
 
 /**
@@ -71,7 +73,9 @@ export type AiContext = {
 };
 
 const toView = (
-  contact: Omit<RememberedContact, 'seenTurn' | 'confidence'>,
+  contact: Omit<RememberedContact, 'seenTurn' | 'confidence'> & {
+    armorBonus?: number;
+  },
   certainty: number,
 ): EnemyView => ({ ...contact, ...statsOf(contact.type), certainty });
 

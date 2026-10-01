@@ -11,6 +11,7 @@ export * from './commands';
 export * from './debug';
 export * from './vision';
 export * from './ai';
+export * from './aiProfiles';
 export * from './combat';
 export * from './sandbox';
 export * from './research';

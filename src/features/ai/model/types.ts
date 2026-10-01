@@ -1,6 +1,7 @@
 import type {
   BuildingType,
   Position,
+  ResearchType,
   RuleGroup,
   StrategyId,
   UnitType,
@@ -37,6 +38,7 @@ export type AiAction =
   | { type: 'repair'; workerId: string; buildingId: string }
   | { type: 'clearForest'; workerId: string; x: number; y: number }
   | { type: 'demolish'; buildingId: string }
+  | { type: 'startResearch'; research: ResearchType }
   | { type: 'wait'; actorId: string };
 
 /** Предложение правила: действие, полезность и причина. */

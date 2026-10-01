@@ -14,6 +14,28 @@ import { standCells, stepToward } from '../movement';
 import { isFree, taskOf, wouldBlock } from './common';
 
 /**
+ * Клетка годится под здание: известная подходящая местность, не занята
+ * и не обещана задаче, без угрозы, есть где встать рабочему, не перекрывает
+ * последний проход.
+ */
+export const siteOk = (ctx: AiContext, type: BuildingType, site: Position) => {
+  if (!ctx.inside(site)) return false;
+  const cell = ctx.known(site.x, site.y);
+  const required = BUILDINGS_CONFIG[type].requiredField;
+  if (!cell || !isBuildableTerrain(required, cell)) return false;
+  if (ctx.occupied(site.x, site.y)) return false;
+  if (
+    ctx.memory.tasks.some(({ target: t }) => t.x === site.x && t.y === site.y)
+  )
+    return false;
+  return (
+    ctx.threatAt(site) === 0 &&
+    standCells(ctx, site).length > 0 &&
+    !wouldBlock(ctx, site)
+  );
+};
+
+/**
  * Площадка для здания у своей базы: подходящая известная местность, не
  * занята, без известной угрозы, есть где встать рабочему, не перекрывает
  * последний проход. Ближе к базе лучше; `toward` сдвигает выбор к точке.
@@ -29,26 +51,15 @@ export const pickBuildSite = (
 ): Position | null => {
   const { base } = ctx;
   if (!base) return null;
-  const required = BUILDINGS_CONFIG[type].requiredField;
-  const taken = new Set(
-    ctx.memory.tasks.map(({ target }) => `${target.x},${target.y}`),
-  );
   let best: Position | null = null;
   let bestScore = Infinity;
   for (let dy = -radius; dy <= radius; dy++) {
     for (let dx = -radius; dx <= radius; dx++) {
       const site = { x: base.x + dx, y: base.y + dy };
       const distance = manhattan(site, base);
-      if (distance < 2 || distance > radius || !ctx.inside(site)) continue;
-      const cell = ctx.known(site.x, site.y);
-      if (!cell || !isBuildableTerrain(required, cell)) continue;
-      if (ctx.occupied(site.x, site.y) || taken.has(`${site.x},${site.y}`)) {
+      if (distance < 2 || distance > radius || !siteOk(ctx, type, site)) {
         continue;
       }
-      if (ctx.threatAt(site) > 0 || standCells(ctx, site).length === 0) {
-        continue;
-      }
-      if (wouldBlock(ctx, site)) continue;
       const score =
         distance +
         (toward ? manhattan(site, toward) * 0.5 : 0) +
@@ -61,19 +72,6 @@ export const pickBuildSite = (
   }
   return best;
 };
-
-/** Рабочий свободен для новой работы: жив, без задачи и не на добыче. */
-export const idleWorkers = (ctx: AiContext): CivilUnit[] =>
-  ctx.workers.filter(
-    worker =>
-      isFree(ctx, worker.id) && !taskOf(ctx, worker.id) && !worker.workplaceId,
-  );
-
-/** Ближайший к точке свободный рабочий. */
-export const nearestIdleWorker = (ctx: AiContext, site: Position) =>
-  [...idleWorkers(ctx)].sort(
-    (a, b) => manhattan(a, site) - manhattan(b, site),
-  )[0] as CivilUnit | undefined;
 
 /**
  * Шаг стройки: рядом — построить, иначе идти к площадке с задачей и
