@@ -197,3 +197,28 @@ export const getVisibleRecords = <
       ({ visibleTo }) => visibleTo === 'all' || visibleTo.includes(viewer),
     )
     .map(({ detail: _detail, ...record }) => record);
+
+/** Сколько последних отказов показывать игроку одновременно. */
+export const PLAYER_ERROR_LIMIT = 3;
+
+/**
+ * Отказы собственных команд игрока для коротких сообщений. Чужие команды
+ * и служебные ошибки партии не попадают: игрок узнаёт только о своём.
+ * Техническая деталь сбоя остаётся только в режиме отладки.
+ *
+ * @param errors - Ошибки журнала.
+ * @param player - Участник за экраном.
+ * @param withDetail - Режим отладки: оставить техническую деталь.
+ * @param limit - Сколько последних показать.
+ * @returns Последние отказы игрока, новые в конце.
+ */
+export const getPlayerErrors = (
+  errors: JournalError[],
+  player: ParticipantId,
+  withDetail = false,
+  limit = PLAYER_ERROR_LIMIT,
+): (Omit<JournalError, 'detail'> & { detail?: string })[] => {
+  const own = errors.filter(error => error.actor === player);
+  const visible = withDetail ? own : getVisibleRecords(own, player);
+  return visible.slice(-limit);
+};

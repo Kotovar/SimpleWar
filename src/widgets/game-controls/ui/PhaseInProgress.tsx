@@ -12,6 +12,7 @@ import { useSelectionSelectors } from '@features/selection';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import {
   AiTurnBanner,
+  CommandToasts,
   ResourcesInfo,
   TurnControls,
   TurnInfo,
@@ -195,6 +196,7 @@ export const PhaseInProgress = ({ minimap }: Props) => {
       </header>
 
       <AiTurnBanner />
+      <CommandToasts />
 
       <aside
         className={styles.ContextPanel}

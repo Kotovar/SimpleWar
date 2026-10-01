@@ -1,7 +1,9 @@
 export {
   JOURNAL_LIMIT,
   DECISION_LIMIT,
+  getPlayerErrors,
   getVisibleRecords,
+  PLAYER_ERROR_LIMIT,
   runCommand,
   useJournalStore,
   type JournalEntry,

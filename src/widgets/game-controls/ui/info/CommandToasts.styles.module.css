@@ -1,0 +1,63 @@
+.Toasts {
+  grid-area: map;
+  align-self: start;
+  justify-self: center;
+  z-index: 60;
+  display: grid;
+  gap: 6px;
+  margin-top: 64px;
+  pointer-events: none;
+}
+
+.Toast {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 420px;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  background-color: rgb(24 29 35 / 0.92);
+  border: 1px solid var(--danger);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-size: 0.9rem;
+  animation: toast 3.5s ease-out forwards;
+}
+
+.Toast[data-kind='failure'] {
+  flex-wrap: wrap;
+  border-color: var(--gold);
+}
+
+.Mark {
+  color: var(--danger-strong);
+  font-weight: 700;
+}
+
+.Count {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Техническая деталь сбоя — только в режиме отладки. */
+.Detail {
+  flex-basis: 100%;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-family: ui-monospace, monospace;
+}
+
+@keyframes toast {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  8%,
+  80% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}

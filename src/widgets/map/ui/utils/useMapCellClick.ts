@@ -14,20 +14,18 @@ import {
   useMovementSelectors,
 } from '@features/pathfinding';
 import type { CommandResult } from '@shared/config';
-import { audio } from '@shared/lib';
 import { handleMapCellClick } from './mapClickHandler';
 import { pushMapEffect } from './mapSignals';
 
 /**
- * Отказ приказа по клетке: звук и «×» над клеткой дублируют друг друга.
- * Текст причины — в итоге событий S19.
+ * Отказ приказа по клетке: «×» над клеткой. Причину и звук отказа даёт
+ * сообщение об ошибке из журнала — одинаково для карты и кнопок панели.
  */
 const withRejectSignal =
   <T>(command: (input: T) => CommandResult, x: number, y: number) =>
   (input: T) => {
     const result = command(input);
     if (!result.ok) {
-      audio.play('reject');
       pushMapEffect({ x, y, signal: 'reject', start: performance.now() });
     }
     return result;

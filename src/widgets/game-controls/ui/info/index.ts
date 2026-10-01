@@ -11,3 +11,4 @@ export * from './BuildingManage';
 export * from './SiegeStrike';
 export * from './ResearchPanel';
 export * from './AudioSettings';
+export * from './CommandToasts';

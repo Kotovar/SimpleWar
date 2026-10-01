@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vite-plus/test';
-import { reject } from '@shared/lib';
+import { failure, reject } from '@shared/lib';
 import { DECISION_LIMIT, type AiDecisionInput } from './decisions';
 import {
   JOURNAL_LIMIT,
+  getPlayerErrors,
   getVisibleRecords,
   runCommand,
   useJournalStore,
@@ -137,5 +138,47 @@ describe('useJournalStore', () => {
 
     journal().newGame();
     expect(journal().decisions).toEqual([]);
+  });
+});
+
+describe('getPlayerErrors', () => {
+  beforeEach(() => journal().newGame());
+
+  it('только свои отказы, последние, без технической детали', () => {
+    runCommand({ type: 'move', actor: 'p2' }, 1, () => reject('path'));
+    runCommand({ type: 'start', actor: null }, 1, () => reject('map'));
+    for (const code of [
+      'points',
+      'resources',
+      'occupied',
+      'distance',
+    ] as const) {
+      runCommand({ type: 'move', actor: 'p1' }, 1, () => reject(code));
+    }
+    runCommand({ type: 'build', actor: 'p1' }, 1, () => failure('boom'));
+
+    const shown = getPlayerErrors(journal().errors, 'p1');
+    expect(shown.map(error => error.code)).toEqual([
+      'occupied',
+      'distance',
+      'failure',
+    ]);
+    expect(shown.at(-1)).not.toHaveProperty('detail');
+  });
+
+  it('в отладке сбой показывает деталь, повтор — счётчик', () => {
+    const meta = { type: 'build', actor: 'p1' } as const;
+    runCommand(meta, 1, () => failure('boom'));
+    runCommand(meta, 1, () => failure('boom'));
+
+    expect(getPlayerErrors(journal().errors, 'p1', true)).toMatchObject([
+      { code: 'failure', detail: 'boom', count: 2 },
+    ]);
+  });
+
+  it('новая партия очищает сообщения', () => {
+    runCommand({ type: 'move', actor: 'p1' }, 1, () => reject('path'));
+    journal().newGame();
+    expect(getPlayerErrors(journal().errors, 'p1')).toEqual([]);
   });
 });
