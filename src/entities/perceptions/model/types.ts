@@ -1,4 +1,10 @@
-import type { BuildingType, CellType, Owner, UnitType } from '@shared/config';
+import type {
+  BuildingType,
+  CellType,
+  Owner,
+  Position,
+  UnitType,
+} from '@shared/config';
 
 /** Коды запомненной местности; `0` в маске — клетку никогда не видели. */
 export const TERRAIN_CODES: readonly CellType[] = [
@@ -27,6 +33,8 @@ export type Contact = {
   maxHp: number;
   /** Круг ходов, в котором объект видели в последний раз. */
   seenTurn: number;
+  /** Юнита замечал разведчик наблюдателя: Картография продлевает память. */
+  byScout?: boolean;
 };
 
 /** Достоверность контакта: свежий или устаревший. */
@@ -42,6 +50,18 @@ export type ParticipantKnowledge = {
   terrain: Uint8Array;
   /** Память о вражеских объектах по ID, включая видимые сейчас. */
   contacts: Record<string, Contact>;
+  /**
+   * Известные отметки подготовленных ударов по ID орудия: только клетка
+   * цели, без позиции орудия. Живут до удара или отмены.
+   */
+  strikes: Record<string, Position>;
+};
+
+/** Подготовленный удар в мире и может ли участник увидеть его отметку сейчас. */
+export type StrikeSighting = Position & {
+  id: string;
+  /** Отметка открыта наблюдателю: публичная, своя/союзная или под разведчиком. */
+  seen: boolean;
 };
 
 /** Состояние клетки для участника. */

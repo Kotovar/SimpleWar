@@ -3,6 +3,7 @@ export {
   drawBase,
   drawFarm,
   drawForge,
+  drawPalisade,
   drawGoldMine,
   drawSanctuary,
   drawSawmill,

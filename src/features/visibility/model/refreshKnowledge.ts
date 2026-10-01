@@ -1,20 +1,29 @@
-import type { Building, Owner, ParticipantId, Unit } from '@shared/config';
+import {
+  CARTOGRAPHY_EXTRA_MEMORY,
+  type Building,
+  type Owner,
+  type ParticipantId,
+  type Unit,
+} from '@shared/config';
 import {
   computeVisibility,
   gameEvents,
   getSightSources,
   getShelteredIds,
+  isCellVisible,
   isHostile,
 } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
 import { useGameLoopStore } from '@entities/games';
+import { hasResearch } from '@entities/researches';
 import {
   observe,
   useKnowledgeStore,
   type Contact,
   type ParticipantKnowledge,
+  type StrikeSighting,
 } from '@entities/perceptions';
 
 /**
@@ -48,11 +57,17 @@ export const getVisibleEnemies = (
   owner: Owner,
   visible: Uint8Array,
 ): Omit<Contact, 'seenTurn'>[] => {
-  const width = useMapStore.getState().grid[0]?.length ?? 0;
+  const { grid } = useMapStore.getState();
+  const width = grid[0]?.length ?? 0;
   const units = Object.values(useUnitsStore.getState().units);
   const buildings = Object.values(useBuildingsStore.getState().buildings);
   // Рабочего внутри здания снаружи не видно.
   const sheltered = getShelteredIds(units, buildings);
+  const scouts = getSightSources(
+    owner,
+    units.filter(({ type }) => type === 'scout'),
+    grid,
+  );
   const pick =
     (kind: Contact['kind']) =>
     (entity: Unit | Building): Omit<Contact, 'seenTurn'>[] =>
@@ -69,6 +84,9 @@ export const getVisibleEnemies = (
               y: entity.y,
               hp: entity.hp,
               maxHp: entity.maxHp,
+              ...(kind === 'unit' && isCellVisible(scouts, entity.x, entity.y)
+                ? { byScout: true }
+                : {}),
             },
           ]
         : [];
@@ -77,6 +95,35 @@ export const getVisibleEnemies = (
     ...units.flatMap(pick('unit')),
     ...buildings.flatMap(pick('building')),
   ];
+};
+
+/**
+ * Подготовленные удары мира глазами участника. Отметка открыта, если
+ * у стороны орудия нет Скрытой наводки, если орудие своё или союзное, или
+ * если клетка цели в обзоре разведчика наблюдателя.
+ *
+ * @param owner - Наблюдающий участник.
+ */
+export const getStrikeSightings = (owner: Owner): StrikeSighting[] => {
+  const units = Object.values(useUnitsStore.getState().units);
+  const sieges = units.filter(
+    unit => unit.role === 'military' && unit.preparedStrike,
+  );
+  if (sieges.length === 0) return [];
+  const scouts = getSightSources(
+    owner,
+    units.filter(({ type }) => type === 'scout'),
+    useMapStore.getState().grid,
+  );
+  return sieges.flatMap(siege => {
+    if (siege.role !== 'military' || !siege.preparedStrike) return [];
+    const { x, y } = siege.preparedStrike;
+    const seen =
+      !isHostile(owner, siege.owner) ||
+      !hasResearch(siege.owner, 'hiddenAiming') ||
+      isCellVisible(scouts, x, y);
+    return [{ id: siege.id, x, y, seen }];
+  });
 };
 
 /**
@@ -109,6 +156,10 @@ export const refreshKnowledge = () => {
       enemies: getVisibleEnemies(id, visible),
       turn: currentTurn,
       eliminated,
+      scoutMemoryBonus: hasResearch(id, 'cartography')
+        ? CARTOGRAPHY_EXTRA_MEMORY
+        : 0,
+      strikes: getStrikeSightings(id),
     });
     changed ||= next[id] !== previous;
   }

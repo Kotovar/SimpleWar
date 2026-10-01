@@ -76,13 +76,18 @@ export const findServingWorker = (
  * осталось рабочее действие: добыча и стройка/ремонт в один ход не сочетаются.
  * Один рабочий кормит одно здание, поэтому двойной добычи нет.
  *
+ * Артель (S16) снимает это условие: рабочий добывает, даже потратив
+ * рабочее действие на стройку или расчистку.
+ *
  * @param buildings - Здания участника.
  * @param units - Юниты участника.
+ * @param artel - У участника изучена Артель.
  * @returns Доход и ID рабочих, добывающих в этом ходу.
  */
 export const calculateTurnIncome = (
   buildings: Building[],
   units: Unit[],
+  artel = false,
 ): { income: Resources; miners: string[] } => {
   const income: Resources = { gold: 0, wood: 0 };
   const miners = new Set<string>();
@@ -91,7 +96,11 @@ export const calculateTurnIncome = (
     if (!building.income) continue;
     if (building.role === 'resource') {
       const worker = findServingWorker(building, units);
-      if (!worker || worker.buildPoints <= 0 || miners.has(worker.id)) {
+      if (
+        !worker ||
+        (!artel && worker.buildPoints <= 0) ||
+        miners.has(worker.id)
+      ) {
         continue;
       }
       miners.add(worker.id);

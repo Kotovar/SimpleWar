@@ -1,6 +1,8 @@
 import {
   type Resources,
   type BuildingType,
+  type ResearchType,
+  BUILDING_RESEARCH,
   BUILDINGS_CONFIG,
 } from '@shared/config';
 
@@ -42,4 +44,19 @@ export const canSpawnBuilding = (
   }
 
   return { canSpawn: true, reason: 'none', message: 'Построить здание' };
+};
+
+/**
+ * Открыт ли тип здания стороне: часть построек требует исследования
+ * (частокол — Инженерии).
+ *
+ * @param type - Тип здания.
+ * @param researched - Изученные стороной исследования.
+ */
+export const isBuildingUnlocked = (
+  type: BuildingType,
+  researched: readonly ResearchType[] = [],
+) => {
+  const required = BUILDING_RESEARCH[type as keyof typeof BUILDING_RESEARCH];
+  return !required || researched.includes(required);
 };

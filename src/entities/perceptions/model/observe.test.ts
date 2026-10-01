@@ -108,6 +108,46 @@ describe('знания участника', () => {
     expect(gone.contacts.e1).toBeUndefined();
   });
 
+  it('Картография продлевает только память о юните, замеченном разведчиком', () => {
+    const hidden = { visible: mask(8, 0, 1), scoutMemoryBonus: 2 };
+    const { forgetAfter, staleAfter } = CONTACT_MEMORY;
+    const scouted = observe(
+      undefined,
+      input({ enemies: [enemy(2, { byScout: true })] }),
+    );
+    const plain = observe(undefined, input({ enemies: [enemy(2)] }));
+
+    const kept = observe(scouted, input({ ...hidden, turn: 3 + forgetAfter }));
+    expect(kept.contacts.e1).toBeDefined();
+    // Достоверность не меняется: контакт всё равно устаревает.
+    expect(getContactConfidence(kept.contacts.e1, 2 + staleAfter)).toBe(
+      'stale',
+    );
+    const gone = observe(kept, input({ ...hidden, turn: 4 + forgetAfter }));
+    expect(gone.contacts.e1).toBeUndefined();
+
+    const plainGone = observe(
+      plain,
+      input({ ...hidden, turn: 2 + forgetAfter }),
+    );
+    expect(plainGone.contacts.e1).toBeUndefined();
+    // Без исследования отметка разведчика срок не меняет.
+    const noBonus = observe(
+      scouted,
+      input({ visible: mask(8, 0, 1), turn: 2 + forgetAfter }),
+    );
+    expect(noBonus.contacts.e1).toBeUndefined();
+  });
+
+  it('отметка разведчика сохраняется при повторном обзоре без него', () => {
+    const scouted = observe(
+      undefined,
+      input({ enemies: [enemy(2, { byScout: true })] }),
+    );
+    const again = observe(scouted, input({ enemies: [enemy(2)], turn: 2 }));
+    expect(again.contacts.e1.byScout).toBe(true);
+  });
+
   it('память здания живёт до проверки места', () => {
     const base = enemy(2, { id: 'b1', kind: 'building', type: 'base' });
     const seen = observe(undefined, input({ enemies: [base] }));

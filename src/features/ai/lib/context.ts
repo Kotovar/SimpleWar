@@ -174,8 +174,11 @@ export const buildContext = (
       gold: obs.stock.gold - reserved.gold,
       wood: obs.stock.wood - reserved.wood,
     },
-    income: calculateTurnIncome(obs.ownBuildings, obs.ownUnits as Unit[])
-      .income,
+    income: calculateTurnIncome(
+      obs.ownBuildings,
+      obs.ownUnits as Unit[],
+      obs.researched.includes('artel'),
+    ).income,
     known,
     inside,
     occupied,

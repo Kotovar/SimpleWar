@@ -42,8 +42,11 @@ export const getBuildingInfoText = (buildingType: BuildingType): string => {
         .map(unit => UNITS_NAME[unit])
         .join(', ')}`;
 
+    case 'palisade':
+      return 'Непроходимое укрепление: без дохода, населения и обзора';
+
     case 'forge':
-      return 'Здесь будут вестись исследования — они появятся в следующей версии';
+      return 'Исследования: новые правила для всех ваших юнитов';
 
     default:
       return '';

@@ -3,9 +3,11 @@ import type { Building, BuildingType, Unit } from '@shared/config';
 import { findServingWorker } from '@shared/lib';
 import { useBuildingsSelectors } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
+import { useResearchStore } from '@entities/researches';
 import { useEconomySelectors } from '@entities/economies';
 import { calculateIncome, useGameLoopSelectors } from '@features/game-loop';
 import { GoldIcon, PopulationIcon, WoodIcon } from '@shared/ui';
+import { ResearchStat } from './ResearchStat';
 import styles from './ResourcesInfo.styles.module.css';
 
 type StatProps = {
@@ -65,6 +67,9 @@ export const ResourcesInfo = () => {
   const { getEconomicBuildings } = useBuildingsSelectors();
   const { humanId, activePlayer } = useGameLoopSelectors();
   const units = useUnitsStore(state => state.units);
+  const artel = useResearchStore(
+    state => !!humanId && !!state.completed[humanId]?.includes('artel'),
+  );
   if (!humanId) return null;
 
   // Прогноз на конец своего хода: добыча идёт только с рабочими. В чужой
@@ -76,6 +81,7 @@ export const ResourcesInfo = () => {
   );
   const income = calculateIncome(ownBuildings, ownUnits, {
     rested: activePlayer !== humanId,
+    artel,
   });
   const { occupied, max } = populationCap[humanId];
 
@@ -110,6 +116,7 @@ export const ResourcesInfo = () => {
         value={`${occupied} / ${max}`}
         extra={occupied >= max ? 'предел' : undefined}
       />
+      <ResearchStat owner={humanId} />
     </div>
   );
 };

@@ -24,7 +24,11 @@ const NEW_UNITS: UnitType[] = [
 describe('состав S14–S14b', () => {
   it('10 юнитов и 10 зданий в конфигурации — состав MVP', () => {
     expect(Object.keys(UNITS_CONFIG)).toHaveLength(10);
-    expect(Object.keys(BUILDINGS_CONFIG)).toHaveLength(10);
+    // Частокол Инженерии (S16) — укрепление, а не одно из 10 зданий.
+    const buildings = Object.keys(BUILDINGS_CONFIG).filter(
+      type => type !== 'palisade',
+    );
+    expect(buildings).toHaveLength(10);
   });
 
   it('каждый юнит нанимается ровно в одном здании', () => {

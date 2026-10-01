@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { MOVE_COST, type Cell } from '@shared/config';
+import { MOVE_COST, type Building, type Cell } from '@shared/config';
 import { ConfirmDialog } from '@shared/ui';
 import { useMapViewer } from '@entities/settings';
 import {
@@ -20,6 +20,7 @@ import {
   UnitOptions,
   WorkerJobs,
   BuildingManage,
+  ResearchPanel,
   DebugPanel,
   SiegeStrike,
 } from './info';
@@ -114,6 +115,21 @@ const useKnownSelection = () => {
   return { selection, cell, unit, building, isUnknownCell };
 };
 
+/** Найм, управление своим зданием и исследования своей кузницы. */
+const BuildingActions = ({ building }: { building: Building }) => {
+  const { humanId } = useGameLoopSelectors();
+  const isOwn = building.owner === humanId;
+  return (
+    <>
+      <UnitOptions building={building} />
+      {isOwn && <BuildingManage building={building} />}
+      {isOwn && building.type === 'forge' && (
+        <ResearchPanel owner={building.owner} />
+      )}
+    </>
+  );
+};
+
 /** Сведения и действия для выбранного объекта с учётом видимости. */
 const SelectionDetails = () => {
   const { selection, cell, unit, building, isUnknownCell } =
@@ -133,10 +149,7 @@ const SelectionDetails = () => {
           {unit?.role === 'military' &&
             unit.type === 'siege' &&
             unit.owner === humanId && <SiegeStrike unit={unit} />}
-          {building && <UnitOptions building={building} />}
-          {building && building.owner === humanId && (
-            <BuildingManage building={building} />
-          )}
+          {building && <BuildingActions building={building} />}
         </>
       )}
 

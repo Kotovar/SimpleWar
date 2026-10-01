@@ -28,6 +28,7 @@ export const BUILDINGS_NAME = {
   workshop: 'Мастерская',
   forge: 'Кузница',
   sanctuary: 'Святилище',
+  palisade: 'Частокол',
 } satisfies Record<BuildingType, string>;
 
 /** Игровые названия сторон по цвету слота. */

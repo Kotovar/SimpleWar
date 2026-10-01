@@ -11,6 +11,7 @@ import {
   canHitTarget,
   getCombatProfile,
   getTargetCategory,
+  hasFormationNeighbor,
 } from './damage';
 
 const hit = (
@@ -129,5 +130,36 @@ describe('матрица земля / воздух', () => {
     expect(
       calculateDamage({ type: 'archer', attack: 22 }, { type: 'griffon' }),
     ).toBe(22 + 6 - 1);
+  });
+});
+
+describe('Строй', () => {
+  const spear = (id: string, x: number, y: number, owner = 'p1') => ({
+    id,
+    type: 'spearman' as const,
+    owner,
+    x,
+    y,
+  });
+
+  it('прибавка к броне снижает только физический урон', () => {
+    expect(calculateDamage(hit('rider'), { type: 'spearman' }, 2)).toBe(12);
+    expect(
+      calculateDamage({ type: 'mage', attack: 20 }, { type: 'spearman' }, 2),
+    ).toBe(calculateDamage({ type: 'mage', attack: 20 }, { type: 'spearman' }));
+  });
+
+  it('нужен свой копейщик по стороне, не по диагонали', () => {
+    const me = spear('a', 2, 2);
+    expect(hasFormationNeighbor(me, [me, spear('b', 2, 3)])).toBe(true);
+    expect(hasFormationNeighbor(me, [me, spear('b', 3, 3)])).toBe(false);
+    expect(hasFormationNeighbor(me, [me, spear('b', 2, 3, 'p2')])).toBe(false);
+    expect(hasFormationNeighbor(me, [me])).toBe(false);
+    expect(
+      hasFormationNeighbor(me, [
+        me,
+        { id: 'c', type: 'swordsman', owner: 'p1', x: 2, y: 3 },
+      ]),
+    ).toBe(false);
   });
 });

@@ -4,6 +4,7 @@ import type {
   ParticipantId,
   PopulationCap,
   Position,
+  ResearchType,
   Resources,
   Unit,
 } from '@shared/config';
@@ -39,8 +40,10 @@ export type Observation = {
   /** Память об объектах вне обзора. */
   contacts: RememberedContact[];
   /**
-   * Публичные отметки подготовленных ударов осады всех сторон: только
-   * клетка цели, без позиции, типа и HP орудия.
+   * Известные участнику отметки подготовленных ударов осады: только клетка
+   * цели, без позиции, типа и HP орудия. Скрытая наводка прячет чужие.
    */
   strikes: Position[];
+  /** Изученные участником исследования. */
+  researched: ResearchType[];
 };

@@ -49,7 +49,8 @@ export const getSightSources = (
 ): SightSource[] => {
   const sources: SightSource[] = [];
   for (const viewer of viewers) {
-    if (viewer.owner !== owner) continue;
+    // Объект без обзора (частокол) не видит даже свою клетку.
+    if (viewer.owner !== owner || viewer.sightRange <= 0) continue;
     sources.push({
       x: viewer.x,
       y: viewer.y,

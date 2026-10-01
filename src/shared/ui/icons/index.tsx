@@ -62,6 +62,17 @@ export const PopulationIcon = ({ size = 14 }: Props) => (
   </svg>
 );
 
+/** Наковальня: исследования кузницы. */
+export const ResearchIcon = ({ size = 14 }: Props) => (
+  <svg {...base(size)}>
+    <path
+      d='M1.5 4.5h10.5c0 2-1.6 3.2-3.5 3.4v1.6h2.2v2H5.3v-2h2.2V7.9C4 7.7 1.5 6.3 1.5 4.5z'
+      fill='var(--research)'
+    />
+    <path d='M4 13.5h8' stroke='var(--research)' strokeWidth='1.6' />
+  </svg>
+);
+
 /** Холм: выбрана клетка. */
 export const TerrainIcon = ({ size = 16 }: Props) => (
   <svg {...base(size)}>

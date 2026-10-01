@@ -233,6 +233,7 @@ export const CIVIL_UNITS_CONFIG: Record<
       'workshop',
       'forge',
       'sanctuary',
+      'palisade',
     ],
     requiresLimit: 1,
     cost: { gold: 40, wood: 40 },

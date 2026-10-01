@@ -11,6 +11,7 @@ import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
 import { useGameLoopStore } from '@entities/games';
 import { useJournalStore } from '@entities/journals';
+import { getResearchArmor } from '@entities/researches';
 
 /**
  * Исполняет подготовленные удары осадных машин участника — шаг 8 порядка
@@ -52,7 +53,11 @@ export const executePreparedStrikes = (owner: ParticipantId) => {
     );
     const hits: string[] = [];
     for (const unit of units) {
-      const damage = calculateDamage(siege, unit);
+      const damage = calculateDamage(
+        siege,
+        unit,
+        getResearchArmor(unit, Object.values(useUnitsStore.getState().units)),
+      );
       if (unit.owner === owner || !building)
         hits.push(`${unit.type}:${damage}`);
       useUnitsStore.getState().damageUnit(unit.id, damage);

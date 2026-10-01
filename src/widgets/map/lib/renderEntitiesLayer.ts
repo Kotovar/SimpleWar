@@ -11,6 +11,7 @@ import {
   drawBase,
   drawFarm,
   drawForge,
+  drawPalisade,
   drawGoldMine,
   drawSanctuary,
   drawSawmill,
@@ -34,8 +35,10 @@ import { drawHpBar } from './drawHpBar';
 import { drawActionPips } from './drawActionPips';
 import { drawWorkBadge } from './drawWorkBadge';
 import { drawIdleBadge } from './drawIdleBadge';
+import { drawFormationBadge } from './drawFormationBadge';
 import { isHostile } from '@shared/lib';
 import { getHealTargets } from '@features/combat';
+import { getResearchArmor } from '@entities/researches';
 
 /** Смещение в клетках и масштаб сущностей, которые сейчас анимируются. */
 export type CellOffsets = Map<
@@ -55,6 +58,7 @@ const BUILDING_DRAWERS = {
   stable: drawStable,
   workshop: drawWorkshop,
   forge: drawForge,
+  palisade: drawPalisade,
   sanctuary: drawSanctuary,
 } satisfies Record<BuildingType, unknown>;
 
@@ -175,7 +179,8 @@ export const renderEntitiesLayer = (
     }
   });
 
-  Object.values(units).forEach(unit => {
+  const unitList = Object.values(units);
+  unitList.forEach(unit => {
     const { id, x, y, type, hp, maxHp, owner } = unit;
     if (isOutside(range, x, y)) return;
     const hpRatio = hp / maxHp;
@@ -190,5 +195,9 @@ export const renderEntitiesLayer = (
     // Полоса здоровья и очки остаются контрастными даже у отходившего юнита.
     drawHpBar(ctx, x + dx, y + dy, cellSize, hpRatio);
     if (owner === humanId) drawActionPips(ctx, x + dx, y + dy, cellSize, unit);
+    // Строй — по видимым соседям, как предпросмотр урона.
+    if (getResearchArmor(unit, unitList) > 0) {
+      drawFormationBadge(ctx, x + dx, y + dy, cellSize);
+    }
   });
 };

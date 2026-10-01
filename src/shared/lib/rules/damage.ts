@@ -40,18 +40,21 @@ export const canHitTarget = (
  *
  * @param attacker - Тип и атака атакующего.
  * @param target - Тип цели.
+ * @param armorBonus - Прибавка к физической защите от исследований цели
+ *   (Строй); от магии не защищает.
  * @returns Итоговый урон.
  */
 export const calculateDamage = (
   attacker: { type: UnitType | BuildingType; attack: number },
   target: { type: UnitType | BuildingType },
+  armorBonus = 0,
 ) => {
   const bonuses = DAMAGE_BONUS[attacker.type as MilitaryType] ?? {};
   const bonus = bonuses[getTargetCategory(target.type)] ?? 0;
   const defense =
     DAMAGE_TYPE[attacker.type] === 'magic'
       ? (MAGIC_RESIST[target.type] ?? 0)
-      : (ARMOR[target.type] ?? 0);
+      : (ARMOR[target.type] ?? 0) + armorBonus;
   return Math.max(1, attacker.attack + bonus - defense);
 };
 
@@ -89,3 +92,36 @@ export const getCombatProfile = (
   hitsAir: HITS_AIR.includes(type),
   heal: HEALING[type as UnitType]?.amount ?? 0,
 });
+
+type FormationMember = {
+  id: string;
+  type: UnitType | BuildingType;
+  owner: string;
+  x: number;
+  y: number;
+};
+
+/**
+ * Стоит ли рядом с копейщиком по стороне (не по диагонали) свой копейщик —
+ * условие Строя. Наличие исследования проверяет вызывающий.
+ *
+ * @param unit - Копейщик-цель.
+ * @param units - Все юниты мира.
+ */
+export const hasFormationNeighbor = (
+  unit: FormationMember,
+  units: Iterable<FormationMember>,
+) => {
+  if (unit.type !== 'spearman') return false;
+  for (const other of units) {
+    if (
+      other.id !== unit.id &&
+      other.type === 'spearman' &&
+      other.owner === unit.owner &&
+      Math.abs(other.x - unit.x) + Math.abs(other.y - unit.y) === 1
+    ) {
+      return true;
+    }
+  }
+  return false;
+};

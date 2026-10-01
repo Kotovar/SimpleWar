@@ -7,7 +7,12 @@ import {
   CellType,
   Unit,
 } from '@shared/config';
-import { canSpawnBuilding, getBuildingInfoText } from '@shared/lib';
+import {
+  canSpawnBuilding,
+  getBuildingInfoText,
+  isBuildingUnlocked,
+} from '@shared/lib';
+import { useResearchStore } from '@entities/researches';
 import { useEconomySelectors } from '@entities/economies';
 import { useBuildingsSelectors } from '@entities/buildings';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
@@ -28,6 +33,7 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
   const { humanId } = useGameLoopSelectors();
   const { owner } = unit;
   const isFree = useDebugException(owner, 'freeBuild');
+  const researched = useResearchStore(state => state.completed[owner]);
   const payable = getPayableResources(resources[owner], isFree);
   const {
     selectedBuildingForSpawn,
@@ -49,7 +55,10 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
 
   if (!isOwnUnit || !isWorker) return null;
 
-  const buildableTypes = unit.buildableBuildings;
+  // Частокол появляется в меню после Инженерии.
+  const buildableTypes = unit.buildableBuildings.filter(type =>
+    isBuildingUnlocked(type, researched),
+  );
   if (buildableTypes.length === 0) return null;
 
   const onClick = (
@@ -147,13 +156,15 @@ export const WorkerBuildOptions = ({ unit }: { unit: Unit }) => {
                   {isFree && ' · бесплатно (отладка)'}
                 </span>
                 <span className={styles.Costs}>
-                  <span
-                    className={styles.Cost}
-                    aria-label={`${isFree ? 0 : cost.gold} золота`}
-                    data-lacking={payable.gold < cost.gold}
-                  >
-                    <GoldIcon /> {isFree ? 0 : cost.gold}
-                  </span>
+                  {cost.gold === 0 ? null : (
+                    <span
+                      className={styles.Cost}
+                      aria-label={`${isFree ? 0 : cost.gold} золота`}
+                      data-lacking={payable.gold < cost.gold}
+                    >
+                      <GoldIcon /> {isFree ? 0 : cost.gold}
+                    </span>
+                  )}
                   {cost.wood === 0 ? null : (
                     <span
                       className={styles.Cost}

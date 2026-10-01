@@ -12,6 +12,8 @@ import {
 import { EntityPortrait, TerrainPortrait } from '@shared/ui';
 import { getCombatProfile, getMoveCost } from '@shared/lib';
 import { useGameLoopSelectors } from '@features/game-loop';
+import { useUnitsStore } from '@entities/units';
+import { getResearchArmor, useResearchStore } from '@entities/researches';
 import { DamageBadges, DefenseBadges, FlightBadge } from './CombatBadges';
 import styles from './SelectedEntityInfo.styles.module.css';
 
@@ -160,16 +162,42 @@ const AttackStatsList = ({ entity }: { entity: AttackStats }) => (
   </>
 );
 
-/** Защита от физического и магического урона, если она есть. */
-const DefenseRow = ({ type }: { type: Unit['type'] | Building['type'] }) =>
-  getCombatProfile(type).armor + getCombatProfile(type).magicResist > 0 ? (
+/**
+ * Прибавка Строя к броне своего копейщика сейчас. Чужому не считаем: его
+ * соседи могут быть под туманом.
+ */
+const useFormationBonus = (unit: Unit) => {
+  const { humanId } = useGameLoopSelectors();
+  const units = useUnitsStore(state => state.units);
+  const learned = useResearchStore(
+    state => !!state.completed[unit.owner]?.includes('formation'),
+  );
+  if (!learned || unit.owner !== humanId) return 0;
+  return getResearchArmor(unit, Object.values(units));
+};
+
+/** Защита от физического и магического урона и прибавка Строя, если есть. */
+const DefenseRow = ({
+  type,
+  bonus = 0,
+}: {
+  type: Unit['type'] | Building['type'];
+  bonus?: number;
+}) =>
+  getCombatProfile(type).armor + getCombatProfile(type).magicResist + bonus >
+  0 ? (
     <div>
       <dt>Защита</dt>
       <dd>
         <DefenseBadges type={type} />
+        {bonus > 0 && ` (+${bonus} — строй)`}
       </dd>
     </div>
   ) : null;
+
+const UnitDefense = ({ unit }: { unit: Unit }) => (
+  <DefenseRow type={unit.type} bonus={useFormationBonus(unit)} />
+);
 
 const UnitDetails = ({ unit }: { unit: Unit }) => (
   <>
@@ -180,7 +208,7 @@ const UnitDetails = ({ unit }: { unit: Unit }) => (
         <FlightBadge type={unit.type} />
       </dd>
     </div>
-    <DefenseRow type={unit.type} />
+    <UnitDefense unit={unit} />
     {unit.role === 'civil' ? (
       <div>
         <dt>Очки строительства</dt>

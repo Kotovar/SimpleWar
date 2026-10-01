@@ -11,12 +11,13 @@ import { calculateTurnIncome } from '@shared/lib';
  * @param options.rested - Считать, что рабочие действия восстановлены: так
  *   прогноз вне своего хода показывает доход следующего своего хода, а не
  *   уже потраченную добычу.
+ * @param options.artel - Изучена Артель: добыча не требует рабочего действия.
  * @returns Количество золота и древесины без изменения входных данных.
  */
 export const calculateIncome = (
   buildings: Building[],
   units: Unit[] = [],
-  { rested = false }: { rested?: boolean } = {},
+  { rested = false, artel = false }: { rested?: boolean; artel?: boolean } = {},
 ): Resources =>
   calculateTurnIncome(
     buildings,
@@ -27,4 +28,5 @@ export const calculateIncome = (
             : unit,
         )
       : units,
+    artel,
   ).income;

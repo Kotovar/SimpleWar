@@ -1,6 +1,7 @@
 import type { Building, Position, Unit } from '@shared/config';
 import { getHealAmount } from '@features/combat';
 import { calculateDamage } from '@shared/lib';
+import { getResearchArmor } from '@entities/researches';
 import type { Selection } from '@features/selection';
 import {
   drawHoverHighlight,
@@ -108,7 +109,12 @@ export const renderSelectionLayer = (
       Object.values(units).find(u => u.x === hover.x && u.y === hover.y) ??
       Object.values(buildings).find(b => b.x === hover.x && b.y === hover.y);
     if (target) {
-      const damage = calculateDamage(attacker, target);
+      // Строй считается по видимым соседям: туман не раскрывается.
+      const damage = calculateDamage(
+        attacker,
+        target,
+        getResearchArmor(target, Object.values(units)),
+      );
       drawDamagePreview(
         ctx,
         hover.x,

@@ -1,6 +1,7 @@
 import { useUnitsStore } from '@entities/units';
 import { useEffect, useRef, type RefObject } from 'react';
 import type { Owner } from '@shared/config';
+import { useResearchStore } from '@entities/researches';
 import {
   drawEffect,
   EFFECT_DURATION,
@@ -156,6 +157,9 @@ export const useEntitiesLayer = ({
     isFirstRun.current = false;
   }, [buildings, isVisible, staffed, units, worldIds, worldUnits]);
 
+  // Завершённое исследование меняет значки (Строй) без смены юнитов.
+  const researched = useResearchStore(state => state.completed);
+
   useEffect(() => {
     const { cellSize, viewport, offset, range } = view;
     const ctx = setupCanvas(ref, viewport.width, viewport.height, offset);
@@ -241,5 +245,15 @@ export const useEntitiesLayer = ({
     draw();
 
     return () => cancelAnimationFrame(frame.current);
-  }, [buildings, humanId, ref, snapshots, staffed, units, view, worldUnits]);
+  }, [
+    buildings,
+    humanId,
+    ref,
+    researched,
+    snapshots,
+    staffed,
+    units,
+    view,
+    worldUnits,
+  ]);
 };

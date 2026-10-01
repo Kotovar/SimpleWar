@@ -7,6 +7,7 @@ import { useBuildingsStore } from '@entities/buildings';
 import { useEconomyStore } from '@entities/economies';
 import { useGameLoopStore } from '@entities/games';
 import { useMapStore } from '@entities/maps';
+import { useResearchStore } from '@entities/researches';
 import { useSettingsStore } from '@entities/settings';
 import { useUnitsStore } from '@entities/units';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
@@ -23,6 +24,7 @@ const resets = [
   snapshot(useEconomyStore),
   snapshot(useGameLoopStore),
   snapshot(useMapStore),
+  snapshot(useResearchStore),
   snapshot(useSettingsStore),
   snapshot(useUnitsStore),
   snapshot(useHighlightStore),

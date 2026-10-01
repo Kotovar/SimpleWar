@@ -57,8 +57,8 @@ const building = (
 
 const setEconomy = (gold: number, wood: number, occupied = 0, max = 10) =>
   useEconomyStore.setState(state => ({
-    resources: { ...state.resources, player: { gold, wood } },
-    populationCap: { ...state.populationCap, player: { occupied, max } },
+    resources: { ...state.resources, p1: { gold, wood } },
+    populationCap: { ...state.populationCap, p1: { occupied, max } },
   }));
 
 const meta = {

@@ -14,6 +14,7 @@ import { useUnitsStore } from '@entities/units';
 import { useMapStore } from '@entities/maps';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand } from '@entities/journals';
+import { getResearchArmor } from '@entities/researches';
 
 /** Приказ атаки: кто, чьим юнитом или башней и по какой цели. */
 export type AttackCommand = {
@@ -76,7 +77,11 @@ const validateAndAttack = ({
     Math.abs(attacker.x - target.x) + Math.abs(attacker.y - target.y);
   if (distance > attacker.attackRange) return reject('distance');
 
-  const damage = calculateDamage(attacker, target);
+  const damage = calculateDamage(
+    attacker,
+    target,
+    getResearchArmor(target, Object.values(unitsStore.units)),
+  );
 
   if (targetUnit) {
     unitsStore.damageUnit(targetId, damage);

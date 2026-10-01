@@ -4,6 +4,7 @@ export * from './drawTerrain';
 export * from './drawUnits';
 export * from './drawHpBar';
 export * from './drawActionPips';
+export * from './drawFormationBadge';
 export * from './drawMovement';
 export * from './drawSelectionHighlight';
 export * from './drawEffects';

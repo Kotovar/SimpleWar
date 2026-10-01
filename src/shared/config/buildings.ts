@@ -1,6 +1,7 @@
 import type { CellType, Owner } from './common';
 import type { Cost } from './economy';
 import type { UnitType } from './units';
+import type { ResearchType } from './research';
 
 /** Строковые имена всех типов зданий. */
 export type BuildingType =
@@ -13,7 +14,8 @@ export type BuildingType =
   | 'stable'
   | 'workshop'
   | 'forge'
-  | 'sanctuary';
+  | 'sanctuary'
+  | 'palisade';
 
 /** Частичный набор ресурсов, которые здание производит за ход. */
 export type Income = Partial<Cost>;
@@ -69,11 +71,19 @@ export type CombatBuilding = BaseBuilding & {
 };
 
 /**
- * Здание для исследований. Исследований пока нет (S16): кузница строится,
- * но работ не запускает.
+ * Здание для исследований: кузница запускает работы (S16), без неё
+ * начатая работа стоит на паузе.
  */
 export type ResearchBuilding = BaseBuilding & {
   role: 'research';
+};
+
+/**
+ * Укрепление (частокол Инженерии S16): непроходимый объект с HP, без найма,
+ * дохода, населения и обзора. Сносится и разрушается как здание.
+ */
+export type ObstacleBuilding = BaseBuilding & {
+  role: 'obstacle';
 };
 
 /** Любое здание на карте в зависимости от роли. */
@@ -82,7 +92,8 @@ export type Building =
   | ResourceBuilding
   | SupplyBuilding
   | CombatBuilding
-  | ResearchBuilding;
+  | ResearchBuilding
+  | ObstacleBuilding;
 
 export const PRODUCTION_BUILDINGS_CONFIG: Record<
   Extract<
@@ -200,10 +211,29 @@ export const RESEARCH_BUILDINGS_CONFIG: Record<
   },
 };
 
+export const OBSTACLE_BUILDINGS_CONFIG: Record<
+  Extract<BuildingType, 'palisade'>,
+  Omit<ObstacleBuilding, InstanceKeys>
+> = {
+  // Старт; HP и цена подбираются в S21. Поле или холм.
+  palisade: {
+    maxHp: 60,
+    sightRange: 0,
+    cost: { gold: 0, wood: 40 },
+    requiredField: 'grass',
+  },
+};
+
+/** Здания, которые рабочий строит только после исследования. */
+export const BUILDING_RESEARCH = {
+  palisade: 'engineering',
+} as const satisfies Partial<Record<BuildingType, ResearchType>>;
+
 export const BUILDINGS_CONFIG = {
   ...PRODUCTION_BUILDINGS_CONFIG,
   ...RESOURCE_BUILDINGS_CONFIG,
   ...SUPPLY_BUILDINGS_CONFIG,
   ...COMBAT_BUILDINGS_CONFIG,
   ...RESEARCH_BUILDINGS_CONFIG,
+  ...OBSTACLE_BUILDINGS_CONFIG,
 };

@@ -75,6 +75,12 @@ describe('обзор', () => {
     expect(onGrass.radius).toBe(2);
   });
 
+  it('объект без обзора (частокол) не источник даже на холме', () => {
+    const grid = makeGrid(3, 1);
+    grid[0][1].type = 'hill';
+    expect(getSightSources('p1', [viewer(1, 0, 0)], grid)).toEqual([]);
+  });
+
   it('без источников ничего не видно: гибель последнего снимает обзор', () => {
     expect(computeVisibility(3, 3, [])).toEqual(new Uint8Array(9));
     expect(isCellVisible([], 0, 0)).toBe(false);

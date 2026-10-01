@@ -13,3 +13,4 @@ export * from './vision';
 export * from './ai';
 export * from './combat';
 export * from './sandbox';
+export * from './research';

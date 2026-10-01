@@ -15,7 +15,9 @@ export type CommandType =
   | 'clearForest'
   | 'demolish'
   | 'prepareStrike'
-  | 'heal';
+  | 'heal'
+  | 'startResearch'
+  | 'cancelResearch';
 
 /** Последствия действий, которые журнал записывает помимо самих команд. */
 export type GameOutcomeType =
@@ -23,7 +25,8 @@ export type GameOutcomeType =
   | 'buildingDestroyed'
   | 'eliminated'
   | 'gameOver'
-  | 'strike';
+  | 'strike'
+  | 'researchDone';
 
 /** Тип записи журнала: команда либо её последствие. */
 export type JournalEventType = CommandType | GameOutcomeType;
@@ -52,6 +55,10 @@ export type RejectionCode =
   | 'workplace'
   | 'blocked'
   | 'map'
+  | 'forge'
+  | 'researched'
+  | 'researching'
+  | 'research'
   | 'failure';
 
 /**
@@ -78,6 +85,10 @@ export const REJECTION_MESSAGE: Record<RejectionCode, string> = {
   workplace: 'Здание уже обслуживает другой рабочий',
   blocked: 'Постройка перекроет последний проход',
   map: 'Не удалось подготовить карту',
+  forge: 'Нужна кузница',
+  researched: 'Исследование уже изучено',
+  researching: 'Кузница уже ведёт исследование',
+  research: 'Сначала нужно исследование',
   failure: 'Внутренняя ошибка игры',
 };
 

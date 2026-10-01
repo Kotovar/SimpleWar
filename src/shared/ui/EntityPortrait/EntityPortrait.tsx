@@ -7,6 +7,7 @@ import { drawArcher, drawSwordsman, drawWorker } from './drawUnits';
 import { drawRider, drawScout, drawSiege, drawSpearman } from './drawNewUnits';
 import {
   drawForge,
+  drawPalisade,
   drawSanctuary,
   drawStable,
   drawWorkshop,
@@ -31,6 +32,7 @@ const DRAW_ENTITY = {
   stable: drawStable,
   workshop: drawWorkshop,
   forge: drawForge,
+  palisade: drawPalisade,
   sanctuary: drawSanctuary,
   mage: drawMage,
   healer: drawHealer,

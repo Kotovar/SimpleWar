@@ -123,3 +123,23 @@ export const drawSanctuary = (
   shape(ctx, '#c9a8ff', [14, 25, 14, 19, 16, 17.5, 18, 19, 18, 25]);
   ctx.restore();
 };
+
+/** Частокол (Инженерия): ряд заострённых кольев с цветной перевязью. */
+export const drawPalisade = (
+  ctx: CanvasRenderingContext2D,
+  cellX: number,
+  cellY: number,
+  cellSize: number,
+  owner: Owner,
+  scale: number = 1,
+) => {
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
+  const team = TEAM_MARKERS[owner];
+  for (let x = 4; x < 28; x += 5) {
+    shape(ctx, TIMBER, [x, 26, x, 11, x + 2, 7, x + 4, 11, x + 4, 26]);
+    sideShadow(ctx, x + 3, 11, 1, 15);
+  }
+  rect(ctx, team.color, 3, 16, 26, 3);
+  rect(ctx, team.shade, 3, 19, 26, 1);
+  ctx.restore();
+};

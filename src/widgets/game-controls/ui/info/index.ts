@@ -9,3 +9,4 @@ export * from './DebugPanel';
 export * from './WorkerJobs';
 export * from './BuildingManage';
 export * from './SiegeStrike';
+export * from './ResearchPanel';

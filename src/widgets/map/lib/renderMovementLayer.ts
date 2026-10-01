@@ -15,7 +15,7 @@ export const renderMovementLayer = (
   map?: { columns: number; rows: number },
   /** Клетки прицела выбранной осадной машины. */
   strikeCells: Position[] | null = null,
-  /** Публичные отметки подготовленных ударов всех сторон. */
+  /** Известные смотрящему отметки подготовленных ударов. */
   strikeMarks: Position[] = [],
   /** Свои раненые в дальности выбранного лекаря. */
   healTargets: Position[] | null = null,

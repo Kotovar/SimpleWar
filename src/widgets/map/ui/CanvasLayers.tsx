@@ -55,12 +55,6 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   const spawnableCells = useHighlightStore(state => state.spawnableCells);
   const strikeCells = useHighlightStore(state => state.strikeCells);
   const healTargets = useMovementStore(state => state.healTargets);
-  // Отметки ударов публичны: берутся из всех юнитов, а не из сцены.
-  const allUnits = useUnitsStore(state => state.units);
-  const strikeMarks = useMemo(
-    () => collectStrikeMarks(Object.values(allUnits)),
-    [allUnits],
-  );
   const buildableCells = useProduceCells();
 
   const isInteractive = phase === 'inProgress' && activePlayer === humanId;
@@ -70,6 +64,15 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   );
 
   const { fog, grid, units, buildings, snapshots } = scene;
+  // Отметки ударов — из знаний смотрящего (Скрытая наводка прячет чужие),
+  // в полном обзоре отладки — все.
+  const strikeMarks = useMemo(
+    () =>
+      fog
+        ? Object.values(fog.strikes)
+        : collectStrikeMarks(Object.values(worldUnits)),
+    [fog, worldUnits],
+  );
   const columns = grid[0]?.length ?? 0;
   const mapSize = useMemo(
     () => ({ columns, rows: grid.length }),

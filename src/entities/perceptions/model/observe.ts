@@ -1,10 +1,16 @@
-import { CONTACT_MEMORY, type Cell, type Owner } from '@shared/config';
+import {
+  CONTACT_MEMORY,
+  type Cell,
+  type Owner,
+  type Position,
+} from '@shared/config';
 import {
   TERRAIN_CODES,
   type CellKnowledge,
   type Contact,
   type ContactConfidence,
   type ParticipantKnowledge,
+  type StrikeSighting,
 } from './types';
 
 /** Что участник наблюдает прямо сейчас. */
@@ -19,6 +25,13 @@ export type ObservationInput = {
   turn: number;
   /** Выбывшие участники: их объектов больше нет, память о них не нужна. */
   eliminated: readonly Owner[];
+  /**
+   * На сколько кругов дольше помнить юнита, замеченного разведчиком
+   * (Картография); по умолчанию 0.
+   */
+  scoutMemoryBonus?: number;
+  /** Все подготовленные удары мира; без списка отметок нет. */
+  strikes?: StrikeSighting[];
 };
 
 const sameMask = (a: Uint8Array, b: Uint8Array) =>
@@ -30,7 +43,8 @@ const sameContact = (a: Contact | undefined, b: Contact) =>
   a.y === b.y &&
   a.hp === b.hp &&
   a.seenTurn === b.seenTurn &&
-  a.owner === b.owner;
+  a.owner === b.owner &&
+  a.byScout === b.byScout;
 
 /**
  * Обновляет знания участника по текущему наблюдению.
@@ -46,7 +60,15 @@ const sameContact = (a: Contact | undefined, b: Contact) =>
  */
 export const observe = (
   previous: ParticipantKnowledge | undefined,
-  { visible, grid, enemies, turn, eliminated }: ObservationInput,
+  {
+    visible,
+    grid,
+    enemies,
+    turn,
+    eliminated,
+    scoutMemoryBonus = 0,
+    strikes: sightings = [],
+  }: ObservationInput,
 ): ParticipantKnowledge => {
   const height = grid.length;
   const width = grid[0]?.length ?? 0;
@@ -74,8 +96,10 @@ export const observe = (
   const seen = new Set<string>();
   let changed = !base;
   for (const enemy of enemies) {
-    const contact = { ...enemy, seenTurn: turn };
     const before = base?.contacts[enemy.id];
+    // Отметка разведчика сохраняется, пока контакт помнится.
+    const byScout = enemy.byScout || before?.byScout || undefined;
+    const contact = { ...enemy, seenTurn: turn, byScout };
     contacts[enemy.id] = sameContact(before, contact) ? before! : contact;
     changed ||= contacts[enemy.id] !== before;
     seen.add(enemy.id);
@@ -87,7 +111,8 @@ export const observe = (
     const refuted = visible[contact.y * width + contact.x] === 1;
     const forgotten =
       contact.kind === 'unit' &&
-      turn - contact.seenTurn > CONTACT_MEMORY.forgetAfter;
+      turn - contact.seenTurn >
+        CONTACT_MEMORY.forgetAfter + (contact.byScout ? scoutMemoryBonus : 0);
     if (refuted || forgotten || out.has(contact.owner)) {
       changed = true;
       continue;
@@ -95,12 +120,26 @@ export const observe = (
     contacts[contact.id] = contact;
   }
 
+  // Раз увиденная отметка помнится до удара или отмены.
+  const strikes: Record<string, Position> = {};
+  for (const { id, x, y, seen } of sightings) {
+    const before = base?.strikes[id];
+    if (before && before.x === x && before.y === y) strikes[id] = before;
+    else if (seen) strikes[id] = { x, y };
+  }
+  const prevStrikes = base?.strikes ?? {};
+  const strikesChanged =
+    !base ||
+    Object.keys(strikes).length !== Object.keys(prevStrikes).length ||
+    Object.keys(strikes).some(id => strikes[id] !== prevStrikes[id]);
+
   return {
     width,
     height,
     visible: base && sameMask(base.visible, visible) ? base.visible : visible,
     terrain,
     contacts: changed ? contacts : base!.contacts,
+    strikes: strikesChanged ? strikes : prevStrikes,
   };
 };
 

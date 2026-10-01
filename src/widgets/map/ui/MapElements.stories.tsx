@@ -13,6 +13,7 @@ import {
 import {
   drawBackgroundAndGrid,
   drawEffect,
+  drawFormationBadge,
   drawForest,
   drawGoldOre,
   drawHill,
@@ -239,6 +240,21 @@ const OVERLAYS: Record<string, Tile[]> = {
       ),
     },
   ],
+  // Рисунки эффектов исследований; условие Строя проверяет игра.
+  Исследования: [
+    {
+      label: 'Строй: +2 брони',
+      draw: (ctx, s) => {
+        entity([unit({}, 'spearman')])(ctx, s);
+        drawFormationBadge(ctx, 0, 0, s);
+      },
+    },
+    { label: 'Копейщик без строя', draw: entity([unit({}, 'spearman')]) },
+    {
+      label: 'Частокол',
+      draw: entity([], [createBuilding('palisade', 0, 0, 'p1')!]),
+    },
+  ],
   // Один момент анимации для всех: число урона поднимается со временем.
   Эффекты: [
     { label: 'Получил урон', damage: 3, lethal: false },
@@ -299,6 +315,7 @@ const FOG_KNOWLEDGE: ParticipantKnowledge = {
     }),
   ),
   contacts: {},
+  strikes: {},
 };
 
 const drawFog: Draw = (ctx, size) => {

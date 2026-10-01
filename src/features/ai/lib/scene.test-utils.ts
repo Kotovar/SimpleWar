@@ -153,6 +153,7 @@ export const scene = (
     resources,
     contacts: spec.contacts ?? [],
     strikes: spec.strikes ?? [],
+    researched: [],
   };
   const memory = { ...createAiMemory(7), ...spec.memory };
   return { ctx: buildContext(obs, memory, createTurnState()), obs, memory };

@@ -80,3 +80,63 @@
   line-height: 1;
   cursor: help;
 }
+
+.Stat[data-tone='research'] {
+  --tone: var(--research);
+
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--border-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--tone);
+    outline-offset: 2px;
+  }
+}
+
+/* Список исследований по клику на плашку: нативный popover. */
+.Popover {
+  max-width: min(420px, calc(100vw - 32px));
+  margin: 72px auto auto;
+  padding: 12px 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background-color: var(--surface-strong);
+  color: var(--text);
+}
+
+.PopoverTitle {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+}
+
+.PopoverList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+
+  & li[data-done='true'] b {
+    color: var(--research);
+  }
+
+  & span {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+}
+
+.PopoverHint {
+  margin: 10px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}

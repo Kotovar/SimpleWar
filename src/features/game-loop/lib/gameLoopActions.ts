@@ -7,8 +7,29 @@ import { useDebugStore, useSettingsStore } from '@entities/settings';
 import { useEconomyStore } from '@entities/economies';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand, useJournalStore } from '@entities/journals';
+import { hasResearch, useResearchStore } from '@entities/researches';
 import { eliminateParticipant } from '../model/gameLoopStore';
 import { executePreparedStrikes } from './strikes';
+
+/**
+ * Прогресс исследования в конце своего хода. Без кузницы работа стоит на
+ * паузе: новая кузница продолжает её с того же места.
+ */
+const advanceResearch = (actor: ParticipantId) => {
+  const hasForge = Object.values(useBuildingsStore.getState().buildings).some(
+    ({ owner, type }) => owner === actor && type === 'forge',
+  );
+  if (!hasForge) return;
+  const done = useResearchStore.getState().advance(actor);
+  if (!done) return;
+  useJournalStore.getState().record({
+    type: 'researchDone',
+    actor,
+    turn: useGameLoopStore.getState().currentTurn,
+    visibleTo: [actor],
+    details: { research: done },
+  });
+};
 
 const validateAndEndTurn = (actor: ParticipantId): CommandResult => {
   const turnRejection = getTurnRejection(actor);
@@ -19,9 +40,11 @@ const validateAndEndTurn = (actor: ParticipantId): CommandResult => {
   const { income, miners } = calculateTurnIncome(
     useBuildingsStore.getState().getEconomicBuildings(actor),
     Object.values(units.units).filter(({ owner }) => owner === actor),
+    hasResearch(actor, 'artel'),
   );
   for (const id of miners) units.changeBuildPoints(id);
   useEconomyStore.getState().addResources(actor, income);
+  advanceResearch(actor);
 
   useGameLoopStore.getState().endTurn();
 
@@ -69,7 +92,7 @@ export const surrender = (actor: ParticipantId) =>
     () => validateAndSurrender(actor),
   );
 
-/** Сбрасывает фазу, объекты, карту, настройки, отладку, экономику и журнал. */
+/** Сбрасывает фазу, объекты, карту, настройки, отладку, экономику, исследования и журнал. */
 export const resetGame = () => {
   useGameLoopStore.getState().resetGame();
   useBuildingsStore.getState().resetStore();
@@ -78,6 +101,7 @@ export const resetGame = () => {
   useSettingsStore.getState().resetStore();
   useDebugStore.getState().resetStore();
   useEconomyStore.getState().resetStore();
+  useResearchStore.getState().resetStore();
   useJournalStore.getState().newGame();
   gameEvents.emit({ type: 'GAME_RESET' });
 };

@@ -17,6 +17,7 @@ import {
   repair,
   unassignWorker,
 } from '@features/workers';
+import { useResearchStore } from '@entities/researches';
 import styles from './OptionCards.styles.module.css';
 
 const where = ({ x, y }: Building) => `(${x}, ${y})`;
@@ -30,6 +31,9 @@ export const WorkerJobs = ({ unit }: { unit: CivilUnit }) => {
   const buildings = useBuildingsStore(state => state.buildings);
   const units = useUnitsStore(state => state.units);
   const resources = useEconomyStore(state => state.resources[unit.owner]);
+  const artel = useResearchStore(
+    state => !!state.completed[unit.owner]?.includes('artel'),
+  );
   const clearableCells = useHighlightStore(state => state.clearableCells);
   const setClearableCells = useHighlightStore(state => state.setClearableCells);
   const clearHighlight = useHighlightStore(state => state.resetStore);
@@ -88,9 +92,11 @@ export const WorkerJobs = ({ unit }: { unit: CivilUnit }) => {
 
       {current && (
         <p className={styles.Prompt}>
-          {hasAction
-            ? `В конце хода принесёт +15 и потратит рабочее действие.`
-            : 'Рабочее действие уже потрачено: в этот ход добычи не будет.'}{' '}
+          {artel
+            ? 'Артель: в конце хода принесёт +15, даже если рабочее действие уже потрачено на стройку, расчистку или ремонт.'
+            : hasAction
+              ? `В конце хода принесёт +15 и потратит рабочее действие.`
+              : 'Рабочее действие уже потрачено: в этот ход добычи не будет.'}{' '}
           Рабочий внутри здания: удар по клетке получает здание. Движение
           выводит его наружу и снимает назначение.
         </p>

@@ -23,6 +23,7 @@
   --gold: #f2c744;
   --wood: #d08a54;
   --population: #8fd8a4;
+  --research: #b9a4f2;
 
   /* Цвета сторон совпадают с картой: TEAM_MARKERS в shared/config/draws. */
   --team-p1: #78ccff;

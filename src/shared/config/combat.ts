@@ -73,6 +73,7 @@ export const MAGIC_RESIST: Partial<Record<UnitType | BuildingType, number>> = {
   workshop: 10,
   forge: 10,
   sanctuary: 10,
+  palisade: 10,
 };
 
 /** Способ передвижения: наземный или воздушный. */

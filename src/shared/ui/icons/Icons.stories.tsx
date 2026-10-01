@@ -1,11 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { GoldIcon, PopulationIcon, TerrainIcon, WoodIcon } from './index';
+import {
+  GoldIcon,
+  PopulationIcon,
+  ResearchIcon,
+  TerrainIcon,
+  WoodIcon,
+} from './index';
 
 const ICONS = {
   Золото: GoldIcon,
   Древесина: WoodIcon,
   Население: PopulationIcon,
   Местность: TerrainIcon,
+  Исследования: ResearchIcon,
 };
 
 const SIZES = [14, 16, 24, 32, 48];

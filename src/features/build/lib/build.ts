@@ -8,6 +8,7 @@ import {
 import {
   canSpawnBuilding,
   failure,
+  isBuildingUnlocked,
   getSightSources,
   isBuildableTerrain,
   isCellVisible,
@@ -20,6 +21,7 @@ import { useEconomyStore } from '@entities/economies';
 import { useMapStore } from '@entities/maps';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand } from '@entities/journals';
+import { useResearchStore } from '@entities/researches';
 import { getDebugExceptions, getPayableResources } from '@entities/settings';
 import { isPlacementBlocking } from './placementAccess';
 
@@ -52,6 +54,14 @@ const validateAndBuild = (
     !worker.buildableBuildings.includes(buildingType)
   )
     return reject('actionType');
+  if (
+    !isBuildingUnlocked(
+      buildingType,
+      useResearchStore.getState().completed[actor],
+    )
+  ) {
+    return reject('research');
+  }
 
   const config = BUILDINGS_CONFIG[buildingType];
   const cell = useMapStore.getState().getCell(x, y);
