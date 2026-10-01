@@ -198,9 +198,10 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
     <a href="#siege"><span>11</span>Осада</a>
     <a href="#ai"><span>12</span>Противник-ИИ</a>
     <a href="#interface"><span>13</span>Интерфейс</a>
-    <a href="#debug"><span>14</span>Режим отладки</a>
-    <a href="#sandbox"><span>15</span>Тест баланса</a>
-    <a href="#status"><span>16</span>Что готово</a>
+    <a href="#sound"><span>14</span>Звук и музыка</a>
+    <a href="#debug"><span>15</span>Режим отладки</a>
+    <a href="#sandbox"><span>16</span>Тест баланса</a>
+    <a href="#status"><span>17</span>Что готово</a>
   </nav>
 </aside>
 
@@ -758,8 +759,8 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   </div>
   <div class="grid3" style="margin-top:16px">
     <div class="panel"><h4>Перед приказом</h4><ul class="small" style="margin:0"><li>Зона движения, строительства и найма показана общей областью с контуром.</li><li>Цели атаки отмечены красными уголками.</li><li>Маршрут и его стоимость отображаются под курсором.</li><li>Показана граница дальности атаки.</li><li>Ожидаемый урон отображается над целью.</li></ul></div>
-    <div class="panel"><h4>Состояние</h4><ul class="small" style="margin:0"><li>Запасы золота и дерева, доход за ход.</li><li>Текущее и предельное население.</li><li>«Исследования»: сколько изучено и что изучается сейчас; по клику — список всех пяти со статусом.</li><li>Оставшиеся очки движения и действия юнита.</li><li>Юниты без доступных действий отображаются затемнёнными.</li><li>«!» отмечает пустой рудник или лесопилку.</li><li>Голубой щит в углу копейщика — действует Строй (+2 к броне).</li></ul></div>
-    <div class="panel"><h4>Анимации</h4><ul class="small" style="margin:0"><li>Плавное перемещение юнитов.</li><li>Здания и новобранцы появляются с кольцом цвета стороны, пылью и искрами.</li><li>Вспышка с числом урона и эффектом гибели.</li><li>Выделение пульсирует; анимация отключается системной настройкой «Уменьшить движение».</li></ul></div>
+    <div class="panel"><h4>Состояние</h4><ul class="small" style="margin:0"><li>Запасы золота и дерева, доход за ход.</li><li>Текущее и предельное население.</li><li>«Исследования»: сколько изучено и что изучается сейчас; по клику — список всех пяти со статусом.</li><li>Оставшиеся очки движения и действия юнита.</li><li>Юниты без доступных действий отображаются затемнёнными.</li><li>«!» отмечает пустой рудник или лесопилку.</li><li>Голубой щит в углу копейщика — действует Строй (+2 к броне).</li><li>Трещины и дым — здание потеряло больше половины прочности.</li><li>Сторону показывает не только цвет, но и форма метки на подставке: у синих круг, у красных ромб.</li><li>При сильном отдалении юниты и здания превращаются в значки стороны: так большую карту легче читать.</li></ul></div>
+    <div class="panel"><h4>Анимации</h4><ul class="small" style="margin:0"><li>Плавное перемещение юнитов и короткий выпад к цели при ударе.</li><li>Новобранцы появляются с кольцом цвета стороны и искрами, достроенное здание — с пылью и молотками.</li><li>Вспышка с числом урона и эффектом гибели.</li><li>«!» над врагом, который только что появился в обзоре, и «×» над клеткой, если приказ не выполнен.</li><li>Анимации и звуки — только для того, что вы видите: бой в тумане себя не выдаёт.</li><li>Выделение пульсирует; анимация отключается системной настройкой «Уменьшить движение».</li></ul></div>
   </div>
   <div class="grid3" style="margin-top:16px;align-items:start">
     <figure class="shot">
@@ -779,8 +780,9 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
     <div class="panel">
       <h4>Меню партии</h4>
       <ul class="small" style="margin:0">
-        <li><b>Режим отладки</b> — см. раздел 14.</li>
+        <li><b>Режим отладки</b> — см. раздел 15.</li>
         <li><b>Гайдбук</b> — эта страница в новой вкладке.</li>
+        <li><b>Звук</b> — громкость музыки и эффектов и выключение звука. Настройки запоминаются; то же есть на стартовом экране.</li>
         <li><b>Сбросить игру</b> — с подтверждением.</li>
       </ul>
       <p class="small muted" style="margin:10px 0 0">Снос здания тоже спрашивает подтверждение.</p>
@@ -788,9 +790,20 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   </div>
 </section>
 
-<!-- 14. Отладка -->
+<!-- 14. Звук -->
+<section id="sound">
+  <div class="head"><div><div class="eyebrow">14 · Атмосфера</div><h2>Звук и музыка</h2></div><p>Звук включается после первого клика в игре. Музыка меняется по ходу партии: спокойная тема при развитии, боевая — когда рядом с вашими войсками видны враги, отдельные темы для победы и поражения. У многих звуков есть несколько вариантов, они чередуются случайно. Здесь всё можно послушать.</p></div>
+  <div class="panel">
+    <h4>Музыка</h4>
+    <div class="chips" id="musicList" role="group" aria-label="Музыкальные темы"></div>
+    <h4 style="margin-top:14px">Звуки</h4>
+    <div id="sfxList"></div>
+  </div>
+</section>
+
+<!-- 15. Отладка -->
 <section id="debug">
-  <div class="head"><div><div class="eyebrow">14 · Для любопытных</div><h2>Режим отладки</h2></div><p>Включается в меню партии. Позволяет увидеть весь мир, посмотреть глазами противника и прочитать его решения.</p></div>
+  <div class="head"><div><div class="eyebrow">15 · Для любопытных</div><h2>Режим отладки</h2></div><p>Включается в меню партии. Позволяет увидеть весь мир, посмотреть глазами противника и прочитать его решения.</p></div>
   <div class="split">
     <div class="panel">
       <ul class="small">
@@ -811,9 +824,9 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   </div>
 </section>
 
-<!-- 15. Тест баланса -->
+<!-- 16. Тест баланса -->
 <section id="sandbox">
-  <div class="head"><div><div class="eyebrow">15 · Режим</div><h2>Тестирование баланса</h2></div><p>Во втором режиме на стартовом экране можно составить армии и посмотреть, чем закончится их встреча, в том числе в бою двух компьютерных противников.</p></div>
+  <div class="head"><div><div class="eyebrow">16 · Режим</div><h2>Тестирование баланса</h2></div><p>Во втором режиме на стартовом экране можно составить армии и посмотреть, чем закончится их встреча, в том числе в бою двух компьютерных противников.</p></div>
   <div class="stack">
     <div class="panel">
       <ul class="small">
@@ -836,9 +849,9 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   </figure>
 </section>
 
-<!-- 16. Статус -->
+<!-- 17. Статус -->
 <section id="status">
-  <div class="head"><div><div class="eyebrow">16 · Развитие</div><h2>Что уже есть и что впереди</h2></div><p>Игра в разработке. Ниже отдельно перечислены готовые, частично реализованные и запланированные возможности.</p></div>
+  <div class="head"><div><div class="eyebrow">17 · Развитие</div><h2>Что уже есть и что впереди</h2></div><p>Игра в разработке. Ниже отдельно перечислены готовые, частично реализованные и запланированные возможности.</p></div>
   <div class="status-cols">
     <div class="panel">
       <h3><span class="status done">ГОТОВО</span></h3>
@@ -854,6 +867,7 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
         <li><b>ИИ-противник</b> с четырьмя характерами и тремя уровнями сложности, который использует все роли, исследует и видит мир через туман.</li>
         <li><b>Режим отладки</b> и журнал решений ИИ.</li>
         <li><b>Тестирование баланса</b>, включая бой ИИ против ИИ.</li>
+        <li><b>Музыка и звуки</b> с настройкой громкости.</li>
         <li>Победа, поражение и новая партия.</li>
       </ul>
     </div>
@@ -872,7 +886,6 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
         <li><b>Сохранения</b>: слоты и автосохранение.</li>
         <li><b>Приказы</b>: движение на несколько ходов, пропуск и удержание, точки сбора.</li>
         <li><b>Сводка событий</b> за ход, кнопка сдачи, подсказки.</li>
-        <li><b>Музыка и звуки.</b></li>
         <li>В дальнейшем планируются выбор нескольких противников, команды и две расы. Позже — сетевая игра, кампания, дипломатия, редактор карт и флот.</li>
       </ul>
     </div>
@@ -1040,6 +1053,71 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   addEventListener('scroll', function () { top.classList.toggle('show', scrollY > 900); }, {passive: true});
   top.onclick = function () { scrollTo({top: 0}); };
 })();
+</script>
+<script type="module">
+import { SFX_TONES, getSfxFiles } from '../../src/shared/config/audio.ts';
+
+const AUDIO = '../../audio/';
+const MUSIC = { menu: 'Главное меню', peace: 'Мирное развитие', battle: 'Бой', victory: 'Победа', defeat: 'Поражение' };
+const GROUPS = [
+  ['Интерфейс', { click: 'Кнопка', select: 'Выбор', turnStart: 'Начало хода', reject: 'Приказ не выполнен', threat: 'Замечен враг' }],
+  ['Армия', { move: 'Движение', attack: 'Удар', shot: 'Выстрел из лука', magic: 'Магия', griffonAttack: 'Атака грифона', heal: 'Лечение', hitUnit: 'Попадание по юниту', death: 'Гибель юнита', griffonDeath: 'Гибель грифона' }],
+  ['База и осада', { build: 'Здание достроено', spawn: 'Найм', hitBuilding: 'Попадание по зданию', destroy: 'Здание разрушено', strikePrepare: 'Осада наводится', strike: 'Удар осады' }],
+];
+
+const chip = (text, onClick) => {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'chip';
+  button.textContent = text;
+  button.addEventListener('click', onClick);
+  return button;
+};
+
+// Одна тема за раз: повторный клик останавливает.
+const player = new Audio();
+player.loop = true;
+player.volume = 0.5;
+const musicList = document.getElementById('musicList');
+for (const [track, name] of Object.entries(MUSIC)) {
+  const button = chip('▶ ' + name, () => {
+    const playing = button.getAttribute('aria-pressed') === 'true';
+    musicList.querySelectorAll('.chip').forEach(other => other.setAttribute('aria-pressed', 'false'));
+    player.pause();
+    if (playing) return;
+    player.src = AUDIO + 'music/' + track + '.mp3';
+    void player.play();
+    button.setAttribute('aria-pressed', 'true');
+  });
+  button.setAttribute('aria-pressed', 'false');
+  musicList.append(button);
+}
+
+const sfxList = document.getElementById('sfxList');
+const known = new Set(GROUPS.flatMap(([, names]) => Object.keys(names)));
+// Звук, которого нет в списке выше, всё равно попадёт на страницу.
+const rest = Object.fromEntries(Object.keys(SFX_TONES).filter(sfx => !known.has(sfx)).map(sfx => [sfx, sfx]));
+for (const [title, names] of [...GROUPS, ...(Object.keys(rest).length ? [['Другие', rest]] : [])]) {
+  const heading = document.createElement('div');
+  heading.className = 'small muted';
+  heading.style.margin = '8px 0 6px';
+  heading.textContent = title;
+  const row = document.createElement('div');
+  row.className = 'chips';
+  for (const [sfx, name] of Object.entries(names)) {
+    const files = getSfxFiles(sfx);
+    if (!files.length) continue;
+    files.forEach((file, index) => {
+      const label = files.length > 1 ? name + ' ' + (index + 1) : name;
+      row.append(chip('▶ ' + label, () => {
+        const sound = new Audio(AUDIO + 'sfx/' + file);
+        sound.volume = 0.6;
+        void sound.play();
+      }));
+    });
+  }
+  sfxList.append(heading, row);
+}
 </script>
 </body>
 </html>

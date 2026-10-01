@@ -45,7 +45,7 @@ export const beginEntity = (
   ctx.lineWidth = 1;
   ctx.strokeStyle = '#1c2420';
   ctx.fillStyle = team.color;
-  traceOwnerMarker(ctx, team.marker, 16, 29.6, 1.9);
+  traceOwnerMarker(ctx, team.marker, 16, 29.2, 2.5);
   ctx.fill();
   ctx.stroke();
   ctx.lineWidth = 1.2;
