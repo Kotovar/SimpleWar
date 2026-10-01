@@ -8,9 +8,11 @@ import styles from './TurnControls.styles.module.css';
 type Props = {
   onNextTurn: () => void;
   onReset: () => void;
+  /** Сдача; нет — участника за экраном нет, кнопка скрыта. */
+  onSurrender?: () => void;
 };
 
-export const TurnControls = ({ onNextTurn, onReset }: Props) => {
+export const TurnControls = ({ onNextTurn, onReset, onSurrender }: Props) => {
   const { activePlayer, humanId } = useGameLoopSelectors();
   const isOwnTurn = activePlayer === humanId;
   const isDebug = useDebugStore(state => state.enabled);
@@ -77,6 +79,17 @@ export const TurnControls = ({ onNextTurn, onReset }: Props) => {
           >
             Гайдбук <span aria-hidden='true'>↗</span>
           </a>
+          {onSurrender && (
+            <button
+              className={styles.DangerButton}
+              onClick={() => {
+                if (menu.current) menu.current.open = false;
+                onSurrender();
+              }}
+            >
+              Сдаться
+            </button>
+          )}
           <button
             className={styles.DangerButton}
             onClick={() => {

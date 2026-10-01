@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom';
 import { useEffect, useRef } from 'react';
-import type { MouseEvent } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import styles from './styles.module.css';
 
 type Props = {
@@ -11,6 +11,8 @@ type Props = {
   cancelText?: string;
   onConfirm: () => void;
   onCancel: () => void;
+  /** Дополнительное содержимое под сообщением, например галочка. */
+  children?: ReactNode;
 };
 
 export const ConfirmDialog = ({
@@ -21,6 +23,7 @@ export const ConfirmDialog = ({
   cancelText = 'Отмена',
   onConfirm,
   onCancel,
+  children,
 }: Props) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -60,6 +63,7 @@ export const ConfirmDialog = ({
       <div className={styles.Content} onClick={e => e.stopPropagation()}>
         <h3 className={styles.Title}>{title}</h3>
         <p className={styles.Message}>{message}</p>
+        {children}
         <div className={styles.Buttons}>
           <button className={styles.ConfirmButton} onClick={onConfirm}>
             {confirmText}

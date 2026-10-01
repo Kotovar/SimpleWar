@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { MOVE_COST, type Building, type Cell } from '@shared/config';
+import { MOVE_COST, type Building, type Cell, type Unit } from '@shared/config';
 import { ConfirmDialog } from '@shared/ui';
 import { useMapViewer } from '@entities/settings';
 import {
@@ -7,11 +7,22 @@ import {
   getKnownCellType,
   useParticipantKnowledge,
 } from '@entities/perceptions';
-import { nextTurn, resetGame, useGameLoopSelectors } from '@features/game-loop';
+import {
+  getPendingUnits,
+  nextTurn,
+  resetGame,
+  surrender,
+  useGameLoopSelectors,
+} from '@features/game-loop';
+import { usePreferencesStore } from '@entities/settings';
+import { useUnitsStore } from '@entities/units';
+import { getHealTargets } from '@features/combat';
+import { getAttackableTargets } from '@features/pathfinding';
 import { useSelectionSelectors } from '@features/selection';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import {
   AiTurnBanner,
+  EndTurnConfirm,
   CommandToasts,
   ResourcesInfo,
   TurnControls,
@@ -90,6 +101,20 @@ const EmptySelection = () => (
 type Props = {
   /** Мини-карта над сведениями о выбранном. */
   minimap?: ReactNode;
+};
+
+/**
+ * Есть ли у бойца видимая цель в дальности: враг (по знаниям владельца) или,
+ * у лекаря, раненый свой. Осадная машина бьёт по клетке, а не по цели, —
+ * без шагов она в напоминание не попадает.
+ */
+const hasTarget = (unit: Unit, units: Unit[]) => {
+  if (unit.role !== 'military' || unit.type === 'siege') return false;
+  if (unit.type === 'healer') return getHealTargets(unit, units).length > 0;
+  return (
+    getAttackableTargets(unit, unit.attackRange, unit.owner, unit.type).length >
+    0
+  );
 };
 
 /** Выбранные объекты и рельеф, доступные смотрящему. */
@@ -174,6 +199,8 @@ const SelectionDetails = () => {
 
 export const PhaseInProgress = ({ minimap }: Props) => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showSurrender, setShowSurrender] = useState(false);
+  const [pending, setPending] = useState(0);
   const [collapsed, setCollapsed] = useState(false);
 
   const { clearSelection } = useSelectionSelectors();
@@ -187,8 +214,28 @@ export const PhaseInProgress = ({ minimap }: Props) => {
     clearHighlight();
   };
 
-  const onNextTurn = () => {
+  const endTurn = () => {
+    setPending(0);
     if (humanId) nextTurn(humanId);
+    clearInteraction();
+  };
+
+  // Перед концом хода — вопрос, если свои юниты ещё могут действовать.
+  const onNextTurn = () => {
+    const units = Object.values(useUnitsStore.getState().units);
+    const count = humanId
+      ? getPendingUnits(units, humanId, unit => hasTarget(unit, units)).length
+      : 0;
+    if (count > 0 && usePreferencesStore.getState().confirmEndTurn) {
+      setPending(count);
+      return;
+    }
+    endTurn();
+  };
+
+  const onSurrender = () => {
+    setShowSurrender(false);
+    if (humanId) surrender(humanId);
     clearInteraction();
   };
 
@@ -205,6 +252,7 @@ export const PhaseInProgress = ({ minimap }: Props) => {
         <TurnControls
           onNextTurn={onNextTurn}
           onReset={() => setShowResetConfirm(true)}
+          onSurrender={humanId ? () => setShowSurrender(true) : undefined}
         />
       </header>
 
@@ -229,6 +277,22 @@ export const PhaseInProgress = ({ minimap }: Props) => {
         <SandboxControls />
         <DebugPanel />
       </aside>
+
+      <EndTurnConfirm
+        pending={pending}
+        onConfirm={endTurn}
+        onCancel={() => setPending(0)}
+      />
+
+      <ConfirmDialog
+        isOpen={showSurrender}
+        title='Сдаться'
+        message='Сдаться и закончить партию поражением?'
+        confirmText='Сдаться'
+        cancelText='Продолжить игру'
+        onConfirm={onSurrender}
+        onCancel={() => setShowSurrender(false)}
+      />
 
       <ConfirmDialog
         isOpen={showResetConfirm}

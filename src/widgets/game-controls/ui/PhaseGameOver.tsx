@@ -1,3 +1,4 @@
+import { pluralRu } from '@shared/lib';
 import { useGameLoopSelectors, resetGame } from '@features/game-loop';
 import { SandboxReport } from './sandbox';
 import styles from './styles.module.css';
@@ -22,7 +23,8 @@ export const PhaseGameOver = () => {
         {title}
       </div>
       <div className={styles.GameOverText}>
-        Игра завершена за {currentTurn} ходов
+        Игра завершена за {currentTurn}{' '}
+        {pluralRu(currentTurn, ['ход', 'хода', 'ходов'])}
       </div>
 
       <SandboxReport />

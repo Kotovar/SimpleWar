@@ -12,3 +12,4 @@ export * from './SiegeStrike';
 export * from './ResearchPanel';
 export * from './AudioSettings';
 export * from './CommandToasts';
+export * from './EndTurnConfirm';
