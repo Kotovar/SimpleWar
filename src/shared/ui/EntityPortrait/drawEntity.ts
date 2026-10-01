@@ -45,23 +45,7 @@ export const beginEntity = (
   ctx.lineWidth = 1;
   ctx.strokeStyle = '#1c2420';
   ctx.fillStyle = team.color;
-  ctx.beginPath();
-  if (team.marker === 'circle') {
-    ctx.arc(16, 29.6, 1.8, 0, Math.PI * 2);
-  } else if (team.marker === 'square') {
-    ctx.rect(14.3, 27.9, 3.4, 3.4);
-  } else if (team.marker === 'triangle') {
-    ctx.moveTo(16, 27.6);
-    ctx.lineTo(18.2, 31.4);
-    ctx.lineTo(13.8, 31.4);
-    ctx.closePath();
-  } else {
-    ctx.moveTo(16, 27.6);
-    ctx.lineTo(18, 29.6);
-    ctx.lineTo(16, 31.6);
-    ctx.lineTo(14, 29.6);
-    ctx.closePath();
-  }
+  traceOwnerMarker(ctx, team.marker, 16, 29.6, 1.9);
   ctx.fill();
   ctx.stroke();
   ctx.lineWidth = 1.2;
@@ -70,6 +54,41 @@ export const beginEntity = (
   ctx.scale(scale, scale);
   ctx.translate(-16, -16);
   ctx.strokeStyle = '#292c30';
+};
+
+/**
+ * Обводит путь маркера стороны: форма дублирует цвет владельца и читается
+ * в монохроме. Ромб и треугольник чуть крупнее, чтобы площадь была равной.
+ *
+ * @param marker - Форма маркера стороны.
+ * @param cx - Центр по горизонтали.
+ * @param cy - Центр по вертикали.
+ * @param radius - Половина размера маркера.
+ */
+export const traceOwnerMarker = (
+  ctx: CanvasRenderingContext2D,
+  marker: (typeof TEAM_MARKERS)[Owner]['marker'],
+  cx: number,
+  cy: number,
+  radius: number,
+) => {
+  ctx.beginPath();
+  if (marker === 'circle') {
+    ctx.arc(cx, cy, radius * 0.95, 0, Math.PI * 2);
+  } else if (marker === 'square') {
+    ctx.rect(cx - radius * 0.9, cy - radius * 0.9, radius * 1.8, radius * 1.8);
+  } else if (marker === 'triangle') {
+    ctx.moveTo(cx, cy - radius * 1.1);
+    ctx.lineTo(cx + radius * 1.15, cy + radius);
+    ctx.lineTo(cx - radius * 1.15, cy + radius);
+    ctx.closePath();
+  } else {
+    ctx.moveTo(cx, cy - radius * 1.05);
+    ctx.lineTo(cx + radius * 1.05, cy);
+    ctx.lineTo(cx, cy + radius * 1.05);
+    ctx.lineTo(cx - radius * 1.05, cy);
+    ctx.closePath();
+  }
 };
 
 export const rect = (

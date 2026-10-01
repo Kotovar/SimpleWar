@@ -2,10 +2,11 @@ import { useEffect, useRef } from 'react';
 import { useGameLoopStore } from '@entities/games';
 import styles from './AiTurnBanner.styles.module.css';
 
-const MESSAGE = 'Ход противника';
+const MESSAGE = { ai: 'Ход противника', human: 'Ваш ход' };
 
 /**
- * Сообщает, что сейчас ходит противник.
+ * Сообщает о смене хода: ходит противник или снова игрок. Начало своего хода
+ * дублирует звуковой сигнал, поэтому видно и без звука.
  *
  * Ход ИИ отрабатывает в текущей стадии мгновенно, поэтому баннер живёт на своей CSS-анимации:
  * подписка на стор перезапускает её при каждом переходе хода к ИИ, и смена
@@ -14,15 +15,18 @@ const MESSAGE = 'Ход противника';
 export const AiTurnBanner = () => {
   const banner = useRef<HTMLDivElement>(null);
   const live = useRef<HTMLSpanElement>(null);
+  const text = useRef<HTMLSpanElement>(null);
 
   useEffect(
     () =>
       useGameLoopStore.subscribe((state, previous) => {
-        const isAi = (id: typeof state.activePlayer) =>
-          state.participants.find(p => p.id === id)?.controller === 'ai';
-        // Каждая смена хода на ИИ, включая переход от одного ИИ к другому.
+        const controller = state.participants.find(
+          p => p.id === state.activePlayer,
+        )?.controller;
+        // Каждая смена хода на ИИ, включая переход от одного ИИ к другому,
+        // и возврат хода человеку.
         if (
-          !isAi(state.activePlayer) ||
+          (controller !== 'ai' && controller !== 'human') ||
           state.activePlayer === previous.activePlayer
         ) {
           return;
@@ -30,6 +34,9 @@ export const AiTurnBanner = () => {
 
         const element = banner.current;
         if (!element || state.phase !== 'inProgress') return;
+        const kind = controller === 'ai' ? 'ai' : 'human';
+        element.dataset.kind = kind;
+        if (text.current) text.current.textContent = MESSAGE[kind];
 
         element.classList.remove(styles.Visible);
         // Форсируем reflow: иначе повторный ход не перезапустит анимацию.
@@ -38,7 +45,7 @@ export const AiTurnBanner = () => {
 
         // Скринридер объявляет живую область по смене текста, а не класса,
         // поэтому текст появляется на время показа и снимается после.
-        if (live.current) live.current.textContent = MESSAGE;
+        if (live.current) live.current.textContent = MESSAGE[kind];
       }),
     [],
   );
@@ -54,7 +61,7 @@ export const AiTurnBanner = () => {
         }}
       >
         <span className={styles.Spinner} />
-        {MESSAGE}
+        <span ref={text}>{MESSAGE.ai}</span>
       </div>
 
       <span ref={live} className={styles.Live} role='status' />

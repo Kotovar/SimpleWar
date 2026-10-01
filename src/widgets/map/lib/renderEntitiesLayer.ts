@@ -1,9 +1,10 @@
-import type {
-  Building,
-  BuildingType,
-  Owner,
-  Unit,
-  UnitType,
+import {
+  DAMAGED_BUILDING_RATIO,
+  type Building,
+  type BuildingType,
+  type Owner,
+  type Unit,
+  type UnitType,
 } from '@shared/config';
 import type { CellRange } from '@shared/lib';
 import {
@@ -36,6 +37,11 @@ import { drawActionPips } from './drawActionPips';
 import { drawWorkBadge } from './drawWorkBadge';
 import { drawIdleBadge } from './drawIdleBadge';
 import { drawFormationBadge } from './drawFormationBadge';
+import {
+  drawDamagedBuilding,
+  drawRoleIcon,
+  getDetailLevel,
+} from './drawEntityStatus';
 import { isHostile } from '@shared/lib';
 import { getHealTargets } from '@features/combat';
 import { getResearchArmor } from '@entities/researches';
@@ -159,6 +165,9 @@ export const renderEntitiesLayer = (
             unit.attackRange,
         ));
 
+  // Издалека — значки роли и владельца, вблизи — рисунок и мелкие значки.
+  const detail = getDetailLevel(cellSize);
+
   Object.values(buildings).forEach(building => {
     const { id, x, y, type, hp, maxHp, owner } = building;
     if (isOutside(range, x, y)) return;
@@ -168,12 +177,24 @@ export const renderEntitiesLayer = (
     ctx.save();
     if (isSpentBuilding(building, humanId)) ctx.globalAlpha = SPENT_ALPHA;
 
+    if (detail === 'icon') {
+      drawRoleIcon(ctx, 'building', x + dx, y + dy, cellSize, owner);
+      ctx.restore();
+      return;
+    }
     drawBuildingModel(ctx, type, x + dx, y + dy, cellSize, owner, scale);
     ctx.restore();
+    if (hpRatio <= DAMAGED_BUILDING_RATIO) {
+      drawDamagedBuilding(ctx, x + dx, y + dy, cellSize);
+    }
 
     drawHpBar(ctx, x + dx, y + dy, cellSize, hpRatio);
     // Свой рудник или лесопилка: рабочий внутри или простой без него.
-    if (owner === humanId && building.role === 'resource') {
+    if (
+      detail === 'detail' &&
+      owner === humanId &&
+      building.role === 'resource'
+    ) {
       if (staffed.has(id)) drawWorkBadge(ctx, x + dx, y + dy, cellSize);
       else drawIdleBadge(ctx, x + dx, y + dy, cellSize);
     }
@@ -189,11 +210,17 @@ export const renderEntitiesLayer = (
     ctx.save();
     if (isSpentUnit(unit, humanId, hasTarget)) ctx.globalAlpha = SPENT_ALPHA;
 
+    if (detail === 'icon') {
+      drawRoleIcon(ctx, unit.role, x + dx, y + dy, cellSize, owner);
+      ctx.restore();
+      return;
+    }
     UNIT_DRAWERS[type](ctx, x + dx, y + dy, cellSize, owner, scale);
     ctx.restore();
 
     // Полоса здоровья и очки остаются контрастными даже у отходившего юнита.
     drawHpBar(ctx, x + dx, y + dy, cellSize, hpRatio);
+    if (detail !== 'detail') return;
     if (owner === humanId) drawActionPips(ctx, x + dx, y + dy, cellSize, unit);
     // Строй — по видимым соседям, как предпросмотр урона.
     if (getResearchArmor(unit, unitList) > 0) {

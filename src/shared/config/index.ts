@@ -15,3 +15,4 @@ export * from './aiProfiles';
 export * from './combat';
 export * from './sandbox';
 export * from './research';
+export * from './audio';

@@ -6,3 +6,4 @@ export * from './renderHiDpiCanvas';
 export * from './withDevtools';
 export * from './camera';
 export * from './minimap';
+export * from './audio';

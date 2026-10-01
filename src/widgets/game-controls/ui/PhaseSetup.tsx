@@ -6,6 +6,7 @@ import { useSettingsSelectors } from '@entities/settings';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { useSandboxStore } from '@features/sandbox';
 import { AiSetupSection } from './AiSetupSection';
+import { AudioSettings } from './info';
 import { SandboxSetup } from './sandbox';
 import styles from './styles.module.css';
 
@@ -180,6 +181,7 @@ export const PhaseSetup = ({ onStartGame }: Props) => {
         >
           Гайдбук: как устроена игра <span aria-hidden='true'>↗</span>
         </a>
+        <AudioSettings />
       </section>
     </div>
   );

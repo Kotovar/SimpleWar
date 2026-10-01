@@ -11,7 +11,11 @@ import { initBattleStats, useSandboxStore } from '@features/sandbox';
 import { Map, Minimap } from '@widgets/map';
 import { initializeGame, initializeSandbox } from '@widgets/start-game';
 import { GameControls } from '@widgets/game-controls';
-import { initJournalSystem, initPopulationSystem } from '@app/system';
+import {
+  initAudioSystem,
+  initJournalSystem,
+  initPopulationSystem,
+} from '@app/system';
 import { runAITurn } from '@app/game/ai';
 import styles from './styles.module.css';
 
@@ -44,6 +48,7 @@ export const Game = () => {
     initJournalSystem();
     initVisibilitySystem();
     initBattleStats();
+    initAudioSystem();
   }, []);
 
   useEffect(() => {

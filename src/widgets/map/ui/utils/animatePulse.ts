@@ -8,7 +8,7 @@ const FRAME_INTERVAL = 1000 / 30;
 const phaseAt = (time: number) =>
   (1 - Math.cos(((time % PERIOD) / PERIOD) * Math.PI * 2)) / 2;
 
-const prefersReducedMotion = () =>
+export const prefersReducedMotion = () =>
   window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
 /**

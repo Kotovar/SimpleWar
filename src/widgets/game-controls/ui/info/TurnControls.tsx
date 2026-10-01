@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { GUIDEBOOK_URL } from '@shared/config';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { useDebugStore } from '@entities/settings';
+import { AudioSettings } from './AudioSettings';
 import styles from './TurnControls.styles.module.css';
 
 type Props = {
@@ -82,6 +83,7 @@ export const TurnControls = ({ onNextTurn, onReset }: Props) => {
           >
             Сбросить игру
           </button>
+          <AudioSettings />
         </div>
       </details>
     </div>

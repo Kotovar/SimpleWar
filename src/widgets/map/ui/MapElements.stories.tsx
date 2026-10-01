@@ -217,6 +217,17 @@ const OVERLAYS: Record<string, Tile[]> = {
     label: `${ratio * 100}%`,
     draw: entity([unit({ hp: Math.ceil(unit().maxHp * ratio) })]),
   })),
+  // Трещины и дым — с половины HP: статус виден без цвета полосы.
+  'Здоровье здания': [1, 0.6, 0.5, 0.2].map(ratio => {
+    const barracks = createBuilding('barracks', 0, 0, 'p1')!;
+    return {
+      label: `${ratio * 100}%`,
+      draw: entity(
+        [],
+        [{ ...barracks, hp: Math.ceil(barracks.maxHp * ratio) }],
+      ),
+    };
+  }),
   'Очки действий': [
     { label: 'Ещё не ходил', draw: entity([unit({ attackPoints: 1 })]) },
     {
@@ -271,6 +282,33 @@ const OVERLAYS: Record<string, Tile[]> = {
     },
   })),
 };
+
+// Сигналы дублируют звук: стройка, замеченная угроза и отказ приказа.
+OVERLAYS['Сигналы'] = (
+  [
+    ['Стройка: пыль', 'under', { spawn: 'p1', building: true }],
+    ['Стройка: молотки', 'over', { spawn: 'p1', building: true }],
+    ['Найм', 'over', { spawn: 'p1' }],
+    ['Угроза', 'over', { signal: 'threat' }],
+    ['Отказ приказа', 'over', { signal: 'reject' }],
+  ] as const
+).map(([label, layer, effect]) => ({
+  label,
+  rows: 1 + EFFECT_HEADROOM,
+  draw: (ctx, s) => {
+    ctx.translate(0, s * EFFECT_HEADROOM);
+    const model =
+      'building' in effect
+        ? entity([], [createBuilding('barracks', 0, 0, 'p1')!])
+        : 'spawn' in effect
+          ? entity([unit()])
+          : effect.signal === 'threat'
+            ? entity([enemy])
+            : ground();
+    model(ctx, s);
+    drawEffect(ctx, { x: 0, y: 0, start: 0, ...effect }, 0.3, s, layer);
+  },
+}));
 
 const LEGEND: Record<string, CellType> = {
   '.': 'grass',

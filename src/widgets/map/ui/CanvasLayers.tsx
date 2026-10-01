@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { useEffect, useMemo, useRef, type MouseEvent } from 'react';
 import type { Owner, Position } from '@shared/config';
-import { collectStrikeMarks } from '@shared/lib';
+import { audio, collectStrikeMarks } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useGameLoopStore } from '@entities/games';
@@ -95,7 +95,13 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     isVisible,
     humanId,
     view,
+    strikeMarks,
   });
+
+  // Выбор озвучивается откликом; снятие выбора — тишиной.
+  useEffect(() => {
+    if (selection) audio.play('select');
+  }, [selection]);
 
   const builtCells = useBuiltCells([...Object.values(buildings), ...snapshots]);
 

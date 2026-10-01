@@ -1,0 +1,35 @@
+.Audio {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 12px;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.Legend {
+  padding: 0;
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.Row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.Name {
+  min-width: 64px;
+}
+
+.Row input[type='range'] {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.Row input:disabled {
+  opacity: 0.5;
+}

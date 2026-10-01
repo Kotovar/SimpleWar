@@ -13,17 +13,35 @@ import {
   useHighlightSelectors,
   useMovementSelectors,
 } from '@features/pathfinding';
+import type { CommandResult } from '@shared/config';
+import { audio } from '@shared/lib';
 import { handleMapCellClick } from './mapClickHandler';
+import { pushMapEffect } from './mapSignals';
 
-const commands = {
-  move,
-  attack,
-  build,
-  spawn,
-  clearForest,
-  prepareStrike,
-  heal,
-};
+/**
+ * Отказ приказа по клетке: звук и «×» над клеткой дублируют друг друга.
+ * Текст причины — в итоге событий S19.
+ */
+const withRejectSignal =
+  <T>(command: (input: T) => CommandResult, x: number, y: number) =>
+  (input: T) => {
+    const result = command(input);
+    if (!result.ok) {
+      audio.play('reject');
+      pushMapEffect({ x, y, signal: 'reject', start: performance.now() });
+    }
+    return result;
+  };
+
+const getCommands = (x: number, y: number) => ({
+  move: withRejectSignal(move, x, y),
+  attack: withRejectSignal(attack, x, y),
+  build: withRejectSignal(build, x, y),
+  spawn: withRejectSignal(spawn, x, y),
+  clearForest: withRejectSignal(clearForest, x, y),
+  prepareStrike: withRejectSignal(prepareStrike, x, y),
+  heal: withRejectSignal(heal, x, y),
+});
 
 const findAt = <T extends { x: number; y: number }>(
   entities: Record<string, T>,
@@ -93,7 +111,7 @@ export const useMapCellClick = (scene: Scene) => {
         strike: strikeCells,
         heal: healTargets,
       },
-      commands,
+      commands: getCommands(x, y),
       ui: {
         selectUnit: unitsSelection.selectUnit,
         selectBuilding: buildingsSelection.selectBuilding,

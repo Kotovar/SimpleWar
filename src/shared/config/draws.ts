@@ -125,3 +125,13 @@ export const MINIMAP_TERRAIN: Record<CellType, string> = {
   forest: '#2f6a50',
   gold: '#d8b04a',
 };
+
+/**
+ * Пороги детализации по размеру клетки, CSS px. Меньше `icon` — значок роли
+ * и владельца без HP и чисел; меньше `detail` — силуэт с HP без мелких
+ * значков очков и состояний; дальше — всё.
+ */
+export const DETAIL_LEVEL = { icon: 14, detail: 22 };
+
+/** Доля HP, ниже которой здание показывается повреждённым. */
+export const DAMAGED_BUILDING_RATIO = 0.5;

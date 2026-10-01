@@ -1,10 +1,15 @@
 import { useUnitsStore } from '@entities/units';
 import { useEffect, useRef, type RefObject } from 'react';
-import type { Owner } from '@shared/config';
+import type { Owner, Position } from '@shared/config';
+import { audio, gameEvents } from '@shared/lib';
 import { useResearchStore } from '@entities/researches';
 import {
+  diffScene,
   drawEffect,
   EFFECT_DURATION,
+  getEventEffect,
+  getEventSfx,
+  isInCombat,
   renderEntitiesLayer,
   renderSnapshots,
   withClear,
@@ -12,19 +17,25 @@ import {
   type Effect,
   type EffectLayer,
   type Scene,
+  type Tracked,
 } from '@widgets/map/lib';
+import { prefersReducedMotion } from './animatePulse';
 import { setupCanvas } from './getCtx';
+import { onMapEffect } from './mapSignals';
 import type { MapView } from './useMapView';
 
 const MOVE_DURATION = 220;
 const SPAWN_DURATION = 420;
+const LUNGE_DURATION = 260;
+/** Выпад к цели в долях клетки. */
+const LUNGE_DEPTH = 0.28;
+/** Кадр эффекта без движения для reduced motion: число стоит на месте. */
+const STILL_PROGRESS = 0.15;
 
 const easeOut = (progress: number) => 1 - (1 - progress) ** 3;
 
 // Небольшой перелёт за 1 и возврат: модель «выпрыгивает» на клетку.
 const easeOutBack = (t: number) => 1 + 2.9 * (t - 1) ** 3 + 1.9 * (t - 1) ** 2;
-
-type Tracked = { x: number; y: number; hp: number };
 
 type Props = {
   ref: RefObject<HTMLCanvasElement | null>;
@@ -38,15 +49,16 @@ type Props = {
   isVisible: (x: number, y: number) => boolean;
   humanId: Owner | null;
   view: MapView;
+  /** Видимые отметки удара осады: попадание по ним звучит как удар осады. */
+  strikeMarks?: readonly Position[];
 };
 
 /**
- * Рисует слой объектов сцены и оживляет его изменения.
+ * Рисует слой объектов сцены, оживляет и озвучивает его изменения.
  *
- * Сравнивает сцену с предыдущим кадром: сдвиг клетки превращается в плавный
- * переезд, изменение HP — во вспышку с числом, гибель — в эффект гибели.
- * Объект, ушедший в туман или вышедший из него, просто исчезает или
- * появляется: по анимации нельзя узнать о скрытых событиях.
+ * Изменения берутся из {@link diffScene}: только видимое смотрящему, поэтому
+ * ни эффект, ни звук не выдают скрытых событий. Анимация — лишь вид:
+ * команды уже применены, её длительность и reduced motion ни на что не влияют.
  *
  * @param props.ref - Холст объектов.
  * @param props.scene - Разрешённые для рисования объекты и снимки.
@@ -54,6 +66,7 @@ type Props = {
  * @param props.isVisible - Проверка видимости клетки.
  * @param props.humanId - Участник, которым управляет интерфейс.
  * @param props.view - Камера карты.
+ * @param props.strikeMarks - Видимые отметки удара осады.
  */
 export const useEntitiesLayer = ({
   ref,
@@ -62,24 +75,45 @@ export const useEntitiesLayer = ({
   isVisible,
   humanId,
   view,
+  strikeMarks,
 }: Props) => {
   const worldUnits = useUnitsStore(state => state.units);
-  const tracked = useRef(new Map<string, Tracked>());
+  const tracked = useRef<ReadonlyMap<string, Tracked>>(new Map());
   const known = useRef<ReadonlySet<string>>(new Set());
+  const strikeCells = useRef<ReadonlySet<string>>(new Set());
   const moves = useRef(
     new Map<string, { fromX: number; fromY: number; start: number }>(),
   );
+  const lunges = useRef(
+    new Map<string, { dx: number; dy: number; start: number }>(),
+  );
   const spawns = useRef(new Map<string, number>());
   const effects = useRef<Effect[]>([]);
-  const frame = useRef(0);
+  /** Запускает перерисовку, если цикл анимации сейчас стоит. */
+  const redraw = useRef<() => void>(() => {});
   const isFirstRun = useRef(true);
+  /** Клетки гибели с прошлого сравнения: события приходят раньше рендера. */
+  const deaths = useRef(new Map<string, Position>());
+
+  useEffect(
+    () =>
+      gameEvents.subscribe(event => {
+        const entity =
+          event.type === 'UNIT_DESTROYED'
+            ? event.unit
+            : event.type === 'BUILDING_DESTROYED'
+              ? event.building
+              : null;
+        if (entity) deaths.current.set(entity.id, { x: entity.x, y: entity.y });
+      }),
+    [],
+  );
 
   const { buildings, units, snapshots, staffed } = scene;
 
   // Сравнение состава — только при изменении сцены, не при сдвиге камеры.
   useEffect(() => {
     const now = performance.now();
-    const alive = new Set<string>();
 
     // Рабочие в своих зданиях не рисуются, но лечение им тоже доступно.
     const sheltered = Object.values(worldUnits).filter(
@@ -89,73 +123,74 @@ export const useEntitiesLayer = ({
         unit.workplaceId &&
         staffed.has(unit.workplaceId),
     );
-    [
-      ...Object.values(buildings),
-      ...Object.values(units),
-      ...sheltered,
-    ].forEach(entity => {
-      alive.add(entity.id);
-      const before = tracked.current.get(entity.id);
-      tracked.current.set(entity.id, {
-        x: entity.x,
-        y: entity.y,
-        hp: entity.hp,
-      });
+    const visibleStrikes = new Set(strikeMarks?.map(({ x, y }) => `${x},${y}`));
+    const visibleUnits = Object.values(units);
+    const visibleBuildings = Object.values(buildings);
+    const diff = diffScene(
+      tracked.current,
+      [...visibleBuildings, ...visibleUnits, ...sheltered],
+      {
+        firstRun: isFirstRun.current,
+        knownIds: known.current,
+        worldIds,
+        isVisible,
+        humanId,
+        strikeCells: strikeCells.current,
+        visibleStrikes,
+        deathCell: id => deaths.current.get(id),
+      },
+    );
 
-      if (!before) {
-        // Эффект найма — только для действительно нового объекта мира.
-        if (!isFirstRun.current && !known.current.has(entity.id)) {
-          spawns.current.set(entity.id, now);
-          effects.current.push({
-            x: entity.x,
-            y: entity.y,
-            spawn: entity.owner,
-            start: now,
-          });
-        }
-        return;
+    diff.events.forEach(event => {
+      audio.play(getEventSfx(event));
+      const effect = getEventEffect(event, now);
+      if (effect) effects.current.push(effect);
+      if (event.kind === 'move') {
+        moves.current.set(event.id, { ...event, start: now });
       }
-
-      if (before.x !== entity.x || before.y !== entity.y) {
-        moves.current.set(entity.id, {
-          fromX: before.x,
-          fromY: before.y,
-          start: now,
-        });
-      }
-
-      if (entity.hp !== before.hp) {
-        effects.current.push({
-          x: entity.x,
-          y: entity.y,
-          ...(entity.hp < before.hp
-            ? { damage: before.hp - entity.hp }
-            : { healing: entity.hp - before.hp }),
+      if (event.kind === 'spawn') spawns.current.set(event.id, now);
+      const attacker =
+        event.kind === 'attack' && (units[event.id] ?? buildings[event.id]);
+      if (attacker && event.kind === 'attack' && event.target) {
+        const dx = event.target.x - attacker.x;
+        const dy = event.target.y - attacker.y;
+        const length = Math.hypot(dx, dy) || 1;
+        lunges.current.set(event.id, {
+          dx: (dx / length) * LUNGE_DEPTH,
+          dy: (dy / length) * LUNGE_DEPTH,
           start: now,
         });
       }
     });
 
-    tracked.current.forEach((before, id) => {
-      if (alive.has(id)) return;
-
-      tracked.current.delete(id);
-      moves.current.delete(id);
-      spawns.current.delete(id);
-      // Ушёл в туман — не гибель; гибель показываем только в обзоре.
-      if (worldIds.has(id) || !isVisible(before.x, before.y)) return;
-      effects.current.push({
-        x: before.x,
-        y: before.y,
-        damage: before.hp,
-        lethal: true,
-        start: now,
-      });
-    });
-
+    tracked.current = diff.tracked;
+    strikeCells.current = visibleStrikes;
+    deaths.current.clear();
     known.current = worldIds;
     isFirstRun.current = false;
-  }, [buildings, isVisible, staffed, units, worldIds, worldUnits]);
+    audio.setMusicState({
+      combat: isInCombat(visibleUnits, visibleBuildings, humanId),
+    });
+  }, [
+    buildings,
+    humanId,
+    isVisible,
+    staffed,
+    strikeMarks,
+    units,
+    worldIds,
+    worldUnits,
+  ]);
+
+  // Внешний сигнал (отказ приказа) запускает перерисовку без смены сцены.
+  useEffect(
+    () =>
+      onMapEffect(effect => {
+        effects.current.push(effect);
+        redraw.current();
+      }),
+    [],
+  );
 
   // Завершённое исследование меняет значки (Строй) без смены юнитов.
   const researched = useResearchStore(state => state.completed);
@@ -165,15 +200,17 @@ export const useEntitiesLayer = ({
     const ctx = setupCanvas(ref, viewport.width, viewport.height, offset);
     if (!ctx) return;
 
+    let frame = 0;
     const draw = () => {
       const time = performance.now();
+      const still = prefersReducedMotion();
       const offsets: CellOffsets = new Map();
 
       moves.current.forEach((move, id) => {
         const entity = units[id] ?? buildings[id];
         const progress = Math.min(1, (time - move.start) / MOVE_DURATION);
 
-        if (!entity || progress >= 1) {
+        if (!entity || progress >= 1 || still) {
           moves.current.delete(id);
           return;
         }
@@ -185,9 +222,20 @@ export const useEntitiesLayer = ({
         });
       });
 
+      lunges.current.forEach((lunge, id) => {
+        const progress = (time - lunge.start) / LUNGE_DURATION;
+        if (progress >= 1 || still || offsets.has(id)) {
+          lunges.current.delete(id);
+          return;
+        }
+        // Быстрый выпад к цели и возврат.
+        const reach = Math.sin(progress * Math.PI);
+        offsets.set(id, { dx: lunge.dx * reach, dy: lunge.dy * reach });
+      });
+
       spawns.current.forEach((start, id) => {
         const progress = Math.min(1, (time - start) / SPAWN_DURATION);
-        if (progress >= 1) {
+        if (progress >= 1 || still) {
           spawns.current.delete(id);
           return;
         }
@@ -209,7 +257,7 @@ export const useEntitiesLayer = ({
           drawEffect(
             ctx,
             effect,
-            (time - effect.start) / EFFECT_DURATION,
+            still ? STILL_PROGRESS : (time - effect.start) / EFFECT_DURATION,
             cellSize,
             layer,
           ),
@@ -232,19 +280,24 @@ export const useEntitiesLayer = ({
         drawEffects('over');
       });
 
-      if (
+      const animating =
         moves.current.size > 0 ||
+        lunges.current.size > 0 ||
         spawns.current.size > 0 ||
-        effects.current.length > 0
-      ) {
-        frame.current = requestAnimationFrame(draw);
-      }
+        effects.current.length > 0;
+      frame = 0;
+      if (animating) frame = requestAnimationFrame(draw);
     };
 
-    cancelAnimationFrame(frame.current);
+    redraw.current = () => {
+      if (!frame) draw();
+    };
     draw();
 
-    return () => cancelAnimationFrame(frame.current);
+    return () => {
+      cancelAnimationFrame(frame);
+      redraw.current = () => {};
+    };
   }, [
     buildings,
     humanId,
