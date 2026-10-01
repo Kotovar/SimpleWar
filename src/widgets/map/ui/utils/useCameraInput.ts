@@ -27,7 +27,7 @@ const KEY_PAN: Record<string, [number, number]> = {
 /** Кнопки-флажки не печатают текст: стрелки на них двигают камеру. */
 const NON_TEXT_INPUTS = ['checkbox', 'radio', 'button', 'submit', 'reset'];
 
-const isTyping = (target: EventTarget | null) =>
+export const isTyping = (target: EventTarget | null) =>
   target instanceof HTMLElement &&
   (target.isContentEditable ||
     target instanceof HTMLTextAreaElement ||

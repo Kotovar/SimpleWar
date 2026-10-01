@@ -15,9 +15,9 @@
     var(--surface-sunken);
 }
 
-.MapViewport:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
+/* Карта — игровое поле: фокус клавиатуры не обводит её рамкой. */
+.MapViewport:focus {
+  outline: none;
 }
 
 .MapViewport[data-dragging='true'],

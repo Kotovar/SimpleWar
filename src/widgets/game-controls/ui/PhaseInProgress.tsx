@@ -70,7 +70,20 @@ const EmptySelection = () => (
       <li>
         <kbd>WASD</kbd> или стрелки — сдвиг камеры
       </li>
+      <li>
+        <kbd>Tab</kbd> следующий юнит с действиями
+      </li>
+      <li>
+        <kbd>.</kbd> свободный рабочий
+      </li>
+      <li>
+        <kbd>H</kbd> к ратуше
+      </li>
+      <li>
+        <kbd>Esc</kbd> отменить режим или выбор
+      </li>
     </ul>
+    <p className={styles.Hint}>Клавиши работают на любой раскладке.</p>
   </div>
 );
 

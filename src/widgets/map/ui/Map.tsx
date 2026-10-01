@@ -4,7 +4,12 @@ import { useSettingsStore } from '@entities/settings';
 import { useUnitsStore } from '@entities/units';
 import { useSelectionStore } from '@features/selection';
 import { useMovementStore } from '@features/pathfinding';
-import { useCameraInput, useMapCellClick, useScene } from './utils';
+import {
+  useCameraInput,
+  useGameHotkeys,
+  useMapCellClick,
+  useScene,
+} from './utils';
 import { CanvasLayers } from './CanvasLayers';
 import { MapControls } from './MapControls';
 import styles from './styles.module.css';
@@ -27,6 +32,8 @@ export const Map = () => {
     if (baseX === undefined || baseY === undefined) fitWorld();
     else centerOn(baseX + 0.5, baseY + 0.5);
   }, [baseX, baseY, centerOn, fitWorld]);
+
+  useGameHotkeys({ scene, humanId, focusBase });
 
   // Новая партия начинается с камеры у своей ратуши, как только окно измерено.
   const focused = useRef(false);

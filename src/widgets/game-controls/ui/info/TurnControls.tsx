@@ -27,7 +27,10 @@ export const TurnControls = ({ onNextTurn, onReset }: Props) => {
       element.open = false;
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') close(event);
+      if (event.key !== 'Escape' || !menu.current?.open) return;
+      // Esc закрыл меню — карта не должна заодно снимать выбор.
+      event.preventDefault();
+      close(event);
     };
 
     document.addEventListener('pointerdown', close);

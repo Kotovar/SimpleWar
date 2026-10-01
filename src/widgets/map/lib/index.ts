@@ -22,3 +22,4 @@ export * from './renderMinimap';
 export * from './diffScene';
 export * from './sceneFeedback';
 export * from './drawEntityStatus';
+export * from './nextUnit';
