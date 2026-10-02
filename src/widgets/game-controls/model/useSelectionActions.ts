@@ -19,6 +19,53 @@ import { runSelectionAction } from './runSelectionAction';
 
 const EMPTY: readonly ResearchType[] = [];
 
+/** Выбранный свой объект и данные для поиска рабочих и соседних зданий. */
+const useOwnSelection = () => {
+  const { humanId } = useGameLoopSelectors();
+  const selection = useSelectionStore(state => state.selection);
+  const units = useUnitsStore(state => state.units);
+  const buildings = useBuildingsStore(state => state.buildings);
+
+  const selectedUnit =
+    selection?.kind === 'unit' ? (units[selection.id] ?? null) : null;
+  const selectedBuilding =
+    selection?.kind === 'building' ? (buildings[selection.id] ?? null) : null;
+  const unit = selectedUnit?.owner === humanId ? selectedUnit : null;
+  const building =
+    selectedBuilding?.owner === humanId ? selectedBuilding : null;
+  return { humanId, units, buildings, unit, building };
+};
+
+/** Режим карты для кнопок и подсказки следующего шага. */
+const useMapMode = () => {
+  const highlight = useHighlightStore();
+  const modeBuilding = useBuildingsStore(
+    state => state.selectedBuildingForSpawn,
+  );
+  const modeUnit = useUnitsStore(state => state.selectedUnitForSpawn);
+
+  // Подсказка следующего шага во включённом режиме карты.
+  let mapMode: MapMode | null = null;
+  if (modeBuilding) {
+    mapMode = {
+      kind: 'build',
+      type: modeBuilding,
+      cells: highlight.buildableCells?.length ?? 0,
+    };
+  } else if (modeUnit) {
+    mapMode = {
+      kind: 'spawn',
+      type: modeUnit,
+      cells: highlight.spawnableCells?.length ?? 0,
+    };
+  } else if (highlight.clearableCells) {
+    mapMode = { kind: 'clear', cells: highlight.clearableCells.length };
+  } else if (highlight.strikeCells) {
+    mapMode = { kind: 'strike', cells: highlight.strikeCells.length };
+  }
+  return { highlight, modeBuilding, modeUnit, mapMode };
+};
+
 /**
  * Кнопки нижней панели для своего выбранного объекта: собирает сведения
  * из хранилищ и строит кнопки чистой функцией; исполнение — тем же
@@ -28,10 +75,7 @@ const EMPTY: readonly ResearchType[] = [];
  *   ключ выбранного для сброса подменю.
  */
 export const useSelectionActions = () => {
-  const { humanId } = useGameLoopSelectors();
-  const selection = useSelectionStore(state => state.selection);
-  const units = useUnitsStore(state => state.units);
-  const buildings = useBuildingsStore(state => state.buildings);
+  const { humanId, units, buildings, unit, building } = useOwnSelection();
   const owner = humanId ?? 'p1';
   const isTurn = useGameLoopStore(state => state.activePlayer === humanId);
   const resources = useEconomyStore(state => state.resources[owner]);
@@ -42,19 +86,7 @@ export const useSelectionActions = () => {
   );
   const freeBuild = useDebugException(owner, 'freeBuild');
   const freeSpawn = useDebugException(owner, 'freeSpawn');
-  const highlight = useHighlightStore();
-  const modeBuilding = useBuildingsStore(
-    state => state.selectedBuildingForSpawn,
-  );
-  const modeUnit = useUnitsStore(state => state.selectedUnitForSpawn);
-
-  const selectedUnit =
-    selection?.kind === 'unit' ? (units[selection.id] ?? null) : null;
-  const selectedBuilding =
-    selection?.kind === 'building' ? (buildings[selection.id] ?? null) : null;
-  const unit = selectedUnit?.owner === humanId ? selectedUnit : null;
-  const building =
-    selectedBuilding?.owner === humanId ? selectedBuilding : null;
+  const { highlight, modeBuilding, modeUnit, mapMode } = useMapMode();
 
   const own = Object.values(buildings).filter(b => b.owner === humanId);
   const workers = Object.values(units).filter(u => u.role === 'civil');
@@ -98,24 +130,6 @@ export const useSelectionActions = () => {
   const run = (button: ActionButton) =>
     runSelectionAction(button, { humanId, unit, building, input });
 
-  // Подсказка следующего шага во включённом режиме карты.
-  const mapMode: MapMode | null = modeBuilding
-    ? {
-        kind: 'build',
-        type: modeBuilding,
-        cells: highlight.buildableCells?.length ?? 0,
-      }
-    : modeUnit
-      ? {
-          kind: 'spawn',
-          type: modeUnit,
-          cells: highlight.spawnableCells?.length ?? 0,
-        }
-      : highlight.clearableCells
-        ? { kind: 'clear', cells: highlight.clearableCells.length }
-        : highlight.strikeCells
-          ? { kind: 'strike', cells: highlight.strikeCells.length }
-          : null;
   const prompt = mapMode && (unit || building) ? getModePrompt(mapMode) : null;
 
   return {

@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type PointerEvent } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type PointerEvent,
+} from 'react';
 import { formatKey, isTyping } from '@shared/lib';
 import { ConfirmDialog } from '@shared/ui';
 import { usePreferencesStore } from '@entities/settings';
@@ -66,7 +72,9 @@ export const ActionBar = () => {
   // Захват на window: срабатывает раньше клавиш карты, а отменённое
   // событие карта пропускает.
   const latest = useRef({ shown, buttons, press, submenu, selectionKey });
-  latest.current = { shown, buttons, press, submenu, selectionKey };
+  useLayoutEffect(() => {
+    latest.current = { shown, buttons, press, submenu, selectionKey };
+  });
   useEffect(() => {
     let spaceFor: string | null = null;
     const onKeyDown = (event: KeyboardEvent) => {

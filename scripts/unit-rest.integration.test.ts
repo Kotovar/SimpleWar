@@ -76,6 +76,7 @@ describe('пропуск и сон', () => {
     const before = store().units[unitId];
     setUnitRest({ actor: 'p1', unitId, mode: 'sleep' });
     expect(store().units[unitId]).toEqual({ ...before, restMode: 'sleep' });
+    // react-doctor-disable-next-line no-json-parse-stringify-clone -- Проверяем JSON-сериализацию состояния для сохранения, а не клонирование.
     expect(JSON.parse(JSON.stringify(store().units[unitId])).restMode).toBe(
       'sleep',
     );

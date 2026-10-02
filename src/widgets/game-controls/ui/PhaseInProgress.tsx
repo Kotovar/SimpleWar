@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import type { Unit } from '@shared/config';
 import { isTyping } from '@shared/lib';
 import { ConfirmDialog } from '@shared/ui';
@@ -91,7 +97,9 @@ export const PhaseInProgress = ({ minimap }: Props) => {
   // Enter завершает ход: не при вводе, не над открытым диалогом и не на
   // кнопке в фокусе — там Enter нажимает её саму.
   const endTurnKey = useRef(onNextTurn);
-  endTurnKey.current = onNextTurn;
+  useLayoutEffect(() => {
+    endTurnKey.current = onNextTurn;
+  });
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.code !== 'Enter' || event.repeat) return;
