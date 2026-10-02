@@ -13,6 +13,11 @@ type Props = {
   onCancel: () => void;
   /** Дополнительное содержимое под сообщением, например галочка. */
   children?: ReactNode;
+  /**
+   * Кнопка в фокусе при открытии — её нажимает `Enter`. По умолчанию
+   * отмена: необратимое действие не выполняется случайно.
+   */
+  focus?: 'confirm' | 'cancel';
 };
 
 export const ConfirmDialog = ({
@@ -24,9 +29,11 @@ export const ConfirmDialog = ({
   onConfirm,
   onCancel,
   children,
+  focus = 'cancel',
 }: Props) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const confirmRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -34,7 +41,7 @@ export const ConfirmDialog = ({
 
     if (isOpen) {
       dialog.showModal();
-      cancelRef.current?.focus();
+      (focus === 'confirm' ? confirmRef : cancelRef).current?.focus();
     } else {
       dialog.close();
     }
@@ -43,7 +50,7 @@ export const ConfirmDialog = ({
     return () => {
       if (dialog.open) dialog.close();
     };
-  }, [isOpen]);
+  }, [isOpen, focus]);
 
   const handleBackdropClick = (e: MouseEvent<HTMLDialogElement>) => {
     if (e.target === dialogRef.current) {
@@ -65,7 +72,11 @@ export const ConfirmDialog = ({
         <p className={styles.Message}>{message}</p>
         {children}
         <div className={styles.Buttons}>
-          <button className={styles.ConfirmButton} onClick={onConfirm}>
+          <button
+            ref={confirmRef}
+            className={styles.ConfirmButton}
+            onClick={onConfirm}
+          >
             {confirmText}
           </button>
           <button

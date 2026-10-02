@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { GUIDEBOOK_URL } from '@shared/config';
+import { Checkbox } from '@shared/ui';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { useDebugStore } from '@entities/settings';
+import { useConfirmEndTurn } from '../../model/confirmEndTurn';
 import { AudioSettings } from './AudioSettings';
 import styles from './TurnControls.styles.module.css';
 
@@ -18,6 +20,7 @@ export const TurnControls = ({ onNextTurn, onReset, onSurrender }: Props) => {
   const isDebug = useDebugStore(state => state.enabled);
   const setDebug = useDebugStore(state => state.setEnabled);
   const menu = useRef<HTMLDetailsElement>(null);
+  const [confirmEndTurn, setConfirmEndTurn] = useConfirmEndTurn();
 
   useEffect(() => {
     const close = (event: Event) => {
@@ -99,6 +102,13 @@ export const TurnControls = ({ onNextTurn, onReset, onSurrender }: Props) => {
           >
             Сбросить игру
           </button>
+          <Checkbox
+            className={styles.MenuCheck}
+            checked={confirmEndTurn}
+            onChange={setConfirmEndTurn}
+          >
+            Предупреждать об непоходивших юнитах
+          </Checkbox>
           <AudioSettings />
         </div>
       </details>

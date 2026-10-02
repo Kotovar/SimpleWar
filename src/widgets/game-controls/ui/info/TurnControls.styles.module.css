@@ -158,3 +158,10 @@
   box-sizing: border-box;
   text-decoration: none;
 }
+
+/* Флажок настроек партии в меню: в ряд с пунктами, тот же отступ. */
+.MenuCheck {
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  font-size: 0.9rem;
+}

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { Owner } from '@shared/config';
+import { isTyping } from '@shared/lib';
 import { useSettingsStore } from '@entities/settings';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
@@ -16,7 +17,6 @@ import {
   isIdleWorker,
   type Scene,
 } from '@widgets/map/lib';
-import { isTyping } from './useCameraInput';
 
 type Props = {
   scene: Scene;

@@ -1,6 +1,6 @@
 import { pluralRu } from '@shared/lib';
 import { Checkbox, ConfirmDialog } from '@shared/ui';
-import { usePreferencesStore } from '@entities/settings';
+import { useConfirmEndTurn } from '../../model/confirmEndTurn';
 import styles from './EndTurnConfirm.styles.module.css';
 
 type Props = {
@@ -12,11 +12,11 @@ type Props = {
 
 /**
  * Спрашивает перед концом хода, если свои юниты ещё могут действовать.
- * Галочка «Больше не спрашивать» сохраняется в браузере.
+ * Галочка «Больше не спрашивать» действует до конца партии; вернуть
+ * вопрос можно в «Меню».
  */
 export const EndTurnConfirm = ({ pending, onConfirm, onCancel }: Props) => {
-  const confirm = usePreferencesStore(state => state.confirmEndTurn);
-  const setConfirm = usePreferencesStore(state => state.setConfirmEndTurn);
+  const [confirm, setConfirm] = useConfirmEndTurn();
 
   return (
     <ConfirmDialog
@@ -25,6 +25,8 @@ export const EndTurnConfirm = ({ pending, onConfirm, onCancel }: Props) => {
       message={`${pending} ${pluralRu(pending, ['юнит', 'юнита', 'юнитов'])} ещё ${pending === 1 ? 'может' : 'могут'} идти, атаковать или лечить.`}
       confirmText='Завершить ход'
       cancelText='Вернуться'
+      // Enter после Enter: повторное нажатие подтверждает конец хода.
+      focus='confirm'
       onConfirm={onConfirm}
       onCancel={onCancel}
     >

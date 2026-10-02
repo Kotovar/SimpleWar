@@ -1,0 +1,129 @@
+/* Нижняя панель действий: по центру низа карты, поверх неё. */
+.Bar {
+  --size: 78px;
+  grid-area: map;
+  align-self: end;
+  justify-self: center;
+  z-index: 40;
+  display: grid;
+  grid-template-rows: repeat(var(--rows, 1), var(--size));
+  grid-template-columns: 10px repeat(var(--cols, 1), var(--size));
+  gap: 6px;
+  max-width: calc(100% - 32px);
+  margin-bottom: 16px;
+  padding: 6px 8px 6px 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background-color: rgb(24 29 35 / 0.94);
+  box-shadow: var(--shadow);
+}
+
+.Handle {
+  grid-row: 1 / -1;
+  border-radius: var(--radius-sm);
+  background-image: radial-gradient(
+    var(--text-disabled) 1px,
+    transparent 1.5px
+  );
+  background-size: 5px 5px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.Handle:active {
+  cursor: grabbing;
+}
+
+.Card,
+.Back {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 2px;
+  width: var(--size);
+  height: var(--size);
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.12s,
+    background-color 0.12s;
+}
+
+.Card:hover,
+.Back:hover {
+  border-color: var(--accent);
+  background-color: var(--surface-hover);
+}
+
+.Card[aria-pressed='true'] {
+  border-color: var(--accent);
+  background-color: rgb(111 181 255 / 0.16);
+}
+
+/* Недоступное видно сразу: приглушено, причина — в подсказке. */
+.Card[data-unavailable='true'] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.Card[data-unavailable='true']:hover {
+  border-color: var(--border);
+  background-color: var(--surface);
+}
+
+.Label {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.15;
+  text-align: center;
+  hyphens: auto;
+}
+
+.Cost {
+  display: flex;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Клавиша — в левом верхнем углу, чтобы карточка оставалась квадратной. */
+.Key {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  min-width: 16px;
+  padding: 0 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background-color: var(--surface-sunken);
+  color: var(--text-muted);
+  font:
+    600 0.7rem / 1.4 ui-monospace,
+    monospace;
+  text-align: center;
+}
+
+.Reason {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  color: var(--danger-strong);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.Back {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}

@@ -5,6 +5,7 @@ import {
   type PointerEvent,
   type RefObject,
 } from 'react';
+import { isTyping } from '@shared/lib';
 import { useSettingsStore } from '@entities/settings';
 
 /** Сдвиг камеры клавишей, в клетках. */
@@ -20,17 +21,6 @@ const KEY_PAN: Record<string, [number, number]> = {
   KeyW: [0, -1],
   KeyS: [0, 1],
 };
-
-/** Кнопки-флажки не печатают текст: стрелки на них двигают камеру. */
-const NON_TEXT_INPUTS = ['checkbox', 'radio', 'button', 'submit', 'reset'];
-
-export const isTyping = (target: EventTarget | null) =>
-  target instanceof HTMLElement &&
-  (target.isContentEditable ||
-    target instanceof HTMLTextAreaElement ||
-    target instanceof HTMLSelectElement ||
-    (target instanceof HTMLInputElement &&
-      !NON_TEXT_INPUTS.includes(target.type)));
 
 type Drag = { x: number; y: number; pointerId: number };
 

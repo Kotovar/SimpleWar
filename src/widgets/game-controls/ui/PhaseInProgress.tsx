@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { MOVE_COST, type Building, type Cell, type Unit } from '@shared/config';
+import { isTyping } from '@shared/lib';
 import { ConfirmDialog } from '@shared/ui';
 import { useMapViewer } from '@entities/settings';
 import {
@@ -14,8 +15,8 @@ import {
   surrender,
   useGameLoopSelectors,
 } from '@features/game-loop';
-import { usePreferencesStore } from '@entities/settings';
 import { useUnitsStore } from '@entities/units';
+import { useGameLoopStore } from '@entities/games';
 import { getHealTargets } from '@features/combat';
 import { canUnitStep, getAttackableTargets } from '@features/pathfinding';
 import { useSelectionSelectors } from '@features/selection';
@@ -37,6 +38,8 @@ import {
   SiegeStrike,
 } from './info';
 import { SandboxControls } from './sandbox';
+import { ActionBar } from './ActionBar';
+import { shouldConfirmEndTurn } from '../model/confirmEndTurn';
 import styles from './styles.module.css';
 
 const LEGEND = [
@@ -94,7 +97,6 @@ const EmptySelection = () => (
         <kbd>Esc</kbd> отменить режим или выбор
       </li>
     </ul>
-    <p className={styles.Hint}>Клавиши работают на любой раскладке.</p>
   </div>
 );
 
@@ -228,12 +230,33 @@ export const PhaseInProgress = ({ minimap }: Props) => {
           hasTarget(unit, units),
         ).length
       : 0;
-    if (count > 0 && usePreferencesStore.getState().confirmEndTurn) {
+    if (count > 0 && shouldConfirmEndTurn()) {
       setPending(count);
       return;
     }
     endTurn();
   };
+
+  // Enter завершает ход: не при вводе, не над открытым диалогом и не на
+  // кнопке в фокусе — там Enter нажимает её саму.
+  const endTurnKey = useRef(onNextTurn);
+  endTurnKey.current = onNextTurn;
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.code !== 'Enter' || event.repeat) return;
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      const target = event.target;
+      if (isTyping(target) || target instanceof HTMLButtonElement) return;
+      if (target instanceof HTMLAnchorElement) return;
+      if (document.querySelector('dialog[open]')) return;
+      const { activePlayer, phase } = useGameLoopStore.getState();
+      if (phase !== 'inProgress' || activePlayer !== humanId) return;
+      event.preventDefault();
+      endTurnKey.current();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [humanId]);
 
   const onSurrender = () => {
     setShowSurrender(false);
@@ -260,6 +283,7 @@ export const PhaseInProgress = ({ minimap }: Props) => {
 
       <AiTurnBanner />
       <CommandToasts />
+      <ActionBar />
 
       <aside
         className={styles.ContextPanel}
