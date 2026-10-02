@@ -5,6 +5,7 @@ import { useGameLoopSelectors } from '@features/game-loop';
 import { useDebugStore } from '@entities/settings';
 import { useConfirmEndTurn } from '../../model/confirmEndTurn';
 import { AudioSettings } from './AudioSettings';
+import { KeyboardHelp } from '../KeyboardHelp';
 import styles from './TurnControls.styles.module.css';
 
 type Props = {
@@ -112,6 +113,7 @@ export const TurnControls = ({ onNextTurn, onReset, onSurrender }: Props) => {
           <AudioSettings />
         </div>
       </details>
+      <KeyboardHelp />
     </div>
   );
 };

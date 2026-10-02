@@ -25,6 +25,10 @@ const SPECIAL: Record<string, string> = {
   Equal: '+',
   Minus: '−',
   F1: 'F1',
+  ArrowUp: '↑',
+  ArrowLeft: '←',
+  ArrowDown: '↓',
+  ArrowRight: '→',
 };
 
 /**
