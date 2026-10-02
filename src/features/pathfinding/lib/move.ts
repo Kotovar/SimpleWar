@@ -84,6 +84,7 @@ const validateAndMove = ({
  * объектами по цене 1. Цена транзитных клеток списывается вместе с шагом
  * на свободную; при преграде или нехватке очков остаёмся на последней
  * свободной клетке. Новый враг останавливает движение после такого шага.
+ * Открытая преграда на оставшемся пути вызывает пересчёт по новым знаниям.
  */
 const moveAlong = (
   actor: ParticipantId,
@@ -93,10 +94,13 @@ const moveAlong = (
 ): CommandResult => {
   const { moveUnit } = useUnitsStore.getState();
   const { getCell } = useMapStore.getState();
+  const target = path.at(-1);
+  if (!target) return reject('path');
   let pending = 0;
   let steps = 0;
   let seen = getSeenEnemies(actor);
-  for (const step of path.slice(1)) {
+  for (let index = 1; index < path.length; index++) {
+    const step = path[index];
     const cell = getCell(step.x, step.y);
     const cost = cell ? (flying ? 1 : getMoveCost(cell)) : 0;
     const current = useUnitsStore.getState().units[unitId];
@@ -112,6 +116,11 @@ const moveAlong = (
     const spotted = [...now].some(id => !seen.has(id));
     seen = now;
     if (spotted) break;
+    const costs = createUnitMovementGrid(current, actor, TURN_UNKNOWN_COST);
+    if (path.slice(index + 1).some(({ x, y }) => !costs[y]?.[x])) {
+      path = getPath(step, target, costs).path;
+      index = 0;
+    }
   }
   return steps > 0 ? ok : reject('path');
 };

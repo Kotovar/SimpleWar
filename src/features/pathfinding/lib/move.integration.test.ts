@@ -5,9 +5,14 @@ import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
 import { useGameLoopStore } from '@entities/games';
 import { useJournalStore } from '@entities/journals';
+import { useKnowledgeStore } from '@entities/perceptions';
 import { move } from './move';
 import { canUnitStep, getUnitReachableCells } from './air';
-import { createKnownMovementGrid } from './createKnownMovementGrid';
+import {
+  createKnownMovementGrid,
+  TURN_UNKNOWN_COST,
+} from './createKnownMovementGrid';
+import { getPath } from './getPath';
 
 const units = () => useUnitsStore.getState();
 
@@ -25,6 +30,7 @@ beforeEach(() => {
   useUnitsStore.setState({ units: {}, selectedUnitForSpawn: null });
   useBuildingsStore.setState({ buildings: {}, selectedBuildingForSpawn: null });
   useJournalStore.getState().newGame();
+  useKnowledgeStore.setState({ byParticipant: {} });
   useGameLoopStore.setState({
     phase: 'inProgress',
     activePlayer: 'p1',
@@ -42,6 +48,70 @@ const readyWorker = (x: number) => {
 };
 
 describe('движение под туманом', () => {
+  it.each([
+    { type: 'water' as const, points: 7 },
+    { type: 'mountain' as const, points: 7 },
+    { type: 'water' as const, points: 5 },
+  ])(
+    'обходит открывшуюся преграду $type с бюджетом $points',
+    ({ type, points }) => {
+      useMapStore.setState({
+        grid: Array.from({ length: 3 }, (_, y) =>
+          Array.from({ length: 12 }, (_, x) => ({
+            x,
+            y,
+            type: 'grass',
+            isWalkable: true,
+          })),
+        ),
+      });
+      const worker = units().spawnUnit('worker', 0, 1, 'p1', true)!;
+      useUnitsStore.setState(state => ({
+        units: {
+          ...state.units,
+          [worker]: { ...state.units[worker], movePoints: points },
+        },
+      }));
+      const target = { x: 5, y: 1 };
+      const planned = getPath(
+        units().units[worker],
+        target,
+        createKnownMovementGrid('p1', TURN_UNKNOWN_COST),
+      );
+      useMapStore.getState().setCell(4, 1, { type, isWalkable: false });
+      // Скрытая местность не влияет ни на путь, ни на его цену.
+      expect(
+        getPath(
+          units().units[worker],
+          target,
+          createKnownMovementGrid('p1', TURN_UNKNOWN_COST),
+        ),
+      ).toEqual(planned);
+      expect(planned.cost).toBe(5);
+
+      const visited: { x: number; y: number }[] = [];
+      const unsubscribe = useUnitsStore.subscribe(state => {
+        const { x, y } = state.units[worker];
+        visited.push({ x, y });
+      });
+      try {
+        expect(move({ actor: 'p1', unitId: worker, ...target })).toEqual({
+          ok: true,
+        });
+        expect(units().units[worker].movePoints).toBe(0);
+        if (points === 7) {
+          expect(units().units[worker]).toMatchObject(target);
+        } else {
+          expect(units().units[worker].x).toBeLessThan(target.x);
+        }
+        expect(visited).not.toContainEqual({ x: 4, y: 1 });
+        expect(visited.some(({ y }) => y !== 1)).toBe(true);
+      } finally {
+        unsubscribe();
+      }
+    },
+  );
+
   it('останавливается перед скрытым врагом и тратит только пройденные клетки', () => {
     const worker = readyWorker(0);
     // Враг в 5,0 вне обзора (3 клетки) и занимает клетку на пути к 6,0.
@@ -103,8 +173,8 @@ describe('движение под туманом', () => {
     useMapStore.getState().setCell(4, 0, { type: 'water', isWalkable: false });
 
     expect(move({ actor: 'p1', unitId: worker, x: 5, y: 0 }).ok).toBe(true);
-    // Вода открывается на подходе: юнит встаёт перед ней.
-    expect(units().units[worker]).toMatchObject({ x: 3, movePoints: 4 });
+    // Первый шаг открывает воду; известного обхода нет — сразу остановка.
+    expect(units().units[worker]).toMatchObject({ x: 1, movePoints: 6 });
   });
 });
 
