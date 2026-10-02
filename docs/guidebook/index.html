@@ -246,16 +246,16 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
 
 <!-- 02. Начало -->
 <section id="start">
-  <div class="head"><div><div class="eyebrow">02 · Начало</div><h2>Настройка и первый ход</h2></div><p>На стартовом экране выберите режим, характер и сложность противника, размер карты и способ её создания. Открыть гайдбук можно по ссылке под кнопкой «Начать игру» или из меню партии.</p></div>
+  <div class="head"><div><div class="eyebrow">02 · Начало</div><h2>Настройка и первый ход</h2></div><p>На стартовом экране настройка идёт по шагам: режим → карта → противник (или составы сторон в тесте баланса). Способ генерации и сид находятся в свёрнутом блоке «Дополнительно». Открыть гайдбук можно по ссылке под кнопкой «Начать игру» или из меню партии.</p></div>
   <div class="split">
     <figure class="shot">
-      <button type="button"><img src="assets/screenshots/game-first-turn.png" alt="Первый ход: ратуша, рабочий и туман войны вокруг" width="1600" height="900"></button>
-      <figcaption><span class="src game">Игра</span> Первый ход на карте 30×30: видна только область вокруг ратуши и рабочего. Справа — мини-карта, подсказки и управление.</figcaption>
+      <button type="button"><img src="assets/screenshots/game-first-turn.png" alt="Первый ход: ратуша, рабочий и туман войны вокруг" width="1280" height="720"></button>
+      <figcaption><span class="src game">Игра</span> Первый ход на карте 30×30: видна только область вокруг ратуши и рабочего. В шапке — ресурсы, конец хода, «Меню» и «?». Карточка рабочего — внизу слева, действия — внизу по центру, мини-карта — вверху справа.</figcaption>
     </figure>
     <div class="stack">
       <figure class="shot">
-        <button type="button"><img src="assets/screenshots/start-screen.png" alt="Стартовый экран с выбором режима, размера карты и генерации" width="720" height="640"></button>
-        <figcaption><span class="src game">Игра</span> Стартовый экран.</figcaption>
+        <button type="button"><img src="assets/screenshots/start-screen.png" alt="Стартовый экран с выбором режима, размера карты и генерации" width="640" height="839"></button>
+        <figcaption><span class="src sb">Экран игры</span> Стартовый экран: шаги настройки и свёрнутые дополнительные параметры.</figcaption>
       </figure>
       <div class="panel">
         <h4>С чем вы начинаете</h4>
@@ -350,7 +350,7 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
           <tr><td>К ратуше</td><td><kbd>H</kbd></td></tr>
           <tr><td>Завершить ход</td><td><kbd>Enter</kbd></td></tr>
           <tr><td>Справка по клавишам и подсветке</td><td>«?» рядом с «Меню» или <kbd>F1</kbd> (справка браузера блокируется). Закрыть: <kbd>Esc</kbd>, повторный <kbd>F1</kbd> или клик мимо окна. Буквы — в текущей раскладке, если браузер её сообщает</td></tr>
-          <tr><td>Действия выбранного</td><td>Панель внизу карты: у каждой кнопки подписана клавиша — например, «Построить» у рабочего <kbd>B</kbd>, затем здание цифрой <kbd>1</kbd>…<kbd>0</kbd>; найм в здании — сразу цифрой. Недоступная кнопка приглушена, причина — в подсказке при наведении. Панель можно перетащить за ручку слева</td></tr>
+          <tr><td>Действия выбранного</td><td>Панель внизу карты: у каждой кнопки подписана клавиша — например, «Построить» у рабочего <kbd>B</kbd>, затем здание цифрой <kbd>1</kbd>…<kbd>0</kbd>; найм в здании — сразу цифрой. Недоступная кнопка приглушена, причина — в подсказке при наведении. Панель можно перетащить за ручку слева; положение запоминается. Двойной клик по ручке возвращает её на место</td></tr>
           <tr><td>Перетащить карту</td><td><kbd>ПКМ</kbd> или <kbd>СКМ</kbd>, <kbd>Пробел</kbd> + <kbd>ЛКМ</kbd> (приказ при этом не отдаётся)</td></tr>
           <tr><td>Масштаб</td><td>Колесо — к точке под курсором; <kbd>+</kbd> / <kbd>−</kbd>; от 6 до 64 px на клетку</td></tr>
           <tr><td>Перемещение по карте</td><td><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> или стрелки</td></tr>
@@ -358,12 +358,16 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
           <tr><td>Мини-карта</td><td>Клик или перетаскивание переносит камеру, не меняя выбор</td></tr>
         </tbody>
       </table>
-      <p class="small muted" style="margin:8px 0 0">Клавиши работают на любой раскладке: важна клавиша, а не буква — <kbd>H</kbd> и на русской раскладке (там это «Р»).</p>
+      <p class="small muted" style="margin:8px 0 0">Клавиши работают по физическому положению: например, <kbd>H</kbd> на русской раскладке — «Р». На кнопках и в справке показаны буквы текущей раскладки, если браузер её сообщает; иначе — латиница. При вводе текста игровые команды не срабатывают.</p>
     </div>
     <div class="stack">
       <figure class="shot">
         <button type="button"><img src="assets/screenshots/minimap.png" alt="Мини-карта с рамкой камеры" width="330" height="190"></button>
         <figcaption><span class="src sandbox">Игра · тест баланса</span> Мини-карта показывает известную вашей стороне часть мира: неразведанное скрыто, рамка обозначает область, видимую сейчас.</figcaption>
+      </figure>
+      <figure class="shot">
+        <button type="button"><img src="assets/screenshots/keyboard-help.png" alt="Справка: мышь, камера, выбор, ход, действия выбранного и легенда подсветки" width="900" height="653"></button>
+        <figcaption><span class="src game">Игра</span> «?» и F1 открывают справку. Светлая область — куда идти, золотая — где строить, красные уголки — кого атаковать. Пока справка открыта, клавиши не двигают карту и не выполняют игровые команды.</figcaption>
       </figure>
       <p class="small muted">В начале партии камера наведена на вашу ратушу. Карта занимает весь экран: выбранный объект показан в карточке внизу слева, его действия — в панели внизу по центру, мини-карта — вверху справа (кнопка в её углу делает её полупрозрачной или прячет).</p>
     </div>
@@ -376,11 +380,11 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   <div class="grid2">
     <figure class="shot">
       <button type="button"><img src="assets/screenshots/fog-of-war.png" alt="Карта с туманом: видимые, разведанные и неизвестные клетки" width="1600" height="900"></button>
-      <figcaption><span class="src debug">Тест баланса · отладка</span> Как видит мир синяя сторона: яркие клетки видны сейчас, затемнённые разведаны раньше, чёрные не разведаны.</figcaption>
+      <figcaption><span class="src debug">Игра · отладка, пример</span> Как видит мир синяя сторона: яркие клетки видны сейчас, затемнённые разведаны раньше, чёрные не разведаны.</figcaption>
     </figure>
     <figure class="shot">
       <button type="button"><img src="assets/screenshots/fog-off.png" alt="Та же позиция с отключённым туманом" width="1600" height="900"></button>
-      <figcaption><span class="src debug">Тот же момент · туман отключён</span> Полный обзор из режима отладки: база и армия красных всё это время были за туманом.</figcaption>
+      <figcaption><span class="src debug">Тот же момент · туман отключён</span> Полный обзор из режима отладки: база красных находится в правом нижнем углу, а здания, которые разведчик видел раньше, показаны без затемнения.</figcaption>
     </figure>
   </div>
   <div class="split" style="margin-top:16px">
@@ -405,8 +409,8 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
       </div>
     </div>
     <figure class="shot">
-      <button type="button"><img src="assets/screenshots/fog-memory.png" alt="Запомненные вражеские здания со знаком вопроса в разведанной зоне" width="535" height="530"></button>
-      <figcaption><span class="src debug">Тест баланса · отладка</span> Грифон слетал к базе красных и вернулся. Казармы, конюшня и башня остались в памяти — снимками со знаком «?».</figcaption>
+      <button type="button"><img src="assets/screenshots/fog-memory.png" alt="Запомненные вражеские здания со знаком вопроса в разведанной зоне" width="1600" height="900"></button>
+      <figcaption><span class="src debug">Игра · отладка, пример</span> Разведчик увидел здания красных и вернулся к своей базе. Казармы, конюшня и башня остались в разведанной зоне — снимками со знаком «?».</figcaption>
     </figure>
   </div>
   <div class="panel note" style="margin-top:16px">
@@ -426,8 +430,8 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   <div class="head"><div><div class="eyebrow">06 · Ресурсы</div><h2>Экономика и рабочие</h2></div><p>Золотой рудник и лесопилка приносят доход, только когда внутри работает рабочий. Враг не видит рабочего и при атаке наносит урон зданию, поэтому такая работа важна и для обороны.</p></div>
   <div class="eco">
     <figure class="shot">
-      <button type="button"><img src="assets/screenshots/eco-1-build.png" alt="Выбран рабочий и карточка рудника, подсвечена клетка золота" width="1280" height="1200"></button>
-      <figcaption><span class="src game">Игра</span> 1. Рабочий у золотой жилы, выбрана карточка «Золотой рудник» — клетка для стройки подсвечена. Постройки показаны компактной сеткой; описания раскрываются кнопкой «Показать характеристики».</figcaption>
+      <button type="button"><img src="assets/screenshots/worker-build-menu.png" alt="Подменю строительства рабочего: девять зданий с ценой и клавишами" width="484" height="192"></button>
+      <figcaption><span class="src sb">Панель игры</span> 1. Подменю строительства выбранного рабочего. Нажмите <kbd>B</kbd> или «Построить», затем выберите здание цифрой <kbd>1</kbd>…<kbd>0</kbd> или кликом. Цена видна на кнопке, подробности и причина недоступности — при наведении; <kbd>Esc</kbd> возвращает к действиям рабочего.</figcaption>
     </figure>
     <figure class="shot">
       <button type="button"><img src="assets/screenshots/eco-2-idle.png" alt="Рудник без рабочего с жёлтым восклицательным знаком" width="1040" height="442"></button>
@@ -518,8 +522,8 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   </div>
   <div class="grid3" style="margin-top:16px;align-items:start">
     <figure class="shot">
-      <button type="button"><img class="narrow" src="assets/screenshots/research-panel.png" alt="Панель кузницы: идёт исследование Строй, у остальных — причина недоступности" width="460" height="907"></button>
-      <figcaption><span class="src game">Игра</span> Панель кузницы: цена, срок и эффект каждого исследования. Идёт «Строй» — показаны полоса прогресса и оставшиеся ходы; остальные недоступны, пока кузница занята.</figcaption>
+      <button type="button"><img class="narrow" src="assets/screenshots/research-panel.png" alt="Нижняя панель кузницы: идёт Картография, другие исследования приглушены, есть отмена" width="392" height="192"></button>
+      <figcaption><span class="src sb">Панель игры</span> Нижняя панель кузницы: исследования выбираются цифрами 1…5, цена видна на кнопке, эффект — в подсказке при наведении. Сейчас изучается «Картография»: остальные исследования недоступны. <kbd>⌫</kbd> — отменить работу, с подтверждением; ресурсы не возвращаются. Прогресс и оставшиеся ходы — в шапке, в списке «Исследования».</figcaption>
     </figure>
     <figure class="shot">
       <button type="button"><img src="assets/screenshots/research-summary.png" alt="Список исследований по клику на плашку в верхней панели" width="540" height="500"></button>
@@ -536,7 +540,7 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   </div>
   <figure class="shot" style="margin-top:16px">
     <button type="button"><img src="assets/screenshots/base-overview.png" alt="База синих со всеми зданиями и всеми юнитами" width="1600" height="900"></button>
-    <figcaption><span class="src sandbox">Игра · тест баланса</span> Все 10 зданий и 10 юнитов на одной базе. Точки рядом с юнитами показывают оставшиеся очки движения и действия. Состав расставлен в режиме тестирования, поэтому население (24/15) превышает лимит.</figcaption>
+    <figcaption><span class="src debug">Игра · отладка, пример</span> Все 11 типов зданий, включая частокол, и все 10 типов юнитов на одной базе. Точки рядом с юнитами показывают оставшиеся очки движения и действия. Выбрана ратуша: её карточка — внизу слева, кнопки найма — в нижней панели.</figcaption>
   </figure>
 </section>
 
@@ -651,7 +655,7 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   </div>
   <figure class="shot" style="margin-top:16px">
     <button type="button"><img src="assets/screenshots/griffon-flight.png" alt="Маршрут грифона над горами к озеру, цена 5" width="1600" height="900"></button>
-    <figcaption><span class="src sandbox">Игра · тест баланса</span> Зона полёта грифона включает воду и горы. Пунктир — маршрут над горами к озеру, цифра — цена хода.</figcaption>
+    <figcaption><span class="src debug">Игра · отладка, пример</span> Зона полёта грифона включает воду и горы. Пунктир — маршрут над горами к озеру, цифра — цена хода.</figcaption>
   </figure>
 </section>
 
@@ -667,11 +671,11 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   <div class="grid2" style="margin-top:16px">
     <figure class="shot">
       <button type="button"><img src="assets/screenshots/siege-aim.png" alt="Осадная машина выбирает клетку в кольце дальности 2–5" width="1600" height="900"></button>
-      <figcaption><span class="src sandbox">Игра · тест баланса</span> Прицеливание: подсвечено кольцо клеток на расстоянии 2–5, в панели — «Подготовить удар».</figcaption>
+      <figcaption><span class="src debug">Игра · отладка, пример</span> Прицеливание: подсвечено кольцо клеток на расстоянии 2–5, в панели — «Подготовить удар».</figcaption>
     </figure>
     <figure class="shot">
       <button type="button"><img src="assets/screenshots/siege-marker.png" alt="Красный прицел на выбранной клетке, орудие приглушено" width="1600" height="900"></button>
-      <figcaption><span class="src sandbox">Игра · тест баланса</span> Отметка удара поставлена. Орудие приглушено — действие на этот ход потрачено.</figcaption>
+      <figcaption><span class="src debug">Игра · отладка, пример</span> Отметка удара поставлена. Орудие приглушено — действие на этот ход потрачено.</figcaption>
     </figure>
   </div>
   <div class="panel" style="margin-top:14px">
@@ -698,8 +702,8 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   </ol>
   <div class="split" style="margin-top:16px">
     <figure class="shot">
-      <button type="button"><img src="assets/screenshots/ai-knowledge.png" alt="Карта глазами ИИ на 16-м ходу: известен только правый нижний угол" width="782" height="784"></button>
-      <figcaption><span class="src debug">Игра · отладка, «смотреть глазами» красных</span> Всё, что компьютер знает о карте 30×30 на 16-м ходу. Где база игрока, ему неизвестно — её придётся искать.</figcaption>
+      <button type="button"><img src="assets/screenshots/ai-knowledge.png" alt="Карта глазами красного ИИ на втором ходу: известна область вокруг своей базы" width="1600" height="900"></button>
+      <figcaption><span class="src debug">Игра · отладка, «смотреть глазами» красных</span> Обзор красного ИИ на карте 30×30 в начале второго хода. Где база игрока, ему неизвестно — её придётся искать.</figcaption>
     </figure>
     <div class="stack">
       <div class="panel note">
@@ -733,7 +737,7 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   <div class="grid2" style="margin-top:16px">
     <figure class="shot">
       <button type="button"><img src="assets/screenshots/ai-decisions.png" alt="Журнал решений ИИ: правила, основания, альтернативы" width="1600" height="900"></button>
-      <figcaption><span class="src debug">Тест баланса · отладка, журнал «Решения ИИ»</span> Ход 9: красный грифон атакует всадника, раненый всадник пытается разорвать контакт, маг отступает («уязвим: отхожу»). Для каждого действия показаны стратегия, причины выбора и оценки альтернатив.</figcaption>
+      <figcaption><span class="src debug">Игра · отладка, журнал «Решения ИИ»</span> Первый ход красных: ИИ нанял рабочего и завершил ход. В выдвижной панели «Инструменты» открыт журнал «Решения ИИ»: видны правило, стратегия, основания, оценка альтернативы и результат команды.</figcaption>
     </figure>
     <div class="panel">
       <h4>Что заметно в игре</h4>
@@ -756,13 +760,32 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   <div class="head"><div><div class="eyebrow">13 · Удобство</div><h2>Интерфейс и подсказки</h2></div><p>Карта отображает рельеф, объекты, туман, подсветки, курсор и эффекты. Перед приказом игра показывает доступные действия и их результат.</p></div>
   <div class="split">
     <figure class="shot">
-      <button type="button"><img src="assets/screenshots/movement-path.png" alt="Рабочий выбран: зона хода, пунктир маршрута и цена 4" width="1600" height="900"></button>
-      <figcaption><span class="src game">Игра</span> Выбран рабочий: светлая область показывает, куда он может дойти; пунктир — маршрут к клетке под курсором; цифра «4» — стоимость пути. В панели показаны здоровье, очки и доступные постройки.</figcaption>
+      <button type="button"><img src="assets/screenshots/movement-path.png" alt="Рабочий выбран: зона хода, пунктир маршрута и цена 4" width="1280" height="720"></button>
+      <figcaption><span class="src game">Игра</span> Выбран рабочий: светлая область показывает, куда он может дойти; пунктир — маршрут к клетке под курсором; цифра «4» — стоимость пути. Здоровье и очки показаны в карточке внизу слева, доступные действия — в нижней панели.</figcaption>
     </figure>
     <figure class="shot">
       <button type="button"><img class="narrow" src="assets/screenshots/sb-map-overlays.png" alt="Подсветки, выделение, полосы здоровья, очки действий и эффекты" width="560" height="750"></button>
       <figcaption><span class="src sb">Игровой рендер</span> Подсветки движения, строительства и атаки, выделение, полосы здоровья, очки действий, а также эффекты урона, лечения и гибели.</figcaption>
     </figure>
+  </div>
+  <div class="panel" style="margin-top:16px">
+    <h3>Клавиши действий выбранного</h3>
+    <p class="small muted">Действуют для своего объекта в свой ход. Набор кнопок зависит от выбранного юнита или здания; цена, очки действий и другие условия проверяются одинаково для клика и клавиши.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Клавиша</th><th>Действие</th><th>Когда доступно</th></tr></thead>
+      <tbody>
+        <tr><td><kbd>B</kbd></td><td>Построить</td><td>Рабочий: открыть список зданий, затем выбрать здание и подсвеченную клетку</td></tr>
+        <tr><td><kbd>G</kbd></td><td>Работать</td><td>Рабочий рядом со своим свободным рудником или лесопилкой</td></tr>
+        <tr><td><kbd>X</kbd></td><td>Снять с работы</td><td>Рабочий внутри здания: выйти на свободную соседнюю клетку</td></tr>
+        <tr><td><kbd>C</kbd></td><td>Расчистить лес</td><td>Рабочий: выбрать соседний лес, потратить очко стройки</td></tr>
+        <tr><td><kbd>R</kbd></td><td>Ремонт</td><td>Рабочий рядом с повреждённым своим зданием</td></tr>
+        <tr><td><kbd>Q</kbd></td><td>Подготовить удар</td><td>Осадная машина: выбрать клетку в дальности 2–5</td></tr>
+        <tr><td><kbd>V</kbd></td><td>Выбрать рабочего</td><td>Свой рудник или лесопилка с рабочим внутри</td></tr>
+        <tr><td><kbd>⌫</kbd></td><td>Отменить исследование</td><td>Кузница с текущей работой; требуется подтверждение</td></tr>
+        <tr><td><kbd>Del</kbd></td><td>Снести</td><td>Своё здание, кроме ратуши; требуется подтверждение</td></tr>
+        <tr><td><kbd>1</kbd>…<kbd>0</kbd></td><td>Здания, найм, исследования</td><td>По порядку кнопок: здания — в подменю «Построить», найм и исследования — сразу</td></tr>
+      </tbody>
+    </table></div>
   </div>
   <div class="grid3" style="margin-top:16px">
     <div class="panel"><h4>Перед приказом</h4><ul class="small" style="margin:0"><li>Зона движения, строительства и найма показана общей областью с контуром.</li><li>Цели атаки отмечены красными уголками.</li><li>Маршрут и его стоимость отображаются под курсором.</li><li>Показана граница дальности атаки.</li><li>Ожидаемый урон отображается над целью.</li></ul></div>
@@ -771,8 +794,8 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   </div>
   <div class="grid3" style="margin-top:16px;align-items:start">
     <figure class="shot">
-      <button type="button"><img src="assets/screenshots/sb-barracks-panel.png" alt="Компактная сетка найма в казармах с ценой и местом в лимите" width="638" height="978"></button>
-      <figcaption><span class="src sb">Панель игры</span> Карточки найма расположены в две колонки: видны цена и место в лимите населения. Характеристики и бонусы раскрываются кнопкой «Показать характеристики». Если нанять юнита нельзя, карточка объясняет причину.</figcaption>
+      <button type="button"><img src="assets/screenshots/sb-barracks-panel.png" alt="Нижняя панель казарм: три кнопки найма с клавишами и ценой, кнопка сноса" width="392" height="100"></button>
+      <figcaption><span class="src sb">Панель игры</span> Найм в казармах — сразу клавишами 1, 2, 3 или кликом по кнопке. На кнопках видны цена и место в лимите населения; характеристики — при наведении. Недоступное действие приглушено и отмечено «!», причина — в подсказке. <kbd>Del</kbd> — снести выбранное здание, с подтверждением.</figcaption>
     </figure>
     <div class="stack">
       <figure class="shot">
@@ -789,11 +812,12 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
       <ul class="small" style="margin:0">
         <li><b>Режим отладки</b> — см. раздел 15.</li>
         <li><b>Гайдбук</b> — эта страница в новой вкладке.</li>
+        <li><b>Предупреждать об непоходивших юнитах</b> — включить или отключить вопрос перед концом хода до конца партии.</li>
         <li><b>Звук</b> — громкость музыки и эффектов и выключение звука. Настройки запоминаются; то же есть на стартовом экране.</li>
         <li><b>Сдаться</b> — партия заканчивается поражением, с подтверждением.</li>
         <li><b>Сбросить игру</b> — с подтверждением.</li>
       </ul>
-      <p class="small muted" style="margin:10px 0 0">Снос здания тоже спрашивает подтверждение. Если юниты ещё могут идти, атаковать или лечить, «Завершить ход» переспросит — это можно отключить галочкой «Больше не спрашивать» до конца партии, а вернуть — флажком «Спрашивать перед концом хода» в «Меню».</p>
+      <p class="small muted" style="margin:10px 0 0">Снос здания тоже спрашивает подтверждение. Если юниты ещё могут идти, атаковать или лечить, «Завершить ход» переспросит — это можно отключить галочкой «Больше не спрашивать» до конца партии, а вернуть — флажком «Предупреждать об непоходивших юнитах» в «Меню».</p>
     </div>
   </div>
 </section>
@@ -811,7 +835,7 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
 
 <!-- 15. Отладка -->
 <section id="debug">
-  <div class="head"><div><div class="eyebrow">15 · Для любопытных</div><h2>Режим отладки</h2></div><p>Включается в меню партии. Позволяет увидеть весь мир, посмотреть глазами противника и прочитать его решения.</p></div>
+  <div class="head"><div><div class="eyebrow">15 · Для любопытных</div><h2>Режим отладки</h2></div><p>Включается пунктом «Режим отладки» в «Меню», затем открывается кнопкой «Инструменты» в шапке. Позволяет увидеть весь мир, посмотреть глазами противника и прочитать его решения.</p></div>
   <div class="split">
     <div class="panel">
       <ul class="small">
@@ -826,8 +850,8 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
       </div>
     </div>
     <figure class="shot">
-      <button type="button"><img class="narrow" src="assets/screenshots/debug-panel.png" alt="Панель отладки: сид, генератор, туман, исключения, журнал" width="319" height="447"></button>
-      <figcaption><span class="src debug">Игра · отладка</span> Панель отладки (кнопка «Инструменты» в шапке).</figcaption>
+      <button type="button"><img class="narrow" src="assets/screenshots/debug-panel.png" alt="Панель отладки: сид, генератор, туман, исключения, журнал" width="360" height="571"></button>
+      <figcaption><span class="src debug">Игра · отладка</span> Выдвижная панель «Инструменты» поверх карты: настройки отладки и журнал решений. Крестик закрывает панель.</figcaption>
     </figure>
   </div>
 </section>
@@ -899,7 +923,7 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   </div>
 </section>
 
-<footer class="footer">Simple Wars · гайдбук игрока. Скриншоты сняты в текущей версии игры. Подписи указывают источник изображения: «Игра» — обычная партия; «Тест баланса» — режим тестирования; «Отладка» — режим отладки; «Игровой рендер», «Панель игры» и «Экран игры» — элементы интерфейса, созданные теми же средствами, что и в игре.</footer>
+<footer class="footer">Simple Wars · гайдбук игрока. Иллюстрации показывают игровые сцены и элементы интерфейса. Подписи указывают источник изображения: «Игра» — обычная партия; «Тест баланса» — режим тестирования; «Отладка» — режим отладки; «Игровой рендер», «Панель игры» и «Экран игры» — элементы интерфейса, созданные теми же средствами, что и в игре.</footer>
 </main>
 </div>
 
