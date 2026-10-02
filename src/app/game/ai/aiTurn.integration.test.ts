@@ -10,6 +10,7 @@ import type { Participant } from '@shared/config';
 import { initPopulationSystem } from '@app/system/population';
 import { useAiMemoryStore } from '@entities/ai-memories';
 import { useBuildingsStore } from '@entities/buildings';
+import { useEconomyStore } from '@entities/economies';
 import { useGameLoopStore } from '@entities/games';
 import { useJournalStore } from '@entities/journals';
 import { useSettingsStore } from '@entities/settings';
@@ -54,6 +55,46 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe('runAITurn', () => {
+  it('сбой планировщика записывается, а ход всё равно переходит', async () => {
+    start();
+    nextTurn('p1');
+    // Подписчик журнала падает на первом решении: исключение уходит в playTurn.
+    let thrown = false;
+    const unsubscribe = useJournalStore.subscribe(({ decisions }) => {
+      if (thrown || !decisions.length) return;
+      thrown = true;
+      throw new Error('planner boom');
+    });
+
+    const result = await runAITurn('p2', { yieldControl: noWait });
+    unsubscribe();
+
+    expect(result).toMatchObject({ stalled: false, cancelled: false });
+    expect(useGameLoopStore.getState().activePlayer).toBe('p1');
+    expect(useJournalStore.getState().errors).toContainEqual(
+      expect.objectContaining({
+        actor: 'p2',
+        kind: 'failure',
+        detail: 'planner boom',
+      }),
+    );
+  });
+
+  it('ход, который не удалось завершить, отмечается как вставший', async () => {
+    start();
+    nextTurn('p1');
+    // Любое списание или доход падает — и команды, и завершение хода.
+    const unsubscribe = useEconomyStore.subscribe(() => {
+      throw new Error('economy boom');
+    });
+
+    const result = await runAITurn('p2', { yieldControl: noWait });
+    unsubscribe();
+
+    expect(result).toMatchObject({ stalled: true, cancelled: false });
+    expect(useGameLoopStore.getState().activePlayer).toBe('p2');
+  });
+
   it('устаревший запуск прекращается, не завершая ход и не сохраняя память', async () => {
     start();
     nextTurn('p1');

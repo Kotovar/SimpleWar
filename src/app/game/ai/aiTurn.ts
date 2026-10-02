@@ -28,6 +28,13 @@ import {
 } from '@features/ai';
 import { useSandboxStore } from '@features/sandbox';
 import { startResearch } from '@features/research';
+import { failure } from '@shared/lib';
+
+/**
+ * Итог запуска хода ИИ. `stalled` — ход не перешёл дальше, хотя запуск не
+ * отменён: сбой при завершении хода, партия стоит до решения игрока.
+ */
+export type AiRunResult = AiTurnResult & { stalled: boolean };
 
 /**
  * Исполняет действие ИИ теми же командами, что и интерфейс человека.
@@ -76,7 +83,7 @@ const seedFor = (actor: ParticipantId) =>
   0;
 
 /** Идущие ходы ИИ по ключу `партия:ход:участник`: один запуск на ход. */
-const running = new Map<string, Promise<AiTurnResult | null>>();
+const running = new Map<string, Promise<AiRunResult | null>>();
 
 const isSandboxPaused = () => {
   const sandbox = useSandboxStore.getState();
@@ -145,14 +152,16 @@ export const runAITurn = (
   };
   if (isCancelled()) return Promise.resolve(null);
 
-  const run = async () => {
+  const run = async (): Promise<AiRunResult> => {
     const memories = useAiMemoryStore.getState();
     const setup = useGameLoopStore
       .getState()
       .participants.find(({ id }) => id === actor)?.ai;
+    const memory =
+      memories.byParticipant[actor] ?? createAiMemory(seedFor(actor));
     const result = await playTurn({
       config: profileConfig(setup?.profile),
-      memory: memories.byParticipant[actor] ?? createAiMemory(seedFor(actor)),
+      memory,
       observe: () => getObservation(actor),
       execute: action => executeAiAction(actor, action),
       isCancelled,
@@ -161,12 +170,29 @@ export const runAITurn = (
       record: decision =>
         useJournalStore.getState().recordDecision({ ...decision, actor, turn }),
       yieldControl,
+    }).catch((error: unknown): AiTurnResult => {
+      // Сбой планировщика не держит партию: сбой — в журнал, ход передаётся.
+      // Память остаётся прежней: решения упавшего хода не сохраняются.
+      useJournalStore
+        .getState()
+        .reportError(
+          { type: 'endTurn', actor },
+          turn,
+          failure(error instanceof Error ? error.message : String(error)),
+        );
+      if (!isCancelled()) nextTurn(actor);
+      return {
+        memory,
+        commands: 0,
+        reason: 'сбой планировщика',
+        cancelled: false,
+      };
     });
     // Память отменённого запуска не сохраняется в новую партию.
     if (useJournalStore.getState().gameId === gameId) {
       useAiMemoryStore.getState().setMemory(actor, result.memory);
     }
-    return result;
+    return { ...result, stalled: !result.cancelled && !isCancelled() };
   };
   // Запуск регистрируется до начала хода: подписчик стора, вызванный
   // командой этого хода, получит тот же Promise, а не второй исполнитель.

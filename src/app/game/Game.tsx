@@ -1,6 +1,12 @@
-import { useEffect } from 'react';
-import { AI_TURN_DELAY_MS, type Participant } from '@shared/config';
-import { useSettingsStore } from '@entities/settings';
+import { useEffect, useState } from 'react';
+import {
+  AI_TURN_DELAY_MS,
+  type Participant,
+  type ParticipantId,
+} from '@shared/config';
+import { ConfirmDialog } from '@shared/ui';
+import { useJournalStore } from '@entities/journals';
+import { useDebugStore, useSettingsStore } from '@entities/settings';
 import {
   initGameLoopEvents,
   nextTurn,
@@ -27,6 +33,30 @@ export const Game = () => {
     useGameLoopSelectors();
   const sandbox = useSandboxStore(state => state.enabled);
   const paused = useSandboxStore(state => state.paused);
+  const debug = useDebugStore(state => state.enabled);
+  const gameId = useJournalStore(state => state.gameId);
+  // ИИ не смог завершить ход: без решения игрока партия стоит. Номер
+  // партии не даёт вопросу пережить сброс.
+  const [stall, setStall] = useState<{
+    actor: ParticipantId;
+    gameId: number;
+  } | null>(null);
+  const stalled =
+    stall?.gameId === gameId && phase === 'inProgress' ? stall.actor : null;
+  const stalledDetail = useJournalStore(state =>
+    stalled
+      ? state.errors.findLast(
+          error => error.actor === stalled && error.kind === 'failure',
+        )?.detail
+      : undefined,
+  );
+
+  const playAi = (actor: ParticipantId) => {
+    const started = useJournalStore.getState().gameId;
+    void runAITurn(actor).then(result => {
+      if (result?.stalled) setStall({ actor, gameId: started });
+    });
+  };
   const fast = useSandboxStore(state => state.fast);
 
   const handleStartGame = () => {
@@ -59,7 +89,7 @@ export const Game = () => {
     const play =
       activeController === 'passive'
         ? () => nextTurn(activePlayer)
-        : () => void runAITurn(activePlayer);
+        : () => playAi(activePlayer);
     const timer = setTimeout(
       play,
       sandbox && fast ? FAST_TURN_DELAY_MS : AI_TURN_DELAY_MS,
@@ -71,6 +101,20 @@ export const Game = () => {
     <main className={phase === 'inProgress' ? styles.Main : styles.Setup}>
       {phase === 'inProgress' && <Map />}
       <GameControls onStartGame={handleStartGame} minimap={<Minimap />} />
+      <ConfirmDialog
+        isOpen={stalled !== null}
+        title='Противник не завершил ход'
+        message='Ход прервала внутренняя ошибка игры. Можно повторить ход противника; если ошибка повторится — начните новую партию через «Меню».'
+        confirmText='Повторить ход'
+        cancelText='Закрыть'
+        onConfirm={() => {
+          if (stalled) playAi(stalled);
+          setStall(null);
+        }}
+        onCancel={() => setStall(null)}
+      >
+        {debug && stalledDetail && <code>{stalledDetail}</code>}
+      </ConfirmDialog>
     </main>
   );
 };
