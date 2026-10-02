@@ -141,7 +141,19 @@ export const getSelectionActions = (
   input: SelectionActionInput,
 ): ActionButton[] => {
   const buttons = input.unit
-    ? [...workerActions(input.unit, input), ...siegeActions(input.unit, input)]
+    ? [
+        ...workerActions(input.unit, input),
+        ...siegeActions(input.unit, input),
+        action('skip', {
+          pressed: input.unit.restMode === 'skip',
+          reason:
+            input.unit.restMode === 'skip' ? 'Уже пропустил ход' : undefined,
+        }),
+        {
+          ...action('sleep', { pressed: input.unit.restMode === 'sleep' }),
+          label: input.unit.restMode === 'sleep' ? 'Разбудить' : 'Спать',
+        },
+      ]
     : input.building
       ? buildingActions(input.building, input)
       : [];

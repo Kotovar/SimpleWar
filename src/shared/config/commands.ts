@@ -4,6 +4,7 @@ import type { ParticipantId } from './gameLoop';
 export type CommandType =
   | 'start'
   | 'move'
+  | 'rest'
   | 'attack'
   | 'build'
   | 'spawn'

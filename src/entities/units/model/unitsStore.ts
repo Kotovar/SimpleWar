@@ -30,6 +30,8 @@ type UnitsState = {
   selectUnitForSpawn: (unitType: UnitType) => void;
   clearSelectedUnitForSpawn: () => void;
   resetUnitsForNewTurn: (owner: Owner) => void;
+  /** Пропуск сжигает очки; сон сохраняет их, null снимает режим. */
+  setRestMode: (id: string, mode: Unit['restMode'] | null) => void;
   /** Удаляет юнитов выбывшего участника без событий гибели. */
   removeOwnerUnits: (owner: Owner) => void;
   resetStore: () => void;
@@ -151,10 +153,24 @@ export const useUnitsStore = create<UnitsState>()(
       });
     },
 
+    setRestMode: (id, mode) =>
+      set(state => {
+        const unit = state.units[id];
+        if (!unit) return;
+        if (mode) unit.restMode = mode;
+        else delete unit.restMode;
+        if (mode === 'skip') {
+          unit.movePoints = 0;
+          if (unit.role === 'civil') unit.buildPoints = 0;
+          else unit.attackPoints = 0;
+        }
+      }),
+
     resetUnitsForNewTurn: owner =>
       set(state => {
         Object.values(state.units).forEach(unit => {
           if (unit.owner !== owner) return;
+          if (unit.restMode === 'skip') delete unit.restMode;
 
           unit.movePoints = unit.maxMovePoints;
 
@@ -184,6 +200,21 @@ export const useUnitsStore = create<UnitsState>()(
 
 // Разрушение или снос здания разрывает назначение его рабочего.
 gameEvents.subscribe(event => {
+  if (event.type === 'COMMAND_SUCCEEDED') {
+    const { command } = event;
+    if (command.type === 'rest') return;
+    const id =
+      command.details?.unitId ??
+      command.details?.workerId ??
+      command.details?.attackerId ??
+      command.details?.healerId;
+    if (typeof id !== 'string') return;
+    const { units, setRestMode } = useUnitsStore.getState();
+    if (units[id]?.owner === command.actor && units[id]?.restMode) {
+      setRestMode(id, null);
+    }
+    return;
+  }
   if (event.type !== 'BUILDING_DESTROYED') return;
   const { units, setWorkplace } = useUnitsStore.getState();
   for (const unit of Object.values(units)) {

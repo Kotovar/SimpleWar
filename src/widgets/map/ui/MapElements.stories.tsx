@@ -14,6 +14,7 @@ import {
   drawBackgroundAndGrid,
   drawEffect,
   drawFormationBadge,
+  drawRestBadge,
   drawForest,
   drawGoldOre,
   drawHill,
@@ -433,6 +434,50 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<Args>;
+
+export const RestModes: Story = {
+  name: 'Пропуск и сон',
+  render: ({ cellSize }) => (
+    <Gallery
+      cellSize={cellSize}
+      sections={{
+        'Значки без фона': [
+          {
+            label: 'Пропуск — пауза',
+            draw: (ctx, size) => drawRestBadge(ctx, 0, 0, size, 'skip'),
+          },
+          {
+            label: 'Сон — Z',
+            draw: (ctx, size) => drawRestBadge(ctx, 0, 0, size, 'sleep'),
+          },
+        ],
+        'На карте': (['grass', 'water'] as const).flatMap(terrain =>
+          (['skip', 'sleep'] as const).map(restMode => ({
+            label: `${restMode === 'skip' ? 'Пропуск' : 'Сон'} · ${TERRAIN_NAME[terrain]}`,
+            draw: withGround((ctx, size) => {
+              const soldier = unit(
+                {
+                  restMode,
+                  movePoints: restMode === 'skip' ? 0 : 3,
+                  attackPoints: restMode === 'skip' ? 0 : 1,
+                },
+                terrain === 'water' ? 'griffon' : 'swordsman',
+              );
+              renderEntitiesLayer(
+                ctx,
+                {},
+                place([soldier]),
+                size,
+                undefined,
+                'p1',
+              );
+            }, terrain),
+          })),
+        ),
+      }}
+    />
+  ),
+};
 
 export const Terrain: Story = {
   render: ({ cellSize }) => <Gallery cellSize={cellSize} sections={TERRAIN} />,

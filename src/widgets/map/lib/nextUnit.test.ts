@@ -29,6 +29,19 @@ describe('getNextUnit', () => {
 });
 
 describe('hasActions / isIdleWorker', () => {
+  it.each(['skip', 'sleep'] as const)(
+    'исключает %s из Tab и свободных рабочих',
+    restMode => {
+      const worker = unit('worker', 0, 0, {
+        restMode,
+        movePoints: 4,
+        buildPoints: 1,
+      });
+      expect(hasActions(worker, byPoints)).toBe(false);
+      expect(isIdleWorker(worker)).toBe(false);
+      expect(getNextUnit([worker], null, fits)).toBeNull();
+    },
+  );
   it('очко удара или стройки — тоже действие', () => {
     expect(fits(unit('archer', 0, 0, { movePoints: 0, attackPoints: 1 }))).toBe(
       true,

@@ -4,7 +4,7 @@ import type { SelectionActionInput } from './actionButton';
 import { getSelectionActions } from './selectionActions';
 
 describe('кнопки рабочего', () => {
-  it('рабочий: постоянный набор B G X C R, недоступное — с причиной', () => {
+  it('рабочий: постоянный набор B G X C R Space F, недоступное — с причиной', () => {
     const worker = unit('worker', { buildPoints: 1 });
     const buttons = getSelectionActions(input({ unit: worker }));
 
@@ -14,6 +14,8 @@ describe('кнопки рабочего', () => {
       'KeyX',
       'KeyC',
       'KeyR',
+      'Space',
+      'KeyF',
     ]);
     const { work, unassign, repair } = byId(buttons);
     expect(work.reason).toMatch(/Рядом нет/);

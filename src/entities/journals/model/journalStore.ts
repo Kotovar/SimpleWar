@@ -7,7 +7,7 @@ import type {
   JournalVisibility,
   ParticipantId,
 } from '@shared/config';
-import { failure, reject, withDevtools } from '@shared/lib';
+import { failure, gameEvents, reject, withDevtools } from '@shared/lib';
 import type { AiDecisionInput, AiDecisionRecord } from './decisions';
 import { DECISION_LIMIT } from './decisions';
 
@@ -171,6 +171,7 @@ export const runCommand = (
 
   const journal = useJournalStore.getState();
   if (result.ok) {
+    gameEvents.emit({ type: 'COMMAND_SUCCEEDED', command: meta });
     journal.record({ ...meta, turn, visibleTo: commandVisibility(meta) });
   } else journal.reportError(meta, turn, result);
 

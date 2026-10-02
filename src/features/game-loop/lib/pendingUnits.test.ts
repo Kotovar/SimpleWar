@@ -7,6 +7,24 @@ const unit = (type: Unit['type'], owner: 'p1' | 'p2', patch = {}) =>
   ({ ...createUnit(type, 0, 0, owner, false)!, ...patch }) as Unit;
 
 describe('getPendingUnits', () => {
+  it.each(['skip', 'sleep'] as const)(
+    'не напоминает о режиме %s даже с целью атаки',
+    restMode => {
+      const ready = unit('archer', 'p1', {
+        movePoints: 3,
+        attackPoints: 1,
+        restMode,
+      });
+      expect(
+        getPendingUnits(
+          [ready],
+          'p1',
+          () => true,
+          () => true,
+        ),
+      ).toEqual([]);
+    },
+  );
   it('свои с шагами, без рабочих внутри зданий и чужих', () => {
     const fresh = unit('archer', 'p1', { movePoints: 2 });
     const working = unit('worker', 'p1', { movePoints: 3, workplaceId: 'm' });

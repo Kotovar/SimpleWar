@@ -38,6 +38,7 @@ export const useCameraInput = (viewport: RefObject<HTMLDivElement | null>) => {
   const drag = useRef<Drag | null>(null);
   const suppressClick = useRef(false);
   const spaceHeld = useRef(false);
+  const spaceUsed = useRef(false);
 
   useEffect(() => {
     const element = viewport.current;
@@ -65,6 +66,7 @@ export const useCameraInput = (viewport: RefObject<HTMLDivElement | null>) => {
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       if (isTyping(event.target)) return;
       if (event.code === 'Space') {
+        if (!spaceHeld.current) spaceUsed.current = false;
         spaceHeld.current = true;
         // Space на кнопке нажимает её; в остальных местах не листает страницу.
         if (!(event.target instanceof HTMLButtonElement))
@@ -83,7 +85,10 @@ export const useCameraInput = (viewport: RefObject<HTMLDivElement | null>) => {
       }
     };
     const onKeyUp = (event: KeyboardEvent) => {
-      if (event.code === 'Space') spaceHeld.current = false;
+      if (event.code !== 'Space') return;
+      // Отпускание после жеста камеры не становится пропуском хода.
+      if (spaceUsed.current || !spaceHeld.current) event.preventDefault();
+      spaceHeld.current = false;
     };
     const onBlur = () => {
       spaceHeld.current = false;
@@ -91,14 +96,14 @@ export const useCameraInput = (viewport: RefObject<HTMLDivElement | null>) => {
 
     element.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('keyup', onKeyUp, { capture: true });
     window.addEventListener('blur', onBlur);
 
     return () => {
       resize.disconnect();
       element.removeEventListener('wheel', onWheel);
       window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('keyup', onKeyUp, { capture: true });
       window.removeEventListener('blur', onBlur);
     };
   }, [viewport]);
@@ -130,6 +135,7 @@ export const useCameraInput = (viewport: RefObject<HTMLDivElement | null>) => {
       suppressClick.current = false;
       // Обычный левый клик должен попасть в Canvas.
       if (event.button === 0 && !spaceHeld.current) return;
+      if (spaceHeld.current) spaceUsed.current = true;
       drag.current = {
         x: event.clientX,
         y: event.clientY,

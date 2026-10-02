@@ -33,6 +33,9 @@
 .Side {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  /* Вмещает «Ходят Фиолетовые»: смена стороны не сдвигает шапку. */
+  min-width: 14em;
   gap: 8px;
   padding: 5px 12px;
   border-radius: 999px;

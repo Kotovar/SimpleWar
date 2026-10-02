@@ -19,8 +19,26 @@ describe('getSelectionActions', () => {
     ).toMatchObject({ code: 'KeyQ', pressed: true, reason: undefined });
   });
 
-  it('боец без действий в панели — пусто', () => {
-    expect(getSelectionActions(input({ unit: unit('archer') }))).toEqual([]);
+  it('у бойца есть пропуск и сон, при сне — пробуждение', () => {
+    expect(
+      getSelectionActions(input({ unit: unit('archer') })).map(b => [
+        b.id,
+        b.code,
+      ]),
+    ).toEqual([
+      ['skip', 'Space'],
+      ['sleep', 'KeyF'],
+    ]);
+    const buttons = byId(
+      getSelectionActions(
+        input({ unit: unit('worker', { restMode: 'sleep' }) }),
+      ),
+    );
+    expect(buttons.sleep).toMatchObject({
+      label: 'Разбудить',
+      code: 'KeyF',
+      pressed: true,
+    });
   });
 
   it('казармы: найм цифрами и снос; ратушу снести нельзя', () => {

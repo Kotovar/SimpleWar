@@ -37,6 +37,8 @@ type BaseUnit = {
   /** Радиус обзора по Manhattan; не связан с дальностью атаки. */
   sightRange: number;
   owner: Owner;
+  /** Пропуск до следующего своего хода или сон до пробуждения; нет — активен. */
+  restMode?: 'skip' | 'sleep';
   requiresLimit: number;
   cost: Cost;
 };

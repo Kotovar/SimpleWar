@@ -1,4 +1,9 @@
-import { DETAIL_LEVEL, TEAM_MARKERS, type Owner } from '@shared/config';
+import {
+  DETAIL_LEVEL,
+  TEAM_MARKERS,
+  type Owner,
+  type Unit,
+} from '@shared/config';
 import { traceOwnerMarker } from '@shared/ui';
 
 /** Уровень детализации объектов на карте. */
@@ -14,6 +19,43 @@ export const getDetailLevel = (cellSize: number): DetailLevel => {
   if (cellSize < DETAIL_LEVEL.icon) return 'icon';
   if (cellSize < DETAIL_LEVEL.detail) return 'silhouette';
   return 'detail';
+};
+
+/** Сон (Z) или пропуск (Ⅱ): золотые штрихи с обводкой, без фоновой плашки. */
+export const drawRestBadge = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  cellSize: number,
+  mode: Unit['restMode'],
+) => {
+  if (!mode) return;
+  const size = Math.max(8, cellSize * 0.3);
+  const left = (x + 1) * cellSize - size;
+  const top = y * cellSize + cellSize * 0.1;
+  ctx.save();
+  ctx.translate(left, top);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  if (mode === 'sleep') {
+    ctx.moveTo(size * 0.15, size * 0.2);
+    ctx.lineTo(size * 0.85, size * 0.2);
+    ctx.lineTo(size * 0.15, size * 0.8);
+    ctx.lineTo(size * 0.85, size * 0.8);
+  } else {
+    for (const x of [0.3, 0.7]) {
+      ctx.moveTo(size * x, size * 0.2);
+      ctx.lineTo(size * x, size * 0.8);
+    }
+  }
+  ctx.strokeStyle = '#202b35';
+  ctx.lineWidth = Math.max(2, size * 0.25);
+  ctx.stroke();
+  ctx.strokeStyle = '#f2c14e';
+  ctx.lineWidth = Math.max(1.4, size * 0.14);
+  ctx.stroke();
+  ctx.restore();
 };
 
 /**

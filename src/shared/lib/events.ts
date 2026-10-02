@@ -1,7 +1,13 @@
-import type { Building, ParticipantId, Unit } from '@shared/config';
+import type {
+  Building,
+  CommandMeta,
+  ParticipantId,
+  Unit,
+} from '@shared/config';
 
 type GameEvent =
   | { type: 'GAME_RESET' }
+  | { type: 'COMMAND_SUCCEEDED'; command: CommandMeta }
   | { type: 'BASE_DESTROYED'; owner: ParticipantId }
   /** Выбывание уже применено; `turn` — ход, в котором оно произошло. */
   | { type: 'PARTICIPANT_ELIMINATED'; owner: ParticipantId; turn: number }

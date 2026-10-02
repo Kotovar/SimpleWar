@@ -168,6 +168,18 @@ export const Siege: Story = {
   },
 };
 
+export const Sleeping: Story = {
+  beforeEach: () => {
+    selectUnit('scout', { restMode: 'sleep' });
+  },
+};
+
+export const Skipped: Story = {
+  beforeEach: () => {
+    selectUnit('worker', { restMode: 'skip', movePoints: 0, buildPoints: 0 });
+  },
+};
+
 export const SiegePrepared: Story = {
   beforeEach: () => {
     selectUnit('siege', { preparedStrike: { x: 7, y: 5 } });

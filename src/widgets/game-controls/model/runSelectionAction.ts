@@ -14,6 +14,7 @@ import { getStrikeCells } from '@features/combat';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import { cancelResearch, startResearch } from '@features/research';
 import { useSelectionStore } from '@features/selection';
+import { setUnitRest } from '@features/game-loop';
 import {
   assignWorker,
   getClearableCells,
@@ -65,6 +66,17 @@ export const runSelectionAction = (
   const actor = humanId;
   const [kind, target] = id.split(':');
   switch (kind) {
+    case 'skip':
+    case 'sleep':
+      if (!unit) return;
+      setUnitRest({
+        actor,
+        unitId: unit.id,
+        mode:
+          kind === 'skip' ? 'skip' : unit.restMode === 'sleep' ? null : 'sleep',
+      });
+      resetModes(unit.id);
+      return;
     case 'build': {
       if (!unit || !target) return;
       const type = target as BuildingType;

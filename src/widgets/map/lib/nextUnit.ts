@@ -1,18 +1,19 @@
 import type { Unit } from '@shared/config';
 
 /**
- * У юнита есть что сделать в этот ход: удар/лечение, стройка или шаг.
+ * Активному юниту есть что сделать: удар/лечение, стройка или шаг.
  *
  * @param canStep - Есть ли клетка для шага: остатка очков может не хватать
  *   на соседний рельеф.
  */
 export const hasActions = (unit: Unit, canStep: (unit: Unit) => boolean) =>
-  (unit.role === 'military' ? unit.attackPoints > 0 : unit.buildPoints > 0) ||
-  canStep(unit);
+  !unit.restMode &&
+  ((unit.role === 'military' ? unit.attackPoints > 0 : unit.buildPoints > 0) ||
+    canStep(unit));
 
-/** Рабочий без работы в здании — ему можно дать дело. */
+/** Активный рабочий без работы в здании — ему можно дать дело. */
 export const isIdleWorker = (unit: Unit) =>
-  unit.role === 'civil' && !unit.workplaceId;
+  unit.role === 'civil' && !unit.workplaceId && !unit.restMode;
 
 /**
  * Следующий подходящий юнит после текущего выбора. Порядок — по клеткам

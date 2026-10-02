@@ -66,10 +66,10 @@ export const PopulationIcon = ({ size = 14 }: Props) => (
 export const ResearchIcon = ({ size = 14 }: Props) => (
   <svg {...base(size)}>
     <path
-      d='M1.5 4.5h10.5c0 2-1.6 3.2-3.5 3.4v1.6h2.2v2H5.3v-2h2.2V7.9C4 7.7 1.5 6.3 1.5 4.5z'
+      d='M4 3h11v3h-3L10 8v3h2v2H5v-2h2V8L5 6H4C2.5 6 1.3 5.4.5 4H4z'
       fill='var(--research)'
     />
-    <path d='M4 13.5h8' stroke='var(--research)' strokeWidth='1.6' />
+    <path d='M4.7 3.8h9.5' stroke='rgb(255 255 255 / 0.35)' strokeWidth='.8' />
   </svg>
 );
 

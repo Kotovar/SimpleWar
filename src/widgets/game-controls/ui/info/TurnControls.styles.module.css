@@ -6,7 +6,8 @@
 }
 
 .EndTurnButton {
-  min-width: 170px;
+  /* Обе подписи помещаются без сдвига соседей при передаче хода. */
+  min-width: 12em;
   background: linear-gradient(180deg, var(--success-strong), var(--success));
   color: #0f1f12;
   font-weight: 700;

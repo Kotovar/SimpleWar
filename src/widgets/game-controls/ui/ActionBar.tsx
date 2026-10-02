@@ -65,12 +65,17 @@ export const ActionBar = () => {
 
   // Захват на window: срабатывает раньше клавиш карты, а отменённое
   // событие карта пропускает.
-  const latest = useRef({ shown, press, submenu });
-  latest.current = { shown, press, submenu };
+  const latest = useRef({ shown, buttons, press, submenu, selectionKey });
+  latest.current = { shown, buttons, press, submenu, selectionKey };
   useEffect(() => {
+    let spaceFor: string | null = null;
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.repeat || event.defaultPrevented) return;
       if (event.ctrlKey || event.metaKey || event.altKey) return;
-      if (isTyping(event.target) || document.querySelector('dialog[open]'))
+      if (
+        isTyping(event.target) ||
+        document.querySelector('details[open], dialog[open]')
+      )
         return;
       const current = latest.current;
       if (event.code === 'Escape' && current.submenu) {
@@ -78,14 +83,48 @@ export const ActionBar = () => {
         setSubmenu(null);
         return;
       }
-      const button = current.shown.find(({ code }) => code === event.code);
+      const button =
+        current.shown.find(({ code }) => code === event.code) ??
+        current.buttons.find(
+          ({ id, code }) =>
+            (id === 'skip' || id === 'sleep') && code === event.code,
+        );
       if (!button) return;
       event.preventDefault();
+      if (event.code === 'Space') {
+        spaceFor = current.selectionKey;
+        return;
+      }
       current.press(button);
     };
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.code !== 'Space') return;
+      const selected = spaceFor;
+      spaceFor = null;
+      if (!selected || selected !== latest.current.selectionKey) return;
+      if (
+        event.defaultPrevented ||
+        event.ctrlKey ||
+        event.altKey ||
+        event.metaKey ||
+        isTyping(event.target) ||
+        document.querySelector('details[open], dialog[open]')
+      )
+        return;
+      const button = latest.current.buttons.find(({ id }) => id === 'skip');
+      if (button) latest.current.press(button);
+    };
+    const onBlur = () => {
+      spaceFor = null;
+    };
     window.addEventListener('keydown', onKeyDown, { capture: true });
-    return () =>
+    window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', onBlur);
+    return () => {
       window.removeEventListener('keydown', onKeyDown, { capture: true });
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', onBlur);
+    };
   }, []);
 
   if (!humanId || !buttons.length) return null;

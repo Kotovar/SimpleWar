@@ -201,6 +201,16 @@ const UnitDefense = ({ unit }: { unit: Unit }) => (
 
 const UnitDetails = ({ unit }: { unit: Unit }) => (
   <>
+    {unit.restMode && (
+      <div>
+        <dt>Режим</dt>
+        <dd>
+          {unit.restMode === 'sleep'
+            ? 'Сон — до пробуждения'
+            : 'Пропуск — до следующего своего хода'}
+        </dd>
+      </div>
+    )}
     <div>
       <dt>Движение</dt>
       <dd className={styles.MovePoints}>

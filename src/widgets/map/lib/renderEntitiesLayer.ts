@@ -40,6 +40,7 @@ import { drawFormationBadge } from './drawFormationBadge';
 import {
   drawDamagedBuilding,
   drawRoleIcon,
+  drawRestBadge,
   getDetailLevel,
 } from './drawEntityStatus';
 import { isHostile } from '@shared/lib';
@@ -219,6 +220,8 @@ export const renderEntitiesLayer = (
     if (detail === 'icon') {
       drawRoleIcon(ctx, unit.role, x + dx, y + dy, cellSize, owner);
       ctx.restore();
+      if (owner === humanId)
+        drawRestBadge(ctx, x + dx, y + dy, cellSize, unit.restMode);
       return;
     }
     UNIT_DRAWERS[type](ctx, x + dx, y + dy, cellSize, owner, scale);
@@ -226,6 +229,8 @@ export const renderEntitiesLayer = (
 
     // Полоса здоровья и очки остаются контрастными даже у отходившего юнита.
     drawHpBar(ctx, x + dx, y + dy, cellSize, hpRatio);
+    if (owner === humanId)
+      drawRestBadge(ctx, x + dx, y + dy, cellSize, unit.restMode);
     if (detail !== 'detail') return;
     if (owner === humanId) drawActionPips(ctx, x + dx, y + dy, cellSize, unit);
     // Строй — по видимым соседям, как предпросмотр урона.
