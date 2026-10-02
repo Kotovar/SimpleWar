@@ -4,9 +4,9 @@
   height: 100vh;
   padding: 10px;
   gap: 10px;
-  grid-template-columns: minmax(0, 1fr) 360px;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
-  grid-template-areas: 'toolbar toolbar' 'map panel';
+  grid-template-areas: 'toolbar' 'map';
   background-color: var(--bg);
 }
 
@@ -20,15 +20,6 @@
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: var(--shadow-raised);
-}
-
-/* Узкий экран: панель уходит под карту и сворачивается, карта не вытесняется. */
-@media (max-width: 900px) {
-  .Main {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    grid-template-areas: 'toolbar' 'map' 'panel';
-  }
 }
 
 @media (min-width: 1000px) {

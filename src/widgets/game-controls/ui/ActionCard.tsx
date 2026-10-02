@@ -21,28 +21,29 @@ export const ActionCard = ({
     aria-pressed={button.pressed ?? false}
     aria-disabled={!!button.reason}
     data-unavailable={!!button.reason}
+    data-portrait={!!button.portrait}
     title={[button.hint, button.reason].filter(Boolean).join('\n')}
     onClick={onPress}
   >
     {button.portrait && (
-      <EntityPortrait type={button.portrait} owner={owner} size={24} />
+      <EntityPortrait type={button.portrait} owner={owner} size={20} />
     )}
     <span className={styles.Label}>{button.label}</span>
     {button.cost && (
       <span className={styles.Cost}>
         {button.cost.gold > 0 && (
           <span>
-            <GoldIcon size={10} /> {button.cost.gold}
+            <GoldIcon size={9} /> {button.cost.gold}
           </span>
         )}
         {button.cost.wood > 0 && (
           <span>
-            <WoodIcon size={10} /> {button.cost.wood}
+            <WoodIcon size={9} /> {button.cost.wood}
           </span>
         )}
         {!!button.cost.population && (
           <span>
-            <PopulationIcon size={10} /> {button.cost.population}
+            <PopulationIcon size={9} /> {button.cost.population}
           </span>
         )}
       </span>

@@ -11,8 +11,8 @@ import type {
   Unit,
   UnitType,
 } from '@shared/config';
-import { SelectedEntityInfo, UnitOptions, WorkerBuildOptions } from './info';
-import styles from './styles.module.css';
+import { SelectedEntityInfo } from './info';
+import styles from './Overlays.styles.module.css';
 
 type Props = {
   cell: Cell | null;
@@ -20,12 +20,13 @@ type Props = {
   building: Building | null;
 };
 
-/** Панель справа от карты в том же составе, что и в `PhaseInProgress`. */
-const ContextPanel = ({ cell, unit, building }: Props) => (
-  <aside className={styles.ContextPanel} style={{ width: 340 }}>
+/**
+ * Карточка выбранного в том же оформлении, что поверх карты в партии.
+ * Кнопки действий — в нижней панели (`ActionBar`), здесь их нет.
+ */
+const SelectionCardPreview = ({ cell, unit, building }: Props) => (
+  <aside className={styles.Card} style={{ position: 'static' }}>
     <SelectedEntityInfo cell={cell} unit={unit} building={building} />
-    {unit && <WorkerBuildOptions unit={unit} />}
-    {building && <UnitOptions building={building} />}
   </aside>
 );
 
@@ -62,12 +63,12 @@ const setEconomy = (gold: number, wood: number, occupied = 0, max = 10) =>
   }));
 
 const meta = {
-  title: 'Interface/ContextPanel',
-  component: ContextPanel,
+  title: 'Interface/SelectionCard',
+  component: SelectionCardPreview,
   args: { cell: null, unit: null, building: null },
   // Хватает на любую постройку и найм: кнопки активны, пока история не решит иначе.
   beforeEach: () => setEconomy(1000, 1000),
-} satisfies Meta<typeof ContextPanel>;
+} satisfies Meta<typeof SelectionCardPreview>;
 
 export default meta;
 

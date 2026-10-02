@@ -1,0 +1,129 @@
+/* Элементы поверх карты: карточка выбранного, мини-карта, инструменты. */
+
+.Card {
+  grid-area: map;
+  align-self: end;
+  justify-self: start;
+  z-index: 30;
+  width: 260px;
+  max-height: calc(100% - 32px);
+  margin: 0 0 16px 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background-color: rgb(24 29 35 / 0.94);
+  box-shadow: var(--shadow);
+  font-size: 0.85rem;
+}
+
+.Note {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.Minimap {
+  grid-area: map;
+  align-self: start;
+  justify-self: end;
+  z-index: 30;
+  position: relative;
+  width: 240px;
+  margin: 16px 16px 0 0;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: opacity 0.15s;
+}
+
+.Minimap[data-mode='translucent'] {
+  opacity: 0.55;
+}
+
+.Minimap[data-mode='translucent']:hover {
+  opacity: 0.9;
+}
+
+.Minimap[data-mode='hidden'] {
+  width: auto;
+  box-shadow: none;
+}
+
+.MinimapToggle {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 1;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background-color: rgb(24 29 35 / 0.85);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.Minimap[data-mode='hidden'] .MinimapToggle {
+  position: static;
+}
+
+.MinimapToggle:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.ToolsToggle {
+  padding: 6px 12px;
+  border: 1px dashed var(--danger);
+  border-radius: var(--radius);
+  background-color: transparent;
+  color: var(--danger-strong);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ToolsToggle[aria-expanded='true'] {
+  background-color: rgb(212 97 76 / 0.12);
+}
+
+/* Выдвижная панель инструментов справа поверх карты. */
+.Drawer {
+  grid-area: map;
+  justify-self: end;
+  position: relative;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(360px, 100%);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 36px 12px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background-color: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.DrawerClose {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.DrawerClose:hover {
+  color: var(--text);
+}

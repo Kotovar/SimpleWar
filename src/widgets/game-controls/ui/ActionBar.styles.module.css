@@ -1,16 +1,47 @@
 /* Нижняя панель действий: по центру низа карты, поверх неё. */
-.Bar {
-  --size: 78px;
+/* Панель с подсказкой режима над ней: двигаются вместе. */
+.Dock {
   grid-area: map;
   align-self: end;
   justify-self: center;
   z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 32px);
+  margin-bottom: 16px;
+}
+
+.Prompt {
+  max-width: 520px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid rgb(242 199 68 / 0.45);
+  border-radius: var(--radius);
+  background-color: rgb(24 29 35 / 0.94);
+  color: var(--text);
+  font-size: 0.85rem;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.Inline {
+  padding: 0 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  font:
+    600 0.75rem / 1.4 ui-monospace,
+    monospace;
+}
+
+.Bar {
+  --size: 86px;
   display: grid;
   grid-template-rows: repeat(var(--rows, 1), var(--size));
   grid-template-columns: 10px repeat(var(--cols, 1), var(--size));
   gap: 6px;
-  max-width: calc(100% - 32px);
-  margin-bottom: 16px;
+  max-width: 100%;
   padding: 6px 8px 6px 4px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
@@ -40,10 +71,10 @@
   display: grid;
   justify-items: center;
   align-content: center;
-  gap: 2px;
+  gap: 1px;
   width: var(--size);
   height: var(--size);
-  padding: 4px;
+  padding: 3px 2px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background-color: var(--surface);
@@ -53,6 +84,11 @@
   transition:
     border-color 0.12s,
     background-color 0.12s;
+}
+
+/* С портретом содержимое занимает всю высоту: сверху полоса под клавишу и «!». */
+.Card[data-portrait='true'] {
+  padding-top: 16px;
 }
 
 .Card:hover,
@@ -82,19 +118,27 @@
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  line-height: 1.15;
+  line-height: 1.12;
   text-align: center;
   hyphens: auto;
 }
 
+/* Цена в одну строку: три значения (золото, дерево, население) влезают. */
 .Cost {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   color: var(--text-muted);
-  font-size: 0.7rem;
+  font-size: 0.64rem;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.Cost > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
 }
 
 /* Клавиша — в левом верхнем углу, чтобы карточка оставалась квадратной. */

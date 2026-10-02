@@ -1,5 +1,7 @@
+/* Слои холстов изолированы: их z-index не спорит с элементами поверх карты. */
 .MapViewport {
   position: relative;
+  isolation: isolate;
   box-sizing: border-box;
   min-width: 0;
   min-height: 0;

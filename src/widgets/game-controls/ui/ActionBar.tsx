@@ -29,7 +29,7 @@ const CONFIRM: Record<string, { title: string; message: string }> = {
  */
 export const ActionBar = () => {
   const { humanId } = useGameLoopSelectors();
-  const { buttons, run, selectionKey } = useSelectionActions();
+  const { buttons, run, prompt, selectionKey } = useSelectionActions();
   const layout = useLayoutMap();
   const offset = usePreferencesStore(state => state.actionBarOffset);
   const setOffset = usePreferencesStore(state => state.setActionBarOffset);
@@ -119,45 +119,54 @@ export const ActionBar = () => {
   return (
     <>
       <div
-        className={styles.Bar}
-        role='toolbar'
-        aria-label='Действия выбранного'
-        style={{
-          translate: `${position.x}px ${position.y}px`,
-          // Больше шести кнопок — два ряда квадратов.
-          ['--rows' as string]: rows,
-          ['--cols' as string]: Math.ceil(count / rows),
-        }}
+        className={styles.Dock}
+        style={{ translate: `${position.x}px ${position.y}px` }}
       >
-        <span
-          className={styles.Handle}
-          title='Перетащите панель; двойной клик — на место'
-          aria-hidden
-          onPointerDown={onHandleDown}
-          onPointerMove={onHandleMove}
-          onPointerUp={onHandleUp}
-          onPointerCancel={onHandleUp}
-          onDoubleClick={() => setOffset({ x: 0, y: 0 })}
-        />
-        {parent && (
-          <button
-            type='button'
-            className={styles.Back}
-            onClick={() => setSubmenu(null)}
-          >
-            ← {parent.label}
-            <kbd className={styles.Key}>Esc</kbd>
-          </button>
+        {prompt && (
+          <p className={styles.Prompt} role='status'>
+            {prompt} <kbd className={styles.Inline}>Esc</kbd> — отмена
+          </p>
         )}
-        {shown.map(button => (
-          <ActionCard
-            key={button.id}
-            button={button}
-            owner={humanId}
-            keyLabel={button.code && formatKey(button.code, layout)}
-            onPress={() => press(button)}
+        <div
+          className={styles.Bar}
+          role='toolbar'
+          aria-label='Действия выбранного'
+          style={{
+            // Больше шести кнопок — два ряда квадратов.
+            ['--rows' as string]: rows,
+            ['--cols' as string]: Math.ceil(count / rows),
+          }}
+        >
+          <span
+            className={styles.Handle}
+            title='Перетащите панель; двойной клик — на место'
+            aria-hidden
+            onPointerDown={onHandleDown}
+            onPointerMove={onHandleMove}
+            onPointerUp={onHandleUp}
+            onPointerCancel={onHandleUp}
+            onDoubleClick={() => setOffset({ x: 0, y: 0 })}
           />
-        ))}
+          {parent && (
+            <button
+              type='button'
+              className={styles.Back}
+              onClick={() => setSubmenu(null)}
+            >
+              ← {parent.label}
+              <kbd className={styles.Key}>Esc</kbd>
+            </button>
+          )}
+          {shown.map(button => (
+            <ActionCard
+              key={button.id}
+              button={button}
+              owner={humanId}
+              keyLabel={button.code && formatKey(button.code, layout)}
+              onPress={() => press(button)}
+            />
+          ))}
+        </div>
       </div>
 
       <ConfirmDialog

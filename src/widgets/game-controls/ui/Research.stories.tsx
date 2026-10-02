@@ -1,28 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
-import { createBuilding, useBuildingsStore } from '@entities/buildings';
 import { useEconomyStore } from '@entities/economies';
 import { useGameLoopStore } from '@entities/games';
 import { useResearchStore, type ResearchWork } from '@entities/researches';
 import { createUnit, useUnitsStore } from '@entities/units';
-import {
-  RESEARCH_TYPES,
-  type Building,
-  type CivilUnit,
-  type MilitaryUnit,
-  type ResearchType,
-  type Unit,
-  type UnitType,
-} from '@shared/config';
-import {
-  ResearchPanel,
-  ResourcesInfo,
-  SelectedEntityInfo,
-  SiegeStrike,
-  WorkerBuildOptions,
-  WorkerJobs,
-} from './info';
-import styles from './styles.module.css';
+import type { ResearchType, Unit, UnitType } from '@shared/config';
+import { ResourcesInfo, SelectedEntityInfo } from './info';
 
 /** Исследования синих (`p1`) — стороны человека в партии по умолчанию. */
 const learn = (completed: ResearchType[], current?: ResearchWork) =>
@@ -50,29 +33,15 @@ const byId = <T extends { id: string }>(...items: T[]) =>
 const spearman = unit('spearman', 2, 2);
 const neighbour = unit('spearman', 2, 3);
 
-const mine = createBuilding('mine', 4, 4, 'p1')! as Building;
-const miner = unit('worker', 4, 4, {
-  workplaceId: mine.id,
-  buildPoints: 0,
-}) as CivilUnit;
-
-const siege = unit('siege', 1, 1, { attackPoints: 1 }) as MilitaryUnit;
-const worker = unit('worker', 1, 1, { buildPoints: 1 }) as CivilUnit;
-
 const meta = {
   title: 'Interface/Research',
-  // Ширина правой панели, как в `ContextPanel`; `topBar` — верхняя панель.
+  // Ширина карточки выбранного; `topBar` — верхняя панель.
   decorators: [
-    (Story, { parameters }) =>
-      parameters.topBar ? (
-        <div style={{ minHeight: 520 }}>
-          <Story />
-        </div>
-      ) : (
-        <aside className={styles.ContextPanel} style={{ width: 340 }}>
-          <Story />
-        </aside>
-      ),
+    (Story, { parameters }) => (
+      <div style={parameters.topBar ? { minHeight: 520 } : { width: 280 }}>
+        <Story />
+      </div>
+    ),
   ],
   beforeEach: () => setStock(1000, 1000),
 } satisfies Meta;
@@ -82,30 +51,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** Кузница свободна, хватает на всё. */
-export const PanelIdle: Story = {
-  name: 'Панель: кузница свободна',
-  render: () => <ResearchPanel owner='p1' />,
-};
-
 /** Идёт Строй, Картография уже изучена; остальное ждёт освобождения. */
-export const PanelInProgress: Story = {
-  name: 'Панель: идёт исследование',
-  render: () => <ResearchPanel owner='p1' />,
-  beforeEach: () => learn(['cartography'], { type: 'formation', turnsLeft: 2 }),
-};
-
-export const PanelNoResources: Story = {
-  name: 'Панель: не хватает ресурсов',
-  render: () => <ResearchPanel owner='p1' />,
-  beforeEach: () => setStock(90, 70),
-};
-
-export const PanelAllDone: Story = {
-  name: 'Панель: всё изучено',
-  render: () => <ResearchPanel owner='p1' />,
-  beforeEach: () => learn(RESEARCH_TYPES),
-};
-
 /** Плашка в верхней панели и список по клику. */
 export const Summary: Story = {
   name: 'Плашка и список изученного',
@@ -172,24 +118,3 @@ export const FormationCardAlone: Story = {
 };
 
 /** Рабочий на добыче уже потратил действие: с Артелью добыча сохраняется. */
-export const ArtelMiner: Story = {
-  name: 'Рабочий на добыче с Артелью',
-  render: () => <WorkerJobs unit={miner} />,
-  beforeEach: () => {
-    learn(['artel']);
-    useUnitsStore.setState({ units: byId<Unit>(miner) });
-    useBuildingsStore.setState({ buildings: byId(mine) });
-  },
-};
-
-export const EngineeringBuildMenu: Story = {
-  name: 'Меню стройки с частоколом',
-  render: () => <WorkerBuildOptions unit={worker} />,
-  beforeEach: () => learn(['engineering']),
-};
-
-export const HiddenAimingSiege: Story = {
-  name: 'Осада со Скрытой наводкой',
-  render: () => <SiegeStrike unit={siege} />,
-  beforeEach: () => learn(['hiddenAiming']),
-};

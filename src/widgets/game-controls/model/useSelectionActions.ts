@@ -14,6 +14,7 @@ import {
   type ActionButton,
   type SelectionActionInput,
 } from '../lib/selectionActions';
+import { getModePrompt, type MapMode } from '../lib/modePrompt';
 import { runSelectionAction } from './runSelectionAction';
 
 const EMPTY: readonly ResearchType[] = [];
@@ -97,5 +98,30 @@ export const useSelectionActions = () => {
   const run = (button: ActionButton) =>
     runSelectionAction(button, { humanId, unit, building, input });
 
-  return { buttons, run, selectionKey: unit?.id ?? building?.id ?? null };
+  // Подсказка следующего шага во включённом режиме карты.
+  const mapMode: MapMode | null = modeBuilding
+    ? {
+        kind: 'build',
+        type: modeBuilding,
+        cells: highlight.buildableCells?.length ?? 0,
+      }
+    : modeUnit
+      ? {
+          kind: 'spawn',
+          type: modeUnit,
+          cells: highlight.spawnableCells?.length ?? 0,
+        }
+      : highlight.clearableCells
+        ? { kind: 'clear', cells: highlight.clearableCells.length }
+        : highlight.strikeCells
+          ? { kind: 'strike', cells: highlight.strikeCells.length }
+          : null;
+  const prompt = mapMode && (unit || building) ? getModePrompt(mapMode) : null;
+
+  return {
+    buttons,
+    run,
+    prompt,
+    selectionKey: unit?.id ?? building?.id ?? null,
+  };
 };

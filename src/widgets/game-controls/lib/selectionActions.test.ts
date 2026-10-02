@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { building, byId, input, unit } from './actions.test-utils';
-import { getSelectionActions } from './selectionActions';
+import { getSelectionActions, unitStats } from './selectionActions';
 
 describe('getSelectionActions', () => {
   it('осадная машина: удар уже подготовлен — причина; прицел включён — доступно', () => {
@@ -86,5 +86,11 @@ describe('getSelectionActions', () => {
         ({ reason }) => reason === 'Сейчас не ваш ход',
       ),
     ).toBe(true);
+  });
+
+  it('подсказка найма: у рабочего нет лечения, у лекаря — +20 HP', () => {
+    expect(unitStats('worker')).not.toMatch(/лечение|undefined/);
+    expect(unitStats('healer')).toContain('лечение +20 HP');
+    expect(unitStats('siege')).toContain('дальность 2–5');
   });
 });

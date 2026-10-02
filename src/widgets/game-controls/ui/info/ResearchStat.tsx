@@ -6,7 +6,7 @@ import {
 import { ResearchIcon } from '@shared/ui';
 import { useResearchStore } from '@entities/researches';
 import { useBuildingsStore } from '@entities/buildings';
-import { CancelResearch } from './ResearchPanel';
+import { CancelResearch } from './CancelResearch';
 import styles from './ResourcesInfo.styles.module.css';
 
 const POPOVER_ID = 'research-summary';

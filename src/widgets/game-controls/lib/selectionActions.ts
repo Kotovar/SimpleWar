@@ -1,11 +1,14 @@
 import {
+  HEALING,
   REJECTION_MESSAGE,
   RESEARCH_CONFIG,
   RESEARCH_TYPES,
+  SIEGE_STRIKE,
   UNITS_CONFIG,
   UNITS_NAME,
   type Building,
   type Unit,
+  type UnitType,
 } from '@shared/config';
 import { canSpawnUnit } from '@shared/lib';
 import {
@@ -17,6 +20,26 @@ import {
 import { workerActions } from './workerActions';
 
 export type { ActionButton, SelectionActionInput } from './actionButton';
+
+/** Характеристики юнита для подсказки найма: HP, урон или лечение, дальность, ход. */
+export const unitStats = (type: UnitType) => {
+  const config = UNITS_CONFIG[type];
+  const heal = HEALING[type]?.amount;
+  const range =
+    type === 'siege'
+      ? `${SIEGE_STRIKE.minRange}–${SIEGE_STRIKE.maxRange}`
+      : 'attackRange' in config && config.attackRange;
+  return [
+    `${config.maxHp} HP`,
+    heal
+      ? `лечение +${heal} HP`
+      : 'attack' in config && `урон ${config.attack}`,
+    range && `дальность ${range}`,
+    `ход ${config.maxMovePoints}`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+};
 
 const siegeActions = (
   unit: Unit,
@@ -54,7 +77,7 @@ const spawnSlots = (
           id: `spawn:${type}`,
           label: UNITS_NAME[type],
           code: slot(index),
-          hint: `Нанять: ${UNITS_NAME[type]}`,
+          hint: `${UNITS_NAME[type]}: ${unitStats(type)}`,
           reason: check.canSpawn ? undefined : check.message,
           pressed: mode.unit === type,
           cost: { ...cost, population: requiresLimit },
