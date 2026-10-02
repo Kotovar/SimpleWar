@@ -7,9 +7,6 @@ import {
 } from 'react';
 import { useSettingsStore } from '@entities/settings';
 
-/** Порог сдвига мыши, после которого левая кнопка тащит карту, а не кликает. */
-const DRAG_THRESHOLD = 5;
-
 /** Сдвиг камеры клавишей, в клетках. */
 const KEY_PAN_CELLS = 3;
 
@@ -35,12 +32,13 @@ export const isTyping = (target: EventTarget | null) =>
     (target instanceof HTMLInputElement &&
       !NON_TEXT_INPUTS.includes(target.type)));
 
-type Drag = { x: number; y: number; pointerId: number; active: boolean };
+type Drag = { x: number; y: number; pointerId: number };
 
 /**
  * Управление камерой: размер окна, колесо с масштабом к курсору,
- * перетаскивание (средняя/правая кнопка, Space + левая или левая после
- * порога) и клавиши. Перетаскивание гасит следующий клик, поэтому
+ * перетаскивание (средняя/правая кнопка или Space + левая) и клавиши.
+ * Левая кнопка без Space карту не двигает: дрогнувшая при выборе мышь
+ * не сдвигает камеру. Перетаскивание гасит следующий клик, поэтому
  * выбранный юнит не получает приказ.
  *
  * @param viewport - Контейнер карты.
@@ -140,41 +138,29 @@ export const useCameraInput = (viewport: RefObject<HTMLDivElement | null>) => {
     onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
       if (event.pointerType !== 'mouse' || event.button > 2) return;
       suppressClick.current = false;
-      const active = event.button !== 0 || spaceHeld.current;
+      // Обычный левый клик должен попасть в Canvas.
+      if (event.button === 0 && !spaceHeld.current) return;
       drag.current = {
         x: event.clientX,
         y: event.clientY,
         pointerId: event.pointerId,
-        active,
       };
-      // Обычный левый клик до начала перетаскивания должен попасть в Canvas.
-      if (active) {
-        event.preventDefault();
-        suppressClick.current = event.button === 0;
-        startDrag(event);
-      }
+      event.preventDefault();
+      suppressClick.current = event.button === 0;
+      startDrag(event);
     },
     onPointerMove: (event: PointerEvent<HTMLDivElement>) => {
       const current = drag.current;
       if (!current || current.pointerId !== event.pointerId) return;
-      const dx = current.x - event.clientX;
-      const dy = current.y - event.clientY;
-      if (!current.active) {
-        // Мелкое движение мыши ещё считается обычным левым кликом.
-        if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
-        current.active = true;
-        startDrag(event);
-      }
       suppressClick.current = true;
-      useSettingsStore.getState().panBy(dx, dy);
+      useSettingsStore
+        .getState()
+        .panBy(current.x - event.clientX, current.y - event.clientY);
       current.x = event.clientX;
       current.y = event.clientY;
     },
     onPointerUp: finishDrag,
     onPointerCancel: finishDrag,
     onLostPointerCapture: finishDrag,
-    onPointerLeave: (event: PointerEvent<HTMLDivElement>) => {
-      if (!drag.current?.active) finishDrag(event);
-    },
   };
 };

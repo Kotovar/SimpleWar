@@ -5,6 +5,7 @@ import { getParticipantKnowledge } from '@entities/perceptions';
 import {
   createKnownMovementGrid,
   getActorVisibility,
+  TURN_UNKNOWN_COST,
 } from './createKnownMovementGrid';
 import { getReachableCells } from './getReachableCells';
 import { isCellOccupied } from './isCellOccupied';
@@ -70,3 +71,10 @@ export const getUnitReachableCells = (
   const canLand = createLandingCheck(actor);
   return cells.filter(canLand);
 };
+
+/**
+ * Может ли юнит сделать хоть один шаг в этот ход: есть клетка из подсветки
+ * хода. Остаток очков меньше цены любой соседней клетки — шага нет.
+ */
+export const canUnitStep = (unit: Unit) =>
+  getUnitReachableCells(unit, unit.owner, TURN_UNKNOWN_COST).length > 0;

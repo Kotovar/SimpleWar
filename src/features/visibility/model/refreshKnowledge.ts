@@ -16,8 +16,9 @@ import {
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
-import { useGameLoopStore } from '@entities/games';
+import { getHumanId, useGameLoopStore } from '@entities/games';
 import { hasResearch } from '@entities/researches';
+import { useJournalStore } from '@entities/journals';
 import {
   observe,
   useKnowledgeStore,
@@ -127,6 +128,46 @@ export const getStrikeSightings = (owner: Owner): StrikeSighting[] => {
 };
 
 /**
+ * Пишет в журнал игрока появление вражеских бойцов, которых он не помнил:
+ * только из его знаний, без чтения скрытого мира. Уже известный контакт
+ * повторно не сообщается, пока его не опровергнет или не сотрёт память.
+ * Не чаще раза за ход: юнит на краю обзора не засыпает журнал.
+ */
+const recordSpotted = (
+  participant: ParticipantId,
+  previous: ParticipantKnowledge,
+  next: ParticipantKnowledge,
+  turn: number,
+) => {
+  if (next === previous) return;
+  const spotted = Object.values(next.contacts).filter(
+    contact =>
+      contact.kind === 'unit' &&
+      contact.type !== 'worker' &&
+      !previous.contacts[contact.id],
+  );
+  const [first] = spotted;
+  if (!first) return;
+  const journal = useJournalStore.getState();
+  const reported = journal.entries.some(
+    entry =>
+      entry.type === 'enemySpotted' &&
+      entry.turn === turn &&
+      entry.visibleTo !== 'all' &&
+      entry.visibleTo.includes(participant),
+  );
+  if (reported) return;
+  journal.record({
+    type: 'enemySpotted',
+    actor: null,
+    turn,
+    visibleTo: [participant],
+    // Клетка — для перехода камерой в сводке хода (S19, этап D).
+    details: { count: spotted.length, x: first.x, y: first.y },
+  });
+};
+
+/**
  * Пересчитывает знания всех участников партии по текущему миру.
  * Полный пересчёт дешёв даже на 100 × 100 и не оставляет обзор погибшего
  * источника. Выбывшие участники больше не наблюдают.
@@ -143,6 +184,7 @@ export const refreshKnowledge = () => {
   const next: Partial<Record<ParticipantId, ParticipantKnowledge>> = {};
   const eliminatedIds = new Set(eliminated);
   let changed = false;
+  const humanId = getHumanId(participants);
   for (const { id } of participants) {
     const previous = byParticipant[id];
     if (eliminatedIds.has(id)) {
@@ -162,6 +204,10 @@ export const refreshKnowledge = () => {
       strikes: getStrikeSightings(id),
     });
     changed ||= next[id] !== previous;
+    // ИИ уведомления не читает: его записи только вытесняли бы журнал.
+    if (previous && id === humanId) {
+      recordSpotted(id, previous, next[id], currentTurn);
+    }
   }
 
   if (

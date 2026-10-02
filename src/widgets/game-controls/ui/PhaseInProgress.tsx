@@ -17,7 +17,7 @@ import {
 import { usePreferencesStore } from '@entities/settings';
 import { useUnitsStore } from '@entities/units';
 import { getHealTargets } from '@features/combat';
-import { getAttackableTargets } from '@features/pathfinding';
+import { canUnitStep, getAttackableTargets } from '@features/pathfinding';
 import { useSelectionSelectors } from '@features/selection';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import {
@@ -224,7 +224,9 @@ export const PhaseInProgress = ({ minimap }: Props) => {
   const onNextTurn = () => {
     const units = Object.values(useUnitsStore.getState().units);
     const count = humanId
-      ? getPendingUnits(units, humanId, unit => hasTarget(unit, units)).length
+      ? getPendingUnits(units, humanId, canUnitStep, unit =>
+          hasTarget(unit, units),
+        ).length
       : 0;
     if (count > 0 && usePreferencesStore.getState().confirmEndTurn) {
       setPending(count);

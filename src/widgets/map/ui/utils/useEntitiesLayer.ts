@@ -1,8 +1,9 @@
 import { useUnitsStore } from '@entities/units';
-import { useEffect, useRef, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, type RefObject } from 'react';
 import type { Owner, Position } from '@shared/config';
 import { audio, gameEvents } from '@shared/lib';
 import { useResearchStore } from '@entities/researches';
+import { canUnitStep } from '@features/pathfinding';
 import {
   diffScene,
   drawEffect,
@@ -78,6 +79,22 @@ export const useEntitiesLayer = ({
   strikeMarks,
 }: Props) => {
   const worldUnits = useUnitsStore(state => state.units);
+  // Очки есть, а шагнуть некуда (вокруг дорогой рельеф): считаем один раз
+  // на смену юнитов, а не в каждом кадре анимации.
+  const stuck = useMemo(
+    () =>
+      new Set(
+        Object.values(worldUnits)
+          .filter(
+            unit =>
+              unit.owner === humanId &&
+              unit.movePoints > 0 &&
+              !canUnitStep(unit),
+          )
+          .map(({ id }) => id),
+      ),
+    [humanId, worldUnits],
+  );
   const tracked = useRef<ReadonlyMap<string, Tracked>>(new Map());
   const known = useRef<ReadonlySet<string>>(new Set());
   const strikeCells = useRef<ReadonlySet<string>>(new Set());
@@ -276,6 +293,7 @@ export const useEntitiesLayer = ({
           range,
           staffed,
           Object.values(worldUnits),
+          stuck,
         );
         drawEffects('over');
       });
@@ -305,6 +323,7 @@ export const useEntitiesLayer = ({
     researched,
     snapshots,
     staffed,
+    stuck,
     units,
     view,
     worldUnits,

@@ -104,15 +104,17 @@ const isOutside = (range: CellRange | undefined, x: number, y: number) =>
 /**
  * Свою сущность без полезных действий гасим: видно, кем ещё можно ходить.
  * Военный без очков движения считается отходившим и с очком атаки, если
- * в его дальности нет видимых врагов.
+ * в его дальности нет видимых врагов. Очки, которых не хватает ни на одну
+ * соседнюю клетку (`stuck`), — то же, что их отсутствие.
  */
 const isSpentUnit = (
   unit: Unit,
   humanId: Owner | null,
   hasTarget: (unit: Unit) => boolean,
+  stuck: ReadonlySet<string>,
 ) =>
   unit.owner === humanId &&
-  unit.movePoints === 0 &&
+  (unit.movePoints === 0 || stuck.has(unit.id)) &&
   (unit.role === 'military'
     ? unit.attackPoints === 0 ||
       // Осадная машина бьёт по клетке: цель ей не нужна.
@@ -140,6 +142,7 @@ const isSpentBuilding = (building: Building, humanId: Owner | null) => {
  * @param staffed - Свои рудники и лесопилки с рабочим внутри.
  * @param healingUnits - Юниты для проверки лечения, включая рабочих внутри зданий;
  *   цели фильтруются по владельцу лекаря и не рисуются этим параметром.
+ * @param stuck - Свои юниты с очками хода, которым некуда шагнуть.
  */
 export const renderEntitiesLayer = (
   ctx: CanvasRenderingContext2D,
@@ -151,6 +154,7 @@ export const renderEntitiesLayer = (
   range?: CellRange,
   staffed: ReadonlySet<string> = new Set(),
   healingUnits: Iterable<Unit> = Object.values(units),
+  stuck: ReadonlySet<string> = new Set(),
 ) => {
   const enemies = [...Object.values(units), ...Object.values(buildings)].filter(
     entity => humanId !== null && isHostile(humanId, entity.owner),
@@ -208,7 +212,9 @@ export const renderEntitiesLayer = (
     const { dx = 0, dy = 0, scale = 1 } = offsets?.get(id) ?? {};
 
     ctx.save();
-    if (isSpentUnit(unit, humanId, hasTarget)) ctx.globalAlpha = SPENT_ALPHA;
+    if (isSpentUnit(unit, humanId, hasTarget, stuck)) {
+      ctx.globalAlpha = SPENT_ALPHA;
+    }
 
     if (detail === 'icon') {
       drawRoleIcon(ctx, unit.role, x + dx, y + dy, cellSize, owner);

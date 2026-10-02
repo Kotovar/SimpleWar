@@ -26,7 +26,9 @@ export type GameOutcomeType =
   | 'eliminated'
   | 'gameOver'
   | 'strike'
-  | 'researchDone';
+  | 'researchDone'
+  /** В обзоре появились вражеские бойцы, которых участник не помнил. */
+  | 'enemySpotted';
 
 /** Тип записи журнала: команда либо её последствие. */
 export type JournalEventType = CommandType | GameOutcomeType;

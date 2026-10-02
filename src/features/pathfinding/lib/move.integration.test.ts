@@ -6,7 +6,7 @@ import { useMapStore } from '@entities/maps';
 import { useGameLoopStore } from '@entities/games';
 import { useJournalStore } from '@entities/journals';
 import { move } from './move';
-import { getUnitReachableCells } from './air';
+import { canUnitStep, getUnitReachableCells } from './air';
 import { createKnownMovementGrid } from './createKnownMovementGrid';
 
 const units = () => useUnitsStore.getState();
@@ -198,4 +198,29 @@ describe('проход через своих', () => {
       expect(units().units[worker]).toMatchObject({ x: 0, movePoints: 4 });
     },
   );
+});
+
+describe('canUnitStep', () => {
+  it('остатка очков не хватает на соседние холмы — шага нет', () => {
+    useMapStore.setState({
+      grid: Array.from({ length: 3 }, (_, y) =>
+        Array.from({ length: 3 }, (_, x) => ({
+          x,
+          y,
+          type: 'hill' as const,
+          isWalkable: true,
+        })),
+      ),
+    });
+    const id = units().spawnUnit('scout', 1, 1, 'p1')!;
+    const patch = (movePoints: number) =>
+      useUnitsStore.setState(state => ({
+        units: { ...state.units, [id]: { ...state.units[id], movePoints } },
+      }));
+
+    patch(1);
+    expect(canUnitStep(units().units[id])).toBe(false);
+    patch(2);
+    expect(canUnitStep(units().units[id])).toBe(true);
+  });
 });

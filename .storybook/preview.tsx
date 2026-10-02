@@ -6,9 +6,10 @@ import type { StoreApi } from 'zustand';
 import { useBuildingsStore } from '@entities/buildings';
 import { useEconomyStore } from '@entities/economies';
 import { useGameLoopStore } from '@entities/games';
+import { useJournalStore } from '@entities/journals';
 import { useMapStore } from '@entities/maps';
 import { useResearchStore } from '@entities/researches';
-import { useSettingsStore } from '@entities/settings';
+import { useDebugStore, useSettingsStore } from '@entities/settings';
 import { useUnitsStore } from '@entities/units';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import { useSelectionStore } from '@features/selection';
@@ -23,6 +24,8 @@ const resets = [
   snapshot(useBuildingsStore),
   snapshot(useEconomyStore),
   snapshot(useGameLoopStore),
+  snapshot(useJournalStore),
+  snapshot(useDebugStore),
   snapshot(useMapStore),
   snapshot(useResearchStore),
   snapshot(useSettingsStore),

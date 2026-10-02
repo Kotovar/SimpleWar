@@ -13,17 +13,37 @@ describe('getPendingUnits', () => {
     const enemy = unit('archer', 'p2', { movePoints: 2 });
 
     expect(
-      getPendingUnits([fresh, working, enemy], 'p1', () => false).map(
-        u => u.id,
-      ),
+      getPendingUnits(
+        [fresh, working, enemy],
+        'p1',
+        () => true,
+        () => false,
+      ).map(u => u.id),
     ).toEqual([fresh.id]);
+  });
+
+  it('очки есть, но шагнуть некуда — юнит не учитывается', () => {
+    const stuck = unit('scout', 'p1', { movePoints: 1 });
+    expect(
+      getPendingUnits(
+        [stuck],
+        'p1',
+        () => false,
+        () => false,
+      ),
+    ).toEqual([]);
   });
 
   it('боец без шагов учитывается, только если есть удар и цель', () => {
     const ready = unit('archer', 'p1', { movePoints: 0, attackPoints: 1 });
     const struck = unit('archer', 'p1', { movePoints: 0, attackPoints: 0 });
 
-    expect(getPendingUnits([ready, struck], 'p1', () => true)).toEqual([ready]);
-    expect(getPendingUnits([ready, struck], 'p1', () => false)).toEqual([]);
+    const noStep = () => false;
+    expect(getPendingUnits([ready, struck], 'p1', noStep, () => true)).toEqual([
+      ready,
+    ]);
+    expect(getPendingUnits([ready, struck], 'p1', noStep, () => false)).toEqual(
+      [],
+    );
   });
 });

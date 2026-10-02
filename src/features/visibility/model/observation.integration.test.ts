@@ -5,6 +5,7 @@ import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
 import { useGameLoopStore } from '@entities/games';
 import { useKnowledgeStore } from '@entities/perceptions';
+import { useJournalStore } from '@entities/journals';
 import { initVisibilitySystem } from './refreshKnowledge';
 import { getObservation } from './observation';
 
@@ -31,6 +32,7 @@ beforeEach(() => {
   useUnitsStore.setState({ units: {}, selectedUnitForSpawn: null });
   useBuildingsStore.setState({ buildings: {}, selectedBuildingForSpawn: null });
   useKnowledgeStore.getState().resetStore();
+  useJournalStore.getState().newGame();
   useGameLoopStore.setState({
     phase: 'inProgress',
     participants: THREE,
@@ -125,5 +127,52 @@ describe('наблюдение участников', () => {
     expect(
       useKnowledgeStore.getState().byParticipant.p1?.contacts[enemy],
     ).toMatchObject({ seenTurn: 2 });
+  });
+
+  it('пишет «враг в обзоре» только участнику и один раз за контакт', () => {
+    units().spawnUnit('worker', 1, 1, 'p1');
+    units().spawnUnit('worker', 4, 1, 'p2');
+    const enemy = units().spawnUnit('archer', 3, 1, 'p2')!;
+    const spotted = () =>
+      useJournalStore
+        .getState()
+        .entries.filter(({ type }) => type === 'enemySpotted');
+
+    // Рабочий — не угроза; лучник замечен p1, а p2 видит своих.
+    expect(spotted()).toEqual([
+      expect.objectContaining({
+        visibleTo: ['p1'],
+        details: { count: 1, x: 3, y: 1 },
+      }),
+    ]);
+
+    // Шаг в обзоре — тот же контакт, повтора нет.
+    useUnitsStore.setState(state => ({
+      units: { ...state.units, [enemy]: { ...state.units[enemy], x: 2 } },
+    }));
+    expect(spotted()).toHaveLength(1);
+
+    // Ушёл и вернулся в том же ходу — без повтора; в новом ходу — снова.
+    const moveEnemy = (x: number) =>
+      useUnitsStore.setState(state => ({
+        units: { ...state.units, [enemy]: { ...state.units[enemy], x } },
+      }));
+    moveEnemy(20);
+    moveEnemy(3);
+    expect(spotted()).toHaveLength(1);
+    moveEnemy(20);
+    useGameLoopStore.setState({ currentTurn: 2 });
+    moveEnemy(3);
+    expect(spotted()).toHaveLength(2);
+  });
+
+  it('не пишет «враг в обзоре» участникам под управлением ИИ', () => {
+    units().spawnUnit('worker', 14, 1, 'p2');
+    units().spawnUnit('archer', 16, 1, 'p1');
+    expect(
+      useJournalStore
+        .getState()
+        .entries.filter(({ type }) => type === 'enemySpotted'),
+    ).toEqual([]);
   });
 });

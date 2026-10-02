@@ -5,7 +5,11 @@ import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useGameLoopStore } from '@entities/games';
 import { useSelectionStore } from '@features/selection';
-import { useHighlightStore, useMovementStore } from '@features/pathfinding';
+import {
+  canUnitStep,
+  useHighlightStore,
+  useMovementStore,
+} from '@features/pathfinding';
 import {
   getNextUnit,
   hasActions,
@@ -115,7 +119,7 @@ export const useGameHotkeys = (props: Props) => {
         case 'Tab':
           // В партии Tab — только игровая клавиша: браузер не переводит
           // фокус по элементам страницы и не обводит карту рамкой.
-          if (ownTurn) selectNext(hasActions);
+          if (ownTurn) selectNext(unit => hasActions(unit, canUnitStep));
           break;
         case 'Period':
           if (!ownTurn) return;
