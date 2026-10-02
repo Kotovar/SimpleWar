@@ -80,3 +80,29 @@ export const TerrainIcon = ({ size = 16 }: Props) => (
     <circle cx='12.4' cy='3.6' r='2.2' fill='var(--gold)' />
   </svg>
 );
+
+/** Динамик: звук; `muted` — перечёркнут. */
+export const SoundIcon = ({
+  size = 16,
+  muted = false,
+}: Props & { muted?: boolean }) => (
+  <svg {...base(size)}>
+    <path d='M2 6h2.6L8 3v10L4.6 10H2z' fill='currentColor' />
+    {muted ? (
+      <path
+        d='M10.5 5.5l4 5m0-5-4 5'
+        stroke='currentColor'
+        strokeWidth='1.5'
+        strokeLinecap='round'
+      />
+    ) : (
+      <path
+        d='M10.4 5.6a3.4 3.4 0 0 1 0 4.8M12.2 3.8a6 6 0 0 1 0 8.4'
+        stroke='currentColor'
+        strokeWidth='1.4'
+        strokeLinecap='round'
+        fill='none'
+      />
+    )}
+  </svg>
+);

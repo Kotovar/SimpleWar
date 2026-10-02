@@ -1,5 +1,5 @@
 import { pluralRu } from '@shared/lib';
-import { ConfirmDialog } from '@shared/ui';
+import { Checkbox, ConfirmDialog } from '@shared/ui';
 import { usePreferencesStore } from '@entities/settings';
 import styles from './EndTurnConfirm.styles.module.css';
 
@@ -28,14 +28,13 @@ export const EndTurnConfirm = ({ pending, onConfirm, onCancel }: Props) => {
       onConfirm={onConfirm}
       onCancel={onCancel}
     >
-      <label className={styles.Ask}>
-        <input
-          type='checkbox'
-          checked={!confirm}
-          onChange={event => setConfirm(!event.target.checked)}
-        />
+      <Checkbox
+        className={styles.Ask}
+        checked={!confirm}
+        onChange={checked => setConfirm(!checked)}
+      >
         Больше не спрашивать
-      </label>
+      </Checkbox>
     </ConfirmDialog>
   );
 };

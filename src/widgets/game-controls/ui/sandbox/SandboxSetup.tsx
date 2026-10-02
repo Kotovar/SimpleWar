@@ -10,6 +10,7 @@ import {
   type SandboxSide,
   type UnitType,
 } from '@shared/config';
+import { Checkbox, NumberField } from '@shared/ui';
 import { useSandboxStore } from '@features/sandbox';
 import { SideControls } from './SideControls';
 import styles from './Sandbox.styles.module.css';
@@ -18,10 +19,6 @@ const UNIT_TYPES = Object.keys(UNITS_NAME) as UnitType[];
 const BUILDING_TYPES = (
   Object.keys(BUILDINGS_NAME) as SandboxBuildingType[]
 ).filter(type => (type as string) !== 'base');
-
-/** Целое в пределах; пустое поле — 0. */
-const toCount = (text: string, max: number) =>
-  Math.min(max, Math.max(0, Math.floor(Number(text) || 0)));
 
 type Row = {
   category: string;
@@ -85,16 +82,13 @@ export const SandboxSetup = () => {
 
   return (
     <div className={styles.Setup}>
-      <label className={styles.Check}>
-        <input
-          type='checkbox'
-          checked={scenario.emptyField}
-          onChange={e =>
-            setScenario({ ...scenario, emptyField: e.target.checked })
-          }
-        />
+      <Checkbox
+        className={styles.Check}
+        checked={scenario.emptyField}
+        onChange={emptyField => setScenario({ ...scenario, emptyField })}
+      >
         Пустое поле без рельефа
-      </label>
+      </Checkbox>
 
       <div
         className={styles.Categories}
@@ -139,18 +133,13 @@ export const SandboxSetup = () => {
                 <th scope='row'>{row.label}</th>
                 {scenario.sides.map((side, index) => (
                   <td key={PARTICIPANT_IDS[index]}>
-                    <input
+                    <NumberField
                       data-filled={row.get(side) > 0}
-                      type='number'
-                      min={0}
                       max={row.max}
                       aria-label={`${row.label}: ${OWNER_NAME[PARTICIPANT_IDS[index]]}`}
                       value={row.get(side)}
-                      onChange={e =>
-                        updateSide(
-                          index,
-                          row.set(side, toCount(e.target.value, row.max)),
-                        )
+                      onChange={count =>
+                        updateSide(index, row.set(side, count))
                       }
                     />
                   </td>

@@ -7,6 +7,7 @@ import {
   START_RESOURCES,
 } from '@shared/config';
 import { useSettingsStore } from '@entities/settings';
+import { StepLabel } from './StepLabel';
 import styles from './styles.module.css';
 
 /** Подпись прибавки: «+150» / «−80» / «как у вас». */
@@ -26,7 +27,7 @@ export const AiSetupSection = () => {
 
   return (
     <section className={styles.Section}>
-      <div className={styles.Label}>Противник</div>
+      <StepLabel step={3}>Противник</StepLabel>
       <div className={clsx(styles.ButtonGroup, styles.AiGroup)}>
         {AI_PROFILE_TYPES.map(profile => (
           <button

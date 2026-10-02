@@ -1,3 +1,4 @@
+import { Checkbox, Slider } from '@shared/ui';
 import { useAudioSettingsStore } from '@entities/settings';
 import styles from './AudioSettings.styles.module.css';
 
@@ -18,36 +19,35 @@ export const AudioSettings = () => {
   return (
     <fieldset className={styles.Audio}>
       <legend className={styles.Legend}>Звук</legend>
-      <label className={styles.Row}>
-        <input
-          type='checkbox'
-          checked={!muted}
-          onChange={event => setMuted(!event.target.checked)}
-        />
+      <Checkbox
+        className={styles.Row}
+        checked={!muted}
+        onChange={checked => setMuted(!checked)}
+      >
         Включён
-      </label>
+      </Checkbox>
       <label className={styles.Row}>
         <span className={styles.Name}>Музыка</span>
-        <input
-          type='range'
+        <Slider
+          className={styles.Volume}
           min={0}
           max={1}
           step={0.05}
           value={musicVolume}
           disabled={muted}
-          onChange={event => setMusicVolume(Number(event.target.value))}
+          onChange={setMusicVolume}
         />
       </label>
       <label className={styles.Row}>
         <span className={styles.Name}>Эффекты</span>
-        <input
-          type='range'
+        <Slider
+          className={styles.Volume}
           min={0}
           max={1}
           step={0.05}
           value={sfxVolume}
           disabled={muted}
-          onChange={event => setSfxVolume(Number(event.target.value))}
+          onChange={setSfxVolume}
         />
       </label>
     </fieldset>

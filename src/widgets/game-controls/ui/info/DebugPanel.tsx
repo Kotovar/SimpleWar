@@ -5,6 +5,7 @@ import {
   OWNER_NAME,
   type ParticipantId,
 } from '@shared/config';
+import { Checkbox, Select } from '@shared/ui';
 import { useMapStore } from '@entities/maps';
 import { useDebugStore } from '@entities/settings';
 import { useGameLoopSelectors } from '@features/game-loop';
@@ -38,6 +39,10 @@ export const DebugPanel = () => {
   const ids = target === 'all' ? participants.map(({ id }) => id) : [target];
   const nameOf = (id: ParticipantId) =>
     id === humanId ? 'Вы' : OWNER_NAME[id];
+  const participantOptions = participants.map(({ id, controller }) => ({
+    value: id,
+    label: `${nameOf(id)}${controller === 'ai' ? ' (ИИ)' : ''}`,
+  }));
 
   return (
     <section className={styles.Panel} aria-label='Режим отладки'>
@@ -66,34 +71,21 @@ export const DebugPanel = () => {
             )}
           </dl>
         )}
-        <label className={styles.Toggle}>
-          <input
-            type='checkbox'
-            checked={fullView}
-            onChange={event => setFullView(event.target.checked)}
-          />
+        <Checkbox
+          className={styles.Toggle}
+          checked={fullView}
+          onChange={setFullView}
+        >
           Отключить туман
-        </label>
+        </Checkbox>
         <label className={styles.Target}>
           Смотреть глазами
-          <select
+          <Select<ParticipantId | ''>
             value={viewer ?? humanId ?? ''}
             disabled={fullView}
-            onChange={event =>
-              setViewer(
-                event.target.value === humanId
-                  ? null
-                  : (event.target.value as ParticipantId),
-              )
-            }
-          >
-            {participants.map(({ id, controller }) => (
-              <option key={id} value={id}>
-                {nameOf(id)}
-                {controller === 'ai' ? ' (ИИ)' : ''}
-              </option>
-            ))}
-          </select>
+            options={participantOptions}
+            onChange={id => setViewer(id === humanId || !id ? null : id)}
+          />
         </label>
         <p className={styles.ViewNote}>
           {fullView
@@ -102,41 +94,35 @@ export const DebugPanel = () => {
         </p>
         <label className={styles.Target}>
           Исключения для
-          <select
+          <Select<Target>
             value={target}
-            onChange={event => setTarget(event.target.value as Target)}
-          >
-            <option value='all'>Все участники</option>
-            {participants.map(({ id, controller }) => (
-              <option key={id} value={id}>
-                {nameOf(id)}
-                {controller === 'ai' ? ' (ИИ)' : ''}
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: 'all', label: 'Все участники' },
+              ...participantOptions,
+            ]}
+            onChange={setTarget}
+          />
         </label>
         {DEBUG_EXCEPTIONS.map(({ id, label }) => {
           const holders = ids.filter(owner => exceptions[owner]?.includes(id));
           const isPartial = holders.length > 0 && holders.length < ids.length;
 
           return (
-            <label key={id} className={styles.Toggle}>
-              <input
-                type='checkbox'
-                checked={holders.length === ids.length}
-                // Для «Все участники»: исключение включено не у всех.
-                ref={input => {
-                  if (input) input.indeterminate = isPartial;
-                }}
-                onChange={event => setException(ids, id, event.target.checked)}
-              />
+            <Checkbox
+              key={id}
+              className={styles.Toggle}
+              checked={holders.length === ids.length}
+              // Для «Все участники»: исключение включено не у всех.
+              indeterminate={isPartial}
+              onChange={checked => setException(ids, id, checked)}
+            >
               {label}
               {isPartial && (
                 <span className={styles.Holders}>
                   {holders.map(nameOf).join(', ')}
                 </span>
               )}
-            </label>
+            </Checkbox>
           );
         })}
       </details>

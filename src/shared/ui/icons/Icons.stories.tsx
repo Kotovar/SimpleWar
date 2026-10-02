@@ -3,6 +3,7 @@ import {
   GoldIcon,
   PopulationIcon,
   ResearchIcon,
+  SoundIcon,
   TerrainIcon,
   WoodIcon,
 } from './index';
@@ -13,6 +14,8 @@ const ICONS = {
   Население: PopulationIcon,
   Местность: TerrainIcon,
   Исследования: ResearchIcon,
+  Звук: SoundIcon,
+  'Звук выключен': (props: { size?: number }) => <SoundIcon {...props} muted />,
 };
 
 const SIZES = [14, 16, 24, 32, 48];

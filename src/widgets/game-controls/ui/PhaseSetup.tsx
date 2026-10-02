@@ -1,13 +1,15 @@
 import { useState, type ChangeEvent } from 'react';
 import clsx from 'clsx';
 import { GUIDEBOOK_URL, MAP_PRESET_LABELS, MAP_PRESETS } from '@shared/config';
+import { TextField } from '@shared/ui';
 import { isValidSeed } from '@entities/maps';
 import { useSettingsSelectors } from '@entities/settings';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { useSandboxStore } from '@features/sandbox';
 import { AiSetupSection } from './AiSetupSection';
-import { AudioSettings } from './info';
 import { SandboxSetup } from './sandbox';
+import { SoundCorner } from './SoundCorner';
+import { StepLabel } from './StepLabel';
 import styles from './styles.module.css';
 
 type Props = {
@@ -20,6 +22,10 @@ const parseSeed = (text: string) => {
   return /^\d+$/.test(value) ? Number(value) : NaN;
 };
 
+/**
+ * Главное меню: шаги «режим → карта → противник» (в тестировании баланса —
+ * составы сторон), сид — в свёрнутом блоке «Дополнительно», звук — в углу.
+ */
 export const PhaseSetup = ({ onStartGame }: Props) => {
   const {
     gridRows,
@@ -42,6 +48,9 @@ export const PhaseSetup = ({ onStartGame }: Props) => {
   );
   const seedValue = parseSeed(seedText);
   const isSeedValid = isValidSeed(seedValue);
+  // Блок открыт сразу, если сид уже задан. Значение не меняется — React
+  // не трогает атрибут, и игрок сворачивает блок сам.
+  const [moreOpen] = useState(mapGenerationMode === 'fixed');
 
   const handleSeedChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSeedText(e.target.value);
@@ -55,8 +64,10 @@ export const PhaseSetup = ({ onStartGame }: Props) => {
       className={clsx(styles.Wrapper, styles.SetupMenu)}
       data-sandbox={sandbox}
     >
+      <SoundCorner />
+
       <section className={styles.Section}>
-        <div className={styles.Label}>Режим</div>
+        <StepLabel step={1}>Режим</StepLabel>
         <div className={clsx(styles.ButtonGroup, styles.ModeGroup)}>
           <button
             className={clsx(styles.ToggleButton, {
@@ -84,7 +95,7 @@ export const PhaseSetup = ({ onStartGame }: Props) => {
       </section>
 
       <section className={styles.Section}>
-        <div className={styles.Label}>Размер карты</div>
+        <StepLabel step={2}>Карта</StepLabel>
         <div className={clsx(styles.ButtonGroup, styles.SizeGroup)}>
           {Object.entries(MAP_PRESETS).map(([key, preset]) => (
             <button
@@ -104,61 +115,60 @@ export const PhaseSetup = ({ onStartGame }: Props) => {
             </button>
           ))}
         </div>
-      </section>
 
-      <section className={styles.Section}>
-        <div className={styles.Label}>Генерация карты</div>
-        <div className={styles.ButtonGroup}>
-          <button
-            className={clsx(styles.ToggleButton, {
-              [styles.Active]: mapGenerationMode === 'random',
-            })}
-            aria-pressed={mapGenerationMode === 'random'}
-            onClick={() => setMapGenerationMode('random')}
-          >
-            Случайная
-          </button>
-          <button
-            className={clsx(styles.ToggleButton, {
-              [styles.Active]: mapGenerationMode === 'fixed',
-            })}
-            aria-pressed={mapGenerationMode === 'fixed'}
-            onClick={() => setMapGenerationMode('fixed')}
-          >
-            Фиксированный сид
-          </button>
-        </div>
-
-        {mapGenerationMode === 'fixed' && (
-          <div className={styles.SeedInputWrapper}>
-            <label className={styles.SeedLabel}>
-              Сид:
-              <input
-                type='text'
-                inputMode='numeric'
-                autoComplete='off'
-                spellCheck={false}
-                value={seedText}
-                onChange={handleSeedChange}
-                aria-invalid={!isSeedValid}
-                className={styles.SeedInput}
-                name='seed'
-              />
-            </label>
-
-            <p className={styles.SeedWarning}>
-              Целое число, например 12354. Непроходимая карта не будет запущена
-              — в таком случае измените сид.
-            </p>
+        <details className={styles.More} open={moreOpen}>
+          <summary>Дополнительно</summary>
+          <div className={styles.ButtonGroup}>
+            <button
+              className={clsx(styles.ToggleButton, {
+                [styles.Active]: mapGenerationMode === 'random',
+              })}
+              aria-pressed={mapGenerationMode === 'random'}
+              onClick={() => setMapGenerationMode('random')}
+            >
+              Случайная
+            </button>
+            <button
+              className={clsx(styles.ToggleButton, {
+                [styles.Active]: mapGenerationMode === 'fixed',
+              })}
+              aria-pressed={mapGenerationMode === 'fixed'}
+              onClick={() => setMapGenerationMode('fixed')}
+            >
+              Фиксированный сид
+            </button>
           </div>
-        )}
+
+          {mapGenerationMode === 'fixed' && (
+            <div className={styles.SeedInputWrapper}>
+              <label className={styles.SeedLabel}>
+                Сид:
+                <TextField
+                  inputMode='numeric'
+                  autoComplete='off'
+                  spellCheck={false}
+                  value={seedText}
+                  onChange={handleSeedChange}
+                  aria-invalid={!isSeedValid}
+                  className={styles.SeedInput}
+                  name='seed'
+                />
+              </label>
+
+              <p className={styles.SeedWarning}>
+                Целое число, например 12354. Непроходимая карта не будет
+                запущена — в таком случае измените сид.
+              </p>
+            </div>
+          )}
+        </details>
       </section>
 
       {!sandbox && <AiSetupSection />}
 
       {sandbox && (
         <section className={styles.Section}>
-          <div className={styles.Label}>Состав сторон</div>
+          <StepLabel step={3}>Состав сторон</StepLabel>
           <SandboxSetup />
         </section>
       )}
@@ -181,7 +191,6 @@ export const PhaseSetup = ({ onStartGame }: Props) => {
         >
           Гайдбук: как устроена игра <span aria-hidden='true'>↗</span>
         </a>
-        <AudioSettings />
       </section>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { OWNER_NAME, type ParticipantId } from '@shared/config';
+import { Select, TextField } from '@shared/ui';
 import { useJournalStore } from '@entities/journals';
 import { useGameLoopSelectors } from '@features/game-loop';
 import styles from './DebugPanel.styles.module.css';
@@ -39,34 +40,29 @@ export const AiDecisionLog = () => {
     <details className={styles.AiLog}>
       <summary>Решения ИИ ({decisions.length})</summary>
       <div className={styles.AiFilters}>
-        <select
+        <Select<ParticipantId | 'all'>
           aria-label='ИИ-участник'
           value={actor}
-          onChange={event =>
-            setActor(event.target.value as ParticipantId | 'all')
-          }
-        >
-          <option value='all'>Все ИИ</option>
-          {ais.map(({ id }) => (
-            <option key={id} value={id}>
-              {OWNER_NAME[id]}
-            </option>
-          ))}
-        </select>
-        <input
+          options={[
+            { value: 'all', label: 'Все ИИ' },
+            ...ais.map(({ id }) => ({ value: id, label: OWNER_NAME[id] })),
+          ]}
+          onChange={setActor}
+        />
+        <TextField
           aria-label='Номер хода'
           placeholder='Ход'
           inputMode='numeric'
           value={turn}
           onChange={event => setTurn(event.target.value.replace(/\D/g, ''))}
         />
-        <input
+        <TextField
           aria-label='ID правила'
           placeholder='Правило'
           value={rule}
           onChange={event => setRule(event.target.value)}
         />
-        <input
+        <TextField
           aria-label='Юнит или задача'
           placeholder='Юнит/задача'
           value={subject}

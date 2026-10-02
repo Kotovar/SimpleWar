@@ -7,12 +7,18 @@ import {
   type ParticipantId,
   type SandboxSide,
 } from '@shared/config';
+import { Select } from '@shared/ui';
 
-const CONTROLLERS: { value: Controller; label: string }[] = [
+const CONTROLLERS: readonly { value: Controller; label: string }[] = [
   { value: 'human', label: 'Человек' },
   { value: 'ai', label: 'ИИ' },
   { value: 'passive', label: 'Пассивная' },
 ];
+
+const PROFILE_OPTIONS = AI_PROFILE_TYPES.map(profile => ({
+  value: profile,
+  label: AI_PROFILES[profile].name,
+}));
 
 type Props = {
   owner: ParticipantId;
@@ -23,33 +29,19 @@ type Props = {
 /** Управление стороной сценария и, для ИИ, его профиль. */
 export const SideControls = ({ owner, side, onChange }: Props) => (
   <>
-    <select
+    <Select
       aria-label={`Управление: ${OWNER_NAME[owner]}`}
       value={side.controller}
-      onChange={e =>
-        onChange({ ...side, controller: e.target.value as Controller })
-      }
-    >
-      {CONTROLLERS.map(({ value, label }) => (
-        <option key={value} value={value}>
-          {label}
-        </option>
-      ))}
-    </select>
+      options={CONTROLLERS}
+      onChange={controller => onChange({ ...side, controller })}
+    />
     {side.controller === 'ai' && (
-      <select
+      <Select<AiProfile>
         aria-label={`Профиль ИИ: ${OWNER_NAME[owner]}`}
         value={side.profile ?? 'balanced'}
-        onChange={e =>
-          onChange({ ...side, profile: e.target.value as AiProfile })
-        }
-      >
-        {AI_PROFILE_TYPES.map(profile => (
-          <option key={profile} value={profile}>
-            {AI_PROFILES[profile].name}
-          </option>
-        ))}
-      </select>
+        options={PROFILE_OPTIONS}
+        onChange={profile => onChange({ ...side, profile })}
+      />
     )}
   </>
 );

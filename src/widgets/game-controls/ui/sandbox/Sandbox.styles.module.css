@@ -38,19 +38,9 @@
 
   & thead select {
     display: block;
-    width: 128px;
+    width: 184px;
     margin-top: 4px;
-  }
-
-  & input[type='number'],
-  & select {
-    width: 84px;
-    padding: 3px 6px;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-sm);
-    background: var(--surface-sunken);
-    color: var(--text);
-    font-variant-numeric: tabular-nums;
+    font-weight: 400;
   }
 }
 
@@ -100,35 +90,6 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface-sunken);
-  cursor: pointer;
-
-  & input {
-    appearance: none;
-    display: grid;
-    place-content: center;
-    flex-shrink: 0;
-    width: 20px;
-    height: 20px;
-    margin: 0;
-    border: 1px solid var(--border-strong);
-    border-radius: 5px;
-    background: var(--surface);
-    cursor: pointer;
-  }
-
-  & input:checked {
-    background: var(--accent);
-    border-color: var(--accent);
-  }
-
-  & input:checked::after {
-    content: '';
-    width: 9px;
-    height: 5px;
-    border-left: 2px solid var(--surface-sunken);
-    border-bottom: 2px solid var(--surface-sunken);
-    transform: translateY(-1px) rotate(-45deg);
-  }
 }
 
 .Categories {
@@ -194,11 +155,7 @@
     border-bottom: 0;
   }
 
-  & input[type='number'] {
-    width: 100%;
-    min-width: 56px;
-    padding: 3px 8px;
-    box-sizing: border-box;
+  & input {
     color: var(--text-muted);
   }
 
@@ -214,7 +171,7 @@
   }
 }
 
-.Setup :is(input, select, button):focus-visible {
+.Setup button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }

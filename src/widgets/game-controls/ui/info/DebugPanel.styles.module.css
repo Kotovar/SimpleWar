@@ -46,26 +46,8 @@
   cursor: pointer;
 }
 
-/* Нативный select в тёмной теме панели; стрелку и список оставляем системными. */
 .Target select {
   min-width: 150px;
-  padding: 4px 8px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  background-color: var(--surface-strong);
-  color: var(--text);
-  font: inherit;
-  color-scheme: dark;
-  cursor: pointer;
-
-  &:hover {
-    background-color: var(--surface-hover);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--gold);
-    outline-offset: 1px;
-  }
 }
 
 /* У кого из участников включено исключение, если не у всех. */
@@ -120,7 +102,13 @@
 }
 
 .AiFilters select,
-.AiFilters input,
+.AiFilters input {
+  min-width: 0;
+  min-height: 0;
+  padding: 3px 6px;
+  font-size: 0.8rem;
+}
+
 .AiFilters button {
   min-width: 0;
   padding: 3px 6px;

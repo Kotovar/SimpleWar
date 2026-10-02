@@ -25,11 +25,6 @@
   min-width: 64px;
 }
 
-.Row input[type='range'] {
+.Volume {
   flex: 1;
-  accent-color: var(--accent);
-}
-
-.Row input:disabled {
-  opacity: 0.5;
 }
