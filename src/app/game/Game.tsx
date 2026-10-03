@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react';
 import {
   AI_TURN_DELAY_MS,
+  AI_PLAYBACK_RATE,
   type Participant,
   type ParticipantId,
 } from '@shared/config';
 import { ConfirmDialog } from '@shared/ui';
 import { useJournalStore } from '@entities/journals';
-import { useDebugStore, useSettingsStore } from '@entities/settings';
+import {
+  useDebugStore,
+  useSettingsStore,
+  usePreferencesStore,
+} from '@entities/settings';
 import {
   initGameLoopEvents,
   nextTurn,
@@ -53,7 +58,7 @@ export const Game = () => {
 
   const playAi = (actor: ParticipantId) => {
     const started = useJournalStore.getState().gameId;
-    void runAITurn(actor).then(result => {
+    void runAITurn(actor, { animate: true }).then(result => {
       if (result?.stalled) setStall({ actor, gameId: started });
     });
   };
@@ -91,9 +96,10 @@ export const Game = () => {
       activeController === 'passive'
         ? () => nextTurn(activePlayer)
         : () => playAi(activePlayer);
+    const rate = AI_PLAYBACK_RATE[usePreferencesStore.getState().aiPlayback];
     const timer = setTimeout(
       play,
-      sandbox && fast ? FAST_TURN_DELAY_MS : AI_TURN_DELAY_MS,
+      sandbox && fast ? FAST_TURN_DELAY_MS : rate ? AI_TURN_DELAY_MS / rate : 0,
     );
     return () => clearTimeout(timer);
   }, [activePlayer, activeController, phase, sandbox, paused, fast]);

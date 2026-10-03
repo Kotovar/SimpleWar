@@ -29,6 +29,10 @@ import {
 import { useSandboxStore } from '@features/sandbox';
 import { startResearch } from '@features/research';
 import { failure } from '@shared/lib';
+import {
+  getAiPresentationSnapshot,
+  waitForAiPresentation,
+} from './aiPresentation';
 
 /**
  * Итог запуска хода ИИ. `stalled` — ход не перешёл дальше, хотя запуск не
@@ -130,10 +134,18 @@ const whilePaused = (isCancelled: () => boolean) => {
  *
  * @param actor - Участник под управлением ИИ.
  * @param options.yieldControl - Пауза между порциями; в тестах — без задержек.
+ * @param options.animate - Ждать видимых эффектов карты; интерфейс включает,
+ * симуляции по умолчанию выполняются без визуальных пауз.
  */
 export const runAITurn = (
   actor: ParticipantId,
-  { yieldControl = nextTask }: { yieldControl?: () => Promise<void> } = {},
+  {
+    yieldControl = nextTask,
+    animate = false,
+  }: {
+    yieldControl?: () => Promise<void>;
+    animate?: boolean;
+  } = {},
 ) => {
   const gameId = useJournalStore.getState().gameId;
   const turn = useGameLoopStore.getState().currentTurn;
@@ -161,11 +173,20 @@ export const runAITurn = (
       ...(memories.byParticipant[actor] ?? createAiMemory(seedFor(actor))),
       seed: seedFor(actor),
     };
+    let visibleChange = false;
     const result = await playTurn({
       config: profileConfig(setup?.profile),
       memory,
       observe: () => getObservation(actor),
-      execute: action => executeAiAction(actor, action),
+      execute: action => {
+        const before = animate ? getAiPresentationSnapshot() : '';
+        const result = executeAiAction(actor, action);
+        visibleChange = animate && before !== getAiPresentationSnapshot();
+        return result;
+      },
+      afterCommand: animate
+        ? () => (visibleChange ? waitForAiPresentation(isCancelled) : null)
+        : undefined,
       isCancelled,
       waitWhilePaused: () => whilePaused(isCancelled),
       endTurn: () => nextTurn(actor),

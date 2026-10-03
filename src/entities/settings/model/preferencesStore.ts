@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { AiPlayback } from '@shared/config';
 
 type Offset = { x: number; y: number };
 
@@ -26,11 +27,13 @@ type PreferencesState = {
   /** Автозапуск только при первой обычной партии с человеком. */
   tutorialStarted: boolean;
   markTutorialStarted: () => void;
+  aiPlayback: AiPlayback;
+  setAiPlayback: (playback: AiPlayback) => void;
 };
 
 /**
  * Предпочтения игрока в интерфейсе. В браузере сохраняются положение
- * панели действий, вид мини-карты и настройки помощника;
+ * панели действий, вид мини-карты, настройки помощника и скорость ИИ;
  * предупреждение конца хода живёт до перезагрузки.
  */
 export const usePreferencesStore = create<PreferencesState>()(
@@ -48,6 +51,8 @@ export const usePreferencesStore = create<PreferencesState>()(
       setTutorialEnabled: tutorialEnabled => set({ tutorialEnabled }),
       tutorialStarted: false,
       markTutorialStarted: () => set({ tutorialStarted: true }),
+      aiPlayback: 'normal',
+      setAiPlayback: aiPlayback => set({ aiPlayback }),
     }),
     {
       name: 'simplewar:preferences',
@@ -59,12 +64,14 @@ export const usePreferencesStore = create<PreferencesState>()(
         hintsEnabled,
         tutorialEnabled,
         tutorialStarted,
+        aiPlayback,
       }) => ({
         actionBarOffset,
         minimapMode,
         hintsEnabled,
         tutorialEnabled,
         tutorialStarted,
+        aiPlayback,
       }),
       migrate: persisted => ({
         actionBarOffset: (persisted as Partial<PreferencesState> | null)

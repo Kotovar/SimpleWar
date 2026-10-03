@@ -28,6 +28,8 @@ export type AiTurnDeps = {
   record?: (decision: Omit<AiDecisionInput, 'actor' | 'turn'>) => void;
   /** Отдаёт управление браузеру между порциями работы. */
   yieldControl?: () => Promise<void>;
+  /** Необязательное ожидание визуального отклика после успешной команды. */
+  afterCommand?: () => Promise<void> | null;
   /**
    * Пауза перед очередным шагом: Promise, пока ход приостановлен, иначе
    * `null`. Состояние хода и память сохраняются, продолжение — тот же цикл.
@@ -153,6 +155,10 @@ export const playTurn = async (deps: AiTurnDeps): Promise<AiTurnResult> => {
           (turn.plannedDamage.get(targetId) ?? 0) + amount,
         );
       }
+      const presentation = deps.afterCommand?.();
+      // react-doctor-disable-next-line async-await-in-loop -- Видимые действия ИИ показываются последовательно.
+      if (presentation) await presentation;
+      if (presentation) chunkStart = now();
     } else {
       turn.failed.add(actionKey(chosen));
       if (++failures >= config.maxConsecutiveFailures) {

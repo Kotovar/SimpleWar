@@ -1,6 +1,9 @@
 import { useUnitsStore } from '@entities/units';
+import { useGameLoopStore } from '@entities/games';
+import { usePreferencesStore } from '@entities/settings';
+import { useSandboxStore } from '@features/sandbox';
 import { useEffect, useMemo, useRef, type RefObject } from 'react';
-import type { Owner, Position } from '@shared/config';
+import { AI_PLAYBACK_RATE, type Owner, type Position } from '@shared/config';
 import { audio, gameEvents } from '@shared/lib';
 import { useResearchStore } from '@entities/researches';
 import { canUnitStep } from '@features/pathfinding';
@@ -79,6 +82,17 @@ export const useEntitiesLayer = ({
   strikeMarks,
 }: Props) => {
   const worldUnits = useUnitsStore(state => state.units);
+  const aiTurn = useGameLoopStore(state =>
+    state.participants.some(
+      participant =>
+        participant.id === state.activePlayer &&
+        participant.controller === 'ai',
+    ),
+  );
+  // Последний кадр мгновенного хода может прийти уже после возврата человеку.
+  const previousAiTurn = useRef(aiTurn);
+  const playback = usePreferencesStore(state => state.aiPlayback);
+  const sandboxFast = useSandboxStore(state => state.enabled && state.fast);
   // Очки есть, а шагнуть некуда (вокруг дорогой рельеф): считаем один раз
   // на смену юнитов, а не в каждом кадре анимации.
   const stuck = useMemo(
@@ -99,13 +113,16 @@ export const useEntitiesLayer = ({
   const known = useRef<ReadonlySet<string>>(new Set());
   const strikeCells = useRef<ReadonlySet<string>>(new Set());
   const moves = useRef(
-    new Map<string, { fromX: number; fromY: number; start: number }>(),
+    new Map<
+      string,
+      { fromX: number; fromY: number; start: number; ai: boolean }
+    >(),
   );
   const lunges = useRef(
-    new Map<string, { dx: number; dy: number; start: number }>(),
+    new Map<string, { dx: number; dy: number; start: number; ai: boolean }>(),
   );
-  const spawns = useRef(new Map<string, number>());
-  const effects = useRef<Effect[]>([]);
+  const spawns = useRef(new Map<string, { start: number; ai: boolean }>());
+  const effects = useRef<(Effect & { ai?: boolean })[]>([]);
   /** Запускает перерисовку, если цикл анимации сейчас стоит. */
   const redraw = useRef<() => void>(() => {});
   const isFirstRun = useRef(true);
@@ -131,6 +148,7 @@ export const useEntitiesLayer = ({
   // Сравнение состава — только при изменении сцены, не при сдвиге камеры.
   useEffect(() => {
     const now = performance.now();
+    const ai = aiTurn || previousAiTurn.current;
 
     // Рабочие в своих зданиях не рисуются, но лечение им тоже доступно.
     const sheltered = Object.values(worldUnits).filter(
@@ -161,11 +179,12 @@ export const useEntitiesLayer = ({
     diff.events.forEach(event => {
       audio.play(getEventSfx(event));
       const effect = getEventEffect(event, now);
-      if (effect) effects.current.push(effect);
+      if (effect) effects.current.push({ ...effect, ai });
       if (event.kind === 'move') {
-        moves.current.set(event.id, { ...event, start: now });
+        moves.current.set(event.id, { ...event, start: now, ai });
       }
-      if (event.kind === 'spawn') spawns.current.set(event.id, now);
+      if (event.kind === 'spawn')
+        spawns.current.set(event.id, { start: now, ai });
       const attacker =
         event.kind === 'attack' && (units[event.id] ?? buildings[event.id]);
       if (attacker && event.kind === 'attack' && event.target) {
@@ -176,6 +195,7 @@ export const useEntitiesLayer = ({
           dx: (dx / length) * LUNGE_DEPTH,
           dy: (dy / length) * LUNGE_DEPTH,
           start: now,
+          ai,
         });
       }
     });
@@ -189,6 +209,7 @@ export const useEntitiesLayer = ({
       combat: isInCombat(visibleUnits, visibleBuildings, humanId),
     });
   }, [
+    aiTurn,
     buildings,
     humanId,
     isVisible,
@@ -198,6 +219,10 @@ export const useEntitiesLayer = ({
     worldIds,
     worldUnits,
   ]);
+
+  useEffect(() => {
+    previousAiTurn.current = aiTurn;
+  }, [aiTurn]);
 
   // Внешний сигнал (отказ приказа) запускает перерисовку без смены сцены.
   useEffect(
@@ -221,13 +246,20 @@ export const useEntitiesLayer = ({
     const draw = () => {
       const time = performance.now();
       const still = prefersReducedMotion();
+      const rate = sandboxFast ? 0 : AI_PLAYBACK_RATE[playback];
+      const skip = (ai?: boolean) => still || (ai && rate === 0);
+      const elapsed = (start: number, ai?: boolean) =>
+        (time - start) * (ai ? rate || 1 : 1);
       const offsets: CellOffsets = new Map();
 
       moves.current.forEach((move, id) => {
         const entity = units[id] ?? buildings[id];
-        const progress = Math.min(1, (time - move.start) / MOVE_DURATION);
+        const progress = Math.min(
+          1,
+          elapsed(move.start, move.ai) / MOVE_DURATION,
+        );
 
-        if (!entity || progress >= 1 || still) {
+        if (!entity || progress >= 1 || skip(move.ai)) {
           moves.current.delete(id);
           return;
         }
@@ -240,8 +272,8 @@ export const useEntitiesLayer = ({
       });
 
       lunges.current.forEach((lunge, id) => {
-        const progress = (time - lunge.start) / LUNGE_DURATION;
-        if (progress >= 1 || still || offsets.has(id)) {
+        const progress = elapsed(lunge.start, lunge.ai) / LUNGE_DURATION;
+        if (progress >= 1 || skip(lunge.ai) || offsets.has(id)) {
           lunges.current.delete(id);
           return;
         }
@@ -250,9 +282,9 @@ export const useEntitiesLayer = ({
         offsets.set(id, { dx: lunge.dx * reach, dy: lunge.dy * reach });
       });
 
-      spawns.current.forEach((start, id) => {
-        const progress = Math.min(1, (time - start) / SPAWN_DURATION);
-        if (progress >= 1 || still) {
+      spawns.current.forEach(({ start, ai }, id) => {
+        const progress = Math.min(1, elapsed(start, ai) / SPAWN_DURATION);
+        if (progress >= 1 || skip(ai)) {
           spawns.current.delete(id);
           return;
         }
@@ -266,7 +298,7 @@ export const useEntitiesLayer = ({
       });
 
       effects.current = effects.current.filter(
-        effect => time - effect.start < EFFECT_DURATION,
+        effect => elapsed(effect.start, effect.ai) < EFFECT_DURATION,
       );
 
       const drawEffects = (layer: EffectLayer) =>
@@ -274,7 +306,9 @@ export const useEntitiesLayer = ({
           drawEffect(
             ctx,
             effect,
-            still ? STILL_PROGRESS : (time - effect.start) / EFFECT_DURATION,
+            skip(effect.ai)
+              ? STILL_PROGRESS
+              : elapsed(effect.start, effect.ai) / EFFECT_DURATION,
             cellSize,
             layer,
           ),
@@ -327,5 +361,7 @@ export const useEntitiesLayer = ({
     units,
     view,
     worldUnits,
+    playback,
+    sandboxFast,
   ]);
 };

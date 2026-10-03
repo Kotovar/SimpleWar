@@ -58,6 +58,49 @@ const deps = ({
 };
 
 describe('цикл хода ИИ', () => {
+  it('ждёт визуальный отклик перед следующей командой, не меняя результат хода', async () => {
+    let release = () => {};
+    const waiting = new Promise<void>(resolve => {
+      release = resolve;
+    });
+    const turn = deps({
+      rules: [mover('R1', step => step)],
+      config: { ...AI_CONFIG, maxCommandsPerTurn: 2 },
+      afterCommand: vi.fn().mockReturnValueOnce(waiting).mockReturnValue(null),
+    });
+    const pending = playTurn(turn);
+    expect(turn.execute).toHaveBeenCalledTimes(1);
+    expect(turn.endTurn).not.toHaveBeenCalled();
+    release();
+    const result = await pending;
+    const immediate = deps({
+      rules: [mover('R1', step => step)],
+      config: { ...AI_CONFIG, maxCommandsPerTurn: 2 },
+    });
+    const immediateResult = await playTurn(immediate);
+    expect(turn.execute.mock.calls).toEqual(immediate.execute.mock.calls);
+    expect(result).toEqual(immediateResult);
+    expect(turn.endTurn).toHaveBeenCalledTimes(1);
+  });
+
+  it('отмена во время визуальной паузы не исполняет следующую команду и не передаёт ход', async () => {
+    let cancelled = false;
+    const turn = deps({
+      rules: [mover('R1', step => step)],
+      afterCommand: () => {
+        cancelled = true;
+        return Promise.resolve();
+      },
+      isCancelled: () => cancelled,
+    });
+    expect(await playTurn(turn)).toMatchObject({
+      commands: 1,
+      cancelled: true,
+    });
+    expect(turn.execute).toHaveBeenCalledTimes(1);
+    expect(turn.endTurn).not.toHaveBeenCalled();
+  });
+
   it('без законных действий завершает ход с причиной', async () => {
     const turn = deps();
 

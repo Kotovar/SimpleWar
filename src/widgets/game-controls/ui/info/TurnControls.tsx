@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { GUIDEBOOK_URL } from '@shared/config';
-import { Checkbox } from '@shared/ui';
+import { GUIDEBOOK_URL, type AiPlayback } from '@shared/config';
+import { Checkbox, Select } from '@shared/ui';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { useDebugStore, usePreferencesStore } from '@entities/settings';
 import { useGuidanceStore } from '../../model/guidanceStore';
@@ -135,6 +135,18 @@ export const TurnControls = ({
             Предупреждать об непоходивших юнитах
           </Checkbox>
           <AudioSettings />
+          <label className={styles.Playback}>
+            Ход ИИ
+            <Select<AiPlayback>
+              value={preferences.aiPlayback}
+              onChange={preferences.setAiPlayback}
+              options={[
+                { value: 'normal', label: 'Обычная скорость' },
+                { value: 'fast', label: 'Быстрая ×2' },
+                { value: 'instant', label: 'Без анимаций' },
+              ]}
+            />
+          </label>
           <Checkbox
             className={styles.MenuCheck}
             checked={preferences.hintsEnabled}

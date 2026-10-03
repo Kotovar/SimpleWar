@@ -58,6 +58,14 @@
   position: relative;
 }
 
+.Playback {
+  display: grid;
+  gap: 4px;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
 /* Свой маркер: стандартный треугольник details не вписывается в панель. */
 .Menu summary {
   display: flex;

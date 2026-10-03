@@ -40,3 +40,9 @@ export const AI_TURN_DELAY_MS = 600;
  * В ускоренном режиме тестирования — без задержки.
  */
 export const AI_YIELD_BREAK_MS = 16;
+
+/** Скорость показа действий ИИ; ноль — без анимаций и визуальных пауз. */
+export const AI_PLAYBACK_RATE = { normal: 1, fast: 2, instant: 0 } as const;
+export type AiPlayback = keyof typeof AI_PLAYBACK_RATE;
+/** Пауза после видимого действия ИИ: хватает на самый длинный эффект карты. */
+export const AI_ACTION_DELAY_MS = 700;
