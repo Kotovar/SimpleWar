@@ -176,13 +176,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     view,
   ]);
 
-  const hoverPath = useHoverPath(
-    hover,
-    selection,
-    units,
-    reachableCells,
-    humanId,
-  );
+  const hoverPath = useHoverPath(hover, selection, units, humanId);
 
   useEffect(() => {
     const { cellSize, viewport, offset } = view;

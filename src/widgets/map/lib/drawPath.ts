@@ -1,16 +1,21 @@
 import { SELECTED, type Position } from '@shared/config';
-
-/** Маршрут и его цена в очках движения, как их отдаёт `getPath`. */
-export type MovePath = { path: Position[]; cost: number };
+import { pluralRu } from '@shared/lib';
 
 /**
- * Рисует маршрут до клетки под курсором и цену хода в конце пути.
+ * Маршрут и его цена в очках движения, как их отдаёт `getPath`;
+ * `turns` — на каком ходу юнит дойдёт (`1` — в этот).
+ */
+export type MovePath = { path: Position[]; cost: number; turns?: number };
+
+/**
+ * Рисует маршрут до клетки под курсором и подпись в конце пути: цену,
+ * если дойдёт в этот ход, иначе число ходов.
  *
- * @param route - Клетки маршрута от текущей позиции до цели и цена.
+ * @param route - Клетки маршрута от текущей позиции до цели, цена и ходы.
  */
 export const drawPath = (
   ctx: CanvasRenderingContext2D,
-  { path, cost }: MovePath,
+  { path, cost, turns = 1 }: MovePath,
   cellSize: number,
 ) => {
   if (path.length < 2) return;
@@ -40,8 +45,12 @@ export const drawPath = (
   ctx.setLineDash([]);
 
   // Столько очков движения спишется: холм и болото стоят дороже поля.
+  // Далёкая цель — сколько ходов идти, считая текущий.
   const [endX, endY] = center(path[path.length - 1]);
-  const text = String(cost);
+  const text =
+    turns > 1
+      ? `${turns} ${pluralRu(turns, ['ход', 'хода', 'ходов'])}`
+      : String(cost);
   ctx.font = `bold ${Math.round(11 * scale)}px sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
