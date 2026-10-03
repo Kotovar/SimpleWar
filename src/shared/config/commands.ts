@@ -5,6 +5,8 @@ export type CommandType =
   | 'start'
   | 'move'
   | 'rest'
+  /** Отдать или снять приказ «Идти в точку». */
+  | 'order'
   | 'attack'
   | 'build'
   | 'spawn'

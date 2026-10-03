@@ -55,6 +55,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   const spawnableCells = useHighlightStore(state => state.spawnableCells);
   const strikeCells = useHighlightStore(state => state.strikeCells);
   const healTargets = useMovementStore(state => state.healTargets);
+  const plannedTarget = useMovementStore(state => state.plannedTarget);
   const buildableCells = useProduceCells();
 
   const isInteractive = phase === 'inProgress' && activePlayer === humanId;
@@ -176,7 +177,13 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     view,
   ]);
 
-  const hoverPath = useHoverPath(hover, selection, units, humanId);
+  const hoverPath = useHoverPath(
+    hover,
+    selection,
+    units,
+    humanId,
+    plannedTarget,
+  );
 
   useEffect(() => {
     const { cellSize, viewport, offset } = view;

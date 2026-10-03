@@ -7,7 +7,7 @@ import type {
   Unit,
   UnitType,
 } from '@shared/config';
-import type { MoveCommand } from '@features/pathfinding';
+import type { GoToCommand, MoveCommand } from '@features/pathfinding';
 import type {
   AttackCommand,
   HealCommand,
@@ -45,6 +45,8 @@ export type MapClickContext = {
     strike?: Position[] | null;
     /** Свои раненые, которых может вылечить выбранный лекарь. */
     heal?: Unit[] | null;
+    /** Далёкая цель после первого клика: второй клик отдаёт приказ. */
+    planned?: (Position & { unitId: string }) | null;
   };
   /** Игровые команды — те же, что вызывает ИИ. */
   commands: {
@@ -55,6 +57,8 @@ export type MapClickContext = {
     clearForest?: (command: ClearForestCommand) => CommandResult;
     prepareStrike?: (command: PrepareStrikeCommand) => CommandResult;
     heal?: (command: HealCommand) => CommandResult;
+    /** Приказ «Идти в точку» с исполнением на оставшиеся очки. */
+    goTo?: (command: GoToCommand) => CommandResult;
   };
   /** Изменение выбора и подсветки в интерфейсе. */
   ui: {
@@ -67,5 +71,9 @@ export type MapClickContext = {
     clearSelection: () => void;
     clearMovement: () => void;
     clearHighlight: () => void;
+    /** Есть ли маршрут до клетки, где юнит может остановиться. */
+    canPlanRoute?: (unit: Unit, x: number, y: number) => boolean;
+    /** Отмечает далёкую цель до подтверждения; `null` снимает отметку. */
+    setPlannedTarget?: (target: (Position & { unitId: string }) | null) => void;
   };
 };

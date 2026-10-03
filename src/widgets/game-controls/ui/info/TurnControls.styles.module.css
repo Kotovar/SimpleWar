@@ -166,3 +166,19 @@
   border-top: 1px solid var(--border);
   font-size: 0.9rem;
 }
+
+/* Вторичная кнопка рядом с концом хода — в стиле кнопки «Меню». */
+.OrdersButton {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface-sunken);
+  color: var(--text);
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--surface-strong);
+    border-color: var(--border-strong);
+  }
+}

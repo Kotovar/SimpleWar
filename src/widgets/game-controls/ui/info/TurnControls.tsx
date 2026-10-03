@@ -10,12 +10,19 @@ import styles from './TurnControls.styles.module.css';
 
 type Props = {
   onNextTurn: () => void;
+  /** Исполнить приказы «Идти в точку»; нет — активных приказов нет. */
+  onRunOrders?: () => void;
   onReset: () => void;
   /** Сдача; нет — участника за экраном нет, кнопка скрыта. */
   onSurrender?: () => void;
 };
 
-export const TurnControls = ({ onNextTurn, onReset, onSurrender }: Props) => {
+export const TurnControls = ({
+  onNextTurn,
+  onRunOrders,
+  onReset,
+  onSurrender,
+}: Props) => {
   const { activePlayer, humanId } = useGameLoopSelectors();
   const isOwnTurn = activePlayer === humanId;
   const isDebug = useDebugStore(state => state.enabled);
@@ -50,6 +57,15 @@ export const TurnControls = ({ onNextTurn, onReset, onSurrender }: Props) => {
 
   return (
     <div className={styles.ButtonRow}>
+      {onRunOrders && isOwnTurn && (
+        <button
+          className={styles.OrdersButton}
+          title='Юниты с приказом «Идти в точку» пойдут на оставшиеся очки'
+          onClick={onRunOrders}
+        >
+          Выполнить приказы
+        </button>
+      )}
       <button
         className={styles.EndTurnButton}
         onClick={onNextTurn}

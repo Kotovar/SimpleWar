@@ -34,6 +34,7 @@ import { MinimapOverlay } from './MinimapOverlay';
 import { SelectionCard } from './SelectionCard';
 import { ToolsDrawer, ToolsToggle } from './ToolsDrawer';
 import { shouldConfirmEndTurn } from '../model/confirmEndTurn';
+import { runOrders } from '../model/runOrders';
 import styles from './styles.module.css';
 
 type Props = {
@@ -66,6 +67,11 @@ export const PhaseInProgress = ({ minimap }: Props) => {
   const { resetStore: clearMovement } = useMovementStore();
   const { resetStore: clearHighlight } = useHighlightStore();
   const { humanId } = useGameLoopSelectors();
+  const hasOrders = useUnitsStore(state =>
+    Object.values(state.units).some(
+      unit => unit.owner === humanId && unit.order && !unit.order.stopped,
+    ),
+  );
 
   const clearInteraction = () => {
     clearSelection();
@@ -79,8 +85,10 @@ export const PhaseInProgress = ({ minimap }: Props) => {
     clearInteraction();
   };
 
-  // Перед концом хода — вопрос, если свои юниты ещё могут действовать.
+  // Сначала приказы; остановка не передаёт ход. Затем вопрос, если свои
+  // юниты ещё могут действовать.
   const onNextTurn = () => {
+    if (runOrders(humanId, clearInteraction)) return;
     const units = Object.values(useUnitsStore.getState().units);
     const count = humanId
       ? getPendingUnits(units, humanId, canUnitStep, unit =>
@@ -136,6 +144,9 @@ export const PhaseInProgress = ({ minimap }: Props) => {
         <ToolsToggle open={toolsOpen} onToggle={toggleTools} />
         <TurnControls
           onNextTurn={onNextTurn}
+          onRunOrders={
+            hasOrders ? () => runOrders(humanId, clearInteraction) : undefined
+          }
           onReset={() => setShowResetConfirm(true)}
           onSurrender={humanId ? () => setShowSurrender(true) : undefined}
         />

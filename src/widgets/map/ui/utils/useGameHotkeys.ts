@@ -30,11 +30,13 @@ const isOverlayOpen = () =>
   !!document.querySelector('details[open], dialog[open]');
 
 /**
- * Отменяет по шагам: сначала режим (стройка, найм, расчистка, прицел) с
- * возвратом обычной подсветки выбранного, затем сам выбор.
+ * Отменяет по шагам: сначала режим (стройка, найм, расчистка, прицел,
+ * отмеченная цель приказа) с возвратом обычной подсветки выбранного, затем
+ * сам выбор.
  */
 const cancelStep = (humanId: Owner | null) => {
   const highlight = useHighlightStore.getState();
+  const movement = useMovementStore.getState();
   const { selection, clearSelection } = useSelectionStore.getState();
   const buildings = useBuildingsStore.getState();
   const units = useUnitsStore.getState();
@@ -44,9 +46,13 @@ const cancelStep = (humanId: Owner | null) => {
     !!highlight.buildableCells ||
     !!highlight.spawnableCells ||
     !!highlight.clearableCells ||
-    !!highlight.strikeCells;
+    !!highlight.strikeCells ||
+    // Отметка другого юнита невидима и не считается режимом выбранного.
+    (selection?.kind === 'unit' &&
+      movement.plannedTarget?.unitId === selection.id);
 
   highlight.resetStore();
+  movement.setPlannedTarget(null);
   if (inMode && selection) {
     buildings.clearSelectedBuildingForSpawn();
     units.clearSelectedUnitForSpawn();

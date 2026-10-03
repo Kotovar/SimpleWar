@@ -19,7 +19,9 @@ export type MapMode =
   | { kind: 'build'; type: BuildingType; cells: number }
   | { kind: 'spawn'; type: UnitType; cells: number }
   | { kind: 'clear'; cells: number }
-  | { kind: 'strike'; cells: number };
+  | { kind: 'strike'; cells: number }
+  /** Далёкая цель отмечена первым кликом. */
+  | { kind: 'goto' };
 
 /**
  * Подсказка следующего шага во включённом режиме карты: куда кликнуть
@@ -48,5 +50,7 @@ export const getModePrompt = (mode: MapMode) => {
       return mode.cells
         ? `Кликните по клетке в ${SIEGE_STRIKE.minRange}–${SIEGE_STRIKE.maxRange} клетках: удар — в начале вашего следующего хода.`
         : 'В дальности удара нет разведанных клеток.';
+    case 'goto':
+      return 'Кликните по отмеченной клетке ещё раз, чтобы отдать приказ «Идти в точку».';
   }
 };

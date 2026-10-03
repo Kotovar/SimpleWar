@@ -7,6 +7,24 @@ const unit = (type: Unit['type'], owner: 'p1' | 'p2', patch = {}) =>
   ({ ...createUnit(type, 0, 0, owner, false)!, ...patch }) as Unit;
 
 describe('getPendingUnits', () => {
+  it('не напоминает об исполнителе приказа, а об остановленном — всегда', () => {
+    const order = { type: 'goto', x: 5, y: 0 } as const;
+    const walking = unit('archer', 'p1', { movePoints: 3, order });
+    const stopped = unit('archer', 'p1', {
+      movePoints: 0,
+      attackPoints: 0,
+      order: { ...order, stopped: 'path' },
+    });
+    expect(
+      getPendingUnits(
+        [walking, stopped],
+        'p1',
+        () => false,
+        () => false,
+      ).map(u => u.id),
+    ).toEqual([stopped.id]);
+  });
+
   it.each(['skip', 'sleep'] as const)(
     'не напоминает о режиме %s даже с целью атаки',
     restMode => {

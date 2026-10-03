@@ -11,7 +11,11 @@ import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
 import { demolish, isPlacementBlocking } from '@features/build';
 import { getStrikeCells } from '@features/combat';
-import { useHighlightStore, useMovementStore } from '@features/pathfinding';
+import {
+  cancelOrder,
+  useHighlightStore,
+  useMovementStore,
+} from '@features/pathfinding';
 import { cancelResearch, startResearch } from '@features/research';
 import { useSelectionStore } from '@features/selection';
 import { setUnitRest } from '@features/game-loop';
@@ -66,6 +70,11 @@ export const runSelectionAction = (
   const actor = humanId;
   const [kind, target] = id.split(':');
   switch (kind) {
+    case 'cancelOrder':
+      if (!unit) return;
+      cancelOrder({ actor, unitId: unit.id });
+      resetModes(unit.id);
+      return;
     case 'skip':
     case 'sleep':
       if (!unit) return;

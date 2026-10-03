@@ -1,6 +1,7 @@
 import type { BuildingType, InstanceKeys } from './buildings';
 import type { Owner } from './common';
 import type { Cost } from './economy';
+import type { RejectionCode } from './commands';
 
 /** Список военных юнитов. */
 export type MilitaryType =
@@ -23,6 +24,18 @@ export type UnitType = MilitaryType | CivilType;
 /** Роль юнита: военный или гражданский. */
 type UnitRole = 'military' | 'civil';
 
+/**
+ * Сохраняемый приказ «Идти в точку». `stopped` — почему исполнение
+ * остановилось (`enemy` — в обзоре новый враг); такой приказ больше не
+ * исполняется и ждёт решения игрока.
+ */
+export type UnitOrder = {
+  type: 'goto';
+  x: number;
+  y: number;
+  stopped?: RejectionCode | 'enemy';
+};
+
 /** Базовая форма юнита, общая для всех ролей. */
 type BaseUnit = {
   id: string;
@@ -39,6 +52,8 @@ type BaseUnit = {
   owner: Owner;
   /** Пропуск до следующего своего хода или сон до пробуждения; нет — активен. */
   restMode?: 'skip' | 'sleep';
+  /** Приказ на несколько ходов; снимается прибытием или прямым приказом. */
+  order?: UnitOrder;
   requiresLimit: number;
   cost: Cost;
 };

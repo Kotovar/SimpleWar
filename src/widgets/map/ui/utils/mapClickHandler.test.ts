@@ -35,6 +35,7 @@ type Overrides = {
   attackableTargets?: Position[];
   spawnableCells?: Position[];
   isCurrent?: () => boolean;
+  planned?: (Position & { unitId: string }) | null;
 };
 
 /** Контекст клика и плоский доступ к его заглушкам для проверок. */
@@ -52,8 +53,11 @@ const makeContext = (o: Overrides = {}) => {
     attack: vi.fn(done),
     build: vi.fn(done),
     spawn: vi.fn(done),
+    goTo: vi.fn(done),
+    canPlanRoute: vi.fn((_unit: Unit, _x: number, _y: number) => false),
+    setPlannedTarget: vi.fn(),
   };
-  const { move, attack, build, spawn, ...ui } = mocks;
+  const { move, attack, build, spawn, goTo, ...ui } = mocks;
   const ctx: MapClickContext = {
     humanId: 'p1',
     clicked: { unit: o.unit ?? null, building: o.building ?? null },
@@ -69,14 +73,78 @@ const makeContext = (o: Overrides = {}) => {
       attackable: o.attackableTargets ?? null,
       buildable: o.buildableCells ?? null,
       spawnable: o.spawnableCells ?? null,
+      planned: o.planned ?? null,
     },
-    commands: { move, attack, build, spawn },
+    commands: { move, attack, build, spawn, goTo },
     ui,
   };
   return { ctx, ...mocks };
 };
 
 describe('handleMapCellClick', () => {
+  it('marks a far cell first and orders «go to» on the second click', () => {
+    const selectedUnit = unitAt('swordsman', 1, 1);
+    const first = makeContext({ selectedUnit, reachableCells: [] });
+    first.canPlanRoute.mockReturnValue(true);
+    handleMapCellClick(8, 1, first.ctx);
+    expect(first.setPlannedTarget).toHaveBeenCalledWith({
+      unitId: selectedUnit.id,
+      x: 8,
+      y: 1,
+    });
+    expect(first.goTo).not.toHaveBeenCalled();
+    expect(first.clearSelection).not.toHaveBeenCalled();
+
+    const second = makeContext({
+      selectedUnit,
+      planned: { unitId: selectedUnit.id, x: 8, y: 1 },
+    });
+    handleMapCellClick(8, 1, second.ctx);
+    expect(second.goTo).toHaveBeenCalledWith({
+      actor: 'p1',
+      unitId: selectedUnit.id,
+      x: 8,
+      y: 1,
+    });
+    expect(second.clearSelection).toHaveBeenCalled();
+  });
+
+  it('does not confirm a mark made by another unit', () => {
+    const selectedUnit = unitAt('swordsman', 1, 1);
+    const ctx = makeContext({
+      selectedUnit,
+      planned: { unitId: 'other', x: 8, y: 1 },
+    });
+    ctx.canPlanRoute.mockReturnValue(true);
+    handleMapCellClick(8, 1, ctx.ctx);
+    expect(ctx.goTo).not.toHaveBeenCalled();
+    expect(ctx.setPlannedTarget).toHaveBeenCalledWith({
+      unitId: selectedUnit.id,
+      x: 8,
+      y: 1,
+    });
+  });
+
+  it('replaces the mark with another far cell and selects a cell without a route', () => {
+    const selectedUnit = unitAt('swordsman', 1, 1);
+    const ctx = makeContext({
+      selectedUnit,
+      planned: { unitId: selectedUnit.id, x: 8, y: 1 },
+    });
+    ctx.canPlanRoute.mockReturnValue(true);
+    handleMapCellClick(9, 2, ctx.ctx);
+    expect(ctx.setPlannedTarget).toHaveBeenCalledWith({
+      unitId: selectedUnit.id,
+      x: 9,
+      y: 2,
+    });
+    expect(ctx.goTo).not.toHaveBeenCalled();
+
+    ctx.canPlanRoute.mockReturnValue(false);
+    handleMapCellClick(0, 5, ctx.ctx);
+    expect(ctx.selectCell).toHaveBeenCalledWith(0, 5);
+  });
+
   it('selects an own unit and calculates its movement', () => {
     const unit = unitAt('swordsman', 1, 1);
     const ctx = makeContext({ unit });

@@ -7,7 +7,7 @@ import { useResearchStore } from '@entities/researches';
 import { getPayableResources, useDebugException } from '@entities/settings';
 import { useUnitsStore } from '@entities/units';
 import { useGameLoopSelectors } from '@features/game-loop';
-import { useHighlightStore } from '@features/pathfinding';
+import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import { useSelectionStore } from '@features/selection';
 import {
   getSelectionActions,
@@ -37,12 +37,13 @@ const useOwnSelection = () => {
 };
 
 /** Режим карты для кнопок и подсказки следующего шага. */
-const useMapMode = () => {
+const useMapMode = (selectedUnitId: string | null) => {
   const highlight = useHighlightStore();
   const modeBuilding = useBuildingsStore(
     state => state.selectedBuildingForSpawn,
   );
   const modeUnit = useUnitsStore(state => state.selectedUnitForSpawn);
+  const planned = useMovementStore(state => state.plannedTarget);
 
   // Подсказка следующего шага во включённом режиме карты.
   let mapMode: MapMode | null = null;
@@ -62,6 +63,8 @@ const useMapMode = () => {
     mapMode = { kind: 'clear', cells: highlight.clearableCells.length };
   } else if (highlight.strikeCells) {
     mapMode = { kind: 'strike', cells: highlight.strikeCells.length };
+  } else if (planned && planned.unitId === selectedUnitId) {
+    mapMode = { kind: 'goto' };
   }
   return { highlight, modeBuilding, modeUnit, mapMode };
 };
@@ -86,7 +89,9 @@ export const useSelectionActions = () => {
   );
   const freeBuild = useDebugException(owner, 'freeBuild');
   const freeSpawn = useDebugException(owner, 'freeSpawn');
-  const { highlight, modeBuilding, modeUnit, mapMode } = useMapMode();
+  const { highlight, modeBuilding, modeUnit, mapMode } = useMapMode(
+    unit?.id ?? null,
+  );
 
   const own = Object.values(buildings).filter(b => b.owner === humanId);
   const workers = Object.values(units).filter(u => u.role === 'civil');

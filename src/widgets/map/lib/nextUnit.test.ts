@@ -68,3 +68,24 @@ describe('hasActions / isIdleWorker', () => {
     expect(isIdleWorker(unit('archer', 0, 0))).toBe(false);
   });
 });
+
+describe('приказ «Идти в точку»', () => {
+  const order = { type: 'goto', x: 5, y: 0 } as const;
+
+  it('Tab пропускает исполнителя и выбирает остановленного', () => {
+    expect(fits(unit('archer', 0, 0, { movePoints: 2, order }))).toBe(false);
+    expect(
+      fits(
+        unit('archer', 0, 0, {
+          movePoints: 0,
+          attackPoints: 0,
+          order: { ...order, stopped: 'enemy' },
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it('рабочий в пути не свободен', () => {
+    expect(isIdleWorker(unit('worker', 0, 0, { order }))).toBe(false);
+  });
+});

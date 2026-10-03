@@ -11,19 +11,24 @@ import {
   getActorVisibility,
   isVisibleTo,
 } from './createKnownMovementGrid';
-import { getPath } from './getPath';
+import { findUnitRoute } from './findUnitRoute';
 import { blocksGroundTransit, isCellOccupied } from './isCellOccupied';
 
-/** Приказ движения: кто, каким юнитом и в какую клетку. */
+/**
+ * Приказ движения: кто, каким юнитом и в какую клетку. `partial` — шаг
+ * приказа «Идти в точку»: идти к цели на оставшиеся очки, даже если за
+ * ход не дойти.
+ */
 export type MoveCommand = {
   actor: ParticipantId;
   unitId: string;
   x: number;
   y: number;
+  partial?: boolean;
 };
 
 /** ID видимых участнику вражеских объектов. */
-const getSeenEnemies = (actor: ParticipantId) => {
+export const getSeenEnemies = (actor: ParticipantId) => {
   const visible = getActorVisibility(actor);
   const width = useMapStore.getState().grid[0]?.length ?? 0;
   const seen = new Set<string>();
@@ -46,6 +51,7 @@ const validateAndMove = ({
   unitId,
   x,
   y,
+  partial,
 }: MoveCommand): CommandResult => {
   const turnRejection = getTurnRejection(actor);
   if (turnRejection) return reject(turnRejection);
@@ -68,13 +74,10 @@ const validateAndMove = ({
   // Маршрут строится по известной карте; цена — сумма цен входа.
   // Летающему нужна клетка, где по известным сведениям можно сесть.
   if (flying && !createLandingCheck(actor)({ x, y })) return reject('occupied');
-  const route = getPath(
-    unit,
-    { x, y },
-    createUnitMovementGrid(unit, actor, TURN_UNKNOWN_COST),
-  );
+  // Транзит через своих дороже полного запаса очков заменяется обходом.
+  const route = findUnitRoute(unit, actor, { x, y });
   if (route.cost === Infinity) return reject('path');
-  if (route.cost > unit.movePoints) return reject('points');
+  if (!partial && route.cost > unit.movePoints) return reject('points');
   return moveAlong(actor, unitId, route.path, flying);
 };
 
@@ -118,7 +121,8 @@ const moveAlong = (
     if (spotted) break;
     const costs = createUnitMovementGrid(current, actor, TURN_UNKNOWN_COST);
     if (path.slice(index + 1).some(({ x, y }) => !costs[y]?.[x])) {
-      path = getPath(step, target, costs).path;
+      const moved = useUnitsStore.getState().units[unitId] ?? current;
+      path = findUnitRoute(moved, actor, target).path;
       index = 0;
     }
   }
@@ -127,7 +131,8 @@ const moveAlong = (
 
 /**
  * Перемещает юнита по маршруту, построенному по известной участнику карте.
- * Движение пошаговое и может остановиться раньше цели.
+ * Движение пошаговое и может остановиться раньше цели; с `partial` цель
+ * может быть дальше, чем хватает очков.
  *
  * @param command - Участник, юнит и целевая клетка.
  * @returns Успех, если пройдена хотя бы одна клетка, либо причина отказа;
@@ -138,7 +143,12 @@ export const move = (command: MoveCommand) =>
     {
       type: 'move',
       actor: command.actor,
-      details: { unitId: command.unitId, x: command.x, y: command.y },
+      details: {
+        unitId: command.unitId,
+        x: command.x,
+        y: command.y,
+        ...(command.partial && { partial: 1 }),
+      },
     },
     useGameLoopStore.getState().currentTurn,
     () => validateAndMove(command),

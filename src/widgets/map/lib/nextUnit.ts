@@ -2,18 +2,27 @@ import type { Unit } from '@shared/config';
 
 /**
  * Активному юниту есть что сделать: удар/лечение, стройка или шаг.
+ * Исполнитель приказа «Идти в точку» пропускается, остановленный приказ
+ * ждёт решения игрока — такой юнит всегда в очереди.
  *
  * @param canStep - Есть ли клетка для шага: остатка очков может не хватать
  *   на соседний рельеф.
  */
 export const hasActions = (unit: Unit, canStep: (unit: Unit) => boolean) =>
-  !unit.restMode &&
-  ((unit.role === 'military' ? unit.attackPoints > 0 : unit.buildPoints > 0) ||
-    canStep(unit));
+  unit.order
+    ? !!unit.order.stopped
+    : !unit.restMode &&
+      ((unit.role === 'military'
+        ? unit.attackPoints > 0
+        : unit.buildPoints > 0) ||
+        canStep(unit));
 
-/** Активный рабочий без работы в здании — ему можно дать дело. */
+/** Активный рабочий без работы в здании и без приказа в пути. */
 export const isIdleWorker = (unit: Unit) =>
-  unit.role === 'civil' && !unit.workplaceId && !unit.restMode;
+  unit.role === 'civil' &&
+  !unit.workplaceId &&
+  !unit.restMode &&
+  (!unit.order || !!unit.order.stopped);
 
 /**
  * Следующий подходящий юнит после текущего выбора. Порядок — по клеткам

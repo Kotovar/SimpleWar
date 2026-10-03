@@ -59,6 +59,35 @@ export const drawRestBadge = (
 };
 
 /**
+ * Приказ «Идти в точку» в том же углу, что сон и пропуск: `»` — в пути,
+ * красный `!` — остановлен и ждёт решения.
+ */
+export const drawOrderBadge = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  cellSize: number,
+  order: Unit['order'],
+) => {
+  if (!order) return;
+  const size = Math.max(8, cellSize * 0.3);
+  ctx.save();
+  ctx.font = `bold ${Math.round(size * 1.1)}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const left = (x + 1) * cellSize - size / 2;
+  const top = y * cellSize + cellSize * 0.1 + size / 2;
+  const text = order.stopped ? '!' : '»';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#202b35';
+  ctx.lineWidth = Math.max(2, size * 0.25);
+  ctx.strokeText(text, left, top);
+  ctx.fillStyle = order.stopped ? '#ff6b5b' : '#f2c14e';
+  ctx.fillText(text, left, top);
+  ctx.restore();
+};
+
+/**
  * Значок дальнего масштаба. Роль — по подложке: здание на квадратной
  * плашке, военный — крупная фигура, рабочий — мелкая. Владелец — по цвету
  * и форме маркера, поэтому различим и в монохроме.

@@ -1,5 +1,6 @@
 import type { Building, Position, Unit } from '@shared/config';
 import type { MapClickContext } from './mapClickContext';
+import { clickGoTo } from './mapClickGoTo';
 
 export type { MapClickContext };
 
@@ -116,6 +117,10 @@ const clickWithOwnUnit = (
     return;
   }
 
+  const goTo = clickGoTo(unit, x, y, ctx);
+  if (goTo === 'ordered') resetInteraction(ctx);
+  if (goTo) return;
+
   ctx.ui.clearHighlight();
   selectClicked(x, y, ctx);
 };
@@ -163,7 +168,8 @@ const clickWithOwnBuilding = (
 /**
  * Переводит клик по клетке в намерение: приказ по подсвеченной клетке
  * либо смену выбора. Приоритет задан порядком проверок: движение, атака,
- * расчистка, строительство или найм, затем выбор объекта под курсором.
+ * расчистка, строительство или найм, приказ «Идти в точку» по далёкой
+ * клетке (два клика), затем выбор объекта под курсором.
  * Результат команды пока не влияет на очистку выбора; сообщение об отказе — S19.
  *
  * @param x - Столбец клетки.

@@ -4,7 +4,8 @@ import type { Owner, Unit } from '@shared/config';
  * Свои юниты, которым ещё есть что сделать в этот ход: шаг либо удар или
  * лечение по доступной цели. Боец без шагов и без цели в дальности не
  * считается — ему нечего делать. Рабочий внутри здания занят добычей.
- * Пропустившие ход и спящие исключены независимо от очков и целей.
+ * Пропустившие ход, спящие и идущие по приказу исключены независимо от
+ * очков и целей; остановленный приказ ждёт решения и считается всегда.
  *
  * @param units - Юниты мира.
  * @param owner - Участник, заканчивающий ход.
@@ -22,6 +23,7 @@ export const getPendingUnits = (
 ) =>
   [...units].filter(unit => {
     if (unit.owner !== owner || unit.restMode) return false;
+    if (unit.order) return !!unit.order.stopped;
     if (unit.role === 'civil') return !unit.workplaceId && canStep(unit);
     return (unit.attackPoints > 0 && hasTarget(unit)) || canStep(unit);
   });

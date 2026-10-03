@@ -28,4 +28,15 @@ describe('countRouteTurns', () => {
     expect(countRouteTurns(row(2), [[1, 0]], 3, 3)).toBe(Infinity);
     expect(countRouteTurns(row(2), [[1, 3]], 3, 2)).toBe(Infinity);
   });
+
+  it('counts transit through own units as one segment with the next free cell', () => {
+    const own = ({ x }: { x: number }) => x !== 1 && x !== 2;
+    // 0 → 3 через двух своих — один отрезок за 3 очка: с остатком 2 он
+    // целиком переносится на ход 2, клетка 4 — уже на ход 3.
+    expect(countRouteTurns(row(5), [[1, 1, 1, 1, 1]], 2, 3, own)).toBe(3);
+    expect(countRouteTurns(row(5), [[1, 1, 1, 1, 1]], 3, 3, own)).toBe(2);
+    expect(countRouteTurns(row(5), [[1, 1, 1, 1, 1]], 3, 2, own)).toBe(
+      Infinity,
+    );
+  });
 });

@@ -14,7 +14,13 @@ interface MovementState {
   attackableTargets: Position[] | null;
   /** Свои раненые юниты, которых выбранный лекарь может вылечить. */
   healTargets: Unit[] | null;
+  /**
+   * Далёкая цель юнита после первого клика: второй клик тем же юнитом
+   * отдаёт приказ «Идти в точку». Другому юниту отметка не переходит.
+   */
+  plannedTarget: (Position & { unitId: string }) | null;
 
+  setPlannedTarget: (target: MovementState['plannedTarget']) => void;
   calculateActionHighlights: (unitId: string) => void;
   resetStore: () => void;
 }
@@ -24,6 +30,12 @@ export const useMovementStore = create<MovementState>()(
     reachableCells: null,
     attackableTargets: null,
     healTargets: null,
+    plannedTarget: null,
+
+    setPlannedTarget: target =>
+      set(state => {
+        state.plannedTarget = target;
+      }),
 
     // Для юнита считает клетки движения и цели атаки; для башни — только цели.
     calculateActionHighlights: unitId => {
@@ -79,6 +91,7 @@ export const useMovementStore = create<MovementState>()(
         state.reachableCells = null;
         state.attackableTargets = null;
         state.healTargets = null;
+        state.plannedTarget = null;
       });
     },
   })),

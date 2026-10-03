@@ -15,6 +15,11 @@ export const getHelpGroups = (layout?: ReadonlyMap<string, string> | null) => {
       items: [
         { codes: [], keys: 'ЛКМ', label: 'Выбрать или выполнить' },
         {
+          codes: [],
+          keys: 'ЛКМ × 2 по далёкой клетке',
+          label: 'Идти в точку за несколько ходов',
+        },
+        {
           codes: [] as string[],
           keys: 'ПКМ / СКМ / Пробел + ЛКМ',
           label: 'Двигать карту',

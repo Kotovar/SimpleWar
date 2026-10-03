@@ -9,8 +9,11 @@ import { build } from '@features/build';
 import { spawn } from '@features/spawn';
 import { clearForest } from '@features/workers';
 import {
+  getRoutePreview,
+  goTo,
   move,
   useHighlightSelectors,
+  useMovementStore,
   useMovementSelectors,
 } from '@features/pathfinding';
 import type { CommandResult } from '@shared/config';
@@ -39,6 +42,7 @@ const getCommands = (x: number, y: number) => ({
   clearForest: withRejectSignal(clearForest, x, y),
   prepareStrike: withRejectSignal(prepareStrike, x, y),
   heal: withRejectSignal(heal, x, y),
+  goTo: withRejectSignal(goTo, x, y),
 });
 
 const findAt = <T extends { x: number; y: number }>(
@@ -108,6 +112,7 @@ export const useMapCellClick = (scene: Scene) => {
         clearable: clearableCells,
         strike: strikeCells,
         heal: healTargets,
+        planned: useMovementStore.getState().plannedTarget,
       },
       commands: getCommands(x, y),
       ui: {
@@ -118,6 +123,9 @@ export const useMapCellClick = (scene: Scene) => {
         clearSelection,
         clearMovement,
         clearHighlight,
+        canPlanRoute: (unit, cellX, cellY) =>
+          !!getRoutePreview(unit, humanId, { x: cellX, y: cellY }),
+        setPlannedTarget: useMovementStore.getState().setPlannedTarget,
       },
     });
   };

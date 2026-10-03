@@ -144,6 +144,7 @@ export const getSelectionActions = (
     ? [
         ...workerActions(input.unit, input),
         ...siegeActions(input.unit, input),
+        ...(input.unit.order ? [action('cancelOrder')] : []),
         action('skip', {
           pressed: input.unit.restMode === 'skip',
           reason:

@@ -12,6 +12,7 @@ import {
 import { EntityPortrait, TerrainPortrait } from '@shared/ui';
 import { getCombatProfile, getMoveCost } from '@shared/lib';
 import { useGameLoopSelectors } from '@features/game-loop';
+import { getOrderStopMessage } from '@features/pathfinding';
 import { useUnitsStore } from '@entities/units';
 import { getResearchArmor, useResearchStore } from '@entities/researches';
 import { DamageBadges, DefenseBadges, FlightBadge } from './CombatBadges';
@@ -201,6 +202,16 @@ const UnitDefense = ({ unit }: { unit: Unit }) => (
 
 const UnitDetails = ({ unit }: { unit: Unit }) => (
   <>
+    {unit.order && (
+      <div>
+        <dt>Приказ</dt>
+        <dd>
+          {unit.order.stopped
+            ? `Остановлен: ${getOrderStopMessage(unit.order.stopped)}`
+            : 'Идти в точку'}
+        </dd>
+      </div>
+    )}
     {unit.restMode && (
       <div>
         <dt>Режим</dt>
