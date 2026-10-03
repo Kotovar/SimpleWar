@@ -16,7 +16,7 @@ import { initVisibilitySystem } from '@features/visibility';
 import { initBattleStats, useSandboxStore } from '@features/sandbox';
 import { Map, Minimap } from '@widgets/map';
 import { initializeGame, initializeSandbox } from '@widgets/start-game';
-import { GameControls } from '@widgets/game-controls';
+import { GameControls, initGuidanceSystem } from '@widgets/game-controls';
 import {
   initAudioSystem,
   initJournalSystem,
@@ -79,6 +79,7 @@ export const Game = () => {
     initVisibilitySystem();
     initBattleStats();
     initAudioSystem();
+    return initGuidanceSystem();
   }, []);
 
   useEffect(() => {

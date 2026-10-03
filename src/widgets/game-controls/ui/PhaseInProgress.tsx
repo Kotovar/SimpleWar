@@ -31,6 +31,7 @@ import {
   TurnInfo,
 } from './info';
 import { ActionBar } from './ActionBar';
+import { Guidance } from './Guidance';
 import { MinimapOverlay } from './MinimapOverlay';
 import { SelectionCard } from './SelectionCard';
 import { ToolsDrawer, ToolsToggle } from './ToolsDrawer';
@@ -170,6 +171,7 @@ export const PhaseInProgress = ({ minimap }: Props) => {
 
       <AiTurnBanner />
       <CommandToasts />
+      <Guidance />
       <ActionBar />
 
       <SelectionCard />

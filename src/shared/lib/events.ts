@@ -6,6 +6,7 @@ import type {
 } from '@shared/config';
 
 type GameEvent =
+  | { type: 'ATTACK_LANDED'; target: Unit | Building; damage: number }
   | {
       type: 'SIEGE_STRIKE_EXECUTED';
       owner: ParticipantId;

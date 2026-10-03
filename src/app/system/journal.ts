@@ -33,9 +33,44 @@ export const initJournalSystem = () => {
   initialized = true;
 
   gameEvents.subscribe(event => {
-    const { activePlayer: actor, currentTurn: turn } =
-      useGameLoopStore.getState();
+    const {
+      activePlayer: actor,
+      currentTurn: turn,
+      participants,
+      eliminated,
+    } = useGameLoopStore.getState();
     const { record } = useJournalStore.getState();
+
+    if (event.type === 'ATTACK_LANDED') {
+      const { owner, type, x, y, hp } = event.target;
+      const sheltered =
+        'movePoints' in event.target &&
+        !!useBuildingsStore.getState().getBuildingAt(x, y);
+      const width = useMapStore.getState().grid[0]?.length ?? 0;
+      const viewers = participants
+        .filter(
+          ({ id }) =>
+            id === owner ||
+            (!sheltered &&
+              !eliminated.includes(id) &&
+              computeVisibleMask(id)[y * width + x] === 1),
+        )
+        .map(({ id }) => id);
+      record({
+        type: 'attackObserved',
+        actor: null,
+        turn,
+        visibleTo: viewers,
+        // Место и полученный урон известны владельцу; стрелявший может быть скрыт.
+        details: {
+          owner,
+          targetType: type,
+          x,
+          y,
+          damage: Math.min(hp, event.damage),
+        },
+      });
+    }
 
     if (event.type === 'UNIT_DESTROYED') {
       const { type, x, y } = event.unit;
@@ -59,7 +94,13 @@ export const initJournalSystem = () => {
         actor,
         turn,
         visibleTo: between(actor, event.building),
-        details: { owner: event.owner, buildingType: type, x, y },
+        details: {
+          owner: event.owner,
+          buildingType: type,
+          x,
+          y,
+          ...(event.demolished ? { demolished: 1 } : {}),
+        },
       });
     }
 

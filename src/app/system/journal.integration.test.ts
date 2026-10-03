@@ -63,17 +63,18 @@ describe('journal of game outcomes', () => {
     attack({ actor: 'p1', attackerId: archer, targetId: target });
 
     expect(journal().entries).toMatchObject([
+      { type: 'attackObserved', actor: null, turn: 3 },
       { type: 'unitDestroyed', actor: 'p1', turn: 3 },
       { type: 'attack', actor: 'p1', turn: 3 },
     ]);
-    expect(journal().entries[0].details).toEqual({
+    expect(journal().entries[1].details).toEqual({
       owner: 'p2',
       unitType: 'worker',
       x: 3,
       y: 3,
     });
-    expect(types('p1')).toEqual(['unitDestroyed', 'attack']);
-    expect(types('p2')).toEqual(['unitDestroyed']);
+    expect(types('p1')).toEqual(['attackObserved', 'unitDestroyed', 'attack']);
+    expect(types('p2')).toEqual(['attackObserved', 'unitDestroyed']);
   });
 
   it('keeps enemy orders out of the ordinary journal', () => {
@@ -94,13 +95,15 @@ describe('journal of game outcomes', () => {
     attack({ actor: 'p1', attackerId: archer, targetId: base.id });
 
     expect(journal().entries.map(({ type }) => type)).toEqual([
+      'attackObserved',
       'buildingDestroyed',
       'eliminated',
       'gameOver',
       'attack',
     ]);
-    expect(journal().entries[2].details).toEqual({ winner: 'p1' });
+    expect(journal().entries[3].details).toEqual({ winner: 'p1' });
     expect(types('p2')).toEqual([
+      'attackObserved',
       'buildingDestroyed',
       'eliminated',
       'gameOver',
@@ -143,4 +146,48 @@ describe('journal of game outcomes', () => {
       { type: 'move', gameId: gameId + 1 },
     ]);
   });
+});
+
+it('records a nonlethal hit for the owner without revealing a hidden attacker', () => {
+  const target = units().spawnUnit('worker', 1, 1, 'p1')!;
+  gameEvents.emit({
+    type: 'ATTACK_LANDED',
+    target: units().units[target],
+    damage: 10,
+  });
+  expect(getVisibleRecords(journal().entries, 'p1')).toMatchObject([
+    {
+      type: 'attackObserved',
+      actor: null,
+      details: { owner: 'p1', targetType: 'worker', x: 1, y: 1, damage: 10 },
+    },
+  ]);
+  expect(types('p2')).toEqual([]);
+  expect(journal().entries[0].details).not.toHaveProperty('attackerId');
+});
+
+it('shows an observed attack to a third participant but conceals a sheltered worker', () => {
+  useGameLoopStore.setState({
+    participants: [
+      { id: 'p1', controller: 'human' },
+      { id: 'p2', controller: 'ai' },
+      { id: 'p3', controller: 'ai' },
+    ],
+  });
+  units().spawnUnit('scout', 2, 1, 'p3', true);
+  const target = units().spawnUnit('worker', 1, 1, 'p1')!;
+  gameEvents.emit({
+    type: 'ATTACK_LANDED',
+    target: units().units[target],
+    damage: 4,
+  });
+  expect(getVisibleRecords(journal().entries, 'p3')).toHaveLength(1);
+  buildings().spawnBuilding('mine', 1, 1, 'p1');
+  gameEvents.emit({
+    type: 'ATTACK_LANDED',
+    target: units().units[target],
+    damage: 4,
+  });
+  expect(getVisibleRecords(journal().entries, 'p3')).toHaveLength(1);
+  expect(types('p1')).toEqual(['attackObserved', 'attackObserved']);
 });

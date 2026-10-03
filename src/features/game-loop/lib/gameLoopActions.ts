@@ -44,6 +44,23 @@ const validateAndEndTurn = (actor: ParticipantId): CommandResult => {
   );
   for (const id of miners) units.changeBuildPoints(id);
   useEconomyStore.getState().addResources(actor, income);
+  const mined = miners.map(id => {
+    const worker = units.units[id];
+    return worker?.role === 'civil' && worker.workplaceId
+      ? useBuildingsStore.getState().buildings[worker.workplaceId]?.type
+      : null;
+  });
+  useJournalStore.getState().record({
+    type: 'income',
+    actor,
+    turn: useGameLoopStore.getState().currentTurn,
+    visibleTo: [actor],
+    details: {
+      ...income,
+      minedGold: mined.includes('mine') ? 1 : 0,
+      minedWood: mined.includes('sawmill') ? 1 : 0,
+    },
+  });
   advanceResearch(actor);
 
   useGameLoopStore.getState().endTurn();

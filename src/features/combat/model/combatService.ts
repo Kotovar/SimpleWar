@@ -83,6 +83,8 @@ const validateAndAttack = ({
     getResearchArmor(target, Object.values(unitsStore.units)),
   );
 
+  gameEvents.emit({ type: 'ATTACK_LANDED', target, damage });
+
   if (targetUnit) {
     unitsStore.damageUnit(targetId, damage);
   } else {

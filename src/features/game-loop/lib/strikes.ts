@@ -61,11 +61,13 @@ export const executePreparedStrikes = (owner: ParticipantId) => {
       );
       if (unit.owner === owner || !building)
         hits.push(`${unit.type}:${damage}`);
+      gameEvents.emit({ type: 'ATTACK_LANDED', target: unit, damage });
       useUnitsStore.getState().damageUnit(unit.id, damage);
     }
     if (building) {
       const damage = calculateDamage(siege, building);
       hits.push(`${building.type}:${damage}`);
+      gameEvents.emit({ type: 'ATTACK_LANDED', target: building, damage });
       useBuildingsStore.getState().damageBuilding(building.id, damage);
       if (!useBuildingsStore.getState().buildings[building.id]) {
         gameEvents.emit({

@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 import { GUIDEBOOK_URL } from '@shared/config';
 import { Checkbox } from '@shared/ui';
 import { useGameLoopSelectors } from '@features/game-loop';
-import { useDebugStore } from '@entities/settings';
+import { useDebugStore, usePreferencesStore } from '@entities/settings';
+import { useGuidanceStore } from '../../model/guidanceStore';
 import { useConfirmEndTurn } from '../../model/confirmEndTurn';
 import { AudioSettings } from './AudioSettings';
 import { KeyboardHelp } from '../KeyboardHelp';
@@ -29,6 +30,8 @@ export const TurnControls = ({
   const setDebug = useDebugStore(state => state.setEnabled);
   const menu = useRef<HTMLDetailsElement>(null);
   const [confirmEndTurn, setConfirmEndTurn] = useConfirmEndTurn();
+  const preferences = usePreferencesStore();
+  const restartTutorial = useGuidanceStore(state => state.restartTutorial);
 
   useEffect(() => {
     const close = (event: Event) => {
@@ -132,6 +135,31 @@ export const TurnControls = ({
             Предупреждать об непоходивших юнитах
           </Checkbox>
           <AudioSettings />
+          <Checkbox
+            className={styles.MenuCheck}
+            checked={preferences.hintsEnabled}
+            onChange={preferences.setHintsEnabled}
+          >
+            Диалоги-подсказки
+          </Checkbox>
+          <Checkbox
+            className={styles.MenuCheck}
+            checked={preferences.tutorialEnabled}
+            onChange={preferences.setTutorialEnabled}
+          >
+            Обучение
+          </Checkbox>
+          {humanId && (
+            <button
+              className={styles.MenuButton}
+              onClick={() => {
+                if (menu.current) menu.current.open = false;
+                restartTutorial();
+              }}
+            >
+              Начать обучение заново
+            </button>
+          )}
         </div>
       </details>
       <KeyboardHelp />

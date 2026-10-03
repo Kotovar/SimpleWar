@@ -145,6 +145,11 @@ export const move = (command: MoveCommand) =>
       actor: command.actor,
       details: {
         unitId: command.unitId,
+        unitType:
+          useUnitsStore.getState().units[command.unitId]?.owner ===
+          command.actor
+            ? useUnitsStore.getState().units[command.unitId].type
+            : 'unknown',
         x: command.x,
         y: command.y,
         ...(command.partial && { partial: 1 }),

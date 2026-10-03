@@ -19,11 +19,19 @@ type PreferencesState = {
   setActionBarOffset: (offset: Offset) => void;
   minimapMode: MinimapMode;
   setMinimapMode: (mode: MinimapMode) => void;
+  hintsEnabled: boolean;
+  setHintsEnabled: (enabled: boolean) => void;
+  tutorialEnabled: boolean;
+  setTutorialEnabled: (enabled: boolean) => void;
+  /** Автозапуск только при первой обычной партии с человеком. */
+  tutorialStarted: boolean;
+  markTutorialStarted: () => void;
 };
 
 /**
  * Предпочтения игрока в интерфейсе. В браузере сохраняются положение
- * панели действий и вид мини-карты; остальное живёт до перезагрузки.
+ * панели действий, вид мини-карты и настройки помощника;
+ * предупреждение конца хода живёт до перезагрузки.
  */
 export const usePreferencesStore = create<PreferencesState>()(
   persist(
@@ -34,14 +42,29 @@ export const usePreferencesStore = create<PreferencesState>()(
       setActionBarOffset: actionBarOffset => set({ actionBarOffset }),
       minimapMode: 'solid',
       setMinimapMode: minimapMode => set({ minimapMode }),
+      hintsEnabled: true,
+      setHintsEnabled: hintsEnabled => set({ hintsEnabled }),
+      tutorialEnabled: true,
+      setTutorialEnabled: tutorialEnabled => set({ tutorialEnabled }),
+      tutorialStarted: false,
+      markTutorialStarted: () => set({ tutorialStarted: true }),
     }),
     {
       name: 'simplewar:preferences',
       // v1 хранил «больше не спрашивать» навсегда — его отбрасываем.
       version: 2,
-      partialize: ({ actionBarOffset, minimapMode }) => ({
+      partialize: ({
         actionBarOffset,
         minimapMode,
+        hintsEnabled,
+        tutorialEnabled,
+        tutorialStarted,
+      }) => ({
+        actionBarOffset,
+        minimapMode,
+        hintsEnabled,
+        tutorialEnabled,
+        tutorialStarted,
       }),
       migrate: persisted => ({
         actionBarOffset: (persisted as Partial<PreferencesState> | null)

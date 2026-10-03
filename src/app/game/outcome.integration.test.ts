@@ -96,6 +96,7 @@ describe('damage down to exactly zero HP', () => {
     ).toMatchObject({ ok: true });
     expect(loop()).toMatchObject({ phase: 'gameOver', winner: 'p1' });
     expect(journalTypes()).toEqual([
+      'attackObserved',
       'buildingDestroyed',
       'eliminated',
       'gameOver',
