@@ -17,9 +17,10 @@ import {
 } from '@features/game-loop';
 import { useUnitsStore } from '@entities/units';
 import { useGameLoopStore } from '@entities/games';
+import { useSettingsStore } from '@entities/settings';
 import { getHealTargets } from '@features/combat';
 import { canUnitStep, getAttackableTargets } from '@features/pathfinding';
-import { useSelectionSelectors } from '@features/selection';
+import { useSelectionSelectors, useSelectionStore } from '@features/selection';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import {
   AiTurnBanner,
@@ -85,16 +86,31 @@ export const PhaseInProgress = ({ minimap }: Props) => {
     clearInteraction();
   };
 
+  const pendingUnits = () => {
+    const units = Object.values(useUnitsStore.getState().units);
+    return humanId
+      ? getPendingUnits(units, humanId, canUnitStep, unit =>
+          hasTarget(unit, units),
+        )
+      : [];
+  };
+
+  const returnToUnit = () => {
+    setPending(0);
+    const units = pendingUnits();
+    const unit = units.find(canUnitStep) ?? units[0];
+    if (!unit) return;
+    clearInteraction();
+    useSelectionStore.getState().selectUnit(unit.id);
+    useMovementStore.getState().calculateActionHighlights(unit.id);
+    useSettingsStore.getState().centerOn(unit.x + 0.5, unit.y + 0.5);
+  };
+
   // Сначала приказы; остановка не передаёт ход. Затем вопрос, если свои
   // юниты ещё могут действовать.
   const onNextTurn = () => {
     if (runOrders(humanId, clearInteraction)) return;
-    const units = Object.values(useUnitsStore.getState().units);
-    const count = humanId
-      ? getPendingUnits(units, humanId, canUnitStep, unit =>
-          hasTarget(unit, units),
-        ).length
-      : 0;
+    const count = pendingUnits().length;
     if (count > 0 && shouldConfirmEndTurn()) {
       setPending(count);
       return;
@@ -163,7 +179,7 @@ export const PhaseInProgress = ({ minimap }: Props) => {
       <EndTurnConfirm
         pending={pending}
         onConfirm={endTurn}
-        onCancel={() => setPending(0)}
+        onCancel={returnToUnit}
       />
 
       <ConfirmDialog
