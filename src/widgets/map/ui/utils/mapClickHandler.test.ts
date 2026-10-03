@@ -11,7 +11,11 @@ import type {
 import { ok, reject } from '@shared/lib';
 import { createBuilding } from '@entities/buildings';
 import { createUnit } from '@entities/units';
-import { handleMapCellClick, type MapClickContext } from './mapClickHandler';
+import {
+  handleMapCellClick,
+  handleMapCellOrder,
+  type MapClickContext,
+} from './mapClickHandler';
 
 const unitAt = (
   type: Unit['type'],
@@ -54,10 +58,11 @@ const makeContext = (o: Overrides = {}) => {
     build: vi.fn(done),
     spawn: vi.fn(done),
     goTo: vi.fn(done),
+    heal: vi.fn(done),
     canPlanRoute: vi.fn((_unit: Unit, _x: number, _y: number) => false),
     setPlannedTarget: vi.fn(),
   };
-  const { move, attack, build, spawn, goTo, ...ui } = mocks;
+  const { move, attack, build, spawn, goTo, heal, ...ui } = mocks;
   const ctx: MapClickContext = {
     humanId: 'p1',
     clicked: { unit: o.unit ?? null, building: o.building ?? null },
@@ -75,74 +80,96 @@ const makeContext = (o: Overrides = {}) => {
       spawnable: o.spawnableCells ?? null,
       planned: o.planned ?? null,
     },
-    commands: { move, attack, build, spawn, goTo },
+    commands: { move, attack, build, spawn, goTo, heal },
     ui,
   };
   return { ctx, ...mocks };
 };
 
 describe('handleMapCellClick', () => {
-  it('marks a far cell first and orders «go to» on the second click', () => {
-    const selectedUnit = unitAt('swordsman', 1, 1);
-    const first = makeContext({ selectedUnit, reachableCells: [] });
-    first.canPlanRoute.mockReturnValue(true);
-    handleMapCellClick(8, 1, first.ctx);
-    expect(first.setPlannedTarget).toHaveBeenCalledWith({
-      unitId: selectedUnit.id,
-      x: 8,
-      y: 1,
+  it('ЛКМ выбирает клетку вместо движения и отметки маршрута', () => {
+    const m = makeContext({
+      selectedUnit: unitAt('swordsman', 1, 1),
+      reachableCells: [{ x: 2, y: 1 }],
     });
-    expect(first.goTo).not.toHaveBeenCalled();
-    expect(first.clearSelection).not.toHaveBeenCalled();
+    handleMapCellClick(2, 1, m.ctx);
+    expect(m.selectCell).toHaveBeenCalledWith(2, 1);
+    expect(m.move).not.toHaveBeenCalled();
+    expect(m.goTo).not.toHaveBeenCalled();
+    expect(m.setPlannedTarget).not.toHaveBeenCalled();
+  });
 
-    const second = makeContext({
-      selectedUnit,
-      planned: { unitId: selectedUnit.id, x: 8, y: 1 },
-    });
-    handleMapCellClick(8, 1, second.ctx);
-    expect(second.goTo).toHaveBeenCalledWith({
+  it('ПКМ сразу отдаёт дальний приказ, заменяя режим стройки', () => {
+    const selectedUnit = unitAt('worker', 1, 1);
+    const m = makeContext({ selectedUnit, buildingTypeToPlace: 'farm' });
+    handleMapCellOrder(8, 1, m.ctx);
+    expect(m.goTo).toHaveBeenCalledWith({
       actor: 'p1',
       unitId: selectedUnit.id,
       x: 8,
       y: 1,
     });
-    expect(second.clearSelection).toHaveBeenCalled();
+    expect(m.clearHighlight).toHaveBeenCalled();
+    expect(m.selectUnit).toHaveBeenCalledWith(selectedUnit.id);
   });
 
-  it('does not confirm a mark made by another unit', () => {
-    const selectedUnit = unitAt('swordsman', 1, 1);
-    const ctx = makeContext({
-      selectedUnit,
-      planned: { unitId: 'other', x: 8, y: 1 },
-    });
-    ctx.canPlanRoute.mockReturnValue(true);
-    handleMapCellClick(8, 1, ctx.ctx);
-    expect(ctx.goTo).not.toHaveBeenCalled();
-    expect(ctx.setPlannedTarget).toHaveBeenCalledWith({
-      unitId: selectedUnit.id,
-      x: 8,
-      y: 1,
-    });
+  it('ПКМ без своего выбранного объекта ничего не выбирает и не приказывает', () => {
+    for (const selectedUnit of [null, unitAt('swordsman', 1, 1, 'p2')]) {
+      const m = makeContext({ selectedUnit });
+      handleMapCellOrder(8, 1, m.ctx);
+      expect(m.goTo).not.toHaveBeenCalled();
+      expect(m.selectCell).not.toHaveBeenCalled();
+      expect(m.clearSelection).not.toHaveBeenCalled();
+    }
   });
 
-  it('replaces the mark with another far cell and selects a cell without a route', () => {
-    const selectedUnit = unitAt('swordsman', 1, 1);
-    const ctx = makeContext({
-      selectedUnit,
-      planned: { unitId: selectedUnit.id, x: 8, y: 1 },
+  it('ПКМ по своему не лечащим юнитом сохраняет выбор', () => {
+    const m = makeContext({
+      selectedUnit: unitAt('swordsman', 1, 1),
+      unit: unitAt('worker', 2, 1),
     });
-    ctx.canPlanRoute.mockReturnValue(true);
-    handleMapCellClick(9, 2, ctx.ctx);
-    expect(ctx.setPlannedTarget).toHaveBeenCalledWith({
-      unitId: selectedUnit.id,
-      x: 9,
-      y: 2,
-    });
-    expect(ctx.goTo).not.toHaveBeenCalled();
+    handleMapCellOrder(2, 1, m.ctx);
+    expect(m.move).not.toHaveBeenCalled();
+    expect(m.attack).not.toHaveBeenCalled();
+    expect(m.selectUnit).not.toHaveBeenCalled();
+    expect(m.clearSelection).not.toHaveBeenCalled();
+  });
 
-    ctx.canPlanRoute.mockReturnValue(false);
-    handleMapCellClick(0, 5, ctx.ctx);
-    expect(ctx.selectCell).toHaveBeenCalledWith(0, 5);
+  it('ЛКМ по врагу выбирает его, ПКМ атакует даже вне подсветки с отказом команды', () => {
+    const enemy = unitAt('worker', 3, 1, 'p2');
+    const m = makeContext({
+      selectedUnit: unitAt('archer', 1, 1),
+      unit: enemy,
+    });
+    handleMapCellClick(3, 1, m.ctx);
+    expect(m.selectUnit).toHaveBeenCalledWith(enemy.id);
+    expect(m.attack).not.toHaveBeenCalled();
+    m.attack.mockReturnValue(reject('points'));
+    handleMapCellOrder(3, 1, m.ctx);
+    expect(m.attack).toHaveBeenCalledWith({
+      actor: 'p1',
+      attackerId: m.ctx.selection.unit!.id,
+      targetId: enemy.id,
+    });
+    expect(m.goTo).not.toHaveBeenCalled();
+  });
+
+  it('ЛКМ выбирает раненого, ПКМ лекарем лечит его', () => {
+    const wounded = { ...unitAt('worker', 2, 1), hp: 5 };
+    const m = makeContext({
+      selectedUnit: unitAt('healer', 1, 1),
+      unit: wounded,
+    });
+    handleMapCellClick(2, 1, m.ctx);
+    expect(m.heal).not.toHaveBeenCalled();
+    expect(m.selectUnit).toHaveBeenCalledWith(wounded.id);
+    handleMapCellOrder(2, 1, m.ctx);
+    expect(m.heal).toHaveBeenCalledWith({
+      actor: 'p1',
+      healerId: m.ctx.selection.unit!.id,
+      targetId: wounded.id,
+    });
+    expect(m.attack).not.toHaveBeenCalled();
   });
 
   it('selects an own unit and calculates its movement', () => {
@@ -179,7 +206,7 @@ describe('handleMapCellClick', () => {
     expect(ctx.move).not.toHaveBeenCalled();
   });
 
-  it('only clears selection when an enemy unit is selected', () => {
+  it('selects the clicked cell when an enemy unit is selected', () => {
     const ctx = makeContext({
       selectedUnit: unitAt('swordsman', 1, 1, 'p2'),
       reachableCells: [{ x: 2, y: 1 }],
@@ -189,13 +216,14 @@ describe('handleMapCellClick', () => {
 
     expect(ctx.clearSelection).toHaveBeenCalled();
     expect(ctx.move).not.toHaveBeenCalled();
+    expect(ctx.selectCell).toHaveBeenCalledWith(2, 1);
   });
 
   it('moves the selected unit to a reachable cell', () => {
     const selectedUnit = unitAt('swordsman', 1, 1);
     const ctx = makeContext({ selectedUnit, reachableCells: [{ x: 2, y: 1 }] });
 
-    handleMapCellClick(2, 1, ctx.ctx);
+    handleMapCellOrder(2, 1, ctx.ctx);
 
     expect(ctx.move).toHaveBeenCalledWith({
       actor: 'p1',
@@ -242,7 +270,7 @@ describe('handleMapCellClick', () => {
       attackableTargets: [{ x: 3, y: 1 }],
     });
 
-    handleMapCellClick(3, 1, ctx.ctx);
+    handleMapCellOrder(3, 1, ctx.ctx);
 
     expect(ctx.attack).toHaveBeenCalledWith({
       actor: 'p1',
@@ -307,7 +335,7 @@ describe('handleMapCellClick', () => {
       attackableTargets: [{ x: 3, y: 1 }],
     });
 
-    handleMapCellClick(3, 1, m.ctx);
+    handleMapCellOrder(3, 1, m.ctx);
 
     expect(m.attack).toHaveBeenCalledWith({
       actor: 'p1',
@@ -348,17 +376,17 @@ describe('handleMapCellClick', () => {
     expect(m.selectCell).toHaveBeenCalledWith(2, 2);
   });
 
-  it('resets the interaction the same way when a command is rejected', () => {
+  it('сохраняет выбор и намерение при отказе ПКМ', () => {
     const m = makeContext({
       selectedUnit: unitAt('swordsman', 1, 1),
       reachableCells: [{ x: 2, y: 1 }],
     });
     m.move.mockReturnValue(reject('points'));
 
-    handleMapCellClick(2, 1, m.ctx);
+    handleMapCellOrder(2, 1, m.ctx);
 
-    expect(m.clearSelection).toHaveBeenCalled();
-    expect(m.clearMovement).toHaveBeenCalled();
-    expect(m.clearHighlight).toHaveBeenCalled();
+    expect(m.clearSelection).not.toHaveBeenCalled();
+    expect(m.clearMovement).not.toHaveBeenCalled();
+    expect(m.clearHighlight).not.toHaveBeenCalled();
   });
 });

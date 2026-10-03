@@ -26,7 +26,7 @@ type Drag = { x: number; y: number; pointerId: number };
 
 /**
  * Управление камерой: размер окна, колесо с масштабом к курсору,
- * перетаскивание (средняя/правая кнопка или Space + левая) и клавиши.
+ * перетаскивание (средняя кнопка или Space + левая) и клавиши.
  * Левая кнопка без Space карту не двигает: дрогнувшая при выборе мышь
  * не сдвигает камеру. Перетаскивание гасит следующий клик, поэтому
  * выбранный юнит не получает приказ.
@@ -131,7 +131,7 @@ export const useCameraInput = (viewport: RefObject<HTMLDivElement | null>) => {
       event.preventDefault();
     },
     onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
-      if (event.pointerType !== 'mouse' || event.button > 2) return;
+      if (event.pointerType !== 'mouse' || event.button > 1) return;
       suppressClick.current = false;
       // Обычный левый клик должен попасть в Canvas.
       if (event.button === 0 && !spaceHeld.current) return;

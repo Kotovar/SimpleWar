@@ -13,15 +13,19 @@ export const getHelpGroups = (layout?: ReadonlyMap<string, string> | null) => {
     {
       title: 'Мышь',
       items: [
-        { codes: [], keys: 'ЛКМ', label: 'Выбрать или выполнить' },
         {
           codes: [],
-          keys: 'ЛКМ × 2 по далёкой клетке',
-          label: 'Идти в точку за несколько ходов',
+          keys: 'ЛКМ',
+          label: 'Выбрать; подтвердить стройку, найм или прицел',
+        },
+        {
+          codes: [],
+          keys: 'ПКМ',
+          label: 'Идти, атаковать врага, лечить своего',
         },
         {
           codes: [] as string[],
-          keys: 'ПКМ / СКМ / Пробел + ЛКМ',
+          keys: 'СКМ / Пробел + ЛКМ',
           label: 'Двигать карту',
         },
         { codes: [], keys: 'Колесо', label: 'Масштаб' },

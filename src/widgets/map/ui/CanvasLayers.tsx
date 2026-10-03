@@ -34,7 +34,7 @@ type Props = {
   /** Участник за этим экраном. */
   humanId: Owner | null;
   /** Клик по клетке мира; координаты могут быть вне карты. */
-  onCellClick: (cell: Position) => void;
+  onCellClick: (cell: Position, order?: boolean) => void;
 };
 
 export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
@@ -221,6 +221,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     const box = event.currentTarget.getBoundingClientRect();
     onCellClick(
       view.cellAt({ x: event.clientX - box.left, y: event.clientY - box.top }),
+      event.type === 'contextmenu',
     );
   };
 
@@ -243,6 +244,10 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
         className={clsx(styles.CanvasLayer, styles.Highlight, cursor)}
         ref={highlightRef}
         onClick={isInteractive ? handleClick : undefined}
+        onContextMenu={event => {
+          event.preventDefault();
+          if (isInteractive) handleClick(event);
+        }}
         onMouseMove={isInteractive ? onMouseMove : undefined}
         onMouseLeave={onMouseLeave}
       />

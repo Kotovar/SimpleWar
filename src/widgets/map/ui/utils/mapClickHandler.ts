@@ -1,6 +1,5 @@
 import type { Building, Position, Unit } from '@shared/config';
 import type { MapClickContext } from './mapClickContext';
-import { clickGoTo } from './mapClickGoTo';
 
 export type { MapClickContext };
 
@@ -49,8 +48,7 @@ const clickWithOwnUnit = (
   y: number,
   ctx: MapClickContext,
 ) => {
-  const { clicked, selection, highlights, commands, humanId: actor } = ctx;
-  const target = clicked.unit ?? clicked.building;
+  const { selection, highlights, commands, humanId: actor } = ctx;
 
   // Режим прицела осады важнее движения: клетки могут совпадать.
   if (
@@ -59,33 +57,6 @@ const clickWithOwnUnit = (
     isHighlighted(highlights.strike ?? null, x, y)
   ) {
     commands.prepareStrike({ actor, unitId: unit.id, x, y });
-    resetInteraction(ctx);
-    return;
-  }
-
-  // Лечение своего раненого: цель — свой юнит, поэтому раньше выбора.
-  const healTarget = highlights.heal?.find(
-    target => target.x === x && target.y === y,
-  );
-  if (commands.heal && healTarget) {
-    commands.heal({ actor, healerId: unit.id, targetId: healTarget.id });
-    resetInteraction(ctx);
-    return;
-  }
-
-  if (unit.movePoints > 0 && isHighlighted(highlights.reachable, x, y)) {
-    commands.move({ actor, unitId: unit.id, x, y });
-    resetInteraction(ctx);
-    return;
-  }
-
-  if (
-    target &&
-    unit.role !== 'civil' &&
-    unit.attackPoints > 0 &&
-    isHighlighted(highlights.attackable, x, y)
-  ) {
-    commands.attack({ actor, attackerId: unit.id, targetId: target.id });
     resetInteraction(ctx);
     return;
   }
@@ -117,10 +88,6 @@ const clickWithOwnUnit = (
     return;
   }
 
-  const goTo = clickGoTo(unit, x, y, ctx);
-  if (goTo === 'ordered') resetInteraction(ctx);
-  if (goTo) return;
-
   ctx.ui.clearHighlight();
   selectClicked(x, y, ctx);
 };
@@ -131,19 +98,7 @@ const clickWithOwnBuilding = (
   y: number,
   ctx: MapClickContext,
 ) => {
-  const { clicked, selection, highlights, commands, humanId: actor } = ctx;
-  const target = clicked.unit ?? clicked.building;
-
-  if (
-    building.role === 'combat' &&
-    target &&
-    isHighlighted(highlights.attackable, x, y)
-  ) {
-    commands.attack({ actor, attackerId: building.id, targetId: target.id });
-    resetInteraction(ctx);
-    return;
-  }
-
+  const { selection, highlights, commands, humanId: actor } = ctx;
   if (
     building.role === 'production' &&
     building.spawnPoints > 0 &&
@@ -165,17 +120,7 @@ const clickWithOwnBuilding = (
   selectClicked(x, y, ctx);
 };
 
-/**
- * Переводит клик по клетке в намерение: приказ по подсвеченной клетке
- * либо смену выбора. Приоритет задан порядком проверок: движение, атака,
- * расчистка, строительство или найм, приказ «Идти в точку» по далёкой
- * клетке (два клика), затем выбор объекта под курсором.
- * Результат команды пока не влияет на очистку выбора; сообщение об отказе — S19.
- *
- * @param x - Столбец клетки.
- * @param y - Строка клетки.
- * @param ctx - Клетка, выбор, подсветка, команды и действия интерфейса.
- */
+/** ЛКМ выбирает объект или подтверждает режим стройки, найма, расчистки, прицела. */
 export const handleMapCellClick = (
   x: number,
   y: number,
@@ -183,18 +128,58 @@ export const handleMapCellClick = (
 ) => {
   const { unit, building } = ctx.selection;
 
-  // Повторный клик по выделению или любой клик при выбранной чужой
-  // сущности снимает выделение.
-  const selectedOwner = (unit ?? building)?.owner;
-  if (
-    ctx.selection.isCurrent(x, y) ||
-    (selectedOwner !== undefined && selectedOwner !== ctx.humanId)
-  ) {
+  if (ctx.selection.isCurrent(x, y)) {
     resetInteraction(ctx);
+    return;
+  }
+  const selectedOwner = (unit ?? building)?.owner;
+  if (selectedOwner !== undefined && selectedOwner !== ctx.humanId) {
+    ctx.ui.clearHighlight();
+    selectClicked(x, y, ctx);
     return;
   }
 
   if (unit) clickWithOwnUnit(unit, x, y, ctx);
   else if (building) clickWithOwnBuilding(building, x, y, ctx);
   else selectClicked(x, y, ctx);
+};
+
+/** ПКМ отдаёт прямой приказ выбранному своему объекту, заменяя прежнее намерение. */
+export const handleMapCellOrder = (
+  x: number,
+  y: number,
+  ctx: MapClickContext,
+) => {
+  const { selection, clicked, highlights, commands, humanId: actor } = ctx;
+  const entity = selection.unit ?? selection.building;
+  if (!entity || entity.owner !== actor || selection.isCurrent(x, y)) return;
+  const target = clicked.unit ?? clicked.building;
+  const healTarget =
+    highlights.heal?.find(cell => cell.x === x && cell.y === y) ?? clicked.unit;
+  let result;
+  if (target && target.owner !== actor) {
+    result = commands.attack({
+      actor,
+      attackerId: entity.id,
+      targetId: target.id,
+    });
+  } else if (selection.unit?.type === 'healer' && healTarget && commands.heal) {
+    result = commands.heal({
+      actor,
+      healerId: entity.id,
+      targetId: healTarget.id,
+    });
+  } else if (selection.unit && !target) {
+    result = isHighlighted(highlights.reachable, x, y)
+      ? commands.move({ actor, unitId: entity.id, x, y })
+      : commands.goTo?.({ actor, unitId: entity.id, x, y });
+  }
+  if (!result) return;
+  // Ошибка сохраняет намерение и выбор; успешная команда снимает режимы.
+  if (result.ok) {
+    resetInteraction(ctx);
+    if (selection.unit) ctx.ui.selectUnit(entity.id);
+    else ctx.ui.selectBuilding(entity.id);
+    ctx.ui.calculateActionHighlights(entity.id);
+  }
 };

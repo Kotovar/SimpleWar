@@ -17,7 +17,7 @@ import {
   useMovementSelectors,
 } from '@features/pathfinding';
 import type { CommandResult } from '@shared/config';
-import { handleMapCellClick } from './mapClickHandler';
+import { handleMapCellClick, handleMapCellOrder } from './mapClickHandler';
 import { pushMapEffect } from './mapSignals';
 
 /**
@@ -84,14 +84,15 @@ export const useMapCellClick = (scene: Scene) => {
     resetStore: clearHighlight,
   } = useHighlightSelectors();
 
-  return (x: number, y: number) => {
+  return (x: number, y: number, order = false) => {
     if (!humanId) return;
     if (x < 0 || x >= gridColumns || y < 0 || y >= gridRows) return;
 
     const units = useUnitsStore.getState();
     const buildings = useBuildingsStore.getState();
 
-    handleMapCellClick(x, y, {
+    const handler = order ? handleMapCellOrder : handleMapCellClick;
+    handler(x, y, {
       humanId,
       clicked: {
         unit: findAt(scene.units, x, y) ?? null,

@@ -61,7 +61,8 @@ export const Map = () => {
     }
   }, [scene, selection, viewer]);
 
-  const onCellClick = ({ x, y }: Position) => handleCellClick(x, y);
+  const onCellClick = ({ x, y }: Position, order = false) =>
+    handleCellClick(x, y, order);
 
   return (
     <>
@@ -70,7 +71,7 @@ export const Map = () => {
         className={styles.MapViewport}
         tabIndex={0}
         role='region'
-        aria-label='Карта. Перетаскивайте средней или правой кнопкой мыши либо с зажатым пробелом, масштабируйте колесом, двигайте стрелками или WASD. Левый клик выбирает клетку или выполняет действие.'
+        aria-label='Карта. Перетаскивайте средней кнопкой мыши либо с зажатым пробелом, масштабируйте колесом, двигайте стрелками или WASD. Левый клик выбирает объект или подтверждает режим. Правый клик приказывает идти, атаковать или лечить.'
         onContextMenu={event => event.preventDefault()}
         {...input}
       >

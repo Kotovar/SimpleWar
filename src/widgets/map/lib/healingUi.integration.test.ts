@@ -14,7 +14,7 @@ import { spawn } from '@features/spawn';
 import { buildScene } from './buildScene';
 import { renderEntitiesLayer } from './renderEntitiesLayer';
 import { renderSelectionLayer } from './renderSelectionLayer';
-import { handleMapCellClick } from '../ui/utils/mapClickHandler';
+import { handleMapCellOrder } from '../ui/utils/mapClickHandler';
 
 const units = () => useUnitsStore.getState();
 const buildings = () => useBuildingsStore.getState();
@@ -105,7 +105,7 @@ it('лечит скрытого внутри здания рабочего кл�
     { hover: { x: 2, y: 2 }, healTargets },
   );
   expect(texts).toContain('+20');
-  handleMapCellClick(2, 2, {
+  handleMapCellOrder(2, 2, {
     humanId: 'p1',
     clicked: { unit: null, building: scene.buildings[mine] },
     selection: {
