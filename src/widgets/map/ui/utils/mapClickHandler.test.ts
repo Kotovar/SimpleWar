@@ -99,9 +99,28 @@ describe('handleMapCellClick', () => {
     expect(m.setPlannedTarget).not.toHaveBeenCalled();
   });
 
-  it('ПКМ сразу отдаёт дальний приказ, заменяя режим стройки', () => {
+  it('первый дальний ПКМ закрепляет цель без движения и заменяет режим стройки', () => {
     const selectedUnit = unitAt('worker', 1, 1);
     const m = makeContext({ selectedUnit, buildingTypeToPlace: 'farm' });
+    m.canPlanRoute.mockReturnValue(true);
+    handleMapCellOrder(8, 1, m.ctx);
+    expect(m.setPlannedTarget).toHaveBeenCalledWith({
+      unitId: selectedUnit.id,
+      x: 8,
+      y: 1,
+    });
+    expect(m.goTo).not.toHaveBeenCalled();
+    expect(m.move).not.toHaveBeenCalled();
+    expect(m.clearHighlight).toHaveBeenCalled();
+    expect(m.selectUnit).toHaveBeenCalledWith(selectedUnit.id);
+  });
+
+  it('второй дальний ПКМ отдаёт приказ и снимает выбор без повторного выбора', () => {
+    const selectedUnit = unitAt('worker', 1, 1);
+    const m = makeContext({
+      selectedUnit,
+      planned: { unitId: selectedUnit.id, x: 8, y: 1 },
+    });
     handleMapCellOrder(8, 1, m.ctx);
     expect(m.goTo).toHaveBeenCalledWith({
       actor: 'p1',
@@ -109,8 +128,40 @@ describe('handleMapCellClick', () => {
       x: 8,
       y: 1,
     });
-    expect(m.clearHighlight).toHaveBeenCalled();
-    expect(m.selectUnit).toHaveBeenCalledWith(selectedUnit.id);
+    expect(m.clearSelection).toHaveBeenCalled();
+    expect(m.clearMovement).toHaveBeenCalled();
+    expect(m.selectUnit).not.toHaveBeenCalled();
+  });
+
+  it('другая клетка или другой юнит заменяет отметку вместо подтверждения', () => {
+    const selectedUnit = unitAt('worker', 1, 1);
+    for (const planned of [
+      { unitId: selectedUnit.id, x: 7, y: 1 },
+      { unitId: 'other', x: 8, y: 1 },
+    ]) {
+      const m = makeContext({ selectedUnit, planned });
+      m.canPlanRoute.mockReturnValue(true);
+      handleMapCellOrder(8, 1, m.ctx);
+      expect(m.goTo).not.toHaveBeenCalled();
+      expect(m.setPlannedTarget).toHaveBeenCalledWith({
+        unitId: selectedUnit.id,
+        x: 8,
+        y: 1,
+      });
+    }
+  });
+
+  it('отказ подтверждённого дальнего приказа сохраняет выбор и отметку', () => {
+    const selectedUnit = unitAt('worker', 1, 1);
+    const m = makeContext({
+      selectedUnit,
+      planned: { unitId: selectedUnit.id, x: 8, y: 1 },
+    });
+    m.goTo.mockReturnValue(reject('busy'));
+    handleMapCellOrder(8, 1, m.ctx);
+    expect(m.clearSelection).not.toHaveBeenCalled();
+    expect(m.clearMovement).not.toHaveBeenCalled();
+    expect(m.setPlannedTarget).not.toHaveBeenCalled();
   });
 
   it('ПКМ без своего выбранного объекта ничего не выбирает и не приказывает', () => {

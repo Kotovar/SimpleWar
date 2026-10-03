@@ -57,15 +57,20 @@ export const TurnControls = ({
 
   return (
     <div className={styles.ButtonRow}>
-      {onRunOrders && isOwnTurn && (
-        <button
-          className={styles.OrdersButton}
-          title='Юниты с приказом «Идти в точку» пойдут на оставшиеся очки'
-          onClick={onRunOrders}
-        >
-          Выполнить приказы
-        </button>
-      )}
+      <button
+        className={styles.OrdersButton}
+        title={
+          !isOwnTurn
+            ? 'Доступно в свой ход'
+            : onRunOrders
+              ? 'Юниты с приказом «Идти в точку» пойдут на оставшиеся очки'
+              : 'Нет активных приказов'
+        }
+        onClick={onRunOrders}
+        disabled={!isOwnTurn || !onRunOrders}
+      >
+        Выполнить приказы
+      </button>
       <button
         className={styles.EndTurnButton}
         onClick={onNextTurn}

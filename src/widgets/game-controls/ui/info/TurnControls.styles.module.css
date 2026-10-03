@@ -1,5 +1,6 @@
 .ButtonRow {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   align-items: center;
   justify-content: center;
@@ -177,8 +178,13 @@
   white-space: nowrap;
   cursor: pointer;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background-color: var(--surface-strong);
     border-color: var(--border-strong);
+  }
+
+  &:disabled {
+    color: var(--text-muted);
+    cursor: default;
   }
 }

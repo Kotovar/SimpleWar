@@ -24,6 +24,11 @@ export const getHelpGroups = (layout?: ReadonlyMap<string, string> | null) => {
           label: 'Идти, атаковать врага, лечить своего',
         },
         {
+          codes: [],
+          keys: 'ПКМ × 2 по далёкой клетке',
+          label: 'Отметить цель, затем подтвердить приказ; Esc отменяет',
+        },
+        {
           codes: [] as string[],
           keys: 'СКМ / Пробел + ЛКМ',
           label: 'Двигать карту',

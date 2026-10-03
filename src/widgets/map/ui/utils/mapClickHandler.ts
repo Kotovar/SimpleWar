@@ -157,6 +157,7 @@ export const handleMapCellOrder = (
   const healTarget =
     highlights.heal?.find(cell => cell.x === x && cell.y === y) ?? clicked.unit;
   let result;
+  let distantOrder = false;
   if (target && target.owner !== actor) {
     result = commands.attack({
       actor,
@@ -170,14 +171,34 @@ export const handleMapCellOrder = (
       targetId: healTarget.id,
     });
   } else if (selection.unit && !target) {
-    result = isHighlighted(highlights.reachable, x, y)
-      ? commands.move({ actor, unitId: entity.id, x, y })
-      : commands.goTo?.({ actor, unitId: entity.id, x, y });
+    const planned = highlights.planned;
+    const confirmed =
+      planned?.unitId === entity.id && planned.x === x && planned.y === y;
+    distantOrder = confirmed || !isHighlighted(highlights.reachable, x, y);
+    if (
+      distantOrder &&
+      !confirmed &&
+      commands.goTo &&
+      ctx.ui.setPlannedTarget &&
+      ctx.ui.canPlanRoute?.(selection.unit, x, y)
+    ) {
+      // Снимаем прежний режим, но оставляем юнит выбранным и закрепляем путь.
+      resetInteraction(ctx);
+      ctx.ui.selectUnit(entity.id);
+      ctx.ui.calculateActionHighlights(entity.id);
+      ctx.ui.setPlannedTarget({ unitId: entity.id, x, y });
+      return;
+    }
+    result = distantOrder
+      ? commands.goTo?.({ actor, unitId: entity.id, x, y })
+      : commands.move({ actor, unitId: entity.id, x, y });
   }
+
   if (!result) return;
   // Ошибка сохраняет намерение и выбор; успешная команда снимает режимы.
   if (result.ok) {
     resetInteraction(ctx);
+    if (distantOrder) return;
     if (selection.unit) ctx.ui.selectUnit(entity.id);
     else ctx.ui.selectBuilding(entity.id);
     ctx.ui.calculateActionHighlights(entity.id);
