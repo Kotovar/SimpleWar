@@ -25,12 +25,15 @@ export type UnitType = MilitaryType | CivilType;
 type UnitRole = 'military' | 'civil';
 
 /**
- * Сохраняемый приказ «Идти в точку». `stopped` — почему исполнение
+ * Сохраняемый приказ движения, стройки или назначения на работу. `stopped` — почему исполнение
  * остановилось (`enemy` — в обзоре новый враг); такой приказ больше не
  * исполняется и ждёт решения игрока.
  */
-export type UnitOrder = {
-  type: 'goto';
+export type UnitOrder = (
+  | { type: 'goto' }
+  | { type: 'build'; buildingType: BuildingType }
+  | { type: 'work'; buildingId: string }
+) & {
   x: number;
   y: number;
   stopped?: RejectionCode | 'enemy';

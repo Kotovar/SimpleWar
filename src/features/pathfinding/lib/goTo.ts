@@ -1,5 +1,6 @@
 import {
   REJECTION_MESSAGE,
+  type CommandResult,
   type ParticipantId,
   type Position,
   type Unit,
@@ -49,6 +50,32 @@ export const getRoutePreview = (
   }
   return { path, cost, turns, firstStop };
 };
+
+/** Маршрут приказа: к цели движения или к свободной клетке рядом со стройкой/работой. */
+export const getOrderRoutePreview = (
+  unit: Unit,
+  actor: ParticipantId,
+  order: UnitOrder,
+) => {
+  if (order.type === 'goto') return getRoutePreview(unit, actor, order);
+  if (Math.max(Math.abs(unit.x - order.x), Math.abs(unit.y - order.y)) === 1)
+    return null;
+  const routes = [];
+  for (let y = order.y - 1; y <= order.y + 1; y++) {
+    for (let x = order.x - 1; x <= order.x + 1; x++) {
+      if (x === order.x && y === order.y) continue;
+      if (!useMapStore.getState().getCell(x, y)) continue;
+      const route = getRoutePreview(unit, actor, { x, y });
+      if (route) routes.push(route);
+    }
+  }
+  return routes.sort((a, b) => a.cost - b.cost)[0] ?? null;
+};
+
+/** Действие по прибытии выполняет вызывающий слой обычной командой. */
+export type OrderArrival = (
+  unit: Unit & { order: Exclude<UnitOrder, { type: 'goto' }> },
+) => CommandResult;
 
 /** Причина остановки приказа для игрока. */
 export const getOrderStopMessage = (
@@ -124,7 +151,11 @@ export const cancelOrder = ({
  *
  * @returns `true`, если приказ остановился сейчас и ждёт решения игрока.
  */
-export const advanceOrder = (actor: ParticipantId, unitId: string) => {
+export const advanceOrder = (
+  actor: ParticipantId,
+  unitId: string,
+  onArrival?: OrderArrival,
+) => {
   const { units, setOrder } = useUnitsStore.getState();
   const unit = units[unitId];
   const order = unit?.order;
@@ -135,23 +166,51 @@ export const advanceOrder = (actor: ParticipantId, unitId: string) => {
     return true;
   };
 
-  const plan = getRoutePreview(unit, actor, order);
+  if (order.type !== 'goto' && !onArrival) return false;
+  const arrive = (worker: Unit) => {
+    if (order.type === 'goto' || !onArrival) return false;
+    // Отсутствие рабочего действия означает ожидание следующего своего хода.
+    if (
+      order.type === 'build' &&
+      worker.role === 'civil' &&
+      worker.buildPoints <= 0
+    )
+      return false;
+    const result = onArrival({ ...worker, order });
+    return !result.ok && result.code !== 'busy' ? stop(result.code) : false;
+  };
+  if (
+    order.type !== 'goto' &&
+    Math.max(Math.abs(unit.x - order.x), Math.abs(unit.y - order.y)) === 1
+  )
+    return arrive(unit);
+  const plan = getOrderRoutePreview(unit, actor, order);
   if (!plan)
-    return stop(createLandingCheck(actor)(order) ? 'path' : 'occupied');
+    return stop(
+      order.type !== 'goto' || createLandingCheck(actor)(order)
+        ? 'path'
+        : 'occupied',
+    );
   if (plan.firstStop > unit.movePoints) return false;
 
   const seen = getSeenEnemies(actor);
-  const result = move({ actor, unitId, x: order.x, y: order.y, partial: true });
+  const target = plan.path[plan.path.length - 1];
+  const result = move({ actor, unitId, ...target, partial: true });
   if (!result.ok) return result.code === 'busy' ? false : stop(result.code);
   const moved = useUnitsStore.getState().units[unitId];
   if (!moved) return false;
-  if (moved.x === order.x && moved.y === order.y) {
+  if (order.type === 'goto' && moved.x === order.x && moved.y === order.y) {
     setOrder(unitId, null);
     return false;
   }
   if ([...getSeenEnemies(actor)].some(id => !seen.has(id)))
     return stop('enemy');
-  if (!getRoutePreview(moved, actor, order)) {
+  if (
+    order.type !== 'goto' &&
+    Math.max(Math.abs(moved.x - order.x), Math.abs(moved.y - order.y)) === 1
+  )
+    return arrive(moved);
+  if (!getOrderRoutePreview(moved, actor, order)) {
     return stop(createLandingCheck(actor)(order) ? 'path' : 'occupied');
   }
   return false;
@@ -175,9 +234,9 @@ export const goTo = (command: GoToCommand) => {
  *
  * @returns ID юнитов, чьи приказы остановились в этом вызове.
  */
-export const executeOrders = (actor: ParticipantId) =>
+export const executeOrders = (actor: ParticipantId, onArrival?: OrderArrival) =>
   Object.values(useUnitsStore.getState().units)
     .filter(unit => unit.owner === actor && unit.order && !unit.order.stopped)
     .map(unit => unit.id)
     .sort()
-    .filter(id => advanceOrder(actor, id));
+    .filter(id => advanceOrder(actor, id, onArrival));

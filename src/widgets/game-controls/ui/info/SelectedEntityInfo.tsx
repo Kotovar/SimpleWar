@@ -208,7 +208,11 @@ const UnitDetails = ({ unit }: { unit: Unit }) => (
         <dd>
           {unit.order.stopped
             ? `Остановлен: ${getOrderStopMessage(unit.order.stopped)}`
-            : 'Идти в точку'}
+            : unit.order.type === 'work'
+              ? 'Работать'
+              : unit.order.type === 'build'
+                ? `Построить: ${BUILDINGS_NAME[unit.order.buildingType]}`
+                : 'Идти в точку'}
         </dd>
       </div>
     )}

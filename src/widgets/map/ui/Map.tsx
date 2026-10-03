@@ -1,9 +1,32 @@
-import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
-import type { Position } from '@shared/config';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
+import {
+  BUILDINGS_NAME,
+  BUILDINGS_CONFIG,
+  type Position,
+} from '@shared/config';
 import { useSettingsStore } from '@entities/settings';
 import { useUnitsStore } from '@entities/units';
 import { useSelectionStore } from '@features/selection';
-import { useMovementStore } from '@features/pathfinding';
+import { build, getContextBuildings, giveBuildOrder } from '@features/build';
+import { getTurnRejection, useGameLoopStore } from '@entities/games';
+import { GoldIcon, WoodIcon } from '@shared/ui';
+import {
+  assignWorker,
+  getContextWorkplace,
+  giveWorkOrder,
+} from '@features/workers';
+import { worldToScreen } from '@shared/lib';
+import {
+  advanceOrder,
+  useHighlightStore,
+  useMovementStore,
+} from '@features/pathfinding';
 import {
   useCameraInput,
   useGameHotkeys,
@@ -15,6 +38,13 @@ import { MapControls } from './MapControls';
 import styles from './styles.module.css';
 
 export const Map = () => {
+  const [buildMenu, setBuildMenu] = useState<
+    (Position & { workerId: string }) | null
+  >(null);
+  const camera = useSettingsStore(state => state.camera);
+  const cellSize = useSettingsStore(state => state.cellSize);
+  const mapSize = useSettingsStore(state => state.viewport);
+  const activePlayer = useGameLoopStore(state => state.activePlayer);
   const viewport = useRef<HTMLDivElement>(null);
   const input = useCameraInput(viewport);
   const { scene, humanId, viewer } = useScene();
@@ -61,8 +91,68 @@ export const Map = () => {
     }
   }, [scene, selection, viewer]);
 
-  const onCellClick = ({ x, y }: Position, order = false) =>
+  const selectedUnitId = selection?.kind === 'unit' ? selection.id : null;
+  useEffect(() => {
+    setBuildMenu(null);
+  }, [selectedUnitId, activePlayer]);
+
+  const menuWorker =
+    buildMenu &&
+    selection?.kind === 'unit' &&
+    selection.id === buildMenu.workerId
+      ? useUnitsStore.getState().units[buildMenu.workerId]
+      : null;
+  const menuOptions =
+    menuWorker && humanId && !getTurnRejection(humanId)
+      ? getContextBuildings(menuWorker, humanId, buildMenu!)
+      : [];
+  const menuWorkplace =
+    menuWorker && humanId && buildMenu && !getTurnRejection(humanId)
+      ? getContextWorkplace(menuWorker, humanId, buildMenu)
+      : null;
+  const finishOrder = (workerId: string) => {
+    if (!humanId) return;
+    const stopped = advanceOrder(humanId, workerId, unit =>
+      unit.order.type === 'work'
+        ? assignWorker({
+            actor: humanId,
+            workerId: unit.id,
+            buildingId: unit.order.buildingId,
+          })
+        : build({ actor: humanId, workerId: unit.id, ...unit.order }),
+    );
+    setBuildMenu(null);
+    useSelectionStore.getState().clearSelection();
+    useMovementStore.getState().resetStore();
+    useHighlightStore.getState().resetStore();
+    if (stopped) {
+      useSelectionStore.getState().selectUnit(workerId);
+      useMovementStore.getState().calculateActionHighlights(workerId);
+    }
+    viewport.current?.focus();
+  };
+  const menuPoint =
+    buildMenu &&
+    worldToScreen(camera, cellSize, { x: buildMenu.x + 0.5, y: buildMenu.y });
+  const onCellClick = ({ x, y }: Position, order = false) => {
+    setBuildMenu(null);
+    const unit =
+      selection?.kind === 'unit'
+        ? useUnitsStore.getState().units[selection.id]
+        : null;
+    if (
+      order &&
+      unit &&
+      humanId &&
+      !getTurnRejection(humanId) &&
+      (getContextBuildings(unit, humanId, { x, y }).length ||
+        getContextWorkplace(unit, humanId, { x, y }))
+    ) {
+      setBuildMenu({ workerId: unit.id, x, y });
+      return;
+    }
     handleCellClick(x, y, order);
+  };
 
   return (
     <>
@@ -71,7 +161,13 @@ export const Map = () => {
         className={styles.MapViewport}
         tabIndex={0}
         role='region'
-        aria-label='Карта. Перетаскивайте средней кнопкой мыши либо с зажатым пробелом, масштабируйте колесом, двигайте стрелками или WASD. Левый клик выбирает объект или подтверждает режим. Правый клик приказывает идти, атаковать или лечить.'
+        aria-label='Карта. Перетаскивайте средней кнопкой мыши либо с зажатым пробелом, масштабируйте колесом, двигайте стрелками или WASD. Левый клик выбирает объект или подтверждает режим. Правый клик приказывает идти, атаковать или лечить; рабочим по ресурсу открывает стройку.'
+        onKeyDownCapture={event => {
+          if (event.key === 'Escape' && buildMenu) {
+            event.stopPropagation();
+            setBuildMenu(null);
+          }
+        }}
         onContextMenu={event => event.preventDefault()}
         {...input}
       >
@@ -80,6 +176,89 @@ export const Map = () => {
           humanId={humanId}
           onCellClick={onCellClick}
         />
+        {buildMenu &&
+          menuWorker &&
+          (menuOptions.length > 0 || menuWorkplace) &&
+          menuPoint &&
+          humanId && (
+            <div
+              className={styles.BuildMenu}
+              role='group'
+              aria-label='Контекстная стройка'
+              style={{
+                left: Math.max(4, Math.min(menuPoint.x, mapSize.width - 240)),
+                top: Math.max(4, Math.min(menuPoint.y, mapSize.height - 280)),
+              }}
+              onPointerDown={event => event.stopPropagation()}
+              onKeyDown={event => event.stopPropagation()}
+            >
+              <strong>
+                {menuWorkplace
+                  ? BUILDINGS_NAME[menuWorkplace.type]
+                  : `Построить (${buildMenu.x + 1}, ${buildMenu.y + 1})`}
+              </strong>
+              {menuOptions.map(buildingType => (
+                <button
+                  key={buildingType}
+                  type='button'
+                  aria-label={`${BUILDINGS_NAME[buildingType]}: ${BUILDINGS_CONFIG[buildingType].cost.gold} золота, ${BUILDINGS_CONFIG[buildingType].cost.wood} древесины`}
+                  onClick={() => {
+                    const result = giveBuildOrder({
+                      actor: humanId,
+                      workerId: buildMenu.workerId,
+                      buildingType,
+                      x: buildMenu.x,
+                      y: buildMenu.y,
+                    });
+                    if (!result.ok) return;
+                    finishOrder(buildMenu.workerId);
+                  }}
+                >
+                  <span>{BUILDINGS_NAME[buildingType]}</span>
+                  <span className={styles.ContextCost}>
+                    <span
+                      aria-label={`${BUILDINGS_CONFIG[buildingType].cost.gold} золота`}
+                      title='Золото'
+                    >
+                      <GoldIcon />
+                      {BUILDINGS_CONFIG[buildingType].cost.gold}
+                    </span>
+                    <span
+                      aria-label={`${BUILDINGS_CONFIG[buildingType].cost.wood} древесины`}
+                      title='Древесина'
+                    >
+                      <WoodIcon />
+                      {BUILDINGS_CONFIG[buildingType].cost.wood}
+                    </span>
+                  </span>
+                </button>
+              ))}
+              {menuWorkplace && (
+                <button
+                  type='button'
+                  onClick={() => {
+                    const result = giveWorkOrder({
+                      actor: humanId,
+                      workerId: buildMenu.workerId,
+                      buildingId: menuWorkplace.id,
+                    });
+                    if (result.ok) finishOrder(buildMenu.workerId);
+                  }}
+                >
+                  Работать
+                </button>
+              )}
+              <button
+                type='button'
+                onClick={() => {
+                  setBuildMenu(null);
+                  viewport.current?.focus();
+                }}
+              >
+                Отмена
+              </button>
+            </div>
+          )}
       </div>
 
       <MapControls onFocusBase={base ? focusBase : undefined} />

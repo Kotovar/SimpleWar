@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { Owner, Position, Unit } from '@shared/config';
 import type { Selection } from '@features/selection';
-import { getRoutePreview } from '@features/pathfinding';
+import { getOrderRoutePreview, getRoutePreview } from '@features/pathfinding';
 
 /**
  * Маршрут выбранного своего юнита — по известной карте, как и сам приказ:
@@ -29,6 +29,8 @@ export const useHoverPath = (
     const unit = units[selection.id];
     if (unit?.owner !== humanId) return null;
     const mark = planned?.unitId === unit.id ? planned : null;
+    if (unit.order && unit.order.type !== 'goto')
+      return getOrderRoutePreview(unit, humanId, unit.order);
     for (const target of [mark, hover, unit.order]) {
       const route = target && getRoutePreview(unit, humanId, target);
       if (route) return route;
