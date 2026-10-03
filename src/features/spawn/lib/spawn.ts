@@ -88,8 +88,14 @@ const validateAndSpawn = (
     );
   }
 
-  if (!spawnUnit(unitType, x, y, actor)) {
+  const unitId = spawnUnit(unitType, x, y, actor);
+  if (!unitId) {
     return failure(`Юнит ${unitType} не создан`);
+  }
+  const target = building.rallyPoint;
+  if (target && (target.x !== x || target.y !== y)) {
+    // Копируем цель без вложенной команды: найм ещё держит runCommand busy.
+    useUnitsStore.getState().setOrder(unitId, { type: 'goto', ...target });
   }
   changeSpawnPoints(buildingId);
   if (!isFree) removeResources(actor, UNITS_CONFIG[unitType].cost);

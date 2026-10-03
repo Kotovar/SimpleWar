@@ -34,6 +34,7 @@ type Overrides = {
   selectedBuilding?: Building | null;
   buildingTypeToPlace?: BuildingType | null;
   unitTypeToSpawn?: UnitType | null;
+  choosingRallyPoint?: boolean;
   buildableCells?: Position[];
   reachableCells?: Position[];
   attackableTargets?: Position[];
@@ -59,10 +60,12 @@ const makeContext = (o: Overrides = {}) => {
     spawn: vi.fn(done),
     goTo: vi.fn(done),
     heal: vi.fn(done),
+    setRallyPoint: vi.fn(done),
     canPlanRoute: vi.fn((_unit: Unit, _x: number, _y: number) => false),
     setPlannedTarget: vi.fn(),
   };
-  const { move, attack, build, spawn, goTo, heal, ...ui } = mocks;
+  const { move, attack, build, spawn, goTo, heal, setRallyPoint, ...ui } =
+    mocks;
   const ctx: MapClickContext = {
     humanId: 'p1',
     clicked: { unit: o.unit ?? null, building: o.building ?? null },
@@ -71,6 +74,7 @@ const makeContext = (o: Overrides = {}) => {
       building: o.selectedBuilding ?? null,
       buildingTypeToPlace: o.buildingTypeToPlace ?? null,
       unitTypeToSpawn: o.unitTypeToSpawn ?? null,
+      choosingRallyPoint: o.choosingRallyPoint,
       isCurrent: o.isCurrent ?? (() => false),
     },
     highlights: {
@@ -80,7 +84,7 @@ const makeContext = (o: Overrides = {}) => {
       spawnable: o.spawnableCells ?? null,
       planned: o.planned ?? null,
     },
-    commands: { move, attack, build, spawn, goTo, heal },
+    commands: { move, attack, build, spawn, goTo, heal, setRallyPoint },
     ui,
   };
   return { ctx, ...mocks };
@@ -162,6 +166,57 @@ describe('handleMapCellClick', () => {
     expect(m.clearSelection).not.toHaveBeenCalled();
     expect(m.clearMovement).not.toHaveBeenCalled();
     expect(m.setPlannedTarget).not.toHaveBeenCalled();
+  });
+
+  it('кнопка точки сбора переводит ЛКМ в установку вместо выбора клетки', () => {
+    const selectedBuilding = buildingAt('base', 1, 1);
+    const m = makeContext({ selectedBuilding, choosingRallyPoint: true });
+    handleMapCellClick(8, 1, m.ctx);
+    expect(m.setRallyPoint).toHaveBeenCalledWith({
+      actor: 'p1',
+      buildingId: selectedBuilding.id,
+      target: { x: 8, y: 1 },
+    });
+    expect(m.selectCell).not.toHaveBeenCalled();
+    expect(m.selectBuilding).toHaveBeenCalledWith(selectedBuilding.id);
+  });
+
+  it('отказ при выборе точки через кнопку сохраняет режим', () => {
+    const m = makeContext({
+      selectedBuilding: buildingAt('base', 1, 1),
+      choosingRallyPoint: true,
+    });
+    m.setRallyPoint.mockReturnValue(reject('occupied'));
+    handleMapCellClick(8, 1, m.ctx);
+    expect(m.clearSelection).not.toHaveBeenCalled();
+    expect(m.clearHighlight).not.toHaveBeenCalled();
+  });
+
+  it('ПКМ зданием найма задаёт точку сбора даже вне режима найма', () => {
+    const selectedBuilding = buildingAt('barracks', 1, 1);
+    const m = makeContext({
+      selectedBuilding,
+      unit: unitAt('worker', 8, 1, 'p2'),
+    });
+    handleMapCellOrder(8, 1, m.ctx);
+    expect(m.setRallyPoint).toHaveBeenCalledWith({
+      actor: 'p1',
+      buildingId: selectedBuilding.id,
+      target: { x: 8, y: 1 },
+    });
+    expect(m.attack).not.toHaveBeenCalled();
+    expect(m.selectBuilding).toHaveBeenCalledWith(selectedBuilding.id);
+  });
+
+  it('ПКМ по выбранному зданию найма снимает точку сбора', () => {
+    const selectedBuilding = buildingAt('base', 1, 1);
+    const m = makeContext({ selectedBuilding, isCurrent: () => true });
+    handleMapCellOrder(1, 1, m.ctx);
+    expect(m.setRallyPoint).toHaveBeenCalledWith({
+      actor: 'p1',
+      buildingId: selectedBuilding.id,
+      target: null,
+    });
   });
 
   it('ПКМ без своего выбранного объекта ничего не выбирает и не приказывает', () => {

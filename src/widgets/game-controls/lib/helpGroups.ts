@@ -21,7 +21,7 @@ export const getHelpGroups = (layout?: ReadonlyMap<string, string> | null) => {
         {
           codes: [],
           keys: 'ПКМ',
-          label: 'Идти, атаковать врага, лечить своего',
+          label: 'Идти, атаковать, лечить; зданием найма — точка сбора',
         },
         {
           codes: [],

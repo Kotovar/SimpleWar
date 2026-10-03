@@ -49,6 +49,8 @@ describe('getSelectionActions', () => {
       ['spawn:swordsman', 'Digit1'],
       ['spawn:archer', 'Digit2'],
       ['spawn:spearman', 'Digit3'],
+      ['rallyPoint', 'KeyT'],
+      ['cancelOrder', 'KeyU'],
       ['demolish', 'Delete'],
     ]);
     expect(

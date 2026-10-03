@@ -1,4 +1,4 @@
-import type { CellType, Owner } from './common';
+import type { CellType, Owner, Position } from './common';
 import type { Cost } from './economy';
 import type { UnitType } from './units';
 import type { ResearchType } from './research';
@@ -44,6 +44,8 @@ export type ProductionBuilding = BaseBuilding & {
   spawningUnits: UnitType[];
   spawnPoints: number;
   maxSpawnPoints: number;
+  /** Цель для будущих новобранцев; отсутствие — остаются у здания. */
+  rallyPoint?: Position;
 };
 
 /**

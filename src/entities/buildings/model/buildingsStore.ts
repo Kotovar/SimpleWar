@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { gameEvents, withDevtools } from '@shared/lib';
 import type {
   Owner,
+  Position,
   BuildingType,
   Building,
   ParticipantId,
@@ -13,6 +14,8 @@ import { createBuilding } from './createBuilding';
 type BuildingsState = {
   buildings: Record<string, Building>;
   selectedBuildingForSpawn: BuildingType | null;
+  selectedRallyBuildingId: string | null;
+  selectRallyBuilding: (id: string | null) => void;
 
   spawnBuilding: (
     type: BuildingType,
@@ -31,6 +34,7 @@ type BuildingsState = {
   getProductionBuildings: (owner: ParticipantId) => ProductionBuilding[];
   changeAttackPoints: (id: string) => void;
   changeSpawnPoints: (id: string) => void;
+  setRallyPoint: (id: string, target: Position | null) => void;
   selectBuildingForSpawn: (buildingType: BuildingType) => void;
   clearSelectedBuildingForSpawn: () => void;
   resetBuildingsForNewTurn: (owner: Owner) => void;
@@ -43,6 +47,8 @@ export const useBuildingsStore = create<BuildingsState>()(
   withDevtools('buildings', (set, get) => ({
     buildings: {},
     selectedBuildingForSpawn: null,
+    selectedRallyBuildingId: null,
+    selectRallyBuilding: id => set({ selectedRallyBuildingId: id }),
 
     spawnBuilding: (type, x, y, owner) => {
       const building = createBuilding(type, x, y, owner);
@@ -76,6 +82,14 @@ export const useBuildingsStore = create<BuildingsState>()(
         });
       }
     },
+
+    setRallyPoint: (id, target) =>
+      set(state => {
+        const building = state.buildings[id];
+        if (building?.role !== 'production') return;
+        if (target) building.rallyPoint = { ...target };
+        else delete building.rallyPoint;
+      }),
 
     repairBuilding: (id, hp) =>
       set(state => {
@@ -156,6 +170,7 @@ export const useBuildingsStore = create<BuildingsState>()(
     clearSelectedBuildingForSpawn: () => {
       set(state => {
         state.selectedBuildingForSpawn = null;
+        state.selectedRallyBuildingId = null;
       });
     },
 
@@ -173,6 +188,7 @@ export const useBuildingsStore = create<BuildingsState>()(
           }
         });
         state.selectedBuildingForSpawn = null;
+        state.selectedRallyBuildingId = null;
       }),
 
     removeOwnerBuildings: owner =>
@@ -186,6 +202,7 @@ export const useBuildingsStore = create<BuildingsState>()(
       set(state => {
         state.buildings = {};
         state.selectedBuildingForSpawn = null;
+        state.selectedRallyBuildingId = null;
       });
     },
   })),

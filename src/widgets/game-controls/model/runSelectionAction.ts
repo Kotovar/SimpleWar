@@ -18,6 +18,8 @@ import {
 } from '@features/pathfinding';
 import { cancelResearch, startResearch } from '@features/research';
 import { useSelectionStore } from '@features/selection';
+import { spawnAtRallyPoint } from './spawnAtRallyPoint';
+import { setRallyPoint } from '@features/spawn';
 import { setUnitRest } from '@features/game-loop';
 import {
   assignWorker,
@@ -70,7 +72,18 @@ export const runSelectionAction = (
   const actor = humanId;
   const [kind, target] = id.split(':');
   switch (kind) {
+    case 'rallyPoint':
+      if (building?.role !== 'production') return;
+      resetModes();
+      if (!input.mode.rally)
+        useBuildingsStore.getState().selectRallyBuilding(building.id);
+      return;
     case 'cancelOrder':
+      if (building?.role === 'production') {
+        if (setRallyPoint({ actor, buildingId: building.id, target: null }).ok)
+          resetModes();
+        return;
+      }
       if (!unit) return;
       cancelOrder({ actor, unitId: unit.id });
       resetModes(unit.id);
@@ -111,6 +124,10 @@ export const runSelectionAction = (
       const type = target as UnitType;
       const wasSelected = input.mode.unit === type;
       resetModes();
+      if (building.role === 'production' && building.rallyPoint) {
+        spawnAtRallyPoint(actor, building, type);
+        return;
+      }
       if (wasSelected) return;
       useUnitsStore.getState().selectUnitForSpawn(type);
       useHighlightStore

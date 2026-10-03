@@ -126,6 +126,14 @@ const buildingActions = (
       action('unassign', { reason }),
     );
   }
+  if (building.role === 'production')
+    buttons.push(action('rallyPoint', { pressed: input.mode.rally }), {
+      ...action('cancelOrder', {
+        hint: 'Новые юниты останутся у здания; приказы уже нанятых не меняются',
+        reason: building.rallyPoint ? undefined : 'Точка сбора не задана',
+      }),
+      label: 'Снять точку сбора',
+    });
   if (building.type !== 'base') buttons.push(action('demolish'));
   return buttons;
 };

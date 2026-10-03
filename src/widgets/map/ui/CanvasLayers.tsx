@@ -202,6 +202,10 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
           path: hoverPath,
           attackableTargets,
           healTargets,
+          showRallyPoint:
+            !!humanId &&
+            selection?.kind === 'building' &&
+            buildings[selection.id]?.owner === humanId,
           pulse,
         }),
       ),
@@ -212,6 +216,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     healTargets,
     hover,
     hoverPath,
+    humanId,
     selection,
     units,
     view,

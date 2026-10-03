@@ -61,6 +61,7 @@ export type SelectionActionInput = {
     unit: UnitType | null;
     clearing: boolean;
     striking: boolean;
+    rally?: boolean;
   };
 };
 

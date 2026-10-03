@@ -99,6 +99,18 @@ const clickWithOwnBuilding = (
   ctx: MapClickContext,
 ) => {
   const { selection, highlights, commands, humanId: actor } = ctx;
+  if (building.role === 'production' && selection.choosingRallyPoint) {
+    const result = commands.setRallyPoint?.({
+      actor,
+      buildingId: building.id,
+      target: { x, y },
+    });
+    if (result?.ok) {
+      resetInteraction(ctx);
+      ctx.ui.selectBuilding(building.id);
+    }
+    return;
+  }
   if (
     building.role === 'production' &&
     building.spawnPoints > 0 &&
@@ -152,13 +164,21 @@ export const handleMapCellOrder = (
 ) => {
   const { selection, clicked, highlights, commands, humanId: actor } = ctx;
   const entity = selection.unit ?? selection.building;
-  if (!entity || entity.owner !== actor || selection.isCurrent(x, y)) return;
+  if (!entity || entity.owner !== actor) return;
+  const onCurrent = selection.isCurrent(x, y);
+  if (onCurrent && selection.building?.role !== 'production') return;
   const target = clicked.unit ?? clicked.building;
   const healTarget =
     highlights.heal?.find(cell => cell.x === x && cell.y === y) ?? clicked.unit;
   let result;
   let distantOrder = false;
-  if (target && target.owner !== actor) {
+  if (selection.building?.role === 'production') {
+    result = commands.setRallyPoint?.({
+      actor,
+      buildingId: entity.id,
+      target: onCurrent ? null : { x, y },
+    });
+  } else if (target && target.owner !== actor) {
     result = commands.attack({
       actor,
       attackerId: entity.id,

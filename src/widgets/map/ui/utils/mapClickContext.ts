@@ -14,7 +14,7 @@ import type {
   PrepareStrikeCommand,
 } from '@features/combat';
 import type { BuildCommand } from '@features/build';
-import type { SpawnCommand } from '@features/spawn';
+import type { RallyPointCommand, SpawnCommand } from '@features/spawn';
 import type { ClearForestCommand } from '@features/workers';
 
 /** Всё, что нужно клику: где кликнули, что выбрано, что подсвечено и чем ответить. */
@@ -31,6 +31,7 @@ export type MapClickContext = {
     buildingTypeToPlace: BuildingType | null;
     /** Юнит, выбранный зданию для найма. */
     unitTypeToSpawn: UnitType | null;
+    choosingRallyPoint?: boolean;
     isCurrent: (x: number, y: number) => boolean;
   };
   /** Подсвеченные клетки: только по ним клик превращается в приказ. */
@@ -54,6 +55,7 @@ export type MapClickContext = {
     attack: (command: AttackCommand) => CommandResult;
     build: (command: BuildCommand) => CommandResult;
     spawn: (command: SpawnCommand) => CommandResult;
+    setRallyPoint?: (command: RallyPointCommand) => CommandResult;
     clearForest?: (command: ClearForestCommand) => CommandResult;
     prepareStrike?: (command: PrepareStrikeCommand) => CommandResult;
     heal?: (command: HealCommand) => CommandResult;

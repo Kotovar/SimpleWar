@@ -6,7 +6,7 @@ import { useSelectionSelectors } from '@features/selection';
 import { attack, heal, prepareStrike } from '@features/combat';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { build } from '@features/build';
-import { spawn } from '@features/spawn';
+import { setRallyPoint, spawn } from '@features/spawn';
 import { clearForest } from '@features/workers';
 import {
   getRoutePreview,
@@ -39,6 +39,7 @@ const getCommands = (x: number, y: number) => ({
   attack: withRejectSignal(attack, x, y),
   build: withRejectSignal(build, x, y),
   spawn: withRejectSignal(spawn, x, y),
+  setRallyPoint: withRejectSignal(setRallyPoint, x, y),
   clearForest: withRejectSignal(clearForest, x, y),
   prepareStrike: withRejectSignal(prepareStrike, x, y),
   heal: withRejectSignal(heal, x, y),
@@ -103,6 +104,9 @@ export const useMapCellClick = (scene: Scene) => {
         building: buildingsSelection.getSelectedBuilding(),
         buildingTypeToPlace: buildings.selectedBuildingForSpawn,
         unitTypeToSpawn: units.selectedUnitForSpawn,
+        choosingRallyPoint:
+          buildings.selectedRallyBuildingId ===
+          buildingsSelection.getSelectedBuilding()?.id,
         isCurrent: isClickOnCurrentSelection,
       },
       highlights: {

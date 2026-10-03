@@ -42,6 +42,7 @@ const cancelStep = (humanId: Owner | null) => {
   const units = useUnitsStore.getState();
   const inMode =
     !!buildings.selectedBuildingForSpawn ||
+    !!buildings.selectedRallyBuildingId ||
     !!units.selectedUnitForSpawn ||
     !!highlight.buildableCells ||
     !!highlight.spawnableCells ||

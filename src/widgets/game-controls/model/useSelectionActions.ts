@@ -37,7 +37,14 @@ const useOwnSelection = () => {
 };
 
 /** Режим карты для кнопок и подсказки следующего шага. */
-const useMapMode = (selectedUnitId: string | null) => {
+const useMapMode = (
+  selectedUnitId: string | null,
+  selectedBuildingId: string | null,
+) => {
+  const rallyBuildingId = useBuildingsStore(
+    state => state.selectedRallyBuildingId,
+  );
+  const rally = !!selectedBuildingId && rallyBuildingId === selectedBuildingId;
   const highlight = useHighlightStore();
   const modeBuilding = useBuildingsStore(
     state => state.selectedBuildingForSpawn,
@@ -47,7 +54,9 @@ const useMapMode = (selectedUnitId: string | null) => {
 
   // Подсказка следующего шага во включённом режиме карты.
   let mapMode: MapMode | null = null;
-  if (modeBuilding) {
+  if (rally) {
+    mapMode = { kind: 'rally' };
+  } else if (modeBuilding) {
     mapMode = {
       kind: 'build',
       type: modeBuilding,
@@ -66,7 +75,7 @@ const useMapMode = (selectedUnitId: string | null) => {
   } else if (planned && planned.unitId === selectedUnitId) {
     mapMode = { kind: 'goto' };
   }
-  return { highlight, modeBuilding, modeUnit, mapMode };
+  return { highlight, modeBuilding, modeUnit, mapMode, rally };
 };
 
 /**
@@ -89,8 +98,9 @@ export const useSelectionActions = () => {
   );
   const freeBuild = useDebugException(owner, 'freeBuild');
   const freeSpawn = useDebugException(owner, 'freeSpawn');
-  const { highlight, modeBuilding, modeUnit, mapMode } = useMapMode(
+  const { highlight, modeBuilding, modeUnit, mapMode, rally } = useMapMode(
     unit?.id ?? null,
+    building?.id ?? null,
   );
 
   const own = Object.values(buildings).filter(b => b.owner === humanId);
@@ -128,6 +138,7 @@ export const useSelectionActions = () => {
       unit: modeUnit,
       clearing: !!highlight.clearableCells,
       striking: !!highlight.strikeCells,
+      rally,
     },
   };
   const buttons = humanId ? getSelectionActions(input) : [];

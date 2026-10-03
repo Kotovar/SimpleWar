@@ -20,6 +20,8 @@ type Options = {
   attackableTargets?: Position[] | null;
   /** Свои раненые, которых может вылечить выбранный лекарь. */
   healTargets?: Unit[] | null;
+  /** Показывать точку сбора: только у выбранного своего здания. */
+  showRallyPoint?: boolean;
   /** Фаза пульсации выделения от 0 до 1. */
   pulse?: number;
 };
@@ -30,7 +32,14 @@ export const renderSelectionLayer = (
   units: Record<string, Unit>,
   selection: Selection | null,
   cellSize: number,
-  { hover, path, attackableTargets, healTargets, pulse = 0 }: Options = {},
+  {
+    hover,
+    path,
+    attackableTargets,
+    healTargets,
+    showRallyPoint = false,
+    pulse = 0,
+  }: Options = {},
 ) => {
   if (hover) drawHoverHighlight(ctx, hover.x, hover.y, cellSize);
 
@@ -53,6 +62,23 @@ export const renderSelectionLayer = (
   if (selection.kind === 'building') {
     const building = buildings[selection.id];
     if (building) {
+      if (
+        showRallyPoint &&
+        building.role === 'production' &&
+        building.rallyPoint
+      ) {
+        const { x, y } = building.rallyPoint;
+        drawTerrainHighlight(ctx, x, y, cellSize, pulse);
+        ctx.save();
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#f5d98f';
+        ctx.strokeStyle = '#202c30';
+        ctx.lineWidth = 3;
+        ctx.strokeText('Сбор', (x + 0.5) * cellSize, (y + 0.5) * cellSize);
+        ctx.fillText('Сбор', (x + 0.5) * cellSize, (y + 0.5) * cellSize);
+        ctx.restore();
+      }
       if (building.role === 'combat' && hasTargets) {
         drawAttackRange(
           ctx,

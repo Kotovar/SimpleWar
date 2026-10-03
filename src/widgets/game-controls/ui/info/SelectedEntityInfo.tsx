@@ -243,7 +243,13 @@ const UnitDetails = ({ unit }: { unit: Unit }) => (
   </>
 );
 
-const BuildingDetails = ({ building }: { building: Building }) => (
+const BuildingDetails = ({
+  building,
+  own,
+}: {
+  building: Building;
+  own: boolean;
+}) => (
   <>
     <DefenseRow type={building.type} />
     {building.role === 'production' && (
@@ -254,11 +260,23 @@ const BuildingDetails = ({ building }: { building: Building }) => (
         </dd>
       </div>
     )}
+    {own && building.role === 'production' && (
+      <div>
+        <dt>Точка сбора</dt>
+        <dd>
+          {building.rallyPoint
+            ? `${building.rallyPoint.x + 1}, ${building.rallyPoint.y + 1}`
+            : 'Не задана'}{' '}
+          · «Задать точку сбора» (T)
+        </dd>
+      </div>
+    )}
     {building.role === 'combat' && <AttackDetails entity={building} />}
   </>
 );
 
 export const SelectedEntityInfo = ({ cell, unit, building }: Props) => {
+  const { humanId } = useGameLoopSelectors();
   const entity = unit ?? building;
   if (!cell && !entity) return null;
 
@@ -269,7 +287,12 @@ export const SelectedEntityInfo = ({ cell, unit, building }: Props) => {
       <dl className={styles.EntityDetails}>
         {cell && <CellDetails cell={cell} />}
         {unit && <UnitDetails unit={unit} />}
-        {building && <BuildingDetails building={building} />}
+        {building && (
+          <BuildingDetails
+            building={building}
+            own={building.owner === humanId}
+          />
+        )}
       </dl>
     </section>
   );
