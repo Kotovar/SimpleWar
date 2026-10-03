@@ -59,6 +59,7 @@ describe('точка сбора', () => {
     expect(point()).toEqual({ x: 14, y: 1 });
     expect(buildings().buildings[buildingId]).toMatchObject({ spawnPoints: 1 });
     expect(
+      // react-doctor-disable-next-line no-json-parse-stringify-clone -- Проверяем JSON-сериализацию точки сбора, а не клонирование.
       JSON.parse(JSON.stringify(buildings().buildings[buildingId])).rallyPoint,
     ).toEqual({ x: 14, y: 1 });
     expect(setRallyPoint({ actor: 'p1', buildingId, target: null })).toEqual(

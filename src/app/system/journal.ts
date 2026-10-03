@@ -47,12 +47,13 @@ export const initJournalSystem = () => {
         'movePoints' in event.target &&
         !!useBuildingsStore.getState().getBuildingAt(x, y);
       const width = useMapStore.getState().grid[0]?.length ?? 0;
+      const eliminatedIds = new Set(eliminated);
       const viewers = participants
         .filter(
           ({ id }) =>
             id === owner ||
             (!sheltered &&
-              !eliminated.includes(id) &&
+              !eliminatedIds.has(id) &&
               computeVisibleMask(id)[y * width + x] === 1),
         )
         .map(({ id }) => id);
