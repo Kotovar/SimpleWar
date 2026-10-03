@@ -12,6 +12,7 @@ import { useUnitsStore } from '@entities/units';
 import { demolish, isPlacementBlocking } from '@features/build';
 import { getStrikeCells } from '@features/combat';
 import {
+  autoExplore,
   cancelOrder,
   useHighlightStore,
   useMovementStore,
@@ -72,6 +73,13 @@ export const runSelectionAction = (
   const actor = humanId;
   const [kind, target] = id.split(':');
   switch (kind) {
+    case 'explore':
+      if (!unit || unit.type !== 'scout') return;
+      if (unit.order?.type === 'explore' && !unit.order.stopped)
+        cancelOrder({ actor, unitId: unit.id });
+      else autoExplore({ actor, unitId: unit.id });
+      resetModes(unit.id);
+      return;
     case 'rallyPoint':
       if (building?.role !== 'production') return;
       resetModes();
@@ -89,16 +97,23 @@ export const runSelectionAction = (
       resetModes(unit.id);
       return;
     case 'skip':
-    case 'sleep':
+    case 'sleep': {
       if (!unit) return;
-      setUnitRest({
+      const mode =
+        kind === 'skip' ? 'skip' : unit.restMode === 'sleep' ? null : 'sleep';
+      const result = setUnitRest({
         actor,
         unitId: unit.id,
-        mode:
-          kind === 'skip' ? 'skip' : unit.restMode === 'sleep' ? null : 'sleep',
+        mode,
       });
+      if (result.ok && mode === 'sleep') {
+        useSelectionStore.getState().clearSelection();
+        resetModes();
+        return;
+      }
       resetModes(unit.id);
       return;
+    }
     case 'build': {
       if (!unit || !target) return;
       const type = target as BuildingType;

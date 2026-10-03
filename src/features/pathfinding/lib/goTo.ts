@@ -2,7 +2,6 @@ import {
   REJECTION_MESSAGE,
   type CommandResult,
   type ParticipantId,
-  type Position,
   type Unit,
   type UnitOrder,
 } from '@shared/config';
@@ -12,7 +11,8 @@ import { useMapStore } from '@entities/maps';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand } from '@entities/journals';
 import { createLandingCheck } from './air';
-import { findUnitRoute } from './findUnitRoute';
+import { getRoutePreview } from './routePreview';
+import { advanceExploration } from './autoExplore';
 import { getSeenEnemies, move } from './move';
 
 /** Приказ «Идти в точку»: кто, каким юнитом и куда. */
@@ -23,33 +23,7 @@ export type GoToCommand = {
   y: number;
 };
 
-/**
- * Маршрут юнита до клетки по известной участнику карте — те же цены, что
- * у приказа на ход, — и ход прибытия (`1` — этот).
- *
- * @returns Путь, цена, ходы и `firstStop` — цена до первой свободной
- * клетки (шаги через своих — транзит) — либо `null`: на клетке нельзя
- * остановиться, пути нет или нет пути без отрезка транзита дороже полного
- * запаса очков.
- */
-export const getRoutePreview = (
-  unit: Unit,
-  actor: ParticipantId,
-  target: Position,
-) => {
-  const { path, cost, turns, costs, canLand } = findUnitRoute(
-    unit,
-    actor,
-    target,
-  );
-  if (!canLand(target) || path.length < 2 || turns === Infinity) return null;
-  let firstStop = 0;
-  for (const cell of path.slice(1)) {
-    firstStop += costs[cell.y][cell.x];
-    if (canLand(cell)) break;
-  }
-  return { path, cost, turns, firstStop };
-};
+export { getRoutePreview } from './routePreview';
 
 /** Маршрут приказа: к цели движения или к свободной клетке рядом со стройкой/работой. */
 export const getOrderRoutePreview = (
@@ -57,7 +31,8 @@ export const getOrderRoutePreview = (
   actor: ParticipantId,
   order: UnitOrder,
 ) => {
-  if (order.type === 'goto') return getRoutePreview(unit, actor, order);
+  if (order.type === 'goto' || order.type === 'explore')
+    return getRoutePreview(unit, actor, order);
   if (Math.max(Math.abs(unit.x - order.x), Math.abs(unit.y - order.y)) === 1)
     return null;
   const routes = [];
@@ -74,13 +49,20 @@ export const getOrderRoutePreview = (
 
 /** Действие по прибытии выполняет вызывающий слой обычной командой. */
 export type OrderArrival = (
-  unit: Unit & { order: Exclude<UnitOrder, { type: 'goto' }> },
+  unit: Unit & { order: Extract<UnitOrder, { type: 'build' | 'work' }> },
 ) => CommandResult;
 
 /** Причина остановки приказа для игрока. */
 export const getOrderStopMessage = (
   reason: NonNullable<UnitOrder['stopped']>,
-) => (reason === 'enemy' ? 'В обзоре враг' : REJECTION_MESSAGE[reason]);
+) =>
+  reason === 'enemy'
+    ? 'В обзоре враг'
+    : reason === 'explored'
+      ? 'Нет достижимых неизведанных клеток'
+      : reason === 'threat'
+        ? 'На пути известная угроза'
+        : REJECTION_MESSAGE[reason];
 
 const findOwnUnit = (actor: ParticipantId, unitId: string) => {
   const unit = useUnitsStore.getState().units[unitId];
@@ -161,9 +143,17 @@ export const advanceOrder = (
   const order = unit?.order;
   if (!order || order.stopped || unit.owner !== actor) return false;
   if (getTurnRejection(actor)) return false;
+  if (order.type === 'explore') return advanceExploration(actor, unitId);
   const stop = (stopped: NonNullable<UnitOrder['stopped']>) => {
-    setOrder(unitId, { ...order, stopped });
-    return true;
+    const result = runCommand(
+      { type: 'order', actor, details: { unitId, stopped } },
+      useGameLoopStore.getState().currentTurn,
+      () => {
+        setOrder(unitId, { ...order, stopped });
+        return ok;
+      },
+    );
+    return result.ok;
   };
 
   if (order.type !== 'goto' && !onArrival) return false;

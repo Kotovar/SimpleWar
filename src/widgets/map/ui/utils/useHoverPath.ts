@@ -29,11 +29,10 @@ export const useHoverPath = (
     const unit = units[selection.id];
     if (unit?.owner !== humanId) return null;
     const mark = planned?.unitId === unit.id ? planned : null;
-    if (unit.order && unit.order.type !== 'goto')
+    if (mark) return getRoutePreview(unit, humanId, mark);
+    if (unit.order && !unit.order.stopped && unit.order.type !== 'goto')
       return getOrderRoutePreview(unit, humanId, unit.order);
-    for (const target of [mark, hover, unit.order]) {
-      const route = target && getRoutePreview(unit, humanId, target);
-      if (route) return route;
-    }
-    return null;
+    const route = hover && getRoutePreview(unit, humanId, hover);
+    if (route) return route;
+    return unit.order ? getOrderRoutePreview(unit, humanId, unit.order) : null;
   }, [hover, humanId, planned, selection, units]);

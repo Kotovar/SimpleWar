@@ -77,7 +77,7 @@ export const drawOrderBadge = (
   ctx.textBaseline = 'middle';
   const left = (x + 1) * cellSize - size / 2;
   const top = y * cellSize + cellSize * 0.1 + size / 2;
-  const text = order.stopped ? '!' : '»';
+  const text = order.stopped ? '!' : order.type === 'explore' ? '⌖' : '»';
   ctx.lineJoin = 'round';
   ctx.strokeStyle = '#202b35';
   ctx.lineWidth = Math.max(2, size * 0.25);

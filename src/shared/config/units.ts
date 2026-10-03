@@ -25,18 +25,19 @@ export type UnitType = MilitaryType | CivilType;
 type UnitRole = 'military' | 'civil';
 
 /**
- * Сохраняемый приказ движения, стройки или назначения на работу. `stopped` — почему исполнение
- * остановилось (`enemy` — в обзоре новый враг); такой приказ больше не
+ * Сохраняемый приказ движения, разведки, стройки или назначения на работу. `stopped` — почему исполнение
+ * остановилось (`enemy` — видимый враг); такой приказ больше не
  * исполняется и ждёт решения игрока.
  */
 export type UnitOrder = (
   | { type: 'goto' }
+  | { type: 'explore' }
   | { type: 'build'; buildingType: BuildingType }
   | { type: 'work'; buildingId: string }
 ) & {
   x: number;
   y: number;
-  stopped?: RejectionCode | 'enemy';
+  stopped?: RejectionCode | 'enemy' | 'explored' | 'threat';
 };
 
 /** Базовая форма юнита, общая для всех ролей. */

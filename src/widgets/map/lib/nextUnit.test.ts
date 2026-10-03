@@ -69,6 +69,21 @@ describe('hasActions / isIdleWorker', () => {
   });
 });
 
+it('Tab пропускает авторазведку и возвращает остановленного разведчика без очков', () => {
+  const scout = unit('scout', 0, 0, {
+    movePoints: 0,
+    attackPoints: 0,
+    order: { type: 'explore', x: 10, y: 0 },
+  });
+  expect(hasActions(scout, byPoints)).toBe(false);
+  expect(getNextUnit([scout], null, fits)).toBeNull();
+  const stopped = {
+    ...scout,
+    order: { type: 'explore' as const, x: 10, y: 0, stopped: 'enemy' as const },
+  };
+  expect(getNextUnit([stopped], null, fits)?.id).toBe(scout.id);
+});
+
 describe('приказ «Идти в точку»', () => {
   const order = { type: 'goto', x: 5, y: 0 } as const;
 

@@ -5,7 +5,7 @@ import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
 import { useGameLoopStore } from '@entities/games';
-import { useJournalStore } from '@entities/journals';
+import { runCommand, useJournalStore } from '@entities/journals';
 import { useKnowledgeStore } from '@entities/perceptions';
 import { move } from './move';
 import {
@@ -153,6 +153,18 @@ describe('приказ «Идти в точку»', () => {
     expect(giveGoToOrder({ actor: 'p1', unitId, x: 11, y: 0 })).toMatchObject({
       code: 'path',
     });
+  });
+
+  it('busy не останавливает приказ, даже если путь исчез', () => {
+    const unitId = readyWorker();
+    giveGoToOrder({ actor: 'p1', unitId, x: 11, y: 0 });
+    useMapStore.getState().setCell(1, 0, { type: 'water', isWalkable: false });
+    const before = units().units[unitId];
+    runCommand({ type: 'order', actor: 'p1', details: {} }, 1, () => {
+      expect(advanceOrder('p1', unitId)).toBe(false);
+      return ok;
+    });
+    expect(units().units[unitId]).toEqual(before);
   });
 
   it('вне своего хода приказ не исполняется и не меняется', () => {

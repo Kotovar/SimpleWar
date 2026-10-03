@@ -11,3 +11,4 @@ export * from './air';
 export * from './countRouteTurns';
 export * from './goTo';
 export * from './findUnitRoute';
+export * from './autoExplore';

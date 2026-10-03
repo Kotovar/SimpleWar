@@ -3,6 +3,36 @@ import { building, byId, input, unit } from './actions.test-utils';
 import { getSelectionActions, unitStats } from './selectionActions';
 
 describe('getSelectionActions', () => {
+  it('авторазведка E доступна только разведчику, показывает активность и блокируется вне своего хода', () => {
+    const scout = unit('scout', { order: { type: 'explore', x: 9, y: 5 } });
+    const button = getSelectionActions(input({ unit: scout })).find(
+      b => b.id === 'explore',
+    );
+    expect(button).toMatchObject({
+      code: 'KeyE',
+      pressed: true,
+    });
+    expect(button?.reason).toBeUndefined();
+    expect(
+      getSelectionActions(input({ unit: unit('worker') })).some(
+        b => b.id === 'explore',
+      ),
+    ).toBe(false);
+    expect(
+      getSelectionActions(input({ unit: scout, isTurn: false })).find(
+        b => b.id === 'explore',
+      )?.reason,
+    ).toBeTruthy();
+    const stopped = unit('scout', {
+      order: { type: 'explore', x: 9, y: 5, stopped: 'enemy' },
+    });
+    expect(
+      getSelectionActions(input({ unit: stopped })).find(
+        b => b.id === 'explore',
+      )?.pressed,
+    ).toBe(false);
+  });
+
   it('осадная машина: удар уже подготовлен — причина; прицел включён — доступно', () => {
     const siege = unit('siege', { preparedStrike: { x: 1, y: 1 } });
     expect(getSelectionActions(input({ unit: siege }))[0].reason).toBe(
