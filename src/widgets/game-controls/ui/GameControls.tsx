@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { GAME_TITLE } from '@shared/config';
+import { useGameLoopStore } from '@entities/games';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { PhaseSetup } from './PhaseSetup';
 import { PhaseInProgress } from './PhaseInProgress';
@@ -14,18 +15,16 @@ type Props = {
 
 export const GameControls = ({ onStartGame, minimap }: Props) => {
   const { phase } = useGameLoopSelectors();
+  const review = useGameLoopStore(state => state.reviewWorld);
+  const showMap = phase === 'inProgress' || (phase === 'gameOver' && review);
 
   return (
-    <section
-      className={
-        phase === 'inProgress' ? styles.GameLayout : styles.GameControls
-      }
-    >
-      {phase !== 'inProgress' && <h1 className={styles.Title}>{GAME_TITLE}</h1>}
+    <section className={showMap ? styles.GameLayout : styles.GameControls}>
+      {!showMap && <h1 className={styles.Title}>{GAME_TITLE}</h1>}
 
       {phase === 'setup' && <PhaseSetup onStartGame={onStartGame} />}
       {phase === 'inProgress' && <PhaseInProgress minimap={minimap} />}
-      {phase === 'gameOver' && <PhaseGameOver />}
+      {phase === 'gameOver' && <PhaseGameOver minimap={minimap} />}
     </section>
   );
 };

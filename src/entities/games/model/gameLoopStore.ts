@@ -16,6 +16,9 @@ interface GameLoopStoreState {
   phase: Phase;
   /** Единственный оставшийся участник; `null` — ничья или исход без победителя. */
   winner: ParticipantId | null;
+  /** Полный обзор завершённой партии; не включает отладку и не меняет знания. */
+  reviewWorld: boolean;
+  setReviewWorld: (review: boolean) => void;
   startError: string | null;
 
   startGame: (participants?: Participant[]) => void;
@@ -70,6 +73,11 @@ export const useGameLoopStore = create<GameLoopStoreState>()(
       activePlayer: DEFAULT_PARTICIPANTS[0].id,
       phase: 'setup',
       winner: null,
+      reviewWorld: false,
+      setReviewWorld: review =>
+        set(state => {
+          state.reviewWorld = state.phase === 'gameOver' && review;
+        }),
       startError: null,
 
       startGame: (participants = DEFAULT_PARTICIPANTS) =>
@@ -81,6 +89,7 @@ export const useGameLoopStore = create<GameLoopStoreState>()(
           state.participants = participants;
           state.eliminated = [];
           state.winner = null;
+          state.reviewWorld = false;
           state.activePlayer = participants[0].id;
         }),
 
@@ -128,6 +137,7 @@ export const useGameLoopStore = create<GameLoopStoreState>()(
           state.eliminated = [];
           state.activePlayer = DEFAULT_PARTICIPANTS[0].id;
           state.winner = null;
+          state.reviewWorld = false;
           state.startError = null;
         });
       },

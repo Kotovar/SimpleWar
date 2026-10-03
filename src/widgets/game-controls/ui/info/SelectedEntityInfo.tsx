@@ -164,16 +164,16 @@ const AttackStatsList = ({ entity }: { entity: AttackStats }) => (
 );
 
 /**
- * Прибавка Строя к броне своего копейщика сейчас. Чужому не считаем: его
- * соседи могут быть под туманом.
+ * Прибавка Строя к броне своего копейщика сейчас. Чужому считаем только
+ * после партии: во время игры его соседи могут быть под туманом.
  */
 const useFormationBonus = (unit: Unit) => {
-  const { humanId } = useGameLoopSelectors();
+  const { humanId, phase } = useGameLoopSelectors();
   const units = useUnitsStore(state => state.units);
   const learned = useResearchStore(
     state => !!state.completed[unit.owner]?.includes('formation'),
   );
-  if (!learned || unit.owner !== humanId) return 0;
+  if (!learned || (unit.owner !== humanId && phase !== 'gameOver')) return 0;
   return getResearchArmor(unit, Object.values(units));
 };
 
@@ -252,9 +252,11 @@ const UnitDetails = ({ unit }: { unit: Unit }) => (
 const BuildingDetails = ({
   building,
   own,
+  canCommand,
 }: {
   building: Building;
   own: boolean;
+  canCommand: boolean;
 }) => (
   <>
     <DefenseRow type={building.type} />
@@ -272,8 +274,8 @@ const BuildingDetails = ({
         <dd>
           {building.rallyPoint
             ? `${building.rallyPoint.x + 1}, ${building.rallyPoint.y + 1}`
-            : 'Не задана'}{' '}
-          · «Задать точку сбора» (T)
+            : 'Не задана'}
+          {canCommand && ' · «Задать точку сбора» (T)'}
         </dd>
       </div>
     )}
@@ -282,7 +284,7 @@ const BuildingDetails = ({
 );
 
 export const SelectedEntityInfo = ({ cell, unit, building }: Props) => {
-  const { humanId } = useGameLoopSelectors();
+  const { humanId, phase } = useGameLoopSelectors();
   const entity = unit ?? building;
   if (!cell && !entity) return null;
 
@@ -297,6 +299,7 @@ export const SelectedEntityInfo = ({ cell, unit, building }: Props) => {
           <BuildingDetails
             building={building}
             own={building.owner === humanId}
+            canCommand={phase === 'inProgress'}
           />
         )}
       </dl>

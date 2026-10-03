@@ -7,6 +7,7 @@ import {
 } from '@shared/config';
 import { ConfirmDialog } from '@shared/ui';
 import { useJournalStore } from '@entities/journals';
+import { useGameLoopStore } from '@entities/games';
 import {
   useDebugStore,
   useSettingsStore,
@@ -40,6 +41,8 @@ export const Game = () => {
   const paused = useSandboxStore(state => state.paused);
   const debug = useDebugStore(state => state.enabled);
   const gameId = useJournalStore(state => state.gameId);
+  const review = useGameLoopStore(state => state.reviewWorld);
+  const showMap = phase === 'inProgress' || (phase === 'gameOver' && review);
   // ИИ не смог завершить ход: без решения игрока партия стоит. Номер
   // партии не даёт вопросу пережить сброс.
   const [stall, setStall] = useState<{
@@ -105,8 +108,8 @@ export const Game = () => {
   }, [activePlayer, activeController, phase, sandbox, paused, fast]);
 
   return (
-    <main className={phase === 'inProgress' ? styles.Main : styles.Setup}>
-      {phase === 'inProgress' && <Map />}
+    <main className={showMap ? styles.Main : styles.Setup}>
+      {showMap && <Map />}
       <GameControls onStartGame={handleStartGame} minimap={<Minimap />} />
       <ConfirmDialog
         isOpen={stalled !== null}

@@ -13,6 +13,40 @@ const state = () => useGameLoopStore.getState();
 describe('useGameLoopStore', () => {
   beforeEach(() => state().resetGame());
 
+  it('разрешает полный обзор только после завершения партии', () => {
+    state().setReviewWorld(true);
+    expect(state().reviewWorld).toBe(false);
+
+    state().startGame();
+    state().setReviewWorld(true);
+    expect(state().reviewWorld).toBe(false);
+
+    state().eliminate('p2');
+    state().setReviewWorld(true);
+    expect(state()).toMatchObject({
+      reviewWorld: true,
+      phase: 'gameOver',
+      winner: 'p1',
+      currentTurn: 1,
+    });
+    state().endTurn();
+    expect(state().currentTurn).toBe(1);
+  });
+
+  it('выходит из обзора без изменения исхода и очищает обзор для новой партии', () => {
+    state().startGame();
+    state().eliminate('p2');
+    state().setReviewWorld(true);
+    state().setReviewWorld(false);
+    expect(state()).toMatchObject({ reviewWorld: false, winner: 'p1' });
+
+    state().setReviewWorld(true);
+    state().resetGame();
+    expect(state()).toMatchObject({ reviewWorld: false, phase: 'setup' });
+    state().startGame();
+    expect(state()).toMatchObject({ reviewWorld: false, phase: 'inProgress' });
+  });
+
   it('начинает игру с первого участника и очищает ошибку старта', () => {
     useGameLoopStore.setState({
       startError: 'Ошибка',

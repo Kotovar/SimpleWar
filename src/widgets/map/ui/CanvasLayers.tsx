@@ -58,7 +58,8 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   const plannedTarget = useMovementStore(state => state.plannedTarget);
   const buildableCells = useProduceCells();
 
-  const isInteractive = phase === 'inProgress' && activePlayer === humanId;
+  const canOrder = phase === 'inProgress' && activePlayer === humanId;
+  const isInteractive = canOrder || phase === 'gameOver';
   const { hover, cursor, onMouseMove, onMouseLeave } = useHoverCell(
     view,
     isInteractive,
@@ -178,7 +179,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   ]);
 
   const hoverPath = useHoverPath(
-    hover,
+    canOrder ? hover : null,
     selection,
     units,
     humanId,
@@ -251,7 +252,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
         onClick={isInteractive ? handleClick : undefined}
         onContextMenu={event => {
           event.preventDefault();
-          if (isInteractive) handleClick(event);
+          if (canOrder) handleClick(event);
         }}
         onMouseMove={isInteractive ? onMouseMove : undefined}
         onMouseLeave={onMouseLeave}

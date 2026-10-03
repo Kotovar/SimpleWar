@@ -1,0 +1,54 @@
+.Result {
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+
+  & h3 {
+    margin: 0 0 12px;
+    font-size: 1rem;
+  }
+}
+
+.Stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+
+  & dt {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  & dd {
+    margin: 4px 0 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.Research {
+  margin: 14px 0 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.Heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  & h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    text-align: left;
+  }
+}
+
+.Toolbar {
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}

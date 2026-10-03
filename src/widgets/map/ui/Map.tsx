@@ -29,6 +29,7 @@ export const Map = () => {
     (Position & { workerId: string }) | null
   >(null);
   const activePlayer = useGameLoopStore(state => state.activePlayer);
+  const phase = useGameLoopStore(state => state.phase);
   const viewport = useRef<HTMLDivElement>(null);
   const input = useCameraInput(viewport);
   const { scene, humanId, viewer } = useScene();
@@ -54,8 +55,9 @@ export const Map = () => {
   useEffect(() => {
     if (!isMeasured || focused.current) return;
     focused.current = true;
-    focusBase();
-  }, [focusBase, isMeasured]);
+    if (phase === 'gameOver') fitWorld();
+    else focusBase();
+  }, [fitWorld, focusBase, isMeasured, phase]);
 
   // Выбранный враг ушёл из обзора — выбор снимается до отрисовки панели.
   const selection = useSelectionStore(state => state.selection);
@@ -107,7 +109,11 @@ export const Map = () => {
         className={styles.MapViewport}
         tabIndex={0}
         role='region'
-        aria-label='Карта. Перетаскивайте средней кнопкой мыши либо с зажатым пробелом, масштабируйте колесом, двигайте стрелками или WASD. Левый клик выбирает объект или подтверждает режим. Правый клик приказывает идти, атаковать или лечить; рабочим по ресурсу открывает стройку.'
+        aria-label={
+          phase === 'gameOver'
+            ? 'Обзор завершённой партии. Левый клик — сведения об объекте. Перетаскивайте средней кнопкой мыши либо с зажатым пробелом, масштабируйте колесом, двигайте стрелками или WASD.'
+            : 'Карта. Перетаскивайте средней кнопкой мыши либо с зажатым пробелом, масштабируйте колесом, двигайте стрелками или WASD. Левый клик выбирает объект или подтверждает режим. Правый клик приказывает идти, атаковать или лечить; рабочим по ресурсу открывает стройку.'
+        }
         onKeyDownCapture={event => {
           if (event.key === 'Escape' && buildMenu) {
             event.stopPropagation();

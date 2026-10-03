@@ -1,5 +1,6 @@
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
+import { useGameLoopStore } from '@entities/games';
 import { useSettingsSelectors } from '@entities/settings';
 import type { Scene } from '@widgets/map/lib';
 import { useSelectionSelectors } from '@features/selection';
@@ -86,8 +87,22 @@ export const useMapCellClick = (scene: Scene) => {
   } = useHighlightSelectors();
 
   return (x: number, y: number, order = false) => {
-    if (!humanId) return;
     if (x < 0 || x >= gridColumns || y < 0 || y >= gridRows) return;
+
+    // После партии клик только рассматривает сцену: прежние режимы не исполняются.
+    if (useGameLoopStore.getState().phase === 'gameOver') {
+      if (order) return;
+      clearSelection();
+      clearMovement();
+      clearHighlight();
+      const building = findAt(scene.buildings, x, y);
+      const unit = findAt(scene.units, x, y);
+      if (building) buildingsSelection.selectBuilding(building.id);
+      else if (unit) unitsSelection.selectUnit(unit.id);
+      else terrainSelection.selectCell(x, y);
+      return;
+    }
+    if (!humanId) return;
 
     const units = useUnitsStore.getState();
     const buildings = useBuildingsStore.getState();

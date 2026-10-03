@@ -1,5 +1,6 @@
 import { MOVE_COST, type Cell } from '@shared/config';
 import { useMapViewer } from '@entities/settings';
+import { useGameLoopStore } from '@entities/games';
 import {
   getCellKnowledge,
   getKnownCellType,
@@ -15,7 +16,11 @@ const useKnownSelection = () => {
   const { terrainSelection, unitsSelection, buildingsSelection } =
     useSelectionSelectors();
   const { humanId } = useGameLoopSelectors();
-  const viewer = useMapViewer(humanId);
+  const configuredViewer = useMapViewer(humanId);
+  const review = useGameLoopStore(
+    state => state.phase === 'gameOver' && state.reviewWorld,
+  );
+  const viewer = review ? 'world' : configuredViewer;
   const knowledge = useParticipantKnowledge(viewer === 'world' ? null : viewer);
 
   // Карточка показывает только то, что видит смотрящий: чужой объект

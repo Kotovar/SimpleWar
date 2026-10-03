@@ -13,7 +13,11 @@ import { buildScene, getKnownGrid } from '@widgets/map/lib';
  */
 export const useScene = () => {
   const humanId = useGameLoopStore(state => getHumanId(state.participants));
-  const viewer = useMapViewer(humanId);
+  const configuredViewer = useMapViewer(humanId);
+  const review = useGameLoopStore(
+    state => state.phase === 'gameOver' && state.reviewWorld,
+  );
+  const viewer = review ? 'world' : configuredViewer;
   const knowledge = useParticipantKnowledge(viewer === 'world' ? null : viewer);
   const grid = useMapStore(state => state.grid);
   const units = useUnitsStore(state => state.units);
