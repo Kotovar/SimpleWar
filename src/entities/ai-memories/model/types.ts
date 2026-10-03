@@ -54,4 +54,8 @@ export type AiMemory = {
     string,
     { buildingId: string; type: BuildingType } & Position
   >;
+  /** Клетки уже обстрелянных целей; новый обзор разрешает повторный удар. */
+  blindStrikes: Record<string, Position>;
+  /** Потери своих зданий от осады: клетка → последний круг избегания стройки. */
+  siegeLosses: Record<string, number>;
 };

@@ -6,12 +6,26 @@ import type {
 } from '@shared/config';
 
 type GameEvent =
+  | {
+      type: 'SIEGE_STRIKE_EXECUTED';
+      owner: ParticipantId;
+      x: number;
+      y: number;
+    }
   | { type: 'GAME_RESET' }
   | { type: 'COMMAND_SUCCEEDED'; command: CommandMeta }
   | { type: 'BASE_DESTROYED'; owner: ParticipantId }
   /** Выбывание уже применено; `turn` — ход, в котором оно произошло. */
   | { type: 'PARTICIPANT_ELIMINATED'; owner: ParticipantId; turn: number }
   | { type: 'BUILDING_SPAWNED'; building: Building; owner: ParticipantId }
+  /** Собственная потеря известна владельцу даже при скрытой наводке. */
+  | {
+      type: 'SIEGE_BUILDING_DESTROYED';
+      owner: ParticipantId;
+      x: number;
+      y: number;
+      turn: number;
+    }
   | {
       type: 'BUILDING_DESTROYED';
       building: Building;

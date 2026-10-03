@@ -45,7 +45,11 @@ const WORTH: Partial<Record<BuildingType, number>> = {
 
 /** Известные здания врага — неподвижные цели; юниты уйдут до удара (кроме O05). */
 export const buildingTargets = (ctx: AiContext) =>
-  [...ctx.enemies, ...ctx.remembered].filter(({ kind }) => kind === 'building');
+  [...ctx.enemies, ...ctx.remembered].filter(
+    ({ kind, x, y }) =>
+      kind === 'building' &&
+      (ctx.obs.visible[y]?.[x] || !ctx.memory.blindStrikes[`${x},${y}`]),
+  );
 
 /** Удар по клетке заденет своих: там свой юнит или здание. */
 export const hitsOwn = (ctx: AiContext, cell: Position) =>

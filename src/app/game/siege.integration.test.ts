@@ -16,6 +16,7 @@ import { attack, prepareStrike } from '@features/combat';
 import { initGameLoopEvents, nextTurn, surrender } from '@features/game-loop';
 import { getObservation, initVisibilitySystem } from '@features/visibility';
 import { initJournalSystem, initPopulationSystem } from '@app/system';
+import { createAiMemory, useAiMemoryStore } from '@entities/ai-memories';
 
 const units = () => useUnitsStore.getState();
 const buildings = () => useBuildingsStore.getState();
@@ -58,6 +59,7 @@ const round = (participants = THREE) => {
 };
 
 beforeEach(() => {
+  useAiMemoryStore.getState().resetStore();
   useUnitsStore.setState({ units: {}, selectedUnitForSpawn: null });
   useBuildingsStore.setState({ buildings: {}, selectedBuildingForSpawn: null });
   useKnowledgeStore.getState().resetStore();
@@ -79,6 +81,43 @@ beforeEach(() => {
 });
 
 describe('подготовленный удар осады', () => {
+  it('запоминает факт удара только атакующему и потерю здания только владельцу', () => {
+    start(DEFAULT_PARTICIPANTS);
+    const siege = siegeAt(1, 2);
+    const mine = buildings().spawnBuilding('mine', 4, 2, 'p2')!;
+    useBuildingsStore.setState(state => ({
+      buildings: {
+        ...state.buildings,
+        [mine]: { ...state.buildings[mine], hp: 1 },
+      },
+    }));
+    expect(prepareStrike({ actor: 'p1', unitId: siege, x: 4, y: 2 }).ok).toBe(
+      true,
+    );
+    expect(useAiMemoryStore.getState().byParticipant.p1).toBeUndefined();
+    const stale = createAiMemory(7);
+    nextTurn('p1');
+    nextTurn('p2');
+    expect(buildings().buildings[mine]).toBeUndefined();
+    expect(useAiMemoryStore.getState().byParticipant.p1?.blindStrikes).toEqual({
+      '4,2': { x: 4, y: 2 },
+    });
+    expect(useAiMemoryStore.getState().byParticipant.p1?.siegeLosses).toEqual(
+      {},
+    );
+    expect(useAiMemoryStore.getState().byParticipant.p2?.siegeLosses).toEqual({
+      '4,2': 4,
+    });
+    expect(useAiMemoryStore.getState().byParticipant.p2?.blindStrikes).toEqual(
+      {},
+    );
+    useAiMemoryStore.getState().setMemory('p2', stale);
+    expect(useAiMemoryStore.getState().byParticipant.p2?.siegeLosses).toEqual({
+      '4,2': 4,
+    });
+    useAiMemoryStore.getState().resetStore();
+    expect(useAiMemoryStore.getState().byParticipant).toEqual({});
+  });
   it('исполняется в начале следующего хода владельца, один раз, при трёх сторонах', () => {
     start(THREE);
     const siege = siegeAt(1, 2);

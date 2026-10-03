@@ -13,6 +13,14 @@ import { manhattan, tieBreak } from '../geometry';
 import { standCells, stepToward } from '../movement';
 import { isFree, taskOf, wouldBlock } from './common';
 
+/** Место недавней потери допускается только при отсутствии других площадок. */
+export const preferUnstruckSites = (ctx: AiContext, sites: Position[]) => {
+  const safe = sites.filter(
+    ({ x, y }) => (ctx.memory.siegeLosses[`${x},${y}`] ?? -1) < ctx.obs.turn,
+  );
+  return safe.length ? safe : sites;
+};
+
 /**
  * Клетка годится под здание: известная подходящая местность, не занята
  * и не обещана задаче, без угрозы, есть где встать рабочему, не перекрывает
@@ -51,8 +59,7 @@ export const pickBuildSite = (
 ): Position | null => {
   const { base } = ctx;
   if (!base) return null;
-  let best: Position | null = null;
-  let bestScore = Infinity;
+  const sites: Position[] = [];
   for (let dy = -radius; dy <= radius; dy++) {
     for (let dx = -radius; dx <= radius; dx++) {
       const site = { x: base.x + dx, y: base.y + dy };
@@ -60,17 +67,17 @@ export const pickBuildSite = (
       if (distance < 2 || distance > radius || !siteOk(ctx, type, site)) {
         continue;
       }
-      const score =
-        distance +
-        (toward ? manhattan(site, toward) * 0.5 : 0) +
-        tieBreak(`${type}:${site.x},${site.y}`, ctx.memory.seed);
-      if (score < bestScore) {
-        best = site;
-        bestScore = score;
-      }
+      sites.push(site);
     }
   }
-  return best;
+  const score = (site: Position) =>
+    manhattan(site, base) +
+    (toward ? manhattan(site, toward) * 0.5 : 0) +
+    tieBreak(`${type}:${site.x},${site.y}`, ctx.memory.seed);
+  return (
+    preferUnstruckSites(ctx, sites).sort((a, b) => score(a) - score(b))[0] ??
+    null
+  );
 };
 
 /**

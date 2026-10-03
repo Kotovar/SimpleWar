@@ -157,8 +157,10 @@ export const runAITurn = (
     const setup = useGameLoopStore
       .getState()
       .participants.find(({ id }) => id === actor)?.ai;
-    const memory =
-      memories.byParticipant[actor] ?? createAiMemory(seedFor(actor));
+    const memory = {
+      ...(memories.byParticipant[actor] ?? createAiMemory(seedFor(actor))),
+      seed: seedFor(actor),
+    };
     const result = await playTurn({
       config: profileConfig(setup?.profile),
       memory,

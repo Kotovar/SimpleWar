@@ -39,6 +39,24 @@ const walk = (
 });
 
 describe('задачи и резервы', () => {
+  it('пересматривает старую стройку на месте потери, если есть другой ресурс', () => {
+    const worker = own('worker', 4, 2);
+    const spec = {
+      map: ['........', '........', '.....gg.', '........'],
+      units: [worker],
+      buildings: [ownBuilding('base', 0, 0)],
+      memory: { tasks: [buildTask(worker.id)], siegeLosses: { '5,2': 7 } },
+    };
+    expect(refreshMemory(scene(spec).ctx).memory.tasks).toEqual([]);
+    expect(
+      refreshMemory(
+        scene({
+          ...spec,
+          map: ['........', '........', '.....g..', '........'],
+        }).ctx,
+      ).memory.tasks,
+    ).toHaveLength(1);
+  });
   it('резерв задачи не входит в свободный бюджет', () => {
     const worker = own('worker', 1, 1);
     const { ctx } = scene({

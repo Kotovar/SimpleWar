@@ -32,6 +32,7 @@ export const executePreparedStrikes = (owner: ParticipantId) => {
     if (siege?.role !== 'military' || !siege.preparedStrike) continue;
     const { x, y } = siege.preparedStrike;
     useUnitsStore.getState().setPreparedStrike(siege.id, null);
+    gameEvents.emit({ type: 'SIEGE_STRIKE_EXECUTED', owner, x, y });
 
     // Воздух ударом не поражается.
     const units = Object.values(useUnitsStore.getState().units).filter(
@@ -66,6 +67,15 @@ export const executePreparedStrikes = (owner: ParticipantId) => {
       const damage = calculateDamage(siege, building);
       hits.push(`${building.type}:${damage}`);
       useBuildingsStore.getState().damageBuilding(building.id, damage);
+      if (!useBuildingsStore.getState().buildings[building.id]) {
+        gameEvents.emit({
+          type: 'SIEGE_BUILDING_DESTROYED',
+          owner: building.owner,
+          x,
+          y,
+          turn: useGameLoopStore.getState().currentTurn,
+        });
+      }
       // Разрушенная ратуша выводит владельца — так же, как при атаке.
       if (
         building.type === 'base' &&

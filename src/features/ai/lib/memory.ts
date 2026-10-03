@@ -4,6 +4,8 @@ import type { AiContext } from './context';
 import { chebyshev } from './geometry';
 import { planOperation } from './operation';
 import { chooseStrategy, evaluateStrategies } from './strategy';
+import { resourceSites } from './facts';
+import { pickBuildSite } from './rules/building';
 
 /** Пустое состояние нового хода. */
 export const createTurnState = (): TurnState => ({
@@ -19,6 +21,26 @@ const isTaskAlive = (ctx: AiContext, task: AiMemory['tasks'][number]) => {
   if (!unit || task.reviewTurn < ctx.obs.turn) return false;
   const { x, y } = task.target;
   if (task.kind === 'build') {
+    if (
+      (ctx.memory.siegeLosses[`${x},${y}`] ?? -1) >= ctx.obs.turn &&
+      task.buildingType
+    ) {
+      const alternatives =
+        task.buildingType === 'mine' || task.buildingType === 'sawmill'
+          ? resourceSites(ctx, task.buildingType === 'mine' ? 'gold' : 'forest')
+          : [pickBuildSite(ctx, task.buildingType)].filter(
+              site => site !== null,
+            );
+      if (
+        alternatives.some(
+          site =>
+            (site.x !== x || site.y !== y) &&
+            (ctx.memory.siegeLosses[`${site.x},${site.y}`] ?? -1) <
+              ctx.obs.turn,
+        )
+      )
+        return false;
+    }
     // Площадку заняли (построено или стоит объект) — задача закрыта. Сам
     // исполнитель на площадке не закрывает её: рабочий, снятый с добычи,
     // может выйти прямо на неё и затем отойти.
@@ -58,7 +80,16 @@ export const refreshMemory = (ctx: AiContext) => {
 
   const cleaned: AiContext = {
     ...ctx,
-    memory: { ...ctx.memory, tasks, lastWorkplace },
+    memory: {
+      ...ctx.memory,
+      tasks,
+      lastWorkplace,
+      blindStrikes: Object.fromEntries(
+        Object.entries(ctx.memory.blindStrikes).filter(
+          ([, { x, y }]) => !ctx.obs.visible[y]?.[x],
+        ),
+      ),
+    },
   };
   const scores = evaluateStrategies(cleaned);
   const { memory: withStrategy, chosen } = chooseStrategy(cleaned, scores);

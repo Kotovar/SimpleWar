@@ -147,6 +147,29 @@ describe('W04: поиск ресурса рабочим', () => {
 });
 
 describe('W05: новая добыча', () => {
+  it('предпочитает другой ресурс после потери от осады, но допускает единственный и забывает риск через три круга', () => {
+    const spec = {
+      map: ['........', '..g.g...', '........', '........'],
+      buildings: [ownBuilding('base', 0, 2)],
+      units: [own('worker', 2, 2)],
+      memory: { siegeLosses: { '2,1': 7 } },
+    };
+    expect(cellOf(W05.evaluate(scene(spec).ctx)[0].action)).not.toEqual({
+      x: 2,
+      y: 1,
+    });
+    expect(
+      W05.evaluate(
+        scene({
+          ...spec,
+          map: ['........', '..g.....', '........', '........'],
+        }).ctx,
+      )[0].action,
+    ).toMatchObject({ type: 'build', x: 2, y: 1 });
+    expect(
+      W05.evaluate(scene({ ...spec, turn: 8 }).ctx)[0].action,
+    ).toMatchObject({ type: 'build', x: 2, y: 1 });
+  });
   const map = ['..........', '..........', '.....g....', '..........'];
 
   it('строит рудник на известном золоте', () => {

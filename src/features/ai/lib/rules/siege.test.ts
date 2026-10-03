@@ -8,10 +8,65 @@ import {
   scene,
 } from '../scene.test-utils';
 import { O02, O05, O06 } from './siege';
+import { applyOutcome, createTurnState, refreshMemory } from '../memory';
+import { buildContext } from '../context';
+import { useAiMemoryStore } from '@entities/ai-memories';
+import { gameEvents } from '@shared/lib';
 
 const map = grass(16, 16);
 
 describe('O02: удар по зданию', () => {
+  it('не повторяет успешный удар по памяти до нового наблюдения клетки', () => {
+    const contact = {
+      ...remembered('swordsman', 9, 5),
+      kind: 'building' as const,
+      type: 'tower' as const,
+    };
+    const { ctx, obs, memory } = scene({
+      map,
+      hidden: ['9,5'],
+      contacts: [contact],
+      units: [own('siege', 5, 5)],
+    });
+    const [candidate] = O02.evaluate(ctx);
+    expect(candidate).toBeDefined();
+    expect(
+      O02.evaluate(
+        buildContext(
+          obs,
+          applyOutcome(memory, candidate, false, 5, 8),
+          createTurnState(),
+        ),
+      ),
+    ).toHaveLength(1);
+    // Подготовка, включая отменённую движением, ещё не является ударом.
+    expect(applyOutcome(memory, candidate, true, 5, 8).blindStrikes).toEqual(
+      {},
+    );
+    useAiMemoryStore.getState().resetStore();
+    useAiMemoryStore.getState().setMemory('p2', memory);
+    gameEvents.emit({ type: 'SIEGE_STRIKE_EXECUTED', owner: 'p2', x: 9, y: 5 });
+    const fired = useAiMemoryStore.getState().byParticipant.p2!;
+    useAiMemoryStore.getState().resetStore();
+    expect(O02.evaluate(buildContext(obs, fired, createTurnState()))).toEqual(
+      [],
+    );
+    const seen = {
+      ...obs,
+      visible: obs.visible.map(row => row.map(() => true)),
+      visibleEnemies: [contact],
+      contacts: [],
+    };
+    const refreshed = refreshMemory(
+      buildContext(seen, fired, createTurnState()),
+    ).memory;
+    expect(
+      O02.evaluate(buildContext(seen, refreshed, createTurnState())),
+    ).toHaveLength(1);
+    expect(
+      O02.evaluate(buildContext(obs, refreshed, createTurnState())),
+    ).toHaveLength(1);
+  });
   it('с прикрытием готовит удар по башне в дальности', () => {
     const tower = foe('tower', 9, 5);
     const siege = own('siege', 5, 5);

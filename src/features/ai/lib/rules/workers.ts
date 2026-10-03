@@ -11,7 +11,7 @@ import { expansionWanted } from '../saving';
 import { manhattan } from '../geometry';
 import { standCells, stepToward } from '../movement';
 import { bestMove, isFree, moveTo, taskOf } from './common';
-import { buildStep, continueBuilds } from './building';
+import { buildStep, continueBuilds, preferUnstruckSites } from './building';
 import { idleWorkers } from './builders';
 
 /** W01: рабочий в известной опасности уходит к защите, бросая работу. */
@@ -174,7 +174,10 @@ export const W05: AiRule = {
       if (idleWorkplaces(ctx).some(b => b.type === type)) continue;
       const site = nearest(
         ctx.base,
-        resourceSites(ctx, resource === 'gold' ? 'gold' : 'forest'),
+        preferUnstruckSites(
+          ctx,
+          resourceSites(ctx, resource === 'gold' ? 'gold' : 'forest'),
+        ),
       );
       if (!site) continue;
       const worker = [...idleWorkers(ctx)].sort(
