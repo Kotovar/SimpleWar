@@ -12,6 +12,7 @@ import {
   getShelteredIds,
   isCellVisible,
   isHostile,
+  isRestoringGame,
 } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
@@ -173,6 +174,7 @@ const recordSpotted = (
  * источника. Выбывшие участники больше не наблюдают.
  */
 export const refreshKnowledge = () => {
+  if (isRestoringGame()) return;
   const { grid } = useMapStore.getState();
   const { participants, eliminated, currentTurn } = useGameLoopStore.getState();
   const { byParticipant, setKnowledge } = useKnowledgeStore.getState();

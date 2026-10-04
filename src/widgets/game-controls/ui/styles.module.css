@@ -110,6 +110,26 @@
   font-weight: 600;
 }
 
+.SavesButton {
+  font-weight: 600;
+  justify-content: center;
+}
+
+.StartActions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+
+  > button {
+    flex: 1;
+    min-width: 0;
+    max-width: 220px;
+    align-self: stretch;
+    padding-inline: 12px;
+    font-size: 1rem;
+  }
+}
+
 .ToggleMeta {
   font-size: 0.8rem;
   font-variant-numeric: tabular-nums;

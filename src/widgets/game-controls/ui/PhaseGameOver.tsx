@@ -10,7 +10,13 @@ import { MinimapOverlay } from './MinimapOverlay';
 import resultStyles from './PhaseGameOver.styles.module.css';
 import styles from './styles.module.css';
 
-export const PhaseGameOver = ({ minimap }: { minimap?: ReactNode }) => {
+export const PhaseGameOver = ({
+  minimap,
+  onOpenSaves,
+}: {
+  minimap?: ReactNode;
+  onOpenSaves?: () => void;
+}) => {
   const { winner, humanId, participants, eliminated, currentTurn } =
     useGameLoopSelectors();
   const isDraw = eliminated.length === participants.length;
@@ -47,6 +53,7 @@ export const PhaseGameOver = ({ minimap }: { minimap?: ReactNode }) => {
             </span>
           </div>
           <div className={styles.ButtonGroup}>
+            {onOpenSaves && <button onClick={onOpenSaves}>Сохранения</button>}
             <button
               className={styles.ToggleButton}
               onClick={() => setReview(false)}
@@ -75,6 +82,11 @@ export const PhaseGameOver = ({ minimap }: { minimap?: ReactNode }) => {
 
       {humanId && <PlayerResult player={humanId} />}
       <SandboxReport />
+      {onOpenSaves && (
+        <button className={styles.ToggleButton} onClick={onOpenSaves}>
+          Сохранения
+        </button>
+      )}
 
       <button className={styles.ToggleButton} onClick={() => setReview(true)}>
         Обзор всей карты

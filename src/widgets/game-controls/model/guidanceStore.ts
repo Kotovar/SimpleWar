@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { isRestoringGame } from '@shared/lib';
 import { getHumanId, useGameLoopStore } from '@entities/games';
 import { getVisibleRecords, useJournalStore } from '@entities/journals';
 import { usePreferencesStore } from '@entities/settings';
@@ -52,6 +53,10 @@ export const useGuidanceStore = create<GuidanceState>()(set => ({
 export const initGuidanceSystem = () => {
   let lastId = useJournalStore.getState().nextId - 1;
   const offJournal = useJournalStore.subscribe((journal, previous) => {
+    if (isRestoringGame()) {
+      lastId = journal.nextId - 1;
+      return;
+    }
     if (journal.gameId !== previous.gameId) {
       lastId = journal.nextId - 1;
       useGuidanceStore.setState(initial());
@@ -115,6 +120,7 @@ export const initGuidanceSystem = () => {
     });
   });
   const offLoop = useGameLoopStore.subscribe((loop, previous) => {
+    if (isRestoringGame()) return;
     if (loop.phase !== 'inProgress' || previous.phase !== 'setup') return;
     const player = getHumanId(loop.participants);
     if (!player || useSandboxStore.getState().enabled) return;

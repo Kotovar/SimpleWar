@@ -29,18 +29,22 @@ import {
   initPopulationSystem,
 } from '@app/system';
 import { runAITurn } from '@app/game/ai';
+import { initSaveSystem, useSaveStore } from '@app/saves/service';
+import { SaveGames } from '@app/saves/SaveGames';
 import styles from './styles.module.css';
 
 /** Пауза перед ходом в ускоренном режиме тестирования, мс. */
 const FAST_TURN_DELAY_MS = 30;
 
 export const Game = () => {
+  const [savesOpen, setSavesOpen] = useState(false);
   const { activePlayer, activeController, phase, startGame } =
     useGameLoopSelectors();
   const sandbox = useSandboxStore(state => state.enabled);
   const paused = useSandboxStore(state => state.paused);
   const debug = useDebugStore(state => state.enabled);
   const gameId = useJournalStore(state => state.gameId);
+  const loadedGameId = useSaveStore(state => state.loadedGameId);
   const review = useGameLoopStore(state => state.reviewWorld);
   const showMap = phase === 'inProgress' || (phase === 'gameOver' && review);
   // ИИ не смог завершить ход: без решения игрока партия стоит. Номер
@@ -87,7 +91,12 @@ export const Game = () => {
     initVisibilitySystem();
     initBattleStats();
     initAudioSystem();
-    return initGuidanceSystem();
+    const offGuidance = initGuidanceSystem();
+    const offSaves = initSaveSystem();
+    return () => {
+      offSaves();
+      offGuidance();
+    };
   }, []);
 
   useEffect(() => {
@@ -105,12 +114,24 @@ export const Game = () => {
       sandbox && fast ? FAST_TURN_DELAY_MS : rate ? AI_TURN_DELAY_MS / rate : 0,
     );
     return () => clearTimeout(timer);
-  }, [activePlayer, activeController, phase, sandbox, paused, fast]);
+  }, [activePlayer, activeController, phase, sandbox, paused, fast, gameId]);
 
   return (
     <main className={showMap ? styles.Main : styles.Setup}>
-      {showMap && <Map />}
-      <GameControls onStartGame={handleStartGame} minimap={<Minimap />} />
+      {showMap && (
+        <Map key={`map:${gameId}`} focusOnMount={loadedGameId !== gameId} />
+      )}
+      <GameControls
+        key={`controls:${gameId}`}
+        onStartGame={handleStartGame}
+        onOpenSaves={() => setSavesOpen(true)}
+        minimap={<Minimap />}
+      />
+      <SaveGames
+        key={`saves:${gameId}`}
+        open={savesOpen}
+        onClose={() => setSavesOpen(false)}
+      />
       <ConfirmDialog
         isOpen={stalled !== null}
         title='Противник не завершил ход'

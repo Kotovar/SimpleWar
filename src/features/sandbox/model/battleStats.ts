@@ -1,5 +1,5 @@
 import type { ParticipantId } from '@shared/config';
-import { gameEvents } from '@shared/lib';
+import { gameEvents, isRestoringGame } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useGameLoopStore } from '@entities/games';
@@ -9,6 +9,7 @@ let unsubscribe: (() => void) | null = null;
 
 /** Учёт идёт только в партии режима тестирования. */
 const counting = () =>
+  !isRestoringGame() &&
   useSandboxStore.getState().enabled &&
   useGameLoopStore.getState().phase === 'inProgress';
 

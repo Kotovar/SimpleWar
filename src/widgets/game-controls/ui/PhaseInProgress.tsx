@@ -40,6 +40,7 @@ import { runOrders } from '../model/runOrders';
 import styles from './styles.module.css';
 
 type Props = {
+  onOpenSaves?: () => void;
   /** Мини-карта поверх карты вверху справа. */
   minimap?: ReactNode;
 };
@@ -58,7 +59,7 @@ const hasTarget = (unit: Unit, units: Unit[]) => {
   );
 };
 
-export const PhaseInProgress = ({ minimap }: Props) => {
+export const PhaseInProgress = ({ minimap, onOpenSaves }: Props) => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showSurrender, setShowSurrender] = useState(false);
   const [pending, setPending] = useState(0);
@@ -160,6 +161,7 @@ export const PhaseInProgress = ({ minimap }: Props) => {
         <ResourcesInfo />
         <ToolsToggle open={toolsOpen} onToggle={toggleTools} />
         <TurnControls
+          onOpenSaves={onOpenSaves}
           onNextTurn={onNextTurn}
           onRunOrders={
             hasOrders ? () => runOrders(humanId, clearInteraction) : undefined

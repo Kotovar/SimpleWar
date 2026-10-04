@@ -10,6 +10,7 @@ import { KeyboardHelp } from '../KeyboardHelp';
 import styles from './TurnControls.styles.module.css';
 
 type Props = {
+  onOpenSaves?: () => void;
   onNextTurn: () => void;
   /** Исполнить приказы «Идти в точку»; нет — активных приказов нет. */
   onRunOrders?: () => void;
@@ -23,6 +24,7 @@ export const TurnControls = ({
   onRunOrders,
   onReset,
   onSurrender,
+  onOpenSaves,
 }: Props) => {
   const { activePlayer, humanId } = useGameLoopSelectors();
   const isOwnTurn = activePlayer === humanId;
@@ -85,6 +87,17 @@ export const TurnControls = ({
       <details className={styles.Menu} ref={menu}>
         <summary>Меню</summary>
         <div className={styles.Dropdown}>
+          {onOpenSaves && (
+            <button
+              className={styles.MenuButton}
+              onClick={() => {
+                if (menu.current) menu.current.open = false;
+                onOpenSaves();
+              }}
+            >
+              Сохранения
+            </button>
+          )}
           <button
             className={styles.MenuButton}
             aria-pressed={isDebug}

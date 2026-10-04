@@ -14,6 +14,7 @@ import styles from './styles.module.css';
 
 type Props = {
   onStartGame: () => void;
+  onOpenSaves?: () => void;
 };
 
 /** Только цифры; остальное (`0.5`, `-1`, `0x1`, `1e3`) — NaN. */
@@ -26,7 +27,7 @@ const parseSeed = (text: string) => {
  * Главное меню: шаги «режим → карта → противник» (в тестировании баланса —
  * составы сторон), сид — в свёрнутом блоке «Дополнительно», звук — в углу.
  */
-export const PhaseSetup = ({ onStartGame }: Props) => {
+export const PhaseSetup = ({ onStartGame, onOpenSaves }: Props) => {
   const {
     gridRows,
     mapGenerationMode,
@@ -179,9 +180,19 @@ export const PhaseSetup = ({ onStartGame }: Props) => {
             {startError}
           </p>
         )}
-        <button className={styles.PrimaryButton} onClick={onStartGame}>
-          Начать игру
-        </button>
+        <div className={styles.StartActions}>
+          <button className={styles.PrimaryButton} onClick={onStartGame}>
+            Начать игру
+          </button>
+          {onOpenSaves && (
+            <button
+              className={`${styles.ToggleButton} ${styles.SavesButton}`}
+              onClick={onOpenSaves}
+            >
+              Сохранения
+            </button>
+          )}
+        </div>
         <a
           className={styles.GuideLink}
           href={GUIDEBOOK_URL}

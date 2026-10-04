@@ -89,6 +89,16 @@ const seedFor = (actor: ParticipantId) =>
 /** Идущие ходы ИИ по ключу `партия:ход:участник`: один запуск на ход. */
 const running = new Map<string, Promise<AiRunResult | null>>();
 
+/** Сохранение ждёт завершения цикла: его новая память пока находится в Promise. */
+export const waitForCurrentAi = () => {
+  const prefix = `${useJournalStore.getState().gameId}:`;
+  return Promise.all(
+    [...running]
+      .filter(([key]) => key.startsWith(prefix))
+      .map(([, promise]) => promise),
+  );
+};
+
 const isSandboxPaused = () => {
   const sandbox = useSandboxStore.getState();
   return sandbox.enabled && sandbox.paused;
@@ -169,10 +179,8 @@ export const runAITurn = (
     const setup = useGameLoopStore
       .getState()
       .participants.find(({ id }) => id === actor)?.ai;
-    const memory = {
-      ...(memories.byParticipant[actor] ?? createAiMemory(seedFor(actor))),
-      seed: seedFor(actor),
-    };
+    const memory =
+      memories.byParticipant[actor] ?? createAiMemory(seedFor(actor));
     let visibleChange = false;
     const result = await playTurn({
       config: profileConfig(setup?.profile),
@@ -194,6 +202,9 @@ export const runAITurn = (
         useJournalStore.getState().recordDecision({ ...decision, actor, turn }),
       yieldControl,
     }).catch((error: unknown): AiTurnResult => {
+      if (useJournalStore.getState().gameId !== gameId) {
+        return { memory, commands: 0, reason: 'отменено', cancelled: true };
+      }
       // Сбой планировщика не держит партию: сбой — в журнал, ход передаётся.
       // Память остаётся прежней: решения упавшего хода не сохраняются.
       useJournalStore

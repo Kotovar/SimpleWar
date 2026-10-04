@@ -24,7 +24,7 @@ import { MapControls } from './MapControls';
 import { ContextBuildMenu } from './ContextBuildMenu';
 import styles from './styles.module.css';
 
-export const Map = () => {
+export const Map = ({ focusOnMount = true }: { focusOnMount?: boolean }) => {
   const [buildMenu, setBuildMenu] = useState<
     (Position & { workerId: string }) | null
   >(null);
@@ -51,7 +51,7 @@ export const Map = () => {
   useGameHotkeys({ scene, humanId, focusBase });
 
   // Новая партия начинается с камеры у своей ратуши, как только окно измерено.
-  const focused = useRef(false);
+  const focused = useRef(!focusOnMount);
   useEffect(() => {
     if (!isMeasured || focused.current) return;
     focused.current = true;

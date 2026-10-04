@@ -7,3 +7,4 @@ export * from './camera';
 export * from './minimap';
 export * from './audio';
 export * from './dom';
+export * from './restoration';

@@ -3,6 +3,10 @@ import type { ParticipantId } from './gameLoop';
 /** Игровые команды, общие для интерфейса и ИИ. */
 export type CommandType =
   | 'start'
+  | 'save'
+  | 'load'
+  | 'import'
+  | 'export'
   | 'move'
   | 'rest'
   /** Отдать или снять приказ «Идти в точку» либо точку сбора здания. */
