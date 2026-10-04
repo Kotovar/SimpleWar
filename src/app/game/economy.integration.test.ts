@@ -179,6 +179,22 @@ describe('назначение рабочих', () => {
 });
 
 describe('ремонт', () => {
+  it('один рабочий восстанавливает только часть серьёзного повреждения', () => {
+    const repairer = readyWorker(5, 3);
+    buildings().damageBuilding(mine, 50);
+    const before = buildings().buildings[mine].hp;
+
+    expect(
+      repair({ actor: 'p1', workerId: repairer, buildingId: mine }),
+    ).toEqual({ ok: true });
+    expect(buildings().buildings[mine].hp).toBe(before + 10);
+    expect(
+      repair({ actor: 'p1', workerId: repairer, buildingId: mine }),
+    ).toMatchObject({ code: 'points' });
+    expect(gold()).toBe(200 - 10);
+    expect(wood()).toBe(120 - 20);
+  });
+
   it('восстанавливает не выше максимума и тратит действие и цену', () => {
     const repairer = readyWorker(5, 3);
     buildings().damageBuilding(mine, 10);

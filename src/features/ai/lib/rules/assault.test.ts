@@ -10,7 +10,48 @@ import {
 } from '../scene.test-utils';
 import { M03, M04 } from './assault';
 
+it('M04: в бою сближается с видимым противником, не проходит мимо к далёкой ратуше', () => {
+  const unit = own('swordsman', 5, 5);
+  const enemy = foe('archer', 8, 5);
+  const { ctx } = scene({
+    map: grass(16, 16),
+    units: [unit],
+    enemies: [enemy, foe('base', 14, 14)],
+    memory: {
+      operation: {
+        phase: 'engage',
+        target: { x: 14, y: 14 },
+        rally: null,
+        since: 1,
+      },
+    },
+  });
+  const [candidate] = M04.evaluate(ctx);
+  expect(manhattan(cellOf(candidate.action), enemy)).toBe(1);
+});
+
 const map = grass(12, 12);
+
+it('M04: доступная ратуша важнее ближайшей лесопилки рядом с ней', () => {
+  const sword = own('swordsman', 5, 4);
+  const base = foe('base', 8, 5);
+  const { ctx } = scene({
+    map,
+    units: [sword],
+    enemies: [base, foe('sawmill', 6, 4)],
+    memory: {
+      operation: {
+        phase: 'advance',
+        target: { x: base.x, y: base.y },
+        rally: null,
+        since: 1,
+      },
+    },
+  });
+  const [candidate] = M04.evaluate(ctx);
+  // Путь обходит лесопилку; не заканчивается на её ближайшей клетке атаки.
+  expect(manhattan(cellOf(candidate.action), base)).toBe(1);
+});
 
 describe('M03/M04: сбор и наступление', () => {
   const gather = {

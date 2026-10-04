@@ -35,7 +35,7 @@ export const START_POPULATION_CAPS = Object.fromEntries(
  * и такая цена. Старт; подбирается в S21.
  */
 export const REPAIR = {
-  hp: 40,
+  hp: 10,
   cost: { gold: 10, wood: 20 },
 };
 

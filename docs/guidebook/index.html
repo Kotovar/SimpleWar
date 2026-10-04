@@ -470,7 +470,7 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
         <li><b>Строить</b> — одно здание за ход.</li>
         <li><b>Работать</b> — войти в соседний рудник или лесопилку, в том числе по диагонали. Внутри рабочий укрыт: враг его не видит, а удар получает здание.</li>
         <li><b>Снять с работы</b> — выйти на соседнюю свободную клетку. Любой шаг тоже выводит рабочего наружу.</li>
-        <li><b>Чинить</b> — +40 HP зданию за 10 золота и 20 дерева.</li>
+        <li><b>Чинить</b> — +10 HP зданию за 10 золота и 20 дерева.</li>
         <li><b>Расчистить лес</b> — соседняя клетка леса становится полем. Дерево не выдаётся.</li>
       </ul>
       <p class="small muted" style="margin:0">Любое своё здание, кроме ратуши, можно снести после подтверждения; затраченные ресурсы не возвращаются. Игра не позволит построить здание, которое, согласно известной вам карте, перекроет последний проход к зданию или ратуше.</p>
@@ -573,29 +573,29 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
       <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>45</dd><dd>5</dd><dd>6</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>6 · 1</dd><dd>1</dd><dd>50 / 20</dd></dl>
       <p>Самый широкий обзор в игре, но в бою разведчик слаб.</p></article>
     <article class="card" data-b="barracks"><img src="assets/screenshots/portraits/swordsman.png" alt="" width="56" height="56"><div><div class="role">линия · пехота</div><h3>Мечник</h3></div>
-      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>110</dd><dd>3</dd><dd>3</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>18 · 1</dd><dd>2</dd><dd>90 / 0</dd></dl>
-      <p>Крепкий и недорогой, не требует дерева. Не может атаковать воздушные цели.</p></article>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>110</dd><dd>3</dd><dd>3</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>28 · 1</dd><dd>2</dd><dd>180 / 0</dd></dl>
+      <p>Крепкий, не требует дерева. +28 против зданий. Не может атаковать воздушные цели.</p></article>
     <article class="card" data-b="barracks" data-air><img src="assets/screenshots/portraits/archer.png" alt="" width="56" height="56"><div><div class="role">дальний бой · стрелки</div><h3>Лучник</h3></div>
-      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>55</dd><dd>3</dd><dd>4</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>22 · 3</dd><dd>2</dd><dd>110 / 120</dd></dl>
-      <p>+6 против летающих. Хрупок вблизи.</p></article>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>55</dd><dd>3</dd><dd>4</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>30 · 3</dd><dd>2</dd><dd>220 / 120</dd></dl>
+      <p>+6 против летающих, +10 против зданий. Хрупок вблизи.</p></article>
     <article class="card" data-b="barracks"><img src="assets/screenshots/portraits/spearman.png" alt="" width="56" height="56"><div><div class="role">против конницы · пехота</div><h3>Копейщик</h3></div>
-      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>100</dd><dd>3</dd><dd>3</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>14 · 1</dd><dd>2</dd><dd>70 / 40</dd></dl>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>100</dd><dd>3</dd><dd>3</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>22 · 1</dd><dd>2</dd><dd>140 / 40</dd></dl>
       <p>Броня 2, +16 против конницы.</p></article>
     <article class="card" data-b="stable"><img src="assets/screenshots/portraits/rider.png" alt="" width="56" height="56"><div><div class="role">рейды · конница</div><h3>Всадник</h3></div>
-      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>90</dd><dd>5</dd><dd>4</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>16 · 1</dd><dd>3</dd><dd>120 / 60</dd></dl>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>90</dd><dd>5</dd><dd>4</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>24 · 1</dd><dd>3</dd><dd>240 / 60</dd></dl>
       <p>Броня 1, +10 против стрелков и рабочих.</p></article>
     <article class="card" data-b="workshop"><img src="assets/screenshots/portraits/siege.png" alt="" width="56" height="56"><div><div class="role">осада</div><h3>Осадная машина</h3></div>
-      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>70</dd><dd>2</dd><dd>2</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>12 · 2–5</dd><dd>3</dd><dd>150 / 150</dd></dl>
-      <p>Атакует только подготовленным ударом по клетке. Бонус урона против зданий — +40.</p></article>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>70</dd><dd>2</dd><dd>2</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>12 · 2–5</dd><dd>3</dd><dd>300 / 150</dd></dl>
+      <p>Атакует только подготовленным ударом по клетке. Бонус урона против зданий — +108.</p></article>
     <article class="card" data-b="sanctuary" data-air><img src="assets/screenshots/portraits/mage.png" alt="" width="56" height="56"><div><div class="role">магия · стрелки</div><h3>Маг</h3></div>
-      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>50</dd><dd>3</dd><dd>3</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>20 маг. · 3</dd><dd>2</dd><dd>120 / 80</dd></dl>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>50</dd><dd>3</dd><dd>3</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>28 маг. · 3</dd><dd>2</dd><dd>240 / 80</dd></dl>
       <p>Магический урон игнорирует броню. Магическая защита — 4.</p></article>
     <article class="card" data-b="sanctuary"><img src="assets/screenshots/portraits/healer.png" alt="" width="56" height="56"><div><div class="role">поддержка · стрелки</div><h3>Лекарь</h3></div>
-      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>45</dd><dd>3</dd><dd>3</dd><dt>Лечение</dt><dt>Место</dt><dt>Цена</dt><dd>+20 · 2</dd><dd>2</dd><dd>90 / 60</dd></dl>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>45</dd><dd>3</dd><dd>3</dd><dt>Лечение</dt><dt>Место</dt><dt>Цена</dt><dd>+12 · 2</dd><dd>2</dd><dd>180 / 60</dd></dl>
       <p>Не атакует, а лечит союзного юнита. Магическая защита — 4.</p></article>
     <article class="card" data-b="sanctuary" data-air><img src="assets/screenshots/portraits/griffon.png" alt="" width="56" height="56"><div><div class="role">воздух · летающие</div><h3>Грифон</h3></div>
-      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>85</dd><dd>5 полёт</dd><dd>4</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>17 · 1</dd><dd>3</dd><dd>150 / 120</dd></dl>
-      <p>Летает над водой, горами и лесом. Броня — 1. Может атаковать наземные и воздушные цели.</p></article>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>85</dd><dd>5 полёт</dd><dd>4</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>26 · 1</dd><dd>3</dd><dd>300 / 120</dd></dl>
+      <p>Летает над водой, горами и лесом. Броня — 1; +17 против зданий. Может атаковать наземные и воздушные цели.</p></article>
   </div>
   <details class="panel" style="margin-top:14px">
     <summary style="cursor:pointer;color:var(--gold)">Подробная таблица характеристик</summary>
@@ -604,14 +604,14 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
       <tbody>
         <tr><td>Рабочий</td><td>Ратуша</td><td class="num">25</td><td class="num">4</td><td class="num">3</td><td class="num">—</td><td class="num">—</td><td class="num">1</td><td class="num">40 / 40</td><td>рабочие</td><td>—</td></tr>
         <tr><td>Разведчик</td><td>Ратуша</td><td class="num">45</td><td class="num">5</td><td class="num">6</td><td class="num">6</td><td class="num">1</td><td class="num">1</td><td class="num">50 / 20</td><td>пехота</td><td>—</td></tr>
-        <tr><td>Мечник</td><td>Казармы</td><td class="num">110</td><td class="num">3</td><td class="num">3</td><td class="num">18</td><td class="num">1</td><td class="num">2</td><td class="num">90 / 0</td><td>пехота</td><td>—</td></tr>
-        <tr><td>Лучник</td><td>Казармы</td><td class="num">55</td><td class="num">3</td><td class="num">4</td><td class="num">22</td><td class="num">3</td><td class="num">2</td><td class="num">110 / 120</td><td>стрелки</td><td>+6 летающие</td></tr>
-        <tr><td>Копейщик</td><td>Казармы</td><td class="num">100</td><td class="num">3</td><td class="num">3</td><td class="num">14</td><td class="num">1</td><td class="num">2</td><td class="num">70 / 40</td><td>пехота</td><td>броня 2; +16 конница</td></tr>
-        <tr><td>Всадник</td><td>Конюшня</td><td class="num">90</td><td class="num">5</td><td class="num">4</td><td class="num">16</td><td class="num">1</td><td class="num">3</td><td class="num">120 / 60</td><td>конница</td><td>броня 1; +10 стрелки и рабочие</td></tr>
-        <tr><td>Осадная машина</td><td>Мастерская</td><td class="num">70</td><td class="num">2</td><td class="num">2</td><td class="num">12</td><td class="num">2–5</td><td class="num">3</td><td class="num">150 / 150</td><td>осада</td><td>+40 здания</td></tr>
-        <tr><td>Маг</td><td>Святилище</td><td class="num">50</td><td class="num">3</td><td class="num">3</td><td class="num">20 маг.</td><td class="num">3</td><td class="num">2</td><td class="num">120 / 80</td><td>стрелки</td><td>маг. защита 4</td></tr>
-        <tr><td>Лекарь</td><td>Святилище</td><td class="num">45</td><td class="num">3</td><td class="num">3</td><td class="num">+20 HP</td><td class="num">2</td><td class="num">2</td><td class="num">90 / 60</td><td>стрелки</td><td>маг. защита 4</td></tr>
-        <tr><td>Грифон</td><td>Святилище</td><td class="num">85</td><td class="num">5 полёт</td><td class="num">4</td><td class="num">17</td><td class="num">1</td><td class="num">3</td><td class="num">150 / 120</td><td>летающие</td><td>броня 1</td></tr>
+        <tr><td>Мечник</td><td>Казармы</td><td class="num">110</td><td class="num">3</td><td class="num">3</td><td class="num">28</td><td class="num">1</td><td class="num">2</td><td class="num">180 / 0</td><td>пехота</td><td>+28 здания</td></tr>
+        <tr><td>Лучник</td><td>Казармы</td><td class="num">55</td><td class="num">3</td><td class="num">4</td><td class="num">30</td><td class="num">3</td><td class="num">2</td><td class="num">220 / 120</td><td>стрелки</td><td>+6 летающие; +10 здания</td></tr>
+        <tr><td>Копейщик</td><td>Казармы</td><td class="num">100</td><td class="num">3</td><td class="num">3</td><td class="num">22</td><td class="num">1</td><td class="num">2</td><td class="num">140 / 40</td><td>пехота</td><td>броня 2; +16 конница</td></tr>
+        <tr><td>Всадник</td><td>Конюшня</td><td class="num">90</td><td class="num">5</td><td class="num">4</td><td class="num">24</td><td class="num">1</td><td class="num">3</td><td class="num">240 / 60</td><td>конница</td><td>броня 1; +10 стрелки и рабочие</td></tr>
+        <tr><td>Осадная машина</td><td>Мастерская</td><td class="num">70</td><td class="num">2</td><td class="num">2</td><td class="num">12</td><td class="num">2–5</td><td class="num">3</td><td class="num">300 / 150</td><td>осада</td><td>+108 здания</td></tr>
+        <tr><td>Маг</td><td>Святилище</td><td class="num">50</td><td class="num">3</td><td class="num">3</td><td class="num">28 маг.</td><td class="num">3</td><td class="num">2</td><td class="num">240 / 80</td><td>стрелки</td><td>маг. защита 4</td></tr>
+        <tr><td>Лекарь</td><td>Святилище</td><td class="num">45</td><td class="num">3</td><td class="num">3</td><td class="num">+12 HP</td><td class="num">2</td><td class="num">2</td><td class="num">180 / 60</td><td>стрелки</td><td>маг. защита 4</td></tr>
+        <tr><td>Грифон</td><td>Святилище</td><td class="num">85</td><td class="num">5 полёт</td><td class="num">4</td><td class="num">26</td><td class="num">1</td><td class="num">3</td><td class="num">300 / 120</td><td>летающие</td><td>броня 1; +17 здания</td></tr>
       </tbody>
     </table></div>
     <p class="small muted" style="margin:10px 0 0">Каждый военный юнит может один раз за ход атаковать или лечить. Если юнит больше не может двигаться и рядом нет доступных целей, он отображается на карте затемнённым.</p>
@@ -656,10 +656,10 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   <div class="head"><div><div class="eyebrow">10 · Состав</div><h2>Особые роли</h2></div><p>У каждого типа войск своя роль и свои сильные стороны.</p></div>
   <div class="grid3">
     <div class="panel"><h4>Разведчик</h4><p class="small muted" style="margin:0">Обзор — 6 клеток, запас движения — 5 очков. Разведчика можно нанять в ратуше уже в первый ход; он поможет найти ресурсы и базу противника.</p></div>
-    <div class="panel"><h4>Копейщик против конницы</h4><p class="small muted" style="margin:0">Всадник наносит копейщику 16 − 2 = 14, копейщик всаднику — 14 + 16 − 1 = 29. Пара копейщиков у базы — надёжный ответ на рейды.</p></div>
-    <div class="panel"><h4>Рейды всадников</h4><p class="small muted" style="margin:0">5 очков хода и +10 против стрелков и рабочих: лучник теряет 26 HP из 55, рабочий гибнет с одного удара. Но рабочий внутри рудника недосягаем — удар примет здание.</p></div>
-    <div class="panel"><h4>Маг</h4><p class="small muted" style="margin:0">Наносит 20 магического урона, который не зависит от брони, и может атаковать воздушные цели. Против зданий он слаб: магическая защита снижает урон с 20 до 10.</p></div>
-    <div class="panel"><h4>Лекарь</h4><p class="small muted" style="margin:0">Вместо атаки восстанавливает до 20 HP союзнику на расстоянии не более 2 клеток, но не выше его максимального здоровья. Держите лекаря за строем: у него всего 45 HP.</p></div>
+    <div class="panel"><h4>Копейщик против конницы</h4><p class="small muted" style="margin:0">Всадник наносит копейщику 24 − 2 = 22, копейщик всаднику — 22 + 16 − 1 = 37. Пара копейщиков у базы — надёжный ответ на рейды.</p></div>
+    <div class="panel"><h4>Рейды всадников</h4><p class="small muted" style="margin:0">5 очков хода и +10 против стрелков и рабочих: лучник теряет 34 HP из 55, рабочий гибнет с одного удара. Но рабочий внутри рудника недосягаем — удар примет здание.</p></div>
+    <div class="panel"><h4>Маг</h4><p class="small muted" style="margin:0">Наносит 28 магического урона, который не зависит от брони, и может атаковать воздушные цели. Против зданий он слаб: магическая защита снижает урон с 28 до 18.</p></div>
+    <div class="panel"><h4>Лекарь</h4><p class="small muted" style="margin:0">Вместо атаки восстанавливает до 12 HP союзнику на расстоянии не более 2 клеток, но не выше его максимального здоровья. Держите лекаря за строем: у него всего 45 HP.</p></div>
     <div class="panel"><h4>Грифон</h4><p class="small muted" style="margin:0">Каждая клетка полёта стоит 1 очко движения. Грифон пролетает над водой, горами, лесом и занятыми клетками, но остановиться может только на свободной. Наземная пехота его не достаёт.</p></div>
   </div>
   <figure class="shot" style="margin-top:16px">
@@ -690,7 +690,7 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   <div class="panel" style="margin-top:14px">
     <ul class="small" style="margin:0">
       <li>Цель — клетка, а не юнит: если юнит успеет её покинуть, он не получит урон. Летающих удар не задевает.</li>
-      <li>Урон по общей формуле: 12 минус броня по войскам, 12 + 40 = 52 по зданию. Рабочий внутри здания на этой клетке тоже получает урон.</li>
+      <li>Урон по общей формуле: 12 минус броня по войскам, 12 + 108 = 120 по зданию. Рабочий внутри здания на этой клетке тоже получает урон.</li>
       <li>Лес на клетке удара превращается в поле — так можно прорубить проход.</li>
       <li>Если клетка удара вам не видна, журнал сообщит об ударе, но не покажет, какие объекты пострадали.</li>
       <li>Компьютер тоже видит метки: уводит с отмеченных клеток наземные войска, не строит и не нанимает на них. Башня в первую очередь атакует замеченную осадную машину, если та угрожает зданиям.</li>
@@ -962,14 +962,14 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   "units": {
     "worker": {"n": "Рабочий", "hp": 25, "cat": "civil"},
     "scout": {"n": "Разведчик", "hp": 45, "atk": 6, "cat": "infantry"},
-    "swordsman": {"n": "Мечник", "hp": 110, "atk": 18, "cat": "infantry"},
-    "archer": {"n": "Лучник", "hp": 55, "atk": 22, "cat": "ranged", "air": 1, "bonus": {"flying": 6}},
-    "spearman": {"n": "Копейщик", "hp": 100, "atk": 14, "cat": "infantry", "armor": 2, "bonus": {"cavalry": 16}},
-    "rider": {"n": "Всадник", "hp": 90, "atk": 16, "cat": "cavalry", "armor": 1, "bonus": {"ranged": 10, "civil": 10}},
-    "siege": {"n": "Осадная машина", "hp": 70, "atk": 12, "cat": "siege", "strike": 1, "bonus": {"building": 40}},
-    "mage": {"n": "Маг", "hp": 50, "atk": 20, "cat": "ranged", "air": 1, "magic": 1, "mres": 4},
+    "swordsman": {"n": "Мечник", "hp": 110, "atk": 28, "cat": "infantry", "bonus": {"building": 28}},
+    "archer": {"n": "Лучник", "hp": 55, "atk": 30, "cat": "ranged", "air": 1, "bonus": {"flying": 6, "building": 10}},
+    "spearman": {"n": "Копейщик", "hp": 100, "atk": 22, "cat": "infantry", "armor": 2, "bonus": {"cavalry": 16}},
+    "rider": {"n": "Всадник", "hp": 90, "atk": 24, "cat": "cavalry", "armor": 1, "bonus": {"ranged": 10, "civil": 10}},
+    "siege": {"n": "Осадная машина", "hp": 70, "atk": 12, "cat": "siege", "strike": 1, "bonus": {"building": 108}},
+    "mage": {"n": "Маг", "hp": 50, "atk": 28, "cat": "ranged", "air": 1, "magic": 1, "mres": 4},
     "healer": {"n": "Лекарь", "hp": 45, "cat": "ranged", "mres": 4, "heal": 1},
-    "griffon": {"n": "Грифон", "hp": 85, "atk": 17, "cat": "flying", "armor": 1, "air": 1, "flying": 1},
+    "griffon": {"n": "Грифон", "hp": 85, "atk": 26, "cat": "flying", "armor": 1, "air": 1, "flying": 1, "bonus": {"building": 17}},
     "tower": {"n": "Башня", "atk": 20, "air": 1}
   },
   "buildings": {
@@ -1039,7 +1039,7 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
     var t = tv[0] === 'u' ? U[tv[1]] : {n: B[tv[1]][0], hp: B[tv[1]][1], cat: 'building', mres: 10};
     var out = document.getElementById('dmg'), why = document.getElementById('why'), kills = document.getElementById('kills');
     kills.textContent = '';
-    if (a.heal) { out.textContent = '—'; why.textContent = 'Лекарь не атакует: его действие — +20 HP своему юниту в пределах 2 клеток.'; return; }
+    if (a.heal) { out.textContent = '—'; why.textContent = 'Лекарь не атакует: его действие — +12 HP своему юниту в пределах 2 клеток.'; return; }
     if (t.flying && !a.air) {
       out.innerHTML = '<span class="no">нельзя</span>';
       why.textContent = a.strike ? 'Удар осады поражает только наземные объекты на клетке.' : a.n + ' не может атаковать воздушные цели.';

@@ -4,6 +4,7 @@ import type { AiRule, Candidate } from '../../model/types';
 import type { AiContext, EnemyView } from '../context';
 import { baseAlarm } from '../facts';
 import { manhattan } from '../geometry';
+import { isAdvancing } from '../operation';
 import {
   attackOf,
   bestMove,
@@ -100,6 +101,7 @@ export const A05: AiRule = {
           },
         ];
       }
+      if (isAdvancing(ctx, unit)) return [];
       const cell = bestMove(ctx, unit, c =>
         attackers.some(e => manhattan(e, c) <= unit.attackRange)
           ? 50 - meleeThreat(ctx, c) * 10

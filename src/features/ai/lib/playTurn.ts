@@ -94,6 +94,9 @@ export const playTurn = async (deps: AiTurnDeps): Promise<AiTurnResult> => {
     turn.step++;
 
     const obs = deps.observe();
+    // Успешные команды уже исполнены: свежие HP содержат их урон.
+    // Фокус прошлого шага нельзя повторно вычитать из нового наблюдения.
+    turn.plannedDamage.clear();
     const refreshed = refreshMemory(buildContext(obs, memory, turn, config));
     memory = refreshed.memory;
     const ctx = buildContext(obs, memory, turn, config);

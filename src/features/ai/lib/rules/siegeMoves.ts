@@ -37,6 +37,7 @@ export const O03: AiRule = {
   group: 'attack',
   title: 'Огневая позиция осады',
   evaluate: ctx => {
+    if (ctx.memory.operation.phase === 'retreat') return [];
     const targets = buildingTargets(ctx);
     if (!targets.length) return [];
     return guns(ctx).flatMap((unit): Candidate[] => {

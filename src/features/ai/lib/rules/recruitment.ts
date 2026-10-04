@@ -17,17 +17,19 @@ export const N03: AiRule = {
     for (const wish of roleWishes(ctx)) {
       const counter = wish.type === 'spearman' || wish.type === 'mage';
       if (lack <= 0 && !counter) continue;
-      const building = producers(ctx).find(b => canHire(ctx, b, wish.type));
-      if (!building) continue;
-      return hire(
-        ctx,
-        'N03',
-        'hire',
-        building,
-        wish.type,
-        50 + Math.max(0, lack) * 4 + (counter ? 10 : 0),
-        wish.reason,
-      );
+      for (const building of producers(ctx)) {
+        if (!canHire(ctx, building, wish.type)) continue;
+        const candidates = hire(
+          ctx,
+          'N03',
+          'hire',
+          building,
+          wish.type,
+          50 + Math.max(0, lack) * 4 + (counter ? 10 : 0),
+          wish.reason,
+        );
+        if (candidates.length) return candidates;
+      }
     }
     return [];
   },

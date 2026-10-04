@@ -135,7 +135,7 @@ describe('лечение', () => {
     expect(heal({ actor: 'p1', healerId: healer, targetId: hurt }).ok).toBe(
       true,
     );
-    expect(unit(hurt).hp).toBe(80);
+    expect(unit(hurt).hp).toBe(72);
   });
 
   it('маг бьёт магией: броня копейщика не помогает', () => {
@@ -144,7 +144,7 @@ describe('лечение', () => {
 
     attack({ actor: 'p1', attackerId: mage, targetId: spear });
 
-    expect(unit(spear).hp).toBe(100 - 20);
+    expect(unit(spear).hp).toBe(100 - 28);
   });
 });
 
@@ -207,7 +207,7 @@ describe('полёт', () => {
     expect(
       attack({ actor: 'p1', attackerId: archer, targetId: griffon }).ok,
     ).toBe(true);
-    expect(unit(griffon).hp).toBe(85 - 27);
+    expect(unit(griffon).hp).toBe(85 - 35);
   });
 
   it('удар осады не задевает летающего', () => {

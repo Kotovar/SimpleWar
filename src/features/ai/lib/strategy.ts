@@ -57,8 +57,8 @@ export const STRATEGIES: Record<StrategyId, Evaluator> = {
     };
   },
   G05: ctx =>
-    enemyTarget(ctx)
-      ? { score: 0, reason: 'вражеское здание известно' }
+    enemyTarget(ctx)?.type === 'base'
+      ? { score: 0, reason: 'вражеская база найдена' }
       : {
           score: Math.min(60, 15 + ctx.obs.turn * 2),
           reason: 'вражеская база не найдена',

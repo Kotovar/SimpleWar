@@ -65,7 +65,7 @@ beforeEach(() => {
 describe('attack', () => {
   it('damages an in-range enemy unit and spends one attack point', () => {
     const attackerId = addUnit('swordsman', 1, 1, 'p1');
-    const targetId = addUnit('worker', 2, 1, 'p2');
+    const targetId = addUnit('scout', 2, 1, 'p2');
     useUnitsStore.getState().resetUnitsForNewTurn('p1');
     const attacker = getMilitaryUnit(attackerId);
     const target = getUnit(targetId);

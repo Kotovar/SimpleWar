@@ -9,6 +9,7 @@ import {
 import { hasFormationNeighbor, isFlyingType } from '@shared/lib';
 import type { AiContext } from './context';
 import { enemyTarget } from './facts';
+import { manhattan } from './geometry';
 import { effectiveness, powerOf } from './stats';
 
 /**
@@ -100,7 +101,7 @@ export const roleWishes = (ctx: AiContext): RoleWish[] => {
     ],
     [flyers > own('mage'), 'mage', 'sanctuary', 'у врага летающие'],
     [
-      own('scout') === 0 && !enemyTarget(ctx),
+      own('scout') === 0 && enemyTarget(ctx)?.type !== 'base',
       'scout',
       'base',
       'нужна разведка',
@@ -141,7 +142,11 @@ export const roleWishes = (ctx: AiContext): RoleWish[] => {
  * мечника) своей силы группе не добавляет. Без врагов — 2.
  */
 export const battleRatio = (ctx: AiContext, group: MilitaryUnit[]) => {
-  const armed = ctx.enemies.filter(enemy => enemy.armed);
+  const armed = ctx.enemies.filter(
+    enemy =>
+      enemy.armed &&
+      group.some(unit => manhattan(unit, enemy) <= enemy.move + enemy.range),
+  );
   const foeTypes = armed.map(({ type, armorBonus }) => ({ type, armorBonus }));
   const ownTypes = asTargets(ctx, group);
   const own = group.reduce(

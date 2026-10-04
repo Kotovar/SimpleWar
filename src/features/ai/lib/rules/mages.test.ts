@@ -21,16 +21,16 @@ describe('K01: магическая атака', () => {
       enemies: [foe('healer', 5, 7), worker],
     });
 
-    // Обе цели безоружны; лекарь держит магию (защита 4): урон 16 против 20.
+    // Обе цели безоружны; лекарь держит магию (защита 4): урон 24 против 28.
     expect(K01.evaluate(ctx)).toMatchObject([
       { action: { type: 'attack', targetId: worker.id } },
     ]);
   });
 
-  it('здание держит магию — не тратит удар', () => {
+  it('урон ниже порога полезности — не тратит удар по зданию', () => {
     const { ctx } = scene({
       map,
-      units: [own('mage', 5, 5)],
+      units: [own('mage', 5, 5, { attack: 20 })],
       enemies: [foe('farm', 7, 5)],
     });
 

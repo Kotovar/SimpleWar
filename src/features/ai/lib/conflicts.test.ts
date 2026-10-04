@@ -11,7 +11,9 @@ import {
   ownBuilding,
   scene,
 } from './scene.test-utils';
-import { F01 } from './rules/griffons';
+import { F01, F03 } from './rules/griffons';
+import { M01, M02 } from './rules/soldiers';
+import { A05 } from './rules/archers';
 import { H02 } from './rules/healers';
 import { O05 } from './rules/siege';
 import { P01, P03 } from './rules/spearmen';
@@ -62,6 +64,32 @@ describe('S21: разведка и рейд конкурируют за перв
 });
 
 describe('оценка сил против непоражаемого врага', () => {
+  it.each([
+    [M01, 'swordsman'],
+    [M02, 'swordsman'],
+    [A05, 'archer'],
+    [F03, 'griffon'],
+  ] as const)(
+    '%s: слабая приманка у базы не отзывает наступающего бойца за гарнизон',
+    (rule, type) => {
+      const unit = own(type, 20, 20);
+      const guards = [own('swordsman', 3, 2), own('swordsman', 2, 3)];
+      const { ctx } = scene({
+        map: grass(30, 30),
+        units: [unit, ...guards, own('worker', 4, 2)],
+        buildings: [ownBuilding('base', 2, 2)],
+        enemies: [foe('scout', 5, 2, { hp: 5 })],
+        memory: {
+          operation: advance({ x: 28, y: 28 }),
+          garrison: guards.map(u => u.id),
+        },
+      });
+      expect(planOperation(ctx).operation.phase).toBe('advance');
+      expect(rule.evaluate(ctx).filter(c => c.actorId === unit.id)).toEqual([]);
+      ctx.memory.operation.phase = 'retreat';
+      expect(rule.evaluate(ctx).some(c => c.actorId === unit.id)).toBe(true);
+    },
+  );
   it('G11: мечники против грифона проигрывают бой', () => {
     const { ctx } = scene({
       map,

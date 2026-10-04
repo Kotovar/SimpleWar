@@ -2,7 +2,14 @@
 
 Срез 2026-10-04: 76 правил и 12 оценок стратегий. G05/G07/G10 присутствуют
 в обоих слоях, поэтому это 85 различных ID. Результаты относятся к unit-сценам,
-не к балансу полных партий. `pnpm test`: 1022/1022 прошли.
+не к балансу полных партий. `pnpm test`: 1042/1042 прошли.
+
+Регрессии длительных партий: дальний контакт разведчика не вызывает G11;
+разведчики не входят в ударную группу, осада и лекарь не занимают гарнизон;
+одиночный лекарь не включает G01; O03 не наступает при отходе;
+M01/M02/A05/F03 не отзывают фронт ради далёкой слабой приманки;
+M04 сближается с противником боя. Интеграционный тест двух атак проверяет
+фокус по свежим HP, без двойного вычитания исполненного урона.
 
 ## Стратегии
 
@@ -12,7 +19,7 @@
 | G02 | [strategy.test.ts:179](../../src/features/ai/lib/strategy.test.ts) | добыча без рабочих / места обслужены и доход достаточен | passed: score > 0 / score = 0 |
 | G03 | [strategy.test.ts:185](../../src/features/ai/lib/strategy.test.ts) | известное свободное золото / простаивает рудник         | passed: score > 0 / score = 0 |
 | G04 | [strategy.test.ts:194](../../src/features/ai/lib/strategy.test.ts) | армии мало / армия и население достаточны               | passed: score > 0 / score = 0 |
-| G05 | [strategy.test.ts:204](../../src/features/ai/lib/strategy.test.ts) | база неизвестна / вражеское здание известно             | passed: score > 0 / score = 0 |
+| G05 | [strategy.test.ts:204](../../src/features/ai/lib/strategy.test.ts) | ратуша неизвестна / ратуша известна                     | passed: score > 0 / score = 0 |
 | G06 | [strategy.test.ts:210](../../src/features/ai/lib/strategy.test.ts) | ресурс не найден / золото и лес известны                | passed: score > 0 / score = 0 |
 | G07 | [strategy.test.ts:216](../../src/features/ai/lib/strategy.test.ts) | устаревший / свежий контакт                             | passed: score > 0 / score = 0 |
 | G08 | [strategy.test.ts:225](../../src/features/ai/lib/strategy.test.ts) | готовая сильная группа / бойцов нет                     | passed: score > 0 / score = 0 |
@@ -101,7 +108,7 @@
 | N02 | [hiring.test.ts](../../src/features/ai/lib/hiring.test.ts)<br>[production.test.ts](../../src/features/ai/lib/rules/production.test.ts)                 | N02 нанимает мечника в казармах, пока армии мало / осада накопится за пару ходов — мечника не покупает                 | passed    |
 | N03 | [roles.test.ts](../../src/features/ai/lib/roles.test.ts)                                                                                               | против конницы нанимает копейщика и при полной армии / нет здания найма — не нанимает                                  | passed    |
 | N04 | [research.test.ts](../../src/features/ai/lib/rules/research.test.ts)                                                                                   | запускает Строй, когда в армии есть пара копейщиков / бесполезное исследование не запускается                          | passed    |
-| G05 | [scouting.test.ts](../../src/features/ai/lib/rules/scouting.test.ts)                                                                                   | отправляет свободного военного к дальней границе с задачей / не ищет базу, когда вражеское здание известно             | passed    |
+| G05 | [scouting.test.ts](../../src/features/ai/lib/rules/scouting.test.ts)                                                                                   | отправляет свободного военного к дальней границе с задачей / не ищет базу, когда вражеская ратуша известна             | passed    |
 | G07 | [scouting.test.ts](../../src/features/ai/lib/rules/scouting.test.ts)                                                                                   | отправляет военного к месту устаревшего контакта / не перепроверяет свежий контакт                                     | passed    |
 | G10 | [scouting.test.ts](../../src/features/ai/lib/rules/scouting.test.ts)                                                                                   | возвращает гарнизон к ратуше / не трогает военных вне гарнизона                                                        | passed    |
 
@@ -121,3 +128,6 @@
 - `memory.test.ts` / `construction.test.ts`: расчистка снимает стройку и запрещает восстановление лесопилки на исчезнувшем ресурсе.
 
 - `operation.test.ts`: завершение отхода проверяется у места сбора, к которому возвращаются бойцы.
+
+- `production.test.ts`: N02/N03 обходят заблокированные первые казармы и нанимают во вторых.
+- `soldiers.test.ts`: доступная для добивания ратуша приоритетнее соседнего защитника.

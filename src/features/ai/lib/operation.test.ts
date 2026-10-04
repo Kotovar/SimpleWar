@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import type { AiOperation } from '@entities/ai-memories';
 import { garrisonUnits, planOperation, strikeGroup } from './operation';
 import { foe, grass, own, ownBuilding, scene } from './scene.test-utils';
+import { STRATEGIES } from './strategy';
 
 const map = grass(14, 14);
 const base = () => ownBuilding('base', 2, 2);
@@ -16,6 +17,63 @@ const operation = (patch: Partial<AiOperation>): AiOperation => ({
 });
 
 describe('операция ударной группы', () => {
+  it('осада и лекарь не занимают гарнизон вместо бойцов прямого перехвата', () => {
+    const siege = own('siege', 3, 2);
+    const healer = own('healer', 2, 3);
+    const sword = own('swordsman', 4, 2);
+    const archer = own('archer', 4, 3);
+    const { ctx } = scene({
+      map,
+      buildings: [base()],
+      units: [siege, healer, sword, archer],
+      enemies: [foe('swordsman', 6, 2)],
+      memory: { garrison: [siege.id, healer.id] },
+    });
+    const result = planOperation(ctx);
+    expect(result.garrison).toEqual([sword.id, archer.id]);
+    expect(
+      strikeGroup({ ...ctx, memory: { ...ctx.memory, ...result } }).map(
+        unit => unit.id,
+      ),
+    ).toEqual([siege.id, healer.id]);
+  });
+
+  it('разведчик без задачи не становится бойцом ударной группы или гарнизона', () => {
+    const scout = own('scout', 3, 2);
+    const sword = own('swordsman', 8, 8);
+    const { ctx } = scene({
+      map,
+      units: [scout, sword],
+      buildings: [base()],
+      enemies: [foe('swordsman', 4, 2)],
+    });
+    expect(strikeGroup(ctx).map(u => u.id)).toEqual([sword.id]);
+    expect(planOperation(ctx).garrison).not.toContain(scout.id);
+  });
+  it('далёкий враг, увиденный разведчиком, не вызывает отход группы вне боя', () => {
+    const scout = own('scout', 26, 25);
+    const { ctx } = scene({
+      map: grass(30, 30),
+      units: [own('swordsman', 8, 8), own('swordsman', 9, 8), scout],
+      enemies: [foe('griffon', 27, 27)],
+      memory: {
+        operation: operation({ phase: 'advance', target: { x: 28, y: 28 } }),
+        tasks: [
+          {
+            id: 'scout-task',
+            kind: 'scout',
+            ruleId: 'G05',
+            unitId: scout.id,
+            target: { x: 27, y: 27 },
+            reserve: { gold: 0, wood: 0 },
+            createdTurn: 1,
+            reviewTurn: 9,
+          },
+        ],
+      },
+    });
+    expect(STRATEGIES.G11(ctx).score).toBe(0);
+  });
   it('отход завершён у места сбора, даже если бойцы дальше четырёх клеток от ратуши', () => {
     const { ctx } = scene({
       map,

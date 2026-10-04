@@ -138,9 +138,9 @@ describe('getSelectionActions', () => {
     ).toBe(true);
   });
 
-  it('подсказка найма: у рабочего нет лечения, у лекаря — +20 HP', () => {
+  it('подсказка найма: у рабочего нет лечения, у лекаря — +12 HP', () => {
     expect(unitStats('worker')).not.toMatch(/лечение|undefined/);
-    expect(unitStats('healer')).toContain('лечение +20 HP');
+    expect(unitStats('healer')).toContain('лечение +12 HP');
     expect(unitStats('siege')).toContain('дальность 2–5');
   });
 });

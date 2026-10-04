@@ -8,6 +8,15 @@ import { T03 } from './rules/towers';
 const map = grass(12, 12);
 
 describe('roleWishes: состав по известному врагу', () => {
+  it('заменяет погибшего разведчика, пока известна лишь лесопилка врага', () => {
+    const { ctx } = scene({
+      map,
+      buildings: [ownBuilding('base', 2, 2)],
+      enemies: [foe('sawmill', 9, 9)],
+    });
+    expect(roleWishes(ctx).map(({ type }) => type)).toContain('scout');
+  });
+
   it('видна конница — нужен копейщик', () => {
     const { ctx } = scene({ map, enemies: [foe('rider', 9, 9)] });
 

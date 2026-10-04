@@ -45,6 +45,7 @@ export const baseAlarm = (ctx: AiContext): EnemyView[] => {
   return ctx.enemies.filter(
     enemy =>
       enemy.armed &&
+      enemy.attack > 0 &&
       enemy.kind === 'unit' &&
       manhattan(enemy, base) <= ctx.config.alertRadius,
   );

@@ -180,7 +180,7 @@ describe('эффекты исследований', () => {
     spawnTarget();
     units().spawnUnit('spearman', 2, 1, 'p1', true);
     units().spawnUnit('spearman', 1, 2, 'p1', true);
-    const plain = 16 - 2;
+    const plain = 24 - 2;
     learn('formation');
     expect(riderHit()).toBe(plain - 2);
   });
@@ -189,13 +189,13 @@ describe('эффекты исследований', () => {
     spawnTarget();
     units().spawnUnit('spearman', 1, 1, 'p1', true);
     learn('formation');
-    expect(riderHit()).toBe(14);
+    expect(riderHit()).toBe(22);
   });
 
   it('без исследования соседний копейщик защиты не даёт', () => {
     spawnTarget();
     units().spawnUnit('spearman', 2, 1, 'p1', true);
-    expect(riderHit()).toBe(14);
+    expect(riderHit()).toBe(22);
   });
 
   it('разведчик помечает замеченный контакт', () => {

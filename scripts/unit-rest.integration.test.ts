@@ -130,7 +130,7 @@ describe('пропуск и сон', () => {
   it('атакующий просыпается; получающий урон спящий не просыпается', () => {
     const attackerId = spawn();
     store().resetUnitsForNewTurn('p1');
-    const targetId = store().spawnUnit('worker', 2, 1, 'p2', true)!;
+    const targetId = store().spawnUnit('scout', 2, 1, 'p2', true)!;
     store().setRestMode(attackerId, 'sleep');
     store().setRestMode(targetId, 'sleep');
     expect(attack({ actor: 'p1', attackerId, targetId })).toEqual(ok);

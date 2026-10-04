@@ -46,6 +46,23 @@ describe('O01: осада с группой', () => {
 });
 
 describe('O03: огневая позиция', () => {
+  it('при общем отходе не уводит осаду обратно к вражескому зданию', () => {
+    const { ctx } = scene({
+      map,
+      units: [own('siege', 2, 5), own('swordsman', 4, 5)],
+      enemies: [foe('tower', 14, 5)],
+      memory: {
+        operation: {
+          phase: 'retreat',
+          target: { x: 14, y: 5 },
+          rally: { x: 1, y: 1 },
+          since: 1,
+        },
+      },
+    });
+    expect(O03.evaluate(ctx)).toEqual([]);
+    expect(O01.evaluate(ctx)).not.toEqual([]);
+  });
   it('идёт к клетке в дальности цели рядом с прикрытием', () => {
     const tower = foe('tower', 14, 5);
     const siege = own('siege', 2, 5);

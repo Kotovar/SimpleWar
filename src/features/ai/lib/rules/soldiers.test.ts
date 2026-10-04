@@ -102,6 +102,19 @@ describe('M05: фокус огня', () => {
     ]);
   });
 
+  it('добивает ратушу раньше соседнего защитника, если обоих можно уничтожить', () => {
+    const base = foe('base', 6, 5, { hp: 44 });
+    const guard = foe('archer', 5, 6, { hp: 25 });
+    const { ctx } = scene({
+      map,
+      units: [own('swordsman', 5, 5)],
+      enemies: [base, guard],
+    });
+    expect(M05.evaluate(ctx)).toMatchObject([
+      { action: { type: 'attack', targetId: base.id } },
+    ]);
+  });
+
   it('не дублирует огонь по уже обречённой цели', () => {
     const enemy = foe('archer', 6, 5);
     const { ctx } = scene({

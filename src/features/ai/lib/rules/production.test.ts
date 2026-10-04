@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { grass, own, ownBuilding, scene } from '../scene.test-utils';
+import {
+  grass,
+  own,
+  ownBuilding,
+  remembered,
+  scene,
+} from '../scene.test-utils';
 import { N01, N02 } from './production';
+import { N03 } from './recruitment';
 
 describe('N01/N02: найм', () => {
   it('N01 нанимает рабочего, пока их меньше нужного', () => {
@@ -50,6 +57,33 @@ describe('N01/N02: найм', () => {
     ]);
   });
 
+  it.each([
+    [N02, 'swordsman'],
+    [N03, 'spearman'],
+  ] as const)(
+    '%s пробует следующие казармы, если у первых нет места для найма',
+    (rule, type) => {
+      const blocked = ownBuilding('barracks', 0, 0);
+      const available = ownBuilding('barracks', 5, 5);
+      const { ctx } = scene({
+        map: grass(20, 20),
+        contacts: rule === N03 ? [remembered('rider', 19, 19)] : [],
+        units: [own('worker', 7, 0), own('worker', 7, 1)],
+        buildings: [
+          ownBuilding('base', 6, 6),
+          blocked,
+          available,
+          ownBuilding('farm', 0, 1),
+          ownBuilding('farm', 1, 0),
+          ownBuilding('farm', 1, 1),
+        ],
+      });
+      expect(rule.evaluate(ctx)).toMatchObject([
+        { action: { type: 'spawn', buildingId: available.id, unitType: type } },
+      ]);
+    },
+  );
+
   it('N02 добавляет лучника к мечникам', () => {
     const { ctx } = scene({
       map: grass(8, 8),
@@ -91,7 +125,7 @@ describe('N02: состав армии', () => {
       map: grass(8, 8),
       units: army,
       buildings: [ownBuilding('base', 1, 1), ownBuilding('barracks', 5, 5)],
-      stock: { gold: 100, wood: 500 },
+      stock: { gold: 210, wood: 500 },
     });
 
     expect(N02.evaluate(ctx)).toEqual([]);
@@ -102,7 +136,7 @@ describe('N02: состав армии', () => {
       map: grass(8, 8),
       units: army,
       buildings: [ownBuilding('base', 1, 1), ownBuilding('barracks', 5, 5)],
-      stock: { gold: 100, wood: 0 },
+      stock: { gold: 200, wood: 0 },
     });
 
     expect(N02.evaluate(ctx)).toMatchObject([

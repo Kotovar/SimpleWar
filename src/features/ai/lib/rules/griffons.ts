@@ -5,6 +5,7 @@ import type { AiContext, EnemyView } from '../context';
 import { baseAlarm, enemyTarget, nearest } from '../facts';
 import { cellKey, manhattan, tieBreak } from '../geometry';
 import { standCells, stepToward } from '../movement';
+import { isAdvancing } from '../operation';
 import { moveTo } from './common';
 import {
   approachEnemy,
@@ -128,6 +129,7 @@ export const F03: AiRule = {
         e => ids.has(e.id),
       );
       if (hit.length) return hit;
+      if (isAdvancing(ctx, unit)) return [];
       return approachEnemy(
         ctx,
         'F03',

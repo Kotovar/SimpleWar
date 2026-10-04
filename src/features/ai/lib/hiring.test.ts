@@ -39,7 +39,7 @@ describe('savingGoals: здание найма для роли', () => {
 
     expect(keys).not.toContain('sanctuary');
     expect(savingGoals(ctx).find(({ key }) => key === 'army')?.cost).toEqual({
-      gold: 150,
+      gold: 300,
       wood: 150,
     });
   });

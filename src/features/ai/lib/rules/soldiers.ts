@@ -10,7 +10,7 @@ import type { AiContext, EnemyView } from '../context';
 import { baseAlarm, nearest } from '../facts';
 import { manhattan } from '../geometry';
 import { standCells, stepToward } from '../movement';
-import { garrisonUnits } from '../operation';
+import { garrisonUnits, isAdvancing } from '../operation';
 import {
   attackOf,
   bestMove,
@@ -36,6 +36,7 @@ export const targetValue = (
 ) => {
   const nearHome = ctx.base && manhattan(enemy, ctx.base) <= 4 ? 15 : 0;
   return (
+    (enemy.type === 'base' && isKillable(ctx, enemy, attacker) ? 100 : 0) +
     (enemy.armed ? 20 + enemy.attack : 5) +
     (isKillable(ctx, enemy, attacker) ? 30 : 0) +
     (enemy.range > 1 ? 5 : 0) +
@@ -85,6 +86,7 @@ export const M01: AiRule = {
           },
         ];
       }
+      if (isAdvancing(ctx, unit)) return [];
       // За целью, которую не достать (воздух), не гоняться.
       const target = nearest(
         unit,
@@ -125,6 +127,11 @@ export const M02: AiRule = {
           ctx.enemies.filter(e => e.armed),
         );
       if (!ward || !threat || manhattan(unit, ward) <= 1) return [];
+      if (
+        isAdvancing(ctx, unit) &&
+        manhattan(unit, ward) > unit.maxMovePoints + 1
+      )
+        return [];
       const cell = bestMove(ctx, unit, c =>
         manhattan(c, ward) <= 1
           ? 100 - manhattan(c, threat)

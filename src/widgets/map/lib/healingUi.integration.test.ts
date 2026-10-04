@@ -104,7 +104,7 @@ it('лечит скрытого внутри здания рабочего кл�
     32,
     { hover: { x: 2, y: 2 }, healTargets },
   );
-  expect(texts).toContain('+20');
+  expect(texts).toContain('+12');
   handleMapCellOrder(2, 2, {
     humanId: 'p1',
     clicked: { unit: null, building: scene.buildings[mine] },
@@ -133,7 +133,7 @@ it('лечит скрытого внутри здания рабочего кл�
       clearHighlight: vi.fn(),
     },
   });
-  expect(units().units[worker].hp).toBe(25);
+  expect(units().units[worker].hp).toBe(17);
   expect(units().units[healer]).toMatchObject({
     attackPoints: 0,
     movePoints: 0,

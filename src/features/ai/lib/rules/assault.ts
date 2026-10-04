@@ -1,8 +1,10 @@
 import type { MilitaryUnit, Position } from '@shared/config';
+import { canHitTarget } from '@shared/lib';
 import type { AiRule, Candidate } from '../../model/types';
 import { approachReach, countReachable } from '../approach';
 import type { AiContext } from '../context';
 import { cellKey, fromKey, manhattan } from '../geometry';
+import { nearest } from '../facts';
 import { pathsFrom, standCells, stepToward } from '../movement';
 import { strikeGroup } from '../operation';
 import { moveTo } from './common';
@@ -36,13 +38,15 @@ export const M03: AiRule = {
 };
 
 /**
- * Куда встать при наступлении: вплотную к цели, к видимым врагам рядом с
- * ней, а если всё занято — как можно ближе: группа не стоит на месте.
+ * Куда встать при наступлении: сначала вплотную к цели операции.
+ * Если все клетки заняты — к соседним врагам или как можно ближе к цели.
  */
 const assaultGoals = (ctx: AiContext, target: Position): Position[] => {
   const goals = ctx.occupied(target.x, target.y)
     ? standCells(ctx, target, false)
     : [target];
+  // Доступную цель операции не подменяют ближайшие хозяйственные здания.
+  if (goals.length) return goals;
   for (const enemy of ctx.enemies) {
     if (manhattan(enemy, target) <= 5)
       goals.push(...standCells(ctx, enemy, false));
@@ -157,6 +161,34 @@ export const M04: AiRule = {
     return swordsmen(ctx)
       .filter(unit => members.has(unit.id) && unit.movePoints > 0)
       .flatMap((unit): Candidate[] => {
+        const foe =
+          phase === 'engage' &&
+          nearest(
+            unit,
+            ctx.enemies.filter(
+              enemy =>
+                enemy.armed &&
+                canHitTarget(unit.type, enemy.type) &&
+                manhattan(unit, enemy) <= unit.maxMovePoints + unit.attackRange,
+            ),
+          );
+        if (foe && manhattan(unit, foe) > unit.attackRange) {
+          const step = stepToward(ctx, unit, standCells(ctx, foe, false));
+          if (step)
+            return [
+              moveTo(
+                'M04',
+                unit,
+                step.next,
+                50,
+                'сближаюсь с противником группы',
+                {
+                  group: 'attack',
+                  basis: { x: foe.x, y: foe.y },
+                },
+              ),
+            ];
+        }
         if (manhattan(unit, target) <= 1) {
           return sealed ? makeRoom(ctx, unit, target, goals) : [];
         }

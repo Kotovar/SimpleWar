@@ -168,7 +168,7 @@ export const N02: AiRule = {
         building,
         ctx.enemies.filter(({ armed }) => armed),
       );
-      return hire(
+      const candidates = hire(
         ctx,
         'N02',
         'hire',
@@ -179,6 +179,7 @@ export const N02: AiRule = {
           ? 'нужна защита'
           : `армия ${ctx.military.length} из ${desiredArmy(ctx)}`,
       );
+      if (candidates.length) return candidates;
     }
     return [];
   },

@@ -79,7 +79,12 @@ export const G05: AiRule = {
         : [];
     });
     if (continued.length || tasks.length) return continued;
-    if (enemyTarget(ctx) || ctx.military.length < 2 || !ctx.base) return [];
+    if (
+      enemyTarget(ctx)?.type === 'base' ||
+      ctx.military.length < 2 ||
+      !ctx.base
+    )
+      return [];
     const base = ctx.base;
     const target = [...ctx.frontier].sort(
       (a, b) =>

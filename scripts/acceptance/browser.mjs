@@ -5,7 +5,9 @@ const mode = 's21';
 const url = process.env.ACCEPTANCE_URL ?? 'http://127.0.0.1:5175/';
 const report = {
   url,
-  warmupCycles: 10,
+  warmupCycles: 20,
+  memoryMethod:
+    'Post-GC snapshots: retained objects, arrays and closures; code and V8 allocation templates reported separately, browser-native data excluded',
   cycles: [],
   warmup: [],
   exceptions: [],
@@ -20,8 +22,11 @@ await new Promise(resolve =>
 let serial = 0;
 const pending = new Map();
 const exceptions = [];
+let heapChunks = null;
 socket.addEventListener('message', ({ data }) => {
   const message = JSON.parse(data);
+  if (message.method === 'HeapProfiler.addHeapSnapshotChunk')
+    heapChunks?.push(message.params.chunk);
   if (message.method === 'Runtime.exceptionThrown')
     exceptions.push(message.params.exceptionDetails.text);
   if (
@@ -105,6 +110,70 @@ const screen = async name => {
     `/tmp/simplewar-save-layout-${mode}-${name}.png`,
     Buffer.from(r.data, 'base64'),
   );
+};
+
+// Общий heap включает прогрев JIT. Снимок отдельно показывает живые данные
+// и игровые объекты; браузерные записи Performance и машинный код не смешиваем с ними.
+const retainedHeap = async cycle => {
+  heapChunks = [];
+  try {
+    await send('HeapProfiler.takeHeapSnapshot');
+    const raw = heapChunks.join('');
+    const { snapshot, nodes, edges, strings } = JSON.parse(raw);
+    const meta = snapshot.meta;
+    const stride = meta.node_fields.length;
+    const edgeStride = meta.edge_fields.length;
+    const types = meta.node_types[0];
+    const edgeTypes = meta.edge_types[0];
+    // V8 хранит шаблоны литералов Array у AllocationSite во время прогрева JIT.
+    // Это шаблоны будущих объектов, а не живые массивы приложения.
+    const jitTemplates = new Set();
+    let templateEdge = 0;
+    for (let node = 0; node < nodes.length; node += stride) {
+      const allocationSite =
+        types[nodes[node]] === 'code' &&
+        strings[nodes[node + 1]] === 'system / AllocationSite';
+      for (let i = 0; i < nodes[node + 4]; i++, templateEdge += edgeStride) {
+        if (
+          allocationSite &&
+          edgeTypes[edges[templateEdge]] === 'internal' &&
+          strings[edges[templateEdge + 1]] === 'transition_info'
+        ) {
+          jitTemplates.add(edges[templateEdge + 2]);
+        }
+      }
+    }
+    let templateBytes = 0;
+    let dataBytes = 0;
+    let codeBytes = 0;
+    let gameEntities = 0;
+    let closures = 0;
+    let edge = 0;
+    for (let node = 0; node < nodes.length; node += stride) {
+      const type = types[nodes[node]];
+      if (jitTemplates.has(node)) templateBytes += nodes[node + 3];
+      else if (['object', 'array', 'closure'].includes(type))
+        dataBytes += nodes[node + 3];
+      if (type === 'code') codeBytes += nodes[node + 3];
+      if (type === 'closure') closures++;
+      const props = {};
+      for (let i = 0; i < nodes[node + 4]; i++, edge += edgeStride) {
+        if (type !== 'object' || edgeTypes[edges[edge]] !== 'property')
+          continue;
+        props[strings[edges[edge + 1]]] = strings[nodes[edges[edge + 2] + 1]];
+      }
+      if (
+        ['p1', 'p2'].includes(props.owner) &&
+        ['id', 'type', 'x', 'y'].every(key => key in props)
+      )
+        gameEntities++;
+    }
+    if (cycle === report.warmupCycles || cycle === report.warmupCycles + 10)
+      await writeFile(`/tmp/simplewar-s21-heap-${cycle}.heapsnapshot`, raw);
+    return { dataBytes, codeBytes, templateBytes, gameEntities, closures };
+  } finally {
+    heapChunks = null;
+  }
 };
 
 // Только подготовка нагрузки обходит обычный старт; загрузка и ввод — через UI.
@@ -263,6 +332,8 @@ try {
     const destination =
       cycle < report.warmupCycles ? report.warmup : report.cycles;
     destination.push({ cycle: cycle + 1, heapBytes: heap.usedSize, ...dom });
+    if (cycle >= report.warmupCycles - 1)
+      destination.at(-1).retained = await retainedHeap(cycle + 1);
   }
   report.devtoolsConnections = await evaluate('window.acceptanceDevtoolsCalls');
   assert.equal(
@@ -281,10 +352,22 @@ try {
       result.p95Ms <= 33,
       `Frame p95 exceeds 33ms: ${JSON.stringify(result)}`,
     );
-  assert.ok(
-    !tail.every((v, i) => i === 0 || v.heapBytes > tail[i - 1].heapBytes),
-    'Heap grows monotonically after warmup',
-  );
+  const baseline = report.warmup.at(-1).retained;
+  for (const cycle of tail) {
+    assert.ok(
+      cycle.retained.dataBytes <= baseline.dataBytes,
+      'Retained data exceeds warmed-up baseline',
+    );
+    assert.equal(
+      cycle.retained.gameEntities,
+      baseline.gameEntities,
+      'Old game entities retained after reset',
+    );
+    assert.ok(
+      cycle.retained.closures <= baseline.closures,
+      'Closure retention after reset',
+    );
+  }
   assert.ok(
     Math.max(...tail.map(v => v.jsEventListeners)) -
       Math.min(...tail.map(v => v.jsEventListeners)) <=

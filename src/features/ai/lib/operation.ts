@@ -14,7 +14,9 @@ const taskedUnits = (ctx: AiContext) =>
 export const strikeGroup = (ctx: AiContext): MilitaryUnit[] => {
   const busy = taskedUnits(ctx);
   const garrison = new Set(ctx.memory.garrison);
-  return ctx.military.filter(({ id }) => !busy.has(id) && !garrison.has(id));
+  return ctx.military.filter(
+    ({ id, type }) => type !== 'scout' && !busy.has(id) && !garrison.has(id),
+  );
 };
 
 /** Гарнизон: военные, оставленные у ратуши. */
@@ -22,6 +24,12 @@ export const garrisonUnits = (ctx: AiContext): MilitaryUnit[] => {
   const ids = new Set(ctx.memory.garrison);
   return ctx.military.filter(({ id }) => ids.has(id));
 };
+
+/** Боец в наступлении: перехват у базы ведёт гарнизон до общего отзыва. */
+export const isAdvancing = (ctx: AiContext, unit: { id: string }) =>
+  (ctx.memory.operation.phase === 'advance' ||
+    ctx.memory.operation.phase === 'engage') &&
+  strikeGroup(ctx).some(member => member.id === unit.id);
 
 /**
  * Цель наступления: известное вражеское здание; без него — самая далёкая
@@ -79,7 +87,12 @@ export const planOperation = (
 ): { operation: AiOperation; garrison: string[] } => {
   const { config, memory, base } = ctx;
   const turn = ctx.obs.turn;
-  const alive = new Set(ctx.military.map(({ id }) => id));
+  const fighters = ctx.military.filter(unit => unit.type !== 'scout');
+  // Гарнизон перехватывает прямым ударом; осада и лекарь идут с прикрытием.
+  const guards = fighters.filter(
+    unit => unit.attack > 0 && unit.type !== 'siege',
+  );
+  const alive = new Set(guards.map(({ id }) => id));
   const alarm = baseAlarm(ctx);
 
   // Гарнизон нужен при известной угрозе базе или стратегии G10.
@@ -88,7 +101,7 @@ export const planOperation = (
   let garrison = memory.garrison.filter(id => alive.has(id));
   if (wantsGarrison && base && garrison.length < config.garrisonSize) {
     const garrisonIds = new Set(garrison);
-    const free = ctx.military
+    const free = guards
       .filter(({ id }) => !garrisonIds.has(id))
       .sort((a, b) => manhattan(a, base) - manhattan(b, base));
     garrison = [

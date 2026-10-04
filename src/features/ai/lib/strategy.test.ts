@@ -32,6 +32,24 @@ const scores = (values: Partial<Record<StrategyId, number>>): StrategyScore[] =>
     ] as const
   ).map(id => ({ id, score: values[id] ?? 0, reason: 'тест' }));
 
+it('G01: один лекарь у ратуши не вызывает срочную оборону', () => {
+  const { ctx } = scene({
+    map: grass(16, 16),
+    buildings: [ownBuilding('base', 2, 2)],
+    enemies: [foe('healer', 3, 2)],
+  });
+  expect(STRATEGIES.G01(ctx).score).toBe(0);
+});
+
+it('G05: известная лесопилка не заменяет найденную вражескую ратушу', () => {
+  const { ctx } = scene({
+    map: grass(16, 16),
+    buildings: [ownBuilding('base', 2, 2)],
+    enemies: [foe('sawmill', 10, 10)],
+  });
+  expect(STRATEGIES.G05(ctx).score).toBeGreaterThan(0);
+});
+
 const choose = (
   strategy: StrategyId,
   since: number,

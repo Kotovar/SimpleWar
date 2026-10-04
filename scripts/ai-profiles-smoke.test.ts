@@ -19,8 +19,9 @@ import { initVisibilitySystem } from '@features/visibility';
 import { initializeGame } from '@widgets/start-game';
 
 /**
- * Профили S17 на одном сиде: каждый ИИ против пассивного игрока должен
- * развить экономику, исследовать и разрушить ратушу; журналы различаются.
+ * Профили S17 на одном сиде: каждый ИИ развивает экономику и побеждает
+ * пассивного игрока; журналы различаются. Исследования проверяются у
+ * balanced/economic/defensive: aggressive может выиграть до их начала.
  *
  * Повтор: `pnpm vp test run scripts/ai-profiles-smoke.test.ts`.
  */
@@ -86,7 +87,7 @@ const play = async (profile: AiProfile) => {
 };
 
 describe('AI profiles smoke', () => {
-  it('каждый профиль исследует и побеждает пассивного игрока', async () => {
+  it('профили побеждают пассивного игрока; неторопливые успевают исследовать', async () => {
     const results = [];
     for (const profile of AI_PROFILE_TYPES) {
       // react-doctor-disable-next-line async-await-in-loop -- Партии идут по очереди на общих хранилищах.
@@ -96,7 +97,8 @@ describe('AI profiles smoke', () => {
 
     for (const result of results) {
       expect(result).toMatchObject({ winner: 'p2' });
-      expect(result.researched.length).toBeGreaterThan(0);
+      if (result.profile !== 'aggressive')
+        expect(result.researched.length).toBeGreaterThan(0);
     }
     const journals = results.map(({ strategies }) =>
       JSON.stringify(strategies),

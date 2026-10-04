@@ -22,26 +22,37 @@ const hit = (
 });
 
 describe('calculateDamage', () => {
-  it('без бонуса и брони равен атаке: прежний бой не меняется', () => {
-    expect(calculateDamage(hit('swordsman'), { type: 'archer' })).toBe(18);
+  it('без бонуса и брони равен атаке', () => {
+    expect(calculateDamage(hit('swordsman'), { type: 'archer' })).toBe(28);
     expect(
       calculateDamage({ type: 'tower', attack: 20 }, { type: 'base' }),
     ).toBe(20);
   });
 
   it('добавляет бонус против нужной категории и вычитает броню', () => {
-    // Копейщик против всадника: 14 + 16 − 1.
-    expect(calculateDamage(hit('spearman'), { type: 'rider' })).toBe(29);
-    // Всадник против лучника и рабочего: 16 + 10.
-    expect(calculateDamage(hit('rider'), { type: 'archer' })).toBe(26);
-    expect(calculateDamage(hit('rider'), { type: 'worker' })).toBe(26);
+    // Копейщик против всадника: 22 + 16 − 1.
+    expect(calculateDamage(hit('spearman'), { type: 'rider' })).toBe(37);
+    // Всадник против лучника и рабочего: 24 + 10.
+    expect(calculateDamage(hit('rider'), { type: 'archer' })).toBe(34);
+    expect(calculateDamage(hit('rider'), { type: 'worker' })).toBe(34);
     // Против копейщика бонуса нет, броня 2.
-    expect(calculateDamage(hit('rider'), { type: 'spearman' })).toBe(14);
+    expect(calculateDamage(hit('rider'), { type: 'spearman' })).toBe(22);
   });
 
   it('осада сильна по зданиям и слаба по войскам', () => {
-    expect(calculateDamage(hit('siege'), { type: 'barracks' })).toBe(52);
+    expect(calculateDamage(hit('siege'), { type: 'barracks' })).toBe(120);
     expect(calculateDamage(hit('siege'), { type: 'swordsman' })).toBe(12);
+  });
+
+  it('штурмовые бонусы ускоряют разрушение зданий, не бой с юнитами', () => {
+    expect(calculateDamage(hit('swordsman'), { type: 'base' })).toBe(56);
+    expect(calculateDamage(hit('swordsman'), { type: 'archer' })).toBe(28);
+    expect(
+      calculateDamage({ type: 'archer', attack: 30 }, { type: 'base' }),
+    ).toBe(40);
+    expect(
+      calculateDamage({ type: 'griffon', attack: 26 }, { type: 'base' }),
+    ).toBe(43);
   });
 
   it('урон не меньше 1', () => {
@@ -78,7 +89,7 @@ describe('категории и особенности', () => {
       flies: true,
       hitsAir: true,
     });
-    expect(getCombatProfile('healer').heal).toBe(20);
+    expect(getCombatProfile('healer').heal).toBe(12);
   });
 });
 
@@ -86,14 +97,14 @@ describe('типы урона', () => {
   const mage = { type: 'mage' as const, attack: UNITS_CONFIG.mage.attack };
 
   it('магия проходит сквозь броню, но упирается в магическую защиту', () => {
-    expect(calculateDamage(mage, { type: 'spearman' })).toBe(20);
-    expect(calculateDamage(mage, { type: 'healer' })).toBe(16);
+    expect(calculateDamage(mage, { type: 'spearman' })).toBe(28);
+    expect(calculateDamage(mage, { type: 'healer' })).toBe(24);
     // Физическая броня от магии не защищает, магическая — от стрел.
-    expect(calculateDamage(hit('swordsman'), { type: 'healer' })).toBe(18);
+    expect(calculateDamage(hit('swordsman'), { type: 'healer' })).toBe(28);
   });
 
   it('маг не заменяет осаду: здания держат магию', () => {
-    expect(calculateDamage(mage, { type: 'barracks' })).toBe(10);
+    expect(calculateDamage(mage, { type: 'barracks' })).toBe(18);
     expect(calculateDamage(hit('siege'), { type: 'barracks' })).toBeGreaterThan(
       40,
     );
@@ -143,7 +154,7 @@ describe('Строй', () => {
   });
 
   it('прибавка к броне снижает только физический урон', () => {
-    expect(calculateDamage(hit('rider'), { type: 'spearman' }, 2)).toBe(12);
+    expect(calculateDamage(hit('rider'), { type: 'spearman' }, 2)).toBe(20);
     expect(
       calculateDamage({ type: 'mage', attack: 20 }, { type: 'spearman' }, 2),
     ).toBe(calculateDamage({ type: 'mage', attack: 20 }, { type: 'spearman' }));

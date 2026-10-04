@@ -21,6 +21,18 @@ const staleContact = (x: number, y: number): RememberedContact => ({
 });
 
 describe('G05: разведка границ', () => {
+  it('продолжает поиск ратуши после обнаружения чужой лесопилки', () => {
+    const { ctx } = scene({
+      map: unexplored,
+      units: [own('scout', 3, 3), own('swordsman', 2, 3)],
+      buildings: [ownBuilding('base', 2, 2)],
+      enemies: [foe('sawmill', 7, 9)],
+    });
+    expect(G05.evaluate(ctx)).toMatchObject([
+      { task: { kind: 'scout', ruleId: 'G05' } },
+    ]);
+  });
+
   it('отправляет свободного военного к дальней границе с задачей', () => {
     const scout = own('swordsman', 3, 3);
     const { ctx } = scene({
@@ -39,7 +51,7 @@ describe('G05: разведка границ', () => {
     expect(ctx.frontier).toContainEqual(candidate.task?.target);
   });
 
-  it('не ищет базу, когда вражеское здание известно', () => {
+  it('не ищет базу, когда вражеская ратуша известна', () => {
     const { ctx } = scene({
       map: unexplored,
       units: [own('swordsman', 3, 3), own('swordsman', 2, 3)],

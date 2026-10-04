@@ -260,7 +260,7 @@ describe('подготовленный удар осады', () => {
 
     round();
 
-    expect(buildings().buildings[barracks].hp).toBe(150 - 52);
+    expect(buildings().buildings[barracks].hp).toBe(150 - 120);
   });
 
   it('отметку видят все, орудие не раскрывается; гибель орудия снимает её', () => {
@@ -385,7 +385,7 @@ describe('подготовленный удар осады', () => {
     );
     expect
       .soft(mineEntries.filter(e => e.type === 'strike'))
-      .toMatchObject([{ details: { hits: 'mine:52' } }]);
+      .toMatchObject([{ details: { hits: 'mine:120' } }]);
     expect.soft(mineEntries.some(e => e.type === 'unitDestroyed')).toBe(false);
     expect(
       getVisibleRecords(useJournalStore.getState().entries, 'p2').some(

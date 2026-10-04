@@ -8,7 +8,7 @@ import { useGameLoopStore } from '@entities/games';
 import { useEconomyStore } from '@entities/economies';
 import { resetGame, initGameLoopEvents } from '@features/game-loop';
 import { getObservation, initVisibilitySystem } from '@features/visibility';
-import { playTurn, type AiAction, type AiRule } from '@features/ai';
+import { playTurn, M05, type AiAction, type AiRule } from '@features/ai';
 import { executeAiAction } from './aiTurn';
 
 beforeEach(() => {
@@ -138,6 +138,29 @@ it('реальные правила дают одному мечнику move �
   });
   expect(useUnitsStore.getState().units.enemy.hp).toBeLessThan(enemy.hp);
   expect(result.commands).toBe(2);
+});
+
+it('второй мечник добивает цель в том же ходу по обновлённым HP', async () => {
+  const second = createUnit('swordsman', 3, 3, 'p2', true)!;
+  const enemy = createUnit('archer', 3, 2, 'p1', true)!;
+  useUnitsStore.setState(state => ({
+    units: {
+      ...state.units,
+      second: { ...second, id: 'second' },
+      enemy: { ...enemy, id: 'enemy', hp: 30 },
+    },
+  }));
+  useUnitsStore.getState().resetUnitsForNewTurn('p2');
+  const turn = run([M05]);
+  await turn.result;
+  expect(turn.actions).toHaveLength(2);
+  expect(turn.actions).toEqual(
+    expect.arrayContaining([
+      { type: 'attack', attackerId: 'sword', targetId: 'enemy' },
+      { type: 'attack', attackerId: 'second', targetId: 'enemy' },
+    ]),
+  );
+  expect(useUnitsStore.getState().units.enemy).toBeUndefined();
 });
 
 it.each([
