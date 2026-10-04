@@ -5,17 +5,17 @@
 .GameControls {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .Toolbar {
   grid-area: toolbar;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
+  gap: 12px;
   padding: 8px 12px;
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-raised);
@@ -24,9 +24,70 @@
 .Title {
   margin: 0;
   text-align: center;
-  font-size: 2.2rem;
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
   letter-spacing: 0.02em;
   color: var(--text);
+}
+
+.Intro {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+  padding-inline: 28px;
+}
+
+.Selection {
+  grid-area: map;
+  align-self: end;
+  justify-self: start;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  max-width: calc(100% - 396px);
+  max-height: calc(100% - 96px);
+  margin: 16px 16px 64px;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.Selection:empty {
+  display: none;
+}
+
+.Selection > :is(aside, div) {
+  pointer-events: auto;
+  margin: 0;
+  max-width: 100%;
+}
+
+.Selection > aside {
+  flex-shrink: 0;
+  max-height: inherit;
+}
+
+@media (max-width: 1150px) {
+  .Selection {
+    max-width: calc(100% - 32px);
+  }
+}
+
+@media (max-width: 700px) {
+  .Selection {
+    grid-area: selection;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .Selection > aside {
+    width: 100%;
+  }
+  .Selection > div {
+    width: 100%;
+    translate: none !important;
+  }
 }
 
 .Wrapper {
@@ -63,8 +124,14 @@
 
 .SizeGroup {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   width: 100%;
+}
+
+@media (min-width: 780px) {
+  .SizeGroup {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
 }
 
 .AiGroup {
@@ -86,7 +153,7 @@
   background-color: var(--surface-sunken);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 10px 16px;
+  padding: 8px 12px;
   cursor: pointer;
   transition:
     background-color 0.15s,
@@ -102,7 +169,7 @@
     background-color: rgb(111 181 255 / 0.14);
     border-color: var(--accent);
     color: var(--text);
-    box-shadow: inset 0 0 0 1px var(--accent);
+    box-shadow: inset 3px 0 0 var(--accent);
   }
 }
 
@@ -172,11 +239,12 @@
 }
 
 .GameOverTitle {
+  margin: 0;
   text-align: center;
   line-height: 1.2;
   font-size: clamp(1.8rem, 5vw, 2.4rem);
   font-weight: 800;
-  color: var(--gold);
+  color: var(--success-strong);
 }
 
 .GameOverTitle[data-defeat='true'] {
@@ -184,7 +252,7 @@
 }
 
 .GameOverText {
-  margin-bottom: 8px;
+  margin: 0 0 8px;
   color: var(--text-muted);
 }
 
@@ -318,22 +386,63 @@
   margin: 0;
 }
 
-@media (max-width: 900px) {
-  .Toolbar {
-    flex-wrap: wrap;
-    gap: 8px 16px;
+.Toolbar:has([aria-controls='tools-drawer']) {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+@media (min-width: 1151px) and (max-width: 1400px) {
+  .Toolbar:has([aria-controls='tools-drawer']) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .Toolbar:has([aria-controls='tools-drawer'])
+    > :nth-child(2):not([aria-controls]) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+@media (max-width: 1150px) {
+  .Toolbar,
+  .Toolbar:has([aria-controls='tools-drawer']) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+  .Toolbar > :nth-child(2):not([aria-controls]) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .Toolbar > :last-child {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 700px) {
+  .Toolbar,
+  .Toolbar:has([aria-controls='tools-drawer']) {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 10px;
+  }
+  .Toolbar > :nth-child(2):not([aria-controls]) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .Toolbar > :last-child {
+    grid-column: 1;
+    grid-row: auto;
   }
 }
 
 .SetupMenu {
-  gap: 16px;
+  gap: 12px;
 
   & .Section {
     align-items: stretch;
+    gap: 8px;
   }
 
   & .Section + .Section {
-    padding-top: 14px;
+    padding-top: 12px;
     border-top: 1px solid var(--border);
   }
 
@@ -358,8 +467,8 @@
   & .ToggleButton {
     align-items: flex-start;
     text-align: left;
-    gap: 6px;
-    padding: 14px;
+    gap: 4px;
+    padding: 10px 14px;
   }
 }
 

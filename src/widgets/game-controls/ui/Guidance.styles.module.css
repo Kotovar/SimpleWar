@@ -19,7 +19,7 @@
 }
 .Title {
   margin: 0 0 8px;
-  color: var(--gold);
+  color: var(--accent);
   font-size: 0.95rem;
 }
 .Guidance section + section {
@@ -43,7 +43,7 @@
 }
 .Note {
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
 }
 .Events {
   list-style: none;
@@ -77,9 +77,19 @@
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+@media (min-width: 701px) and (max-width: 1150px) {
+  .Guidance {
+    align-self: start;
+    width: min(300px, calc(100% - 440px));
+    margin: 16px 272px 0 16px;
+    max-height: 35%;
+  }
+}
 @media (max-width: 700px) {
   .Guidance {
-    width: min(280px, calc(100% - 32px));
-    max-height: 38%;
+    grid-area: guidance;
+    width: 100%;
+    max-height: none;
+    margin: 0;
   }
 }

@@ -29,6 +29,25 @@
   font-variant-numeric: tabular-nums;
 }
 
+@media (max-width: 1150px) {
+  .TurnInfo {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 700px) {
+  .TurnInfo {
+    gap: 6px;
+  }
+  .Side {
+    min-width: 14em;
+    padding-inline: 8px;
+  }
+  .Debug {
+    padding: 3px 6px;
+  }
+}
+
 /* Бейдж стороны: цвет совпадает с постаментами юнитов на карте. */
 .Side {
   display: inline-flex;

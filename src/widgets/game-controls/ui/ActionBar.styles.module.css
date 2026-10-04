@@ -36,10 +36,13 @@
 }
 
 .Bar {
-  --size: 86px;
+  --size: 90px;
   display: grid;
   grid-template-rows: repeat(var(--rows, 1), var(--size));
-  grid-template-columns: 10px repeat(var(--cols, 1), var(--size));
+  grid-template-columns: 10px repeat(
+      var(--cols, 1),
+      var(--card-width, var(--size))
+    );
   gap: 6px;
   max-width: 100%;
   padding: 6px 8px 6px 4px;
@@ -72,7 +75,7 @@
   justify-items: center;
   align-content: center;
   gap: 1px;
-  width: var(--size);
+  width: var(--card-width, var(--size));
   height: var(--size);
   padding: 3px 2px;
   border: 1px solid var(--border);
@@ -84,6 +87,24 @@
   transition:
     border-color 0.12s,
     background-color 0.12s;
+}
+
+@media (max-width: 700px) {
+  .Bar {
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: none;
+    grid-auto-rows: 96px;
+    padding: 8px;
+  }
+  .Handle {
+    display: none;
+  }
+  .Card,
+  .Back {
+    width: 100%;
+    height: 100%;
+  }
 }
 
 /* С портретом содержимое занимает всю высоту: сверху полоса под клавишу и «!». */
@@ -104,7 +125,7 @@
 
 /* Недоступное видно сразу: приглушено, причина — в подсказке. */
 .Card[data-unavailable='true'] {
-  opacity: 0.5;
+  opacity: 0.62;
   cursor: default;
 }
 
@@ -118,19 +139,21 @@
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  line-height: 1.12;
+  line-height: 1.2;
   text-align: center;
   hyphens: auto;
 }
 
-/* Цена в одну строку: три значения (золото, дерево, население) влезают. */
+/* Цена с пиктограммами; на узких карточках значения переносятся. */
 .Cost {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 3px;
   color: var(--text-muted);
-  font-size: 0.64rem;
+  font-size: 0.7rem;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -141,7 +164,7 @@
   gap: 1px;
 }
 
-/* Клавиша — в левом верхнем углу, чтобы карточка оставалась квадратной. */
+/* Клавиша в углу оставляет место названию и цене. */
 .Key {
   position: absolute;
   top: 3px;
@@ -170,4 +193,11 @@
 .Back {
   color: var(--text-muted);
   font-size: 0.7rem;
+}
+
+@media (min-width: 701px) and (max-width: 900px) {
+  .Bar {
+    --size: 104px;
+    --card-width: 70px;
+  }
 }

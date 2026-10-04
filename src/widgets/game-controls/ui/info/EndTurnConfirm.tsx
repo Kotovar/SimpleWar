@@ -20,6 +20,8 @@ export const EndTurnConfirm = ({ pending, onConfirm, onCancel }: Props) => {
 
   return (
     <ConfirmDialog
+      intent='primary'
+      centered
       isOpen={pending > 0}
       title='Завершить ход?'
       message={`${pending} ${pluralRu(pending, ['юнит', 'юнита', 'юнитов'])} ещё ${pending === 1 ? 'может' : 'могут'} идти, атаковать или лечить.`}

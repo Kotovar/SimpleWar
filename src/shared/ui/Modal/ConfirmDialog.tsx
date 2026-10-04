@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom';
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import type { MouseEvent, ReactNode } from 'react';
 import styles from './styles.module.css';
 
@@ -18,6 +18,8 @@ type Props = {
    * отмена: необратимое действие не выполняется случайно.
    */
   focus?: 'confirm' | 'cancel';
+  intent?: 'primary' | 'danger';
+  centered?: boolean;
 };
 
 export const ConfirmDialog = ({
@@ -30,7 +32,11 @@ export const ConfirmDialog = ({
   onCancel,
   children,
   focus = 'cancel',
+  intent = 'danger',
+  centered = false,
 }: Props) => {
+  const titleId = useId();
+  const messageId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
@@ -64,27 +70,35 @@ export const ConfirmDialog = ({
     <dialog
       ref={dialogRef}
       className={styles.Dialog}
+      data-intent={intent}
+      data-centered={centered}
+      aria-labelledby={titleId}
+      aria-describedby={messageId}
       onClose={onCancel}
       onClick={handleBackdropClick}
     >
       <div className={styles.Content} onClick={e => e.stopPropagation()}>
-        <h3 className={styles.Title}>{title}</h3>
-        <p className={styles.Message}>{message}</p>
+        <h3 id={titleId} className={styles.Title}>
+          {title}
+        </h3>
+        <p id={messageId} className={styles.Message}>
+          {message}
+        </p>
         {children}
         <div className={styles.Buttons}>
-          <button
-            ref={confirmRef}
-            className={styles.ConfirmButton}
-            onClick={onConfirm}
-          >
-            {confirmText}
-          </button>
           <button
             ref={cancelRef}
             className={styles.CancelButton}
             onClick={onCancel}
           >
             {cancelText}
+          </button>
+          <button
+            ref={confirmRef}
+            className={styles.ConfirmButton}
+            onClick={onConfirm}
+          >
+            {confirmText}
           </button>
         </div>
       </div>

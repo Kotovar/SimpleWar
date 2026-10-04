@@ -62,27 +62,32 @@ export const TurnControls = ({
 
   return (
     <div className={styles.ButtonRow}>
-      <button
-        className={styles.OrdersButton}
-        title={
-          !isOwnTurn
-            ? 'Доступно в свой ход'
-            : onRunOrders
-              ? 'Юниты с приказом «Идти в точку» пойдут на оставшиеся очки'
-              : 'Нет активных приказов'
-        }
-        onClick={onRunOrders}
-        disabled={!isOwnTurn || !onRunOrders}
-      >
-        Выполнить приказы
-      </button>
-      <button
-        className={styles.EndTurnButton}
-        onClick={onNextTurn}
-        disabled={!isOwnTurn}
-      >
-        {isOwnTurn ? 'Завершить ход' : 'Ход противника…'}
-      </button>
+      {humanId && (
+        <>
+          <button
+            className={styles.OrdersButton}
+            aria-label='Выполнить приказы'
+            title={
+              !isOwnTurn
+                ? 'Доступно в свой ход'
+                : onRunOrders
+                  ? 'Юниты с приказом «Идти в точку» пойдут на оставшиеся очки'
+                  : 'Нет активных приказов'
+            }
+            onClick={onRunOrders}
+            disabled={!isOwnTurn || !onRunOrders}
+          >
+            Приказы
+          </button>
+          <button
+            className={styles.EndTurnButton}
+            onClick={onNextTurn}
+            disabled={!isOwnTurn}
+          >
+            {isOwnTurn ? 'Завершить ход' : 'Ход противника…'}
+          </button>
+        </>
+      )}
 
       <details className={styles.Menu} ref={menu}>
         <summary>Меню</summary>
@@ -120,26 +125,7 @@ export const TurnControls = ({
           >
             Гайдбук <span aria-hidden='true'>↗</span>
           </a>
-          {onSurrender && (
-            <button
-              className={styles.DangerButton}
-              onClick={() => {
-                if (menu.current) menu.current.open = false;
-                onSurrender();
-              }}
-            >
-              Сдаться
-            </button>
-          )}
-          <button
-            className={styles.DangerButton}
-            onClick={() => {
-              if (menu.current) menu.current.open = false;
-              onReset();
-            }}
-          >
-            Сбросить игру
-          </button>
+          <h3 className={styles.MenuHeading}>Настройки партии</h3>
           <Checkbox
             className={styles.MenuCheck}
             checked={confirmEndTurn}
@@ -160,6 +146,7 @@ export const TurnControls = ({
               ]}
             />
           </label>
+          <h3 className={styles.MenuHeading}>Помощь и обучение</h3>
           <Checkbox
             className={styles.MenuCheck}
             checked={preferences.hintsEnabled}
@@ -185,6 +172,27 @@ export const TurnControls = ({
               Начать обучение заново
             </button>
           )}
+          <h3 className={styles.MenuHeading}>Завершение партии</h3>
+          {onSurrender && (
+            <button
+              className={styles.DangerButton}
+              onClick={() => {
+                if (menu.current) menu.current.open = false;
+                onSurrender();
+              }}
+            >
+              Сдаться
+            </button>
+          )}
+          <button
+            className={styles.DangerButton}
+            onClick={() => {
+              if (menu.current) menu.current.open = false;
+              onReset();
+            }}
+          >
+            Сбросить игру
+          </button>
         </div>
       </details>
       <KeyboardHelp />

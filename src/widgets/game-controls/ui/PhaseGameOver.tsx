@@ -53,19 +53,25 @@ export const PhaseGameOver = ({
             </span>
           </div>
           <div className={styles.ButtonGroup}>
-            {onOpenSaves && <button onClick={onOpenSaves}>Сохранения</button>}
+            {onOpenSaves && (
+              <button className={styles.ToggleButton} onClick={onOpenSaves}>
+                Сохранения
+              </button>
+            )}
             <button
               className={styles.ToggleButton}
               onClick={() => setReview(false)}
             >
               Итоги партии
             </button>
-            <button className={styles.ToggleButton} onClick={resetGame}>
+            <button className={styles.PrimaryButton} onClick={resetGame}>
               Начать новую игру
             </button>
           </div>
         </header>
-        <SelectionCard />
+        <div className={styles.Selection}>
+          <SelectionCard />
+        </div>
         {minimap && <MinimapOverlay>{minimap}</MinimapOverlay>}
       </>
     );
@@ -82,15 +88,17 @@ export const PhaseGameOver = ({
 
       {humanId && <PlayerResult player={humanId} />}
       <SandboxReport />
-      {onOpenSaves && (
-        <button className={styles.ToggleButton} onClick={onOpenSaves}>
-          Сохранения
-        </button>
-      )}
+      <div className={styles.ButtonGroup}>
+        {onOpenSaves && (
+          <button className={styles.ToggleButton} onClick={onOpenSaves}>
+            Сохранения
+          </button>
+        )}
 
-      <button className={styles.ToggleButton} onClick={() => setReview(true)}>
-        Обзор всей карты
-      </button>
+        <button className={styles.ToggleButton} onClick={() => setReview(true)}>
+          Обзор всей карты
+        </button>
+      </div>
       <button className={styles.PrimaryButton} onClick={resetGame}>
         Начать новую игру
       </button>

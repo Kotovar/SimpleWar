@@ -1,18 +1,14 @@
 .EntityInfo {
   --owner: var(--border-strong);
 
-  background: linear-gradient(
-    160deg,
-    color-mix(in srgb, var(--owner) 10%, var(--surface-strong)),
-    var(--surface-sunken) 65%
-  );
-  border: 1px solid var(--border);
+  background: transparent;
+  border: 0;
   border-top: 3px solid var(--owner);
-  border-radius: var(--radius);
-  padding: 12px;
+  border-radius: 0;
+  padding: 10px 0 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 /* Цвет стороны совпадает с постаментом на карте. */
@@ -35,14 +31,14 @@
 .EntityHeader {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .EntityName {
   margin: 0 0 4px;
   font-size: 1.15rem;
   line-height: 1.2;
-  color: #f0dfb4;
+  color: var(--text);
 }
 
 .Owner {
@@ -64,7 +60,7 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
 }
 
 .HealthLabel {
@@ -117,7 +113,7 @@
 .EntityDetails {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
   margin: 0;
   font-size: 0.85rem;
   color: var(--text-muted);
@@ -152,4 +148,12 @@
 .EntityDetails .BuildPoints,
 .EntityDetails .IsWalkable {
   color: var(--population);
+}
+
+@media (max-width: 700px) {
+  .EntityDetails {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 16px;
+  }
 }

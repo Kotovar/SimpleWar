@@ -8,6 +8,7 @@ import { worldToScreen } from '@shared/lib';
 import { GoldIcon, WoodIcon } from '@shared/ui';
 import { useSettingsStore } from '@entities/settings';
 import { useUnitsStore } from '@entities/units';
+import { useEconomyStore } from '@entities/economies';
 import { getTurnRejection } from '@entities/games';
 import { useSelectionStore } from '@features/selection';
 import { build, getContextBuildings, giveBuildOrder } from '@features/build';
@@ -42,9 +43,13 @@ export const ContextBuildMenu = ({
   const mapSize = useSettingsStore(state => state.viewport);
   const selection = useSelectionStore(state => state.selection);
   const worker = useUnitsStore(state => state.units[target.workerId]);
+  const resources = useEconomyStore(state =>
+    humanId ? state.resources[humanId] : null,
+  );
   if (selection?.kind !== 'unit' || selection.id !== target.workerId)
     return null;
-  if (!worker || !humanId || getTurnRejection(humanId)) return null;
+  if (!worker || !humanId || !resources || getTurnRejection(humanId))
+    return null;
   const menuOptions = getContextBuildings(worker, humanId, target);
   const menuWorkplace = getContextWorkplace(worker, humanId, target);
   const finishOrder = (workerId: string) => {
@@ -89,42 +94,67 @@ export const ContextBuildMenu = ({
           ? BUILDINGS_NAME[menuWorkplace.type]
           : `Построить (${target.x + 1}, ${target.y + 1})`}
       </strong>
-      {menuOptions.map(buildingType => (
-        <button
-          key={buildingType}
-          type='button'
-          aria-label={`${BUILDINGS_NAME[buildingType]}: ${BUILDINGS_CONFIG[buildingType].cost.gold} золота, ${BUILDINGS_CONFIG[buildingType].cost.wood} древесины`}
-          onClick={() => {
-            const result = giveBuildOrder({
-              actor: humanId,
-              workerId: target.workerId,
-              buildingType,
-              x: target.x,
-              y: target.y,
-            });
-            if (!result.ok) return;
-            finishOrder(target.workerId);
-          }}
-        >
-          <span>{BUILDINGS_NAME[buildingType]}</span>
-          <span className={styles.ContextCost}>
-            <span
-              aria-label={`${BUILDINGS_CONFIG[buildingType].cost.gold} золота`}
-              title='Золото'
-            >
-              <GoldIcon />
-              {BUILDINGS_CONFIG[buildingType].cost.gold}
+      {menuOptions.map(buildingType => {
+        const cost = BUILDINGS_CONFIG[buildingType].cost;
+        const missingGold = resources.gold < cost.gold;
+        const missingWood = resources.wood < cost.wood;
+        const missingResources = [
+          missingGold && 'золота',
+          missingWood && 'древесины',
+        ].filter(Boolean);
+        const warning = missingResources.length
+          ? `Не хватает ${missingResources.join(' и ')}. Ресурсы будут проверены при исполнении приказа.`
+          : undefined;
+        return (
+          <button
+            key={buildingType}
+            type='button'
+            data-unaffordable={missingGold || missingWood}
+            aria-label={`${BUILDINGS_NAME[buildingType]}: ${cost.gold} золота, ${cost.wood} древесины`}
+            aria-description={warning}
+            title={warning}
+            onClick={() => {
+              const result = giveBuildOrder({
+                actor: humanId,
+                workerId: target.workerId,
+                buildingType,
+                x: target.x,
+                y: target.y,
+              });
+              if (!result.ok) return;
+              finishOrder(target.workerId);
+            }}
+          >
+            <span>{BUILDINGS_NAME[buildingType]}</span>
+            <span className={styles.ContextCost}>
+              <span
+                data-shortage={missingGold}
+                aria-label={`${cost.gold} золота${missingGold ? ' — недостаточно' : ''}`}
+                title={
+                  missingGold
+                    ? `Не хватает ${cost.gold - resources.gold} золота`
+                    : 'Золото'
+                }
+              >
+                <GoldIcon />
+                {cost.gold}
+              </span>
+              <span
+                data-shortage={missingWood}
+                aria-label={`${cost.wood} древесины${missingWood ? ' — недостаточно' : ''}`}
+                title={
+                  missingWood
+                    ? `Не хватает ${cost.wood - resources.wood} древесины`
+                    : 'Древесина'
+                }
+              >
+                <WoodIcon />
+                {cost.wood}
+              </span>
             </span>
-            <span
-              aria-label={`${BUILDINGS_CONFIG[buildingType].cost.wood} древесины`}
-              title='Древесина'
-            >
-              <WoodIcon />
-              {BUILDINGS_CONFIG[buildingType].cost.wood}
-            </span>
-          </span>
-        </button>
-      ))}
+          </button>
+        );
+      })}
       {menuWorkplace && (
         <button
           type='button'

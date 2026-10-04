@@ -4,7 +4,9 @@
   background-color: var(--surface);
   color: var(--text);
   padding: 0;
-  max-width: 90vw;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
   width: 420px;
   box-shadow: 0 20px 50px oklab(0% 0 0 / 0.8);
   animation: fadeIn 0.25s ease-out;
@@ -21,14 +23,14 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  text-align: center;
+  text-align: left;
 }
 
 .Title {
   font-size: 1.5em;
   font-weight: bold;
   margin: 0;
-  color: var(--gold);
+  color: var(--text);
 }
 
 .Message {
@@ -40,21 +42,32 @@
 
 .Buttons {
   display: flex;
-  gap: 16px;
-  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.Dialog[data-centered='true'] {
+  .Content {
+    text-align: center;
+  }
+  .Buttons {
+    justify-content: center;
+  }
 }
 
 .ConfirmButton {
   background-color: var(--danger);
-  color: var(--text);
-  border: none;
+  color: #20130f;
+  font-weight: 700;
+  border: 1px solid transparent;
   border-radius: var(--radius);
   padding: 10px 24px;
   font-size: 1em;
   cursor: pointer;
 
   &:hover {
-    background-color: var(--danger-strong);
+    filter: brightness(1.12);
   }
 }
 
@@ -88,5 +101,28 @@
   }
   to {
     opacity: 1;
+  }
+}
+
+.Dialog[data-intent='primary'] .ConfirmButton {
+  background-color: var(--accent);
+  color: #102136;
+}
+@media (max-width: 540px) {
+  .Content {
+    padding: 20px;
+    gap: 16px;
+  }
+  .Buttons > button {
+    flex: 1;
+    padding-inline: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .Dialog {
+    animation: none;
+  }
+  .Dialog::backdrop {
+    animation: none;
   }
 }

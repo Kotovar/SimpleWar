@@ -111,6 +111,7 @@ const SlotRow = ({
       <div className={styles.Actions}>
         {!slot.auto && (
           <button
+            className={styles.SaveButton}
             disabled={!canSave}
             onClick={() =>
               slot.record || slot.error
@@ -122,6 +123,7 @@ const SlotRow = ({
           </button>
         )}
         <button
+          className={styles.LoadButton}
           disabled={!snapshot}
           onClick={() => snapshot && onConfirm({ kind: 'load', snapshot })}
         >
@@ -135,6 +137,7 @@ const SlotRow = ({
         </button>
         <button
           disabled={!slot.record && !slot.error}
+          className={styles.DeleteButton}
           onClick={() => onConfirm({ kind: 'delete', slot, name })}
         >
           Удалить
@@ -316,29 +319,31 @@ export const SaveGames = ({
             ))}
         </ul>
         {!slots.some(s => s.auto) && <p>Автосохранений пока нет.</p>}
-        <h3>Диагностика</h3>
-        <p>
-          Файл содержит полный мир, включая скрытые сведения, настройки и
-          последние команды. Он скачивается локально и не отправляется в сеть.
-          Импорт восстанавливает сцену для следующего действия; полного повтора
-          истории нет.
-        </p>
-        <div className={styles.Actions}>
-          <button disabled={!canSave} onClick={() => void exportDiagnostic()}>
-            Скачать диагностику
-          </button>
-          {debug && (
-            <label className={styles.Import}>
-              Импорт диагностики
-              <input
-                ref={fileInput}
-                type='file'
-                accept='.json,application/json'
-                onChange={e => void importFile(e.target.files?.[0])}
-              />
-            </label>
-          )}
-        </div>
+        <details className={styles.Diagnostics}>
+          <summary>Диагностика партии</summary>
+          <p>
+            Файл содержит полный мир, включая скрытые сведения, настройки и
+            последние команды. Он скачивается локально и не отправляется в сеть.
+            Импорт восстанавливает сцену для следующего действия; полного
+            повтора истории нет.
+          </p>
+          <div className={styles.Actions}>
+            <button disabled={!canSave} onClick={() => void exportDiagnostic()}>
+              Скачать диагностику
+            </button>
+            {debug && (
+              <label className={styles.Import}>
+                Импорт диагностики
+                <input
+                  ref={fileInput}
+                  type='file'
+                  accept='.json,application/json'
+                  onChange={e => void importFile(e.target.files?.[0])}
+                />
+              </label>
+            )}
+          </div>
+        </details>
       </dialog>
       <SaveConfirmation
         confirmation={confirmation}
@@ -375,9 +380,17 @@ const SaveConfirmation = ({
   return (
     <ConfirmDialog
       isOpen
+      intent={confirmation.kind === 'delete' ? 'danger' : 'primary'}
       title={titles[confirmation.kind]}
       message={message}
-      confirmText={confirmation.kind === 'load' ? 'Загрузить' : 'Подтвердить'}
+      confirmText={
+        {
+          load: 'Загрузить',
+          save: 'Перезаписать',
+          rename: 'Переименовать',
+          delete: 'Удалить',
+        }[confirmation.kind]
+      }
       onConfirm={onConfirm}
       onCancel={onCancel}
     />

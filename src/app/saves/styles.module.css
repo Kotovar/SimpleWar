@@ -3,8 +3,9 @@
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: 16px;
-  width: min(880px, 92vw);
-  max-height: 88dvh;
+  width: 880px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
   overflow: auto;
   padding: 24px;
   &::backdrop {
@@ -18,7 +19,7 @@
   }
   h2 {
     margin: 0;
-    color: var(--gold);
+    color: var(--text);
   }
   h3 {
     margin: 18px 0 8px;
@@ -55,7 +56,8 @@
   }
 }
 .Slot {
-  border: 1px solid var(--border-strong);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px;
   display: grid;
@@ -64,6 +66,7 @@
   align-items: center;
   button,
   input {
+    min-height: 32px;
     padding: 4px 8px;
     font-size: 13px;
   }
@@ -119,8 +122,12 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
   label {
     display: flex;
     align-items: center;
@@ -156,4 +163,30 @@
   .Slot > .Actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+.Dialog button:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--surface-hover);
+}
+.Dialog .SaveButton:not(:disabled),
+.Dialog .LoadButton:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  color: var(--accent);
+}
+.Dialog .DeleteButton:not(:disabled) {
+  color: var(--danger-strong);
+}
+.Diagnostics {
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.Diagnostics > summary {
+  cursor: pointer;
+}
+.Diagnostics[open] > summary {
+  margin-bottom: 8px;
 }

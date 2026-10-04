@@ -49,6 +49,7 @@
 }
 
 .Toolbar {
+  grid-template-columns: minmax(0, 1fr) auto;
   flex-wrap: wrap;
   gap: 8px 16px;
 }

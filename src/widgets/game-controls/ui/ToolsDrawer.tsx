@@ -36,6 +36,7 @@ export const ToolsDrawer = ({ open, onToggle }: Props) => {
   if (!open || !available) return null;
   return (
     <aside id='tools-drawer' className={styles.Drawer} aria-label='Инструменты'>
+      <h2 className={styles.DrawerTitle}>Инструменты партии</h2>
       <button
         type='button'
         className={styles.DrawerClose}

@@ -1,7 +1,7 @@
 .Main {
   display: grid;
   box-sizing: border-box;
-  height: 100vh;
+  height: 100dvh;
   padding: 10px;
   gap: 10px;
   grid-template-columns: minmax(0, 1fr);
@@ -10,13 +10,28 @@
   background-color: var(--bg);
 }
 
+@media (max-width: 700px) {
+  .Main {
+    height: auto;
+    min-height: 100dvh;
+    padding: 8px;
+    gap: 8px;
+    grid-template-rows: auto clamp(280px, 48dvh, 420px) auto auto;
+    grid-template-areas: 'toolbar' 'map' 'selection' 'guidance';
+  }
+  .Setup {
+    width: calc(100% - 16px);
+    margin: 8px auto;
+  }
+}
+
 .Setup {
   position: relative;
   box-sizing: border-box;
-  width: min(720px, calc(100% - 24px));
-  margin: 24px auto;
-  padding: clamp(16px, 3vw, 28px);
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  width: min(860px, calc(100% - 24px));
+  margin: 16px auto;
+  padding: clamp(16px, 3vw, 20px);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: var(--shadow-raised);

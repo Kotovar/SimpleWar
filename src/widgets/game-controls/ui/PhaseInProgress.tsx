@@ -174,9 +174,10 @@ export const PhaseInProgress = ({ minimap, onOpenSaves }: Props) => {
       <AiTurnBanner />
       <CommandToasts />
       <Guidance />
-      <ActionBar />
-
-      <SelectionCard />
+      <div className={styles.Selection}>
+        <SelectionCard />
+        <ActionBar />
+      </div>
       <ToolsDrawer open={toolsOpen} onToggle={toggleTools} />
       {minimap && <MinimapOverlay>{minimap}</MinimapOverlay>}
 

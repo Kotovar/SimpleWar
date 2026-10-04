@@ -21,7 +21,16 @@ export const GameControls = ({ onStartGame, onOpenSaves, minimap }: Props) => {
 
   return (
     <section className={showMap ? styles.GameLayout : styles.GameControls}>
-      {!showMap && <h1 className={styles.Title}>{GAME_TITLE}</h1>}
+      {!showMap && (
+        <div className={styles.Intro}>
+          <h1 className={styles.Title}>{GAME_TITLE}</h1>
+          {phase === 'setup' && (
+            <p className={styles.Hint}>
+              Пошаговая стратегия · Настройте свою партию
+            </p>
+          )}
+        </div>
+      )}
 
       {phase === 'setup' && (
         <PhaseSetup onStartGame={onStartGame} onOpenSaves={onOpenSaves} />

@@ -112,7 +112,7 @@ export const ResourcesInfo = () => {
       <Stat
         tone='population'
         icon={<PopulationIcon size={18} />}
-        label='Лимит юнитов'
+        label='Население'
         value={`${occupied} / ${max}`}
         extra={occupied >= max ? 'предел' : undefined}
       />

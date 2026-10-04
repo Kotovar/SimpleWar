@@ -18,6 +18,15 @@ export const ActionCard = ({
   <button
     type='button'
     className={styles.Card}
+    aria-label={button.label}
+    aria-description={[
+      button.hint,
+      button.reason,
+      button.cost &&
+        `Цена: ${button.cost.gold} золота, ${button.cost.wood} древесины${button.cost.population ? `, ${button.cost.population} населения` : ''}`,
+    ]
+      .filter(Boolean)
+      .join('. ')}
     aria-pressed={button.pressed ?? false}
     aria-disabled={!!button.reason}
     data-unavailable={!!button.reason}

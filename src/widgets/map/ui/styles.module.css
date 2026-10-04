@@ -93,6 +93,16 @@
   font-variant-numeric: tabular-nums;
 }
 
+@media (max-width: 360px) {
+  .MapControls {
+    gap: 2px;
+  }
+  .MapControls button {
+    min-width: 28px;
+    padding-inline: 6px;
+  }
+}
+
 .CursorIdle {
   cursor: default;
 }
@@ -181,6 +191,10 @@
   cursor: pointer;
 }
 
+.BuildMenu button[data-unaffordable='true'] {
+  border-color: var(--danger-strong);
+}
+
 .ContextCost {
   display: flex;
   justify-content: center;
@@ -194,4 +208,8 @@
   gap: 4px;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+}
+
+.ContextCost > span[data-shortage='true'] {
+  color: var(--danger-strong);
 }

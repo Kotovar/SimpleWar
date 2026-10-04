@@ -3,7 +3,9 @@
   border-radius: var(--radius);
   background: var(--surface-sunken);
   color: var(--text);
-  padding: 8px 14px;
+  width: 40px;
+  height: 42px;
+  padding: 0;
   cursor: pointer;
   font-size: 1rem;
 
@@ -40,7 +42,7 @@
 }
 .Header h2 {
   margin: 0;
-  color: var(--gold);
+  color: var(--text);
   font-size: 1.3rem;
 }
 .Note {
@@ -63,7 +65,7 @@
 .Groups h3 {
   margin: 8px 0;
   font-size: 1rem;
-  color: var(--gold);
+  color: var(--text);
 }
 .Keys {
   margin: 0;
@@ -73,7 +75,7 @@
   display: flex;
   align-items: baseline;
   gap: 10px;
-  padding: 4px 0;
+  padding: 6px 0;
 }
 .Keys dt {
   flex-shrink: 0;
@@ -83,6 +85,13 @@
   color: var(--text-muted);
 }
 .Keys kbd {
+  display: inline-block;
+  min-width: 28px;
+  padding: 1px 5px;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--surface-sunken);
   color: var(--text);
   font: inherit;
   font-weight: 700;
@@ -98,6 +107,9 @@
   }
 }
 @media (max-width: 540px) {
+  .Content {
+    padding: 16px;
+  }
   .Groups {
     grid-template-columns: 1fr;
   }

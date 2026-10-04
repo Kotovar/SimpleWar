@@ -5,7 +5,7 @@
   align-self: end;
   justify-self: start;
   z-index: 30;
-  width: 260px;
+  width: 220px;
   max-height: calc(100% - 32px);
   margin: 0 0 16px 16px;
   overflow-y: auto;
@@ -54,8 +54,8 @@
   top: 4px;
   right: 4px;
   z-index: 1;
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
@@ -75,6 +75,7 @@
 }
 
 .ToolsToggle {
+  justify-self: end;
   padding: 6px 12px;
   border: 1px dashed var(--danger);
   border-radius: var(--radius);
@@ -102,7 +103,7 @@
   width: min(360px, 100%);
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 36px 12px 12px;
+  padding: 16px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
   background-color: var(--surface);
@@ -113,8 +114,8 @@
   position: absolute;
   top: 6px;
   right: 8px;
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: none;
   border-radius: var(--radius-sm);
@@ -126,4 +127,32 @@
 
 .DrawerClose:hover {
   color: var(--text);
+}
+
+.DrawerTitle {
+  margin: 0 36px 4px 0;
+  font-size: 1rem;
+}
+
+@media (max-width: 700px) {
+  .Minimap {
+    width: 160px;
+    margin: 10px 10px 0 0;
+  }
+  .Minimap > div {
+    height: 120px;
+  }
+  .Card {
+    width: min(230px, calc(100% - 20px));
+    margin: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .Minimap {
+    width: 128px;
+  }
+  .Minimap > div {
+    height: 96px;
+  }
 }
