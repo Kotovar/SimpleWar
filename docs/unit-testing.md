@@ -5,11 +5,17 @@
 
 ## Запуск
 
-- `pnpm test` — весь набор.
+- `pnpm test` — основной набор; длительная приёмка S21 запускается отдельно.
 - `pnpm test:unit` — только unit-тесты.
 - `pnpm test:integration` — взаимодействие настоящих хранилищ и событий.
 - `pnpm test:unit -- src/features/pathfinding/lib/getPath.test.ts` — один файл.
 - `pnpm type-check` — отдельная проверка типов, включая тесты.
+- `pnpm acceptance:matches` — 196 полных партий с отчётом; тайм-аут — провал.
+- `pnpm acceptance:performance` — технические бюджеты на 100×100.
+- `pnpm acceptance:browser` — production, циклы сохранения/загрузки, память.
+
+Условия запуска и результаты: [S21](roadmap/s21-report.md),
+позитивные и негативные сцены всех ID: [матрица ИИ](roadmap/s21-matrix.md).
 
 Unit-тесты размещаются рядом с модулем в `*.test.ts`. Интеграционные сценарии
 имеют суффикс `*.integration.test.ts` и исключены из unit-команды.

@@ -14,6 +14,7 @@ import {
   moveTo,
 } from './common';
 import { archers } from './archers';
+import { followGroup } from './roleKit';
 
 /** A01: до атаки занять дальнюю огневую клетку вне ближней угрозы. */
 export const A01: AiRule = {
@@ -61,13 +62,15 @@ const near = (ctx: AiContext, center: Position, radius: number) => {
   return cells;
 };
 
-/** A04: своя пехота наступает — держаться позади неё. */
+/** A04: при наступлении идти за пехотой, при отходе вернуться к группе. */
 export const A04: AiRule = {
   id: 'A04',
   group: 'attack',
   title: 'За прикрытием',
   evaluate: ctx => {
     const { phase, target } = ctx.memory.operation;
+    if (phase === 'retreat')
+      return archers(ctx).flatMap(unit => followGroup(ctx, 'A04', unit, 35));
     if ((phase !== 'advance' && phase !== 'engage') || !target) return [];
     const group = strikeGroup(ctx);
     const members = new Set(group.map(({ id }) => id));

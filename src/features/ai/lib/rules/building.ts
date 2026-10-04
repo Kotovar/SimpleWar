@@ -94,6 +94,12 @@ export const buildStep = (
   score: number,
   reason: string,
 ): Candidate[] => {
+  const terrain = ctx.known(site.x, site.y);
+  if (
+    !terrain ||
+    !isBuildableTerrain(BUILDINGS_CONFIG[type].requiredField, terrain)
+  )
+    return [];
   const cost = BUILDINGS_CONFIG[type].cost;
   const task = {
     kind: 'build' as const,

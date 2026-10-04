@@ -5,6 +5,13 @@ import { R07 } from './hiddenAiming';
 import { N02 } from './production';
 
 describe('R07: разведчик у своих против осады', () => {
+  it('без известной осады не отвлекает разведчика от разведки', () => {
+    const { ctx } = scene({
+      map: grass(10, 10),
+      units: [own('scout', 1, 1), own('swordsman', 8, 8)],
+    });
+    expect(R07.evaluate(ctx)).toEqual([]);
+  });
   it('держится у армии, а не у самого себя', () => {
     const { ctx } = scene({
       map: grass(10, 10),

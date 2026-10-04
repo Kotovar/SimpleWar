@@ -48,6 +48,21 @@ describe('M03/M04: сбор и наступление', () => {
     expect(M03.evaluate(ctx)).toEqual([]);
   });
 
+  it('M03 возвращает здорового мечника после общего отхода', () => {
+    const sword = own('swordsman', 9, 9);
+    const { ctx } = scene({
+      map,
+      units: [sword],
+      buildings: [ownBuilding('base', 1, 1)],
+      memory: { operation: { ...gather, phase: 'retreat' } },
+    });
+    const [candidate] = M03.evaluate(ctx);
+    expect(candidate).toBeDefined();
+    expect(manhattan(cellOf(candidate.action), gather.rally)).toBeLessThan(
+      manhattan(sword, gather.rally),
+    );
+  });
+
   it('M04 наступает на цель', () => {
     const sword = own('swordsman', 2, 2);
     const { ctx } = scene({

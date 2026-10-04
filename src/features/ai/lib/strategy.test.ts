@@ -3,8 +3,15 @@ import type { StrategyId } from '@shared/config';
 import type { RememberedContact } from '@entities/perceptions';
 import type { StrategyScore } from '../model/types';
 import { enemyPower } from './composition';
-import { foe, grass, own, ownBuilding, scene } from './scene.test-utils';
-import { chooseStrategy, evaluateStrategies } from './strategy';
+import {
+  foe,
+  grass,
+  own,
+  ownBuilding,
+  remembered,
+  scene,
+} from './scene.test-utils';
+import { chooseStrategy, evaluateStrategies, STRATEGIES } from './strategy';
 
 /** Оценки всех стратегий: заданные — как указано, остальные — ноль. */
 const scores = (values: Partial<Record<StrategyId, number>>): StrategyScore[] =>
@@ -135,5 +142,151 @@ describe('знание о враге', () => {
 
   it('контакт из памяти не становится видимым врагом', () => {
     expect(view('recent').enemies).toEqual([]);
+  });
+});
+
+describe('S21: применимость каждой стратегии G01–G12', () => {
+  type Spec = Parameters<typeof scene>[0];
+  const field = grass(16, 16);
+  const army = () => [0, 1, 2, 3].map(i => own('swordsman', 4 + i, 4));
+  const base = () => ownBuilding('base', 2, 2);
+  const staffed = (): Spec => {
+    const mine = ownBuilding('mine', 5, 5);
+    const mill = ownBuilding('sawmill', 6, 5);
+    return {
+      map: field,
+      buildings: [base(), mine, mill],
+      units: [
+        own('worker', 5, 5, { workplaceId: mine.id }),
+        own('worker', 6, 5, { workplaceId: mill.id }),
+        own('worker', 1, 1),
+      ],
+    };
+  };
+  const cases: Array<{ id: StrategyId; yes: Spec; no: Spec; reason: string }> =
+    [
+      {
+        id: 'G01',
+        reason: 'вооружённый враг у ратуши / тревоги нет',
+        yes: {
+          map: field,
+          buildings: [base()],
+          enemies: [foe('swordsman', 4, 2)],
+        },
+        no: { map: field, buildings: [base()] },
+      },
+      {
+        id: 'G02',
+        reason: 'добыча без рабочих / места обслужены и доход достаточен',
+        yes: { map: field, buildings: [base(), ownBuilding('mine', 5, 5)] },
+        no: staffed(),
+      },
+      {
+        id: 'G03',
+        reason: 'известное свободное золото / простаивает рудник',
+        yes: { map: ['..g..', ...grass(5, 4)], buildings: [base()] },
+        no: {
+          map: ['..g..', ...grass(5, 4)],
+          buildings: [base(), ownBuilding('mine', 1, 4)],
+        },
+      },
+      {
+        id: 'G04',
+        reason: 'армии мало / армия и население достаточны',
+        yes: { map: field },
+        no: {
+          map: field,
+          units: Array.from({ length: 10 }, (_, i) => own('swordsman', i, 5)),
+          population: { max: 30, occupied: 10 },
+        },
+      },
+      {
+        id: 'G05',
+        reason: 'база неизвестна / вражеское здание известно',
+        yes: { map: field },
+        no: { map: field, enemies: [foe('base', 14, 14)] },
+      },
+      {
+        id: 'G06',
+        reason: 'ресурс не найден / золото и лес известны',
+        yes: { map: field },
+        no: { map: ['..g.f', ...grass(5, 4)] },
+      },
+      {
+        id: 'G07',
+        reason: 'устаревший / свежий контакт',
+        yes: {
+          map: field,
+          contacts: [remembered('swordsman', 12, 12, 'stale')],
+        },
+        no: { map: field, contacts: [remembered('swordsman', 12, 12)] },
+      },
+      {
+        id: 'G08',
+        reason: 'готовая сильная группа / бойцов нет',
+        yes: { map: field, units: army() },
+        no: { map: field },
+      },
+      {
+        id: 'G09',
+        reason: 'незащищённый рабочий / охрана у рабочего',
+        yes: { map: field, units: army(), enemies: [foe('worker', 12, 12)] },
+        no: {
+          map: field,
+          units: army(),
+          enemies: [foe('worker', 12, 12), foe('swordsman', 12, 11)],
+        },
+      },
+      {
+        id: 'G10',
+        reason: 'враг на подходе / прямое нападение требует G01',
+        yes: {
+          map: field,
+          buildings: [base()],
+          enemies: [foe('swordsman', 10, 2)],
+        },
+        no: {
+          map: field,
+          buildings: [base()],
+          enemies: [foe('swordsman', 4, 2)],
+        },
+      },
+      {
+        id: 'G11',
+        reason: 'проигрышный бой / сбор вне боя',
+        yes: {
+          map: field,
+          units: army(),
+          enemies: [foe('griffon', 7, 7)],
+          memory: {
+            operation: {
+              phase: 'engage',
+              rally: null,
+              target: { x: 14, y: 14 },
+              since: 0,
+            },
+          },
+        },
+        no: { map: field, units: army(), enemies: [foe('griffon', 7, 7)] },
+      },
+      {
+        id: 'G12',
+        reason: 'Строй полезен / кузница уже занята',
+        yes: {
+          map: field,
+          units: [own('spearman', 4, 4), own('spearman', 5, 4)],
+          buildings: [ownBuilding('forge', 2, 2)],
+        },
+        no: {
+          map: field,
+          units: [own('spearman', 4, 4), own('spearman', 5, 4)],
+          buildings: [ownBuilding('forge', 2, 2)],
+          researching: 'formation',
+        },
+      },
+    ];
+  it.each(cases)('$id: $reason', ({ id, yes, no }) => {
+    expect(STRATEGIES[id](scene(yes).ctx).score).toBeGreaterThan(0);
+    expect(STRATEGIES[id](scene(no).ctx).score).toBe(0);
   });
 });

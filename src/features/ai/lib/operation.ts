@@ -40,7 +40,7 @@ export const pickTarget = (ctx: AiContext): Position | null => {
   )[0];
 };
 
-/** Место сбора: свободная известная клетка у ратуши в сторону цели. */
+/** Место сбора: известная клетка у ратуши; свои войска её не закрывают. */
 const pickRally = (ctx: AiContext, target: Position | null) => {
   const { base } = ctx;
   if (!base) return null;
@@ -52,7 +52,7 @@ const pickRally = (ctx: AiContext, target: Position | null) => {
       const cell = { x: base.x + dx, y: base.y + dy };
       const dist = manhattan(cell, base);
       if (dist < 2 || dist > 3 || !ctx.inside(cell)) continue;
-      if (ctx.grid(1)[cell.y][cell.x] === 0) continue;
+      if (ctx.grid(1, true)[cell.y][cell.x] === 0) continue;
       const score = manhattan(cell, toward);
       if (score < bestScore) {
         best = cell;
@@ -164,7 +164,7 @@ export const planOperation = (
       };
     }
     case 'retreat': {
-      const home = base ?? rally;
+      const home = rally ?? base;
       const back = !home || ownNear(home).length >= Math.ceil(group.length / 2);
       const safe = enemyPower(ctx) === 0 || !foesNear;
       return {

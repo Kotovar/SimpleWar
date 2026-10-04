@@ -43,6 +43,24 @@ describe('X02 против атаки', () => {
   });
 });
 
+describe('S21: разведка и рейд конкурируют за первый шаг', () => {
+  it('G05 отдаёт приоритет поиску, G09 — доступному рейду по рабочему', () => {
+    const spec = {
+      map: Array.from({ length: 12 }, () => '.......?????'),
+      units: [own('scout', 5, 5), own('rider', 1, 1)],
+      enemies: [foe('worker', 3, 1)],
+    };
+    const search = decideStep(
+      scene({ ...spec, memory: { strategy: 'G05' } }).ctx,
+    );
+    const raid = decideStep(
+      scene({ ...spec, memory: { strategy: 'G09' } }).ctx,
+    );
+    expect(search.chosen?.ruleId).toBe('R01');
+    expect(raid.chosen?.ruleId).toBe('C01');
+  });
+});
+
 describe('оценка сил против непоражаемого врага', () => {
   it('G11: мечники против грифона проигрывают бой', () => {
     const { ctx } = scene({

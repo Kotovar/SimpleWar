@@ -65,6 +65,28 @@ describe('A01/A04/A06: позиция лучника', () => {
     expect(A04.evaluate(ctx)).toEqual([]);
   });
 
+  it('A04 возвращает здорового лучника к месту сбора при отходе', () => {
+    const archer = own('archer', 9, 9);
+    const rally = { x: 2, y: 2 };
+    const { ctx } = scene({
+      map,
+      units: [archer],
+      memory: {
+        operation: {
+          phase: 'retreat',
+          rally,
+          target: { x: 10, y: 10 },
+          since: 0,
+        },
+      },
+    });
+    const [candidate] = A04.evaluate(ctx);
+    expect(candidate).toBeDefined();
+    expect(manhattan(cellOf(candidate.action), rally)).toBeLessThan(
+      manhattan(archer, rally),
+    );
+  });
+
   it('A06 идёт к последнему месту скрывшегося врага', () => {
     const contact = remembered('swordsman', 8, 5);
     const archer = own('archer', 3, 5);

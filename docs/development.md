@@ -80,7 +80,7 @@
 | `pnpm format`       | Oxfmt с перезаписью всего проекта |
 
 После клонирования: `vp install` или `pnpm install`.
-Тесты: `pnpm test` — весь набор, `pnpm test:unit` — unit,
+Тесты: `pnpm test` — основной набор, `pnpm test:unit` — unit,
 `pnpm test:integration` — сценарии взаимодействия хранилищ и событий,
 `pnpm smoke` — 10 раундов ИИ против пассивного игрока со снимком в
 `/tmp/simplewar-ai-turn-smoke.json`. Партия ИИ до разрушения ратуши
@@ -88,6 +88,10 @@
 (итоги по раундам в `/tmp/simplewar-ai-match-smoke.json`). Прогон баланса
 режима тестирования по сидам — `pnpm vp test run scripts/sandbox-balance.test.ts`:
 сценарий задаётся в файле, итоги боёв — в `/tmp/simplewar-sandbox-balance.json`.
+Длительная приёмка S21 запускается отдельно: `pnpm acceptance:matches`,
+`pnpm acceptance:performance`, `pnpm acceptance:browser`. Она не входит
+в основной набор и обязательна перед закрытием S21/S22. Настройки, окружение,
+артефакты и непрошедшие критерии — в [отчёте S21](roadmap/s21-report.md).
 Состояние партии находится в `entities/games`, запуск — в
 `widgets/start-game/lib/initializeGame.ts`. Для изменений документации достаточно
 проверить ссылки и форматирование только затронутых Markdown-файлов.

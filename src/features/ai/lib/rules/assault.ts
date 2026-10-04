@@ -7,14 +7,17 @@ import { pathsFrom, standCells, stepToward } from '../movement';
 import { strikeGroup } from '../operation';
 import { moveTo } from './common';
 import { swordsmen } from './soldiers';
+import { followGroup } from './roleKit';
 
-/** M03: группа собирается — идти к месту сбора, не атаковать в одиночку. */
+/** M03: сбор или отход — вернуться к месту сбора группы. */
 export const M03: AiRule = {
   id: 'M03',
   group: 'attack',
   title: 'Сбор группы',
   evaluate: ctx => {
     const { phase, rally } = ctx.memory.operation;
+    if (phase === 'retreat')
+      return swordsmen(ctx).flatMap(unit => followGroup(ctx, 'M03', unit, 30));
     if (phase !== 'gather' || !rally) return [];
     const group = new Set(strikeGroup(ctx).map(({ id }) => id));
     return swordsmen(ctx)

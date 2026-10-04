@@ -1,3 +1,5 @@
+import { BUILDINGS_CONFIG } from '@shared/config';
+import { isBuildableTerrain } from '@shared/lib';
 import type { AiMemory } from '@entities/ai-memories';
 import type { Candidate, TurnState } from '../model/types';
 import type { AiContext } from './context';
@@ -21,6 +23,16 @@ const isTaskAlive = (ctx: AiContext, task: AiMemory['tasks'][number]) => {
   if (!unit || task.reviewTurn < ctx.obs.turn) return false;
   const { x, y } = task.target;
   if (task.kind === 'build') {
+    const terrain = ctx.obs.knownTerrain[y]?.[x];
+    if (
+      task.buildingType &&
+      terrain &&
+      !isBuildableTerrain(
+        BUILDINGS_CONFIG[task.buildingType].requiredField,
+        terrain,
+      )
+    )
+      return false;
     if (
       (ctx.memory.siegeLosses[`${x},${y}`] ?? -1) >= ctx.obs.turn &&
       task.buildingType
@@ -151,6 +163,7 @@ export const applyOutcome = (
       ...others,
       {
         ...candidate.task,
+        target: { x: candidate.task.target.x, y: candidate.task.target.y },
         id: `t${memory.nextTaskId}`,
         createdTurn: turn,
         reviewTurn: turn + review,

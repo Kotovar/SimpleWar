@@ -16,6 +16,43 @@ const operation = (patch: Partial<AiOperation>): AiOperation => ({
 });
 
 describe('операция ударной группы', () => {
+  it('отход завершён у места сбора, даже если бойцы дальше четырёх клеток от ратуши', () => {
+    const { ctx } = scene({
+      map,
+      buildings: [base()],
+      enemies: [enemyBase()],
+      units: [
+        own('swordsman', 7, 2),
+        own('swordsman', 6, 3),
+        own('archer', 5, 4),
+        own('healer', 7, 3),
+      ],
+      memory: {
+        operation: operation({ phase: 'retreat', rally: { x: 5, y: 2 } }),
+      },
+    });
+    expect(planOperation(ctx).operation.phase).toBe('gather');
+  });
+  it('место сбора не исчезает, когда его окрестность занята своей группой', () => {
+    const units = Array.from({ length: 6 }, (_, y) =>
+      Array.from({ length: 6 }, (_, x) => ({ x, y })),
+    )
+      .flat()
+      .filter(
+        p =>
+          Math.abs(p.x - 2) + Math.abs(p.y - 2) >= 2 &&
+          Math.abs(p.x - 2) + Math.abs(p.y - 2) <= 3,
+      )
+      .map(p => own('swordsman', p.x, p.y));
+    const { ctx } = scene({
+      map,
+      units,
+      buildings: [base()],
+      enemies: [enemyBase()],
+      memory: { operation: operation({ phase: 'retreat' }) },
+    });
+    expect(planOperation(ctx).operation.rally).not.toBeNull();
+  });
   it('неполная группа продолжает сбор', () => {
     const { ctx } = scene({
       map,

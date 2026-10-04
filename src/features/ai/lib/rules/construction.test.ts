@@ -138,6 +138,20 @@ describe('W08: ремонт', () => {
 describe('W09: восстановление добычи', () => {
   const map = ['..........', '..........', '..........', '...g......'];
 
+  it('не восстанавливает лесопилку, если лес на старом месте уже расчищен', () => {
+    const worker = own('worker', 4, 2);
+    const { ctx } = scene({
+      map: grass(10, 4),
+      units: [worker],
+      memory: {
+        lastWorkplace: {
+          [worker.id]: { buildingId: 'lost', type: 'sawmill', x: 3, y: 3 },
+        },
+      },
+    });
+    expect(W09.evaluate(ctx)).toEqual([]);
+  });
+
   it('отстраивает разрушенный рудник на старом месте', () => {
     const worker = own('worker', 4, 2);
     const { ctx } = scene({

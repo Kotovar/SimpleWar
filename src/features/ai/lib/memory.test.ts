@@ -39,6 +39,25 @@ const walk = (
 });
 
 describe('задачи и резервы', () => {
+  it('отменяет лесопилку после наблюдаемой расчистки её площадки', () => {
+    const worker = own('worker', 4, 2);
+    const task = buildTask(worker.id, {
+      buildingType: 'sawmill',
+      reserve: BUILDINGS_CONFIG.sawmill.cost,
+    });
+    const spec = { units: [worker], memory: { tasks: [task] }, turn: 5 };
+    expect(
+      refreshMemory(
+        scene({
+          ...spec,
+          map: ['........', '........', '.....f..', '........'],
+        }).ctx,
+      ).memory.tasks,
+    ).toHaveLength(1);
+    expect(
+      refreshMemory(scene({ ...spec, map: grass(8, 4) }).ctx).memory.tasks,
+    ).toEqual([]);
+  });
   it('пересматривает старую стройку на месте потери, если есть другой ресурс', () => {
     const worker = own('worker', 4, 2);
     const spec = {
@@ -138,6 +157,26 @@ describe('задачи и резервы', () => {
     expect(applyOutcome(memory, walk('u1', task), false, 5, 8)).toBe(memory);
   });
 
+  it('координаты задачи не сохраняют метаданные ресурсной клетки', () => {
+    const target = { x: 5, y: 2, type: 'gold' as const };
+    const { memory } = scene({ map: grass(8, 4) });
+    const next = applyOutcome(
+      memory,
+      walk('u1', {
+        kind: 'build',
+        ruleId: 'W05',
+        unitId: 'u1',
+        target,
+        buildingType: 'mine',
+        reserve: BUILDINGS_CONFIG.mine.cost,
+      }),
+      true,
+      5,
+      8,
+    );
+    expect(next.tasks[0].target).toEqual({ x: 5, y: 2 });
+  });
+
   it('пересмотр снимает задачи погибших, просроченные и с занятой площадкой', () => {
     const alive = own('worker', 1, 1);
     const late = own('worker', 2, 1);
@@ -146,6 +185,7 @@ describe('задачи и резервы', () => {
       id: 'ok',
       target: { x: 6, y: 3 },
       reviewTurn: 12,
+      buildingType: 'farm',
     });
     const { ctx } = scene({
       map: grass(8, 4),
@@ -171,7 +211,9 @@ describe('задачи и резервы', () => {
     const { ctx } = scene({
       map: grass(8, 4),
       units: [worker],
-      memory: { tasks: [buildTask(worker.id, { reviewTurn: 12 })] },
+      memory: {
+        tasks: [buildTask(worker.id, { reviewTurn: 12, buildingType: 'farm' })],
+      },
     });
 
     expect(refreshMemory(ctx).memory.tasks).toHaveLength(1);
