@@ -1,9 +1,10 @@
 import type { Owner } from '@shared/config';
 import { EntityPortrait, GoldIcon, PopulationIcon, WoodIcon } from '@shared/ui';
 import type { ActionButton } from '../lib/selectionActions';
+import { ActionIcon } from './ActionIcon';
 import styles from './ActionBar.styles.module.css';
 
-/** Кнопка панели: портрет, название, цена, клавиша и знак недоступности. */
+/** Кнопка панели: портрет или значок, название, цена, клавиша и знак недоступности. */
 export const ActionCard = ({
   button,
   owner,
@@ -34,8 +35,12 @@ export const ActionCard = ({
     title={[button.hint, button.reason].filter(Boolean).join('\n')}
     onClick={onPress}
   >
-    {button.portrait && (
-      <EntityPortrait type={button.portrait} owner={owner} size={20} />
+    {button.portrait ? (
+      <EntityPortrait type={button.portrait} owner={owner} size={34} />
+    ) : (
+      <span className={styles.Icon}>
+        <ActionIcon id={button.id} />
+      </span>
     )}
     <span className={styles.Label}>{button.label}</span>
     {button.cost && (

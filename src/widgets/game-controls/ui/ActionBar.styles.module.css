@@ -13,8 +13,17 @@
   margin-bottom: 16px;
 }
 
+/* Подсказка над панелью не меняет её ширину: панель не прыгает. */
+.Dock {
+  position: relative;
+}
+
 .Prompt {
-  max-width: 520px;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  width: max-content;
+  max-width: min(520px, calc(100vw - 32px));
   margin: 0;
   padding: 8px 12px;
   border: 1px solid rgb(242 199 68 / 0.45);
@@ -46,10 +55,10 @@
   gap: 6px;
   max-width: 100%;
   padding: 6px 8px 6px 4px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--frame);
   border-radius: var(--radius-lg);
-  background-color: rgb(24 29 35 / 0.94);
-  box-shadow: var(--shadow);
+  background: var(--panel-bg);
+  box-shadow: var(--shadow-panel);
 }
 
 .Handle {
@@ -80,16 +89,23 @@
   padding: 3px 2px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background-color: var(--surface);
+  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.05) inset;
   color: var(--text);
   font: inherit;
   cursor: pointer;
   transition:
     border-color 0.12s,
-    background-color 0.12s;
+    background-color 0.12s,
+    transform 0.12s,
+    box-shadow 0.12s;
 }
 
 @media (max-width: 700px) {
+  .Prompt {
+    position: static;
+    width: auto;
+  }
   .Bar {
     width: 100%;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -108,19 +124,45 @@
 }
 
 /* С портретом содержимое занимает всю высоту: сверху полоса под клавишу и «!». */
-.Card[data-portrait='true'] {
+.Card {
   padding-top: 16px;
 }
 
 .Card:hover,
 .Back:hover {
-  border-color: var(--accent);
-  background-color: var(--surface-hover);
+  border-color: var(--frame-strong);
+  background: linear-gradient(180deg, var(--surface-hover), var(--surface));
+}
+
+.Card:not([data-unavailable='true']):hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.06) inset,
+    0 6px 14px rgb(0 0 0 / 0.4);
+}
+
+.Card:not([data-unavailable='true']):active {
+  transform: translateY(0);
+}
+
+/* Значок команды: тот же цвет, что у надписи; в наведении — бронза. */
+.Icon {
+  display: grid;
+  place-items: center;
+  height: 30px;
+  color: var(--text-muted);
+  transition: color 0.12s;
+}
+
+.Card:not([data-unavailable='true']):hover .Icon,
+.Card[aria-pressed='true'] .Icon {
+  color: var(--frame-strong);
 }
 
 .Card[aria-pressed='true'] {
-  border-color: var(--accent);
-  background-color: rgb(111 181 255 / 0.16);
+  border-color: var(--frame-strong);
+  background: rgb(201 164 98 / 0.18);
+  box-shadow: 0 0 12px rgb(201 164 98 / 0.25);
 }
 
 /* Недоступное видно сразу: приглушено, причина — в подсказке. */
@@ -131,7 +173,7 @@
 
 .Card[data-unavailable='true']:hover {
   border-color: var(--border);
-  background-color: var(--surface);
+  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
 }
 
 .Label {

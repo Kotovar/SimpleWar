@@ -2,16 +2,16 @@
 :root {
   color-scheme: dark;
 
-  --bg: #161b20;
-  --surface: #222930;
-  --surface-strong: #2c343d;
-  --surface-hover: #333d47;
-  --surface-sunken: #1b2127;
-  --border: #353f49;
-  --border-strong: #4d5a68;
+  --bg: #12161b;
+  --surface: #1f252c;
+  --surface-strong: #2a323b;
+  --surface-hover: #323c46;
+  --surface-sunken: #171c22;
+  --border: #343c45;
+  --border-strong: #4f5761;
 
-  --text: #e8edf2;
-  --text-muted: #9dabb9;
+  --text: #ece9e2;
+  --text-muted: #a3abb4;
   --text-disabled: #6d7883;
 
   --accent: #6fb5ff;
@@ -30,6 +30,19 @@
   --team-p2: #ff9474;
   --team-p3: #f5d05e;
   --team-p4: #c79bff;
+
+  /* Игровая рамка панелей: бронза по краю, светлая грань сверху. */
+  --frame: rgb(201 164 98 / 0.42);
+  --frame-strong: #c9a462;
+  --panel-bg: linear-gradient(
+    180deg,
+    rgb(39 46 55 / 0.97),
+    rgb(25 30 37 / 0.97)
+  );
+  --shadow-panel:
+    0 1px 0 rgb(255 236 200 / 0.07) inset, 0 0 0 1px rgb(0 0 0 / 0.35),
+    0 8px 24px rgb(0 0 0 / 0.45);
+  --font-display: 'Alegreya SC', Georgia, 'Times New Roman', serif;
 
   --radius-lg: 12px;
   --radius: 8px;
@@ -50,7 +63,9 @@
 
 body {
   margin: 0;
-  background-color: var(--bg);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgb(201 164 98 / 0.07), transparent 60%),
+    var(--bg);
   color: var(--text);
   font-family:
     system-ui,

@@ -11,10 +11,22 @@
   user-select: none;
   touch-action: none;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
+  border: 1px solid var(--frame);
   background:
-    radial-gradient(ellipse at 50% 40%, rgb(70 96 70 / 0.18), transparent 70%),
-    var(--surface-sunken);
+    radial-gradient(ellipse at 50% 45%, rgb(48 60 74 / 0.35), transparent 75%),
+    #0d1115;
+  box-shadow: var(--shadow-panel);
+}
+
+/* Виньетка по краю окна карты: поле уходит в тень, панели читаются. */
+.MapViewport::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 45;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 0 48px rgb(0 0 0 / 0.55);
 }
 
 /* Карта — игровое поле: фокус клавиатуры не обводит её рамкой. */
@@ -66,10 +78,10 @@
   gap: 4px;
   margin: 12px;
   padding: 4px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--frame);
   border-radius: 999px;
-  background-color: rgb(24 29 35 / 0.88);
-  box-shadow: var(--shadow);
+  background: var(--panel-bg);
+  box-shadow: var(--shadow-panel);
 }
 
 .MapControls button {
@@ -149,7 +161,7 @@
   height: 180px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  background-color: var(--surface-sunken);
+  background-color: #0d1115;
   overflow: hidden;
 }
 

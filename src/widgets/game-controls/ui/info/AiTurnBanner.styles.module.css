@@ -1,9 +1,9 @@
 .Overlay {
   grid-area: map;
-  align-self: start;
-  justify-self: center;
   z-index: 60;
-  margin-top: 16px;
+  display: grid;
+  justify-items: center;
+  align-items: start;
   pointer-events: none;
 }
 
@@ -11,6 +11,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-top: 16px;
   padding: 10px 18px;
   border-radius: 999px;
   background-color: rgb(24 29 35 / 0.88);
@@ -26,26 +27,86 @@
   animation: show 1s ease-out;
 }
 
-/* Свой ход: акцентная рамка и звезда вместо спиннера ожидания */
-.Banner[data-kind='human'] {
-  border-color: var(--accent);
+.TurnNumber {
+  display: none;
 }
 
-.Banner[data-kind='human'] .Spinner {
-  border: none;
+/* Свой ход: лента через центр карты с номером хода. */
+.Banner[data-kind='human'] {
+  align-self: center;
+  flex-direction: column;
+  gap: 0;
+  width: min(560px, 90%);
+  margin: 0;
+  padding: 14px 24px 16px;
+  border: 0;
   border-radius: 0;
-  background-color: var(--accent);
-  clip-path: polygon(
-    50% 0,
-    62% 38%,
-    100% 50%,
-    62% 62%,
-    50% 100%,
-    38% 62%,
-    0 50%,
-    38% 38%
+  border-block: 1px solid transparent;
+  border-image: linear-gradient(
+      90deg,
+      transparent,
+      var(--frame-strong) 30%,
+      var(--frame-strong) 70%,
+      transparent
+    )
+    1;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(16 20 26 / 0.9) 22%,
+    rgb(16 20 26 / 0.9) 78%,
+    transparent
   );
-  animation: none;
+  box-shadow: none;
+
+  &.Visible {
+    animation: ribbon 1.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  & .Spinner {
+    display: none;
+  }
+
+  & .TurnNumber {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+  }
+
+  & .Text {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: 0.04em;
+    background: linear-gradient(180deg, #fff3cf 10%, #e7bf6a 60%, #b8873d);
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.6));
+  }
+}
+
+@keyframes ribbon {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.6);
+    letter-spacing: 0.2em;
+  }
+  18% {
+    opacity: 1;
+    transform: none;
+  }
+  78% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
 }
 
 .Live {

@@ -24,6 +24,9 @@ import { MapControls } from './MapControls';
 import { ContextBuildMenu } from './ContextBuildMenu';
 import styles from './styles.module.css';
 
+/** Шаги приближения при старте партии: 32 px × 1.15³ ≈ 49 px на клетку. */
+const START_ZOOM_STEPS = 3;
+
 export const Map = ({ focusOnMount = true }: { focusOnMount?: boolean }) => {
   const [buildMenu, setBuildMenu] = useState<
     (Position & { workerId: string }) | null
@@ -50,13 +53,20 @@ export const Map = ({ focusOnMount = true }: { focusOnMount?: boolean }) => {
 
   useGameHotkeys({ scene, humanId, focusBase });
 
-  // Новая партия начинается с камеры у своей ратуши, как только окно измерено.
+  // Новая партия начинается с камеры у своей ратуши, как только окно
+  // измерено: крупнее обычного масштаба, чтобы база и рабочий читались.
   const focused = useRef(!focusOnMount);
   useEffect(() => {
     if (!isMeasured || focused.current) return;
     focused.current = true;
-    if (phase === 'gameOver') fitWorld();
-    else focusBase();
+    if (phase === 'gameOver') {
+      fitWorld();
+      return;
+    }
+    const { resetZoom, zoomBy } = useSettingsStore.getState();
+    resetZoom();
+    zoomBy(START_ZOOM_STEPS);
+    focusBase();
   }, [fitWorld, focusBase, isMeasured, phase]);
 
   // Выбранный враг ушёл из обзора — выбор снимается до отрисовки панели.

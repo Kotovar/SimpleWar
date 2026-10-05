@@ -5,9 +5,69 @@ import type { ParticipantKnowledge } from '@entities/perceptions';
 const snap = (value: number, ratio: number) =>
   Math.round(value * ratio) / ratio;
 
+/** Сторона плитки облаков, px; плитка покрывает 8 × 8 клеток. */
+const CLOUD_TILE = 256;
+const CLOUD_CELLS = 8;
+
+let cloudTile: HTMLCanvasElement | null | undefined;
+
+/**
+ * Бесшовная плитка облаков неразведанного: непрозрачная основа цвета
+ * тумана и мягкие светлые и тёмные пятна. Пятна у края повторяются со
+ * сдвигом на плитку, поэтому стыков нет. Без Canvas (тесты) — `null`.
+ */
+const getCloudTile = () => {
+  if (cloudTile !== undefined) return cloudTile;
+  const canvas =
+    typeof document === 'undefined' ? null : document.createElement('canvas');
+  const ctx = canvas?.getContext('2d');
+  if (!canvas || !ctx) return (cloudTile = null);
+  canvas.width = canvas.height = CLOUD_TILE;
+  ctx.fillStyle = FOG.unknown;
+  ctx.fillRect(0, 0, CLOUD_TILE, CLOUD_TILE);
+  // Детерминированный разброс: рисунок не меняется между запусками.
+  let seed = 7;
+  const random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+  for (let i = 0; i < 26; i++) {
+    const x = random() * CLOUD_TILE;
+    const y = random() * CLOUD_TILE;
+    const r = 30 + random() * 70;
+    const light = i % 3 !== 0;
+    const color = light ? '120 140 165' : '0 0 0';
+    const alpha = light ? 0.03 + random() * 0.04 : 0.18;
+    for (const dx of [-CLOUD_TILE, 0, CLOUD_TILE]) {
+      for (const dy of [-CLOUD_TILE, 0, CLOUD_TILE]) {
+        const gradient = ctx.createRadialGradient(
+          x + dx,
+          y + dy,
+          0,
+          x + dx,
+          y + dy,
+          r,
+        );
+        gradient.addColorStop(0, `rgb(${color} / ${alpha})`);
+        gradient.addColorStop(1, `rgb(${color} / 0)`);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x + dx - r, y + dy - r, r * 2, r * 2);
+      }
+    }
+  }
+  return (cloudTile = canvas);
+};
+
+/** Заливка неразведанного: облака, привязанные к миру, иначе ровный цвет. */
+const unknownFill = (ctx: CanvasRenderingContext2D, cellSize: number) => {
+  const tile = getCloudTile();
+  const pattern = tile && ctx.createPattern?.(tile, 'repeat');
+  if (!pattern) return FOG.unknown;
+  const scale = (CLOUD_CELLS * cellSize) / CLOUD_TILE;
+  pattern.setTransform?.(new DOMMatrix().scale(scale, scale));
+  return pattern;
+};
+
 /**
  * Рисует туман в диапазоне клеток: видимые прозрачны, разведанные
- * затемнены, неизвестные закрыты сплошь. Два общих контура с округлёнными
+ * затемнены, неизвестные закрыты сплошь облаками. Два общих контура с округлёнными
  * углами и размытием сглаживают ступеньки клеток, не размывая местность
  * и объекты под ними.
  * Запас клеток сохраняет переходы у края окна; у края карты повторяется
@@ -79,7 +139,7 @@ export const renderFogLayer = (
       }
     }
     // Один fill на контур: соседние полосы размываются вместе, без швов.
-    ctx.fillStyle = unknown ? FOG.unknown : FOG.explored;
+    ctx.fillStyle = unknown ? unknownFill(ctx, cellSize) : FOG.explored;
     ctx.fill();
   }
   ctx.restore();

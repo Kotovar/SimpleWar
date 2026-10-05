@@ -16,39 +16,39 @@ export const AiTurnBanner = () => {
   const banner = useRef<HTMLDivElement>(null);
   const live = useRef<HTMLSpanElement>(null);
   const text = useRef<HTMLSpanElement>(null);
+  const turn = useRef<HTMLSpanElement>(null);
 
-  useEffect(
-    () =>
-      useGameLoopStore.subscribe((state, previous) => {
-        const controller = state.participants.find(
-          p => p.id === state.activePlayer,
-        )?.controller;
-        // Каждая смена хода на ИИ, включая переход от одного ИИ к другому,
-        // и возврат хода человеку.
-        if (
-          (controller !== 'ai' && controller !== 'human') ||
-          state.activePlayer === previous.activePlayer
-        ) {
-          return;
-        }
+  useEffect(() => {
+    const show = (state: ReturnType<typeof useGameLoopStore.getState>) => {
+      const controller = state.participants.find(
+        p => p.id === state.activePlayer,
+      )?.controller;
+      const element = banner.current;
+      if (controller !== 'ai' && controller !== 'human') return;
+      if (!element || state.phase !== 'inProgress') return;
+      const kind = controller === 'ai' ? 'ai' : 'human';
+      element.dataset.kind = kind;
+      if (text.current) text.current.textContent = MESSAGE[kind];
+      // Свой ход объявляется крупной лентой с номером хода.
+      if (turn.current) turn.current.textContent = `Ход ${state.currentTurn}`;
 
-        const element = banner.current;
-        if (!element || state.phase !== 'inProgress') return;
-        const kind = controller === 'ai' ? 'ai' : 'human';
-        element.dataset.kind = kind;
-        if (text.current) text.current.textContent = MESSAGE[kind];
+      element.classList.remove(styles.Visible);
+      // Форсируем reflow: иначе повторный ход не перезапустит анимацию.
+      void element.offsetWidth;
+      element.classList.add(styles.Visible);
 
-        element.classList.remove(styles.Visible);
-        // Форсируем reflow: иначе повторный ход не перезапустит анимацию.
-        void element.offsetWidth;
-        element.classList.add(styles.Visible);
-
-        // Скринридер объявляет живую область по смене текста, а не класса,
-        // поэтому текст появляется на время показа и снимается после.
-        if (live.current) live.current.textContent = MESSAGE[kind];
-      }),
-    [],
-  );
+      // Скринридер объявляет живую область по смене текста, а не класса,
+      // поэтому текст появляется на время показа и снимается после.
+      if (live.current) live.current.textContent = MESSAGE[kind];
+    };
+    // Начало или продолжение партии тоже объявляется.
+    show(useGameLoopStore.getState());
+    // Каждая смена хода на ИИ, включая переход от одного ИИ к другому,
+    // и возврат хода человеку.
+    return useGameLoopStore.subscribe((state, previous) => {
+      if (state.activePlayer !== previous.activePlayer) show(state);
+    });
+  }, []);
 
   return (
     <div className={styles.Overlay}>
@@ -61,7 +61,10 @@ export const AiTurnBanner = () => {
         }}
       >
         <span className={styles.Spinner} />
-        <span ref={text}>{MESSAGE.ai}</span>
+        <span ref={turn} className={styles.TurnNumber} />
+        <span ref={text} className={styles.Text}>
+          {MESSAGE.ai}
+        </span>
       </div>
 
       <span ref={live} className={styles.Live} role='status' />

@@ -25,8 +25,9 @@
 }
 
 .Number {
-  font-size: 1.25rem;
+  font-size: 1.3rem;
   font-variant-numeric: tabular-nums;
+  color: var(--frame-strong);
 }
 
 @media (max-width: 1150px) {

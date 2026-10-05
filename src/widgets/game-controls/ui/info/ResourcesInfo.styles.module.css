@@ -19,6 +19,43 @@
   border: 1px solid var(--border);
 }
 
+/* Изменение запаса: всплывает над плашкой и гаснет. */
+.Delta {
+  position: absolute;
+  top: 2px;
+  right: 8px;
+  z-index: 1;
+  font-size: 0.95rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--success-strong);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
+  pointer-events: none;
+  animation: rise 1.4s ease-out forwards;
+}
+
+.Delta[data-sign='minus'] {
+  color: var(--danger-strong);
+}
+
+@keyframes rise {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.8);
+  }
+  15% {
+    opacity: 1;
+    transform: none;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+
 .Stat[data-tone='wood'] {
   --tone: var(--wood);
 }

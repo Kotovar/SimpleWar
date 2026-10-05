@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { Building, BuildingType, Unit } from '@shared/config';
 import { findServingWorker } from '@shared/lib';
 import { useBuildingsSelectors } from '@entities/buildings';
@@ -21,10 +21,46 @@ type StatProps = {
    */
   warning?: { count: number; text: string; title: string };
   tone: 'gold' | 'wood' | 'population';
+  /** Запас числом: его изменение всплывает над плашкой. */
+  amount?: number;
 };
 
-const Stat = ({ icon, label, value, extra, warning, tone }: StatProps) => (
+/**
+ * Всплывающее «+3» / «−40» при изменении запаса. Прежнее значение хранится
+ * в состоянии и сверяется при рендере — без эффекта и лишнего кадра.
+ */
+const Delta = ({ amount }: { amount: number }) => {
+  const [previous, setPrevious] = useState(amount);
+  const [delta, setDelta] = useState<{ id: number; diff: number } | null>(null);
+  if (amount !== previous) {
+    setPrevious(amount);
+    setDelta({ id: (delta?.id ?? 0) + 1, diff: amount - previous });
+  }
+  if (!delta) return null;
+  return (
+    <span
+      key={delta.id}
+      className={styles.Delta}
+      data-sign={delta.diff > 0 ? 'plus' : 'minus'}
+      aria-hidden
+      onAnimationEnd={() => setDelta(null)}
+    >
+      {delta.diff > 0 ? `+${delta.diff}` : `−${-delta.diff}`}
+    </span>
+  );
+};
+
+const Stat = ({
+  icon,
+  label,
+  value,
+  extra,
+  warning,
+  tone,
+  amount,
+}: StatProps) => (
   <div className={styles.Stat} data-tone={tone}>
+    {amount !== undefined && <Delta amount={amount} />}
     <span className={styles.Icon}>{icon}</span>
     <span className={styles.Body}>
       <span className={styles.Label}>{label}</span>
@@ -92,6 +128,7 @@ export const ResourcesInfo = () => {
         icon={<GoldIcon size={18} />}
         label='Золото'
         value={resources[humanId].gold}
+        amount={resources[humanId].gold}
         extra={`+${income.gold}/ход`}
         warning={idleWarning(
           countIdle(ownBuildings, ownUnits, 'mine'),
@@ -103,6 +140,7 @@ export const ResourcesInfo = () => {
         icon={<WoodIcon size={18} />}
         label='Древесина'
         value={resources[humanId].wood}
+        amount={resources[humanId].wood}
         extra={`+${income.wood}/ход`}
         warning={idleWarning(
           countIdle(ownBuildings, ownUnits, 'sawmill'),

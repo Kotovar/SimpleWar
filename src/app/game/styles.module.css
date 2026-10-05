@@ -29,12 +29,67 @@
   position: relative;
   box-sizing: border-box;
   width: min(860px, calc(100% - 24px));
-  margin: 16px auto;
-  padding: clamp(16px, 3vw, 20px);
-  background: var(--surface);
-  border: 1px solid var(--border);
+  margin: clamp(16px, 6vh, 64px) auto 16px;
+  padding: clamp(16px, 3vw, 24px);
+  background: linear-gradient(
+    180deg,
+    rgb(33 39 47 / 0.9),
+    rgb(22 27 33 / 0.92)
+  );
+  border: 1px solid var(--frame);
   border-radius: 16px;
-  box-shadow: var(--shadow-raised);
+  box-shadow:
+    0 1px 0 rgb(255 236 200 / 0.08) inset,
+    0 24px 64px rgb(0 0 0 / 0.6);
+  backdrop-filter: blur(6px);
+  animation: rise 0.5s ease-out;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Фон меню: живая карта под затемнением, медленно плывёт. */
+.Backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+
+  & > canvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    filter: saturate(0.85) brightness(0.62);
+    animation: drift 70s ease-in-out infinite alternate;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        ellipse at 50% 45%,
+        transparent 20%,
+        rgb(10 13 17 / 0.75) 85%
+      ),
+      linear-gradient(180deg, rgb(10 13 17 / 0.35), rgb(10 13 17 / 0.6));
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: scale(1.04) translate(-2%, -1%);
+  }
+  to {
+    transform: scale(1.1) translate(2%, 1.5%);
+  }
 }
 
 @media (min-width: 1000px) {

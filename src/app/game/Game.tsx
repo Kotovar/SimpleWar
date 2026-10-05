@@ -31,6 +31,7 @@ import {
 import { runAITurn } from '@app/game/ai';
 import { initSaveSystem, useSaveStore } from '@app/saves/service';
 import { SaveGames } from '@app/saves/SaveGames';
+import { MenuBackdrop } from './MenuBackdrop';
 import styles from './styles.module.css';
 
 /** Пауза перед ходом в ускоренном режиме тестирования, мс. */
@@ -117,35 +118,38 @@ export const Game = () => {
   }, [activePlayer, activeController, phase, sandbox, paused, fast, gameId]);
 
   return (
-    <main className={showMap ? styles.Main : styles.Setup}>
-      {showMap && (
-        <Map key={`map:${gameId}`} focusOnMount={loadedGameId !== gameId} />
-      )}
-      <GameControls
-        key={`controls:${gameId}`}
-        onStartGame={handleStartGame}
-        onOpenSaves={() => setSavesOpen(true)}
-        minimap={<Minimap />}
-      />
-      <SaveGames
-        key={`saves:${gameId}`}
-        open={savesOpen}
-        onClose={() => setSavesOpen(false)}
-      />
-      <ConfirmDialog
-        isOpen={stalled !== null}
-        title='Противник не завершил ход'
-        message='Ход прервала внутренняя ошибка игры. Можно повторить ход противника; если ошибка повторится — начните новую партию через «Меню».'
-        confirmText='Повторить ход'
-        cancelText='Закрыть'
-        onConfirm={() => {
-          if (stalled) playAi(stalled);
-          setStall(null);
-        }}
-        onCancel={() => setStall(null)}
-      >
-        {debug && stalledDetail && <code>{stalledDetail}</code>}
-      </ConfirmDialog>
-    </main>
+    <>
+      {!showMap && <MenuBackdrop key={`backdrop:${gameId}`} />}
+      <main className={showMap ? styles.Main : styles.Setup}>
+        {showMap && (
+          <Map key={`map:${gameId}`} focusOnMount={loadedGameId !== gameId} />
+        )}
+        <GameControls
+          key={`controls:${gameId}`}
+          onStartGame={handleStartGame}
+          onOpenSaves={() => setSavesOpen(true)}
+          minimap={<Minimap />}
+        />
+        <SaveGames
+          key={`saves:${gameId}`}
+          open={savesOpen}
+          onClose={() => setSavesOpen(false)}
+        />
+        <ConfirmDialog
+          isOpen={stalled !== null}
+          title='Противник не завершил ход'
+          message='Ход прервала внутренняя ошибка игры. Можно повторить ход противника; если ошибка повторится — начните новую партию через «Меню».'
+          confirmText='Повторить ход'
+          cancelText='Закрыть'
+          onConfirm={() => {
+            if (stalled) playAi(stalled);
+            setStall(null);
+          }}
+          onCancel={() => setStall(null)}
+        >
+          {debug && stalledDetail && <code>{stalledDetail}</code>}
+        </ConfirmDialog>
+      </main>
+    </>
   );
 };
