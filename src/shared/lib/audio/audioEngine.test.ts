@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { AudioEngine } from './audioEngine';
-import { SFX_VARIANTS, getSfxFiles, type Sfx } from '@shared/config';
+import {
+  MUSIC_CROSSFADE,
+  SFX_VARIANTS,
+  getSfxFiles,
+  type Sfx,
+} from '@shared/config';
 import { getLoopEnd, getNormalizeGain } from './loadAudio';
 
 const SFX_FILES = (Object.keys(SFX_VARIANTS) as Sfx[]).flatMap(sfx =>
@@ -33,12 +38,23 @@ class FakeContext {
   sampleRate = 8;
   destination = {};
   sources = 0;
+  gains: ReturnType<typeof node>[] = [];
+  buffers: ReturnType<typeof node>[] = [];
   constructor() {
     FakeContext.last = this;
   }
-  createGain = () => node();
+  createGain = () => {
+    const gain = node();
+    this.gains.push(gain);
+    return gain;
+  };
   createOscillator = () => (this.sources++, node());
-  createBufferSource = () => (this.sources++, node());
+  createBufferSource = () => {
+    this.sources++;
+    const source = node();
+    this.buffers.push(source);
+    return source;
+  };
   createBiquadFilter = () => node();
   createBuffer = () => ({ getChannelData: () => new Float32Array(8) });
   resume = vi.fn(async () => {});
@@ -111,6 +127,28 @@ describe('AudioEngine', () => {
     engine.play('attack');
     // Синтез удара — два источника, файл — один.
     expect(context.sources - before).toBe(1);
+  });
+
+  it('темы перекрываются: старая затихает за 5 секунд, новая нарастает', async () => {
+    const { engine, context } = setup(
+      vi.fn(async () => ({
+        ok: true,
+        arrayBuffer: async () => new ArrayBuffer(0),
+      })) as never,
+    );
+    await vi.waitFor(() => expect(context.buffers).toHaveLength(1));
+    const old = context.buffers[0];
+    context.currentTime = 10;
+    engine.setMusicState({ phase: 'inProgress' });
+    await vi.waitFor(() => expect(context.buffers).toHaveLength(2));
+    expect(MUSIC_CROSSFADE).toBe(5);
+    expect(old.stop).toHaveBeenCalledWith(15);
+    expect(context.buffers[1].start).toHaveBeenCalledWith(10);
+    const ramps = context.gains.flatMap(
+      gain => gain.gain.linearRampToValueAtTime.mock.calls,
+    );
+    expect(ramps).toContainEqual([0, 15]);
+    expect(ramps).toContainEqual([1, 15]);
   });
 });
 

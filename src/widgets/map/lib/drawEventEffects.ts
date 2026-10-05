@@ -1,4 +1,39 @@
 import { TEAM_MARKERS, type Owner } from '@shared/config';
+import { drawForest } from '@shared/ui';
+
+/** Заваливает деревья поверх уже расчищенной клетки, разбрасывая щепки. */
+export const drawClearing = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  progress: number,
+  cellSize: number,
+) => {
+  ctx.save();
+  ctx.globalAlpha = Math.max(0, 1 - progress * 1.4);
+  ctx.translate(cellSize * 0.5, cellSize * 0.85);
+  ctx.rotate(progress * 1.1);
+  ctx.scale(1, 1 - progress * 0.5);
+  ctx.translate(-cellSize * 0.5, -cellSize * 0.85);
+  ctx.translate(-x * cellSize, -y * cellSize);
+  drawForest(ctx, x, y, cellSize);
+  ctx.restore();
+
+  ctx.globalAlpha = 1 - progress;
+  for (let i = 0; i < 8; i++) {
+    const angle = (i * Math.PI * 2) / 8;
+    const distance = cellSize * progress * 0.7;
+    ctx.fillStyle = i % 2 ? '#b58a54' : '#76a35a';
+    ctx.fillRect(
+      cellSize * 0.5 + Math.cos(angle) * distance,
+      cellSize * 0.65 +
+        Math.sin(angle) * distance * 0.45 -
+        Math.sin(progress * Math.PI) * cellSize * 0.25,
+      cellSize * 0.07,
+      cellSize * 0.04,
+    );
+  }
+};
 
 /**
  * Рисует появление юнита или здания под моделью и поверх неё.

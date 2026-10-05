@@ -4,6 +4,7 @@ import {
   DAMAGE_TYPE,
   DEATH_SFX,
   type Building,
+  type CommandMeta,
   type Owner,
   type Sfx,
   type Unit,
@@ -11,6 +12,19 @@ import {
 import { isHostile } from '@shared/lib';
 import type { SceneEvent } from './diffScene';
 import type { Effect } from './drawEffects';
+
+/** Расчистка озвучивается только после успеха и в видимой клетке. */
+export const getCommandEffect = (
+  command: CommandMeta,
+  isVisible: (x: number, y: number) => boolean,
+  start: number,
+): Effect | null => {
+  if (command.type !== 'clearForest') return null;
+  const { x, y } = command.details ?? {};
+  if (typeof x !== 'number' || typeof y !== 'number' || !isVisible(x, y))
+    return null;
+  return { x, y, clearing: true, start };
+};
 
 /**
  * Звук видимого изменения сцены.

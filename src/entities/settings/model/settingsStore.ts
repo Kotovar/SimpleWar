@@ -46,8 +46,8 @@ type SettingsState = {
   setViewport: (width: number, height: number) => void;
   /** Сдвигает камеру на экранное расстояние в CSS-пикселях. */
   panBy: (dx: number, dy: number) => void;
-  /** Ставит точку мира в клетках в центр окна. */
-  centerOn: (x: number, y: number) => void;
+  /** Ставит точку мира в центр окна; `smooth` — плавно, если разрешено движение. */
+  centerOn: (x: number, y: number, smooth?: boolean) => void;
   /** Масштаб, при котором весь мир виден целиком. */
   fitWorld: () => void;
   resetStore: () => void;
@@ -97,8 +97,10 @@ const DEFAULTS = {
   aiSetup: DEFAULT_AI_SETUP,
 };
 
+let cameraFrame = 0;
+
 export const useSettingsStore = create<SettingsState>()(
-  withDevtools('settings', set => ({
+  withDevtools('settings', (set, get) => ({
     ...DEFAULTS,
 
     setMapGenerationMode: mode =>
@@ -140,10 +142,53 @@ export const useSettingsStore = create<SettingsState>()(
         });
       }),
 
-    centerOn: (x, y) =>
-      set(state => {
-        settle(state, centerCameraOn({ x, y }, state.cellSize, state.viewport));
-      }),
+    centerOn: (x, y, smooth = false) => {
+      if (cameraFrame) cancelAnimationFrame(cameraFrame);
+      cameraFrame = 0;
+      const state = get();
+      const { camera: from, cellSize, viewport } = state;
+      const target = clampCamera(
+        centerCameraOn({ x, y }, cellSize, viewport),
+        cellSize,
+        viewport,
+        { columns: state.gridColumns, rows: state.gridRows },
+        CAMERA_EDGE_MARGIN,
+      );
+      if (
+        !smooth ||
+        typeof requestAnimationFrame === 'undefined' ||
+        globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+      ) {
+        set(state => {
+          state.camera = target;
+        });
+        return;
+      }
+      const start = performance.now();
+      let expected = from;
+      const tick = (time: number) => {
+        cameraFrame = 0;
+        // Ввод, смена масштаба, размера окна или сброс имеют приоритет.
+        const current = get();
+        if (
+          current.camera !== expected ||
+          current.cellSize !== cellSize ||
+          current.viewport !== viewport
+        )
+          return;
+        const progress = Math.min(1, (time - start) / 420);
+        const ease = 1 - (1 - progress) ** 3;
+        set(state => {
+          state.camera = {
+            x: from.x + (target.x - from.x) * ease,
+            y: from.y + (target.y - from.y) * ease,
+          };
+        });
+        expected = get().camera;
+        if (progress < 1) cameraFrame = requestAnimationFrame(tick);
+      };
+      cameraFrame = requestAnimationFrame(tick);
+    },
 
     fitWorld: () =>
       set(state => {

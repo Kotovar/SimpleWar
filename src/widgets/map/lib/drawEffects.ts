@@ -1,6 +1,11 @@
 import type { Owner } from '@shared/config';
 import { DETAIL_LEVEL } from '@shared/config';
-import { drawConstruction, drawSignal, drawSpawn } from './drawEventEffects';
+import {
+  drawClearing,
+  drawConstruction,
+  drawSignal,
+  drawSpawn,
+} from './drawEventEffects';
 
 /** Мгновенный эффект над клеткой: попадание, число урона, гибель или появление. */
 export type Effect = {
@@ -15,6 +20,8 @@ export type Effect = {
   spawn?: Owner;
   /** Новое здание: вместо искр найма — пыль и молотки стройки. */
   building?: boolean;
+  /** Падающие деревья и щепки после расчистки леса. */
+  clearing?: boolean;
   /** Сигнал над клеткой: замеченная угроза или отказ приказа. */
   signal?: 'threat' | 'reject';
   start: number;
@@ -42,7 +49,17 @@ export const drawEffect = (
   cellSize: number,
   layer: EffectLayer = 'over',
 ) => {
-  const { x, y, damage, healing, lethal, spawn, building, signal } = effect;
+  const { x, y, damage, healing, lethal, spawn, building, clearing, signal } =
+    effect;
+
+  if (clearing) {
+    if (layer === 'under') return;
+    ctx.save();
+    ctx.translate(x * cellSize, y * cellSize);
+    drawClearing(ctx, x, y, progress, cellSize);
+    ctx.restore();
+    return;
+  }
 
   if (spawn || (signal && layer === 'over')) {
     ctx.save();

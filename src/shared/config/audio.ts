@@ -17,6 +17,7 @@ export type Sfx =
   | 'strikePrepare'
   | 'strike'
   | 'build'
+  | 'clearForest'
   | 'spawn'
   /** Разрушение здания. */
   | 'destroy'
@@ -132,6 +133,25 @@ export const SFX_TONES: Record<Sfx, SfxTone[]> = {
       delay: 0.08,
     },
   ],
+  clearForest: [
+    { wave: 'noise', from: 700, to: 700, duration: 0.09, gain: 0.3 },
+    {
+      wave: 'noise',
+      from: 500,
+      to: 500,
+      duration: 0.12,
+      gain: 0.3,
+      delay: 0.18,
+    },
+    {
+      wave: 'noise',
+      from: 250,
+      to: 250,
+      duration: 0.3,
+      gain: 0.25,
+      delay: 0.36,
+    },
+  ],
   shot: [
     { wave: 'triangle', from: 900, to: 300, duration: 0.08, gain: 0.2 },
     {
@@ -233,6 +253,7 @@ export const SFX_VARIANTS: Partial<Record<Sfx, number>> = {
   strikePrepare: 1,
   strike: 2,
   build: 3,
+  clearForest: 3,
   spawn: 1,
   destroy: 3,
   turnStart: 1,
@@ -301,7 +322,7 @@ export const SFX_REPEAT_LIMIT: Record<Sfx, { max: number; windowMs: number }> =
   };
 
 /** Плавная смена музыкальной темы, с. */
-export const MUSIC_CROSSFADE = 2;
+export const MUSIC_CROSSFADE = 5;
 
 /**
  * Сторона-угроза ближе этого числа клеток к своим объектам включает музыку

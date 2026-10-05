@@ -14,6 +14,16 @@
   `src/shared/config/audio.ts`; тест `audio.test.ts` сверяет его с папкой.
 - Новая вариация: положить файл со следующим номером и увеличить число в
   `SFX_VARIANTS`.
+- Расчистка леса: `public/audio/sfx/clearForest1.mp3` … `clearForest3.mp3`.
+  При каждом событии выбирается случайный вариант; до загрузки звучит синтез.
+  Для генерации — короткий эффект около 0,7 с без зацикливания.
+  Промпт: `Short isolated medieval strategy game sound effect: two quick axe
+chops into wood, followed by a small tree cracking and falling with a soft
+leafy rustle. Dry close-up foley, compact and gentle, 0.7 seconds total,
+immediate start, short natural decay. No voices, no music, no ambience,
+no reverb, no loop.`
+- Музыкальные темы перекрываются плавным затиханием и нарастанием по 5 с;
+  старая тема звучит до загрузки новой.
 - Громкость файлов выравнивается при загрузке, сами файлы не меняются:
   звучащая часть (без тишины) приводится к `SFX_LOUDNESS_DB` (−20 дБ RMS),
   интерфейс и частые звуки тише — `SFX_LOUDNESS_OVERRIDE`. Пик не выходит

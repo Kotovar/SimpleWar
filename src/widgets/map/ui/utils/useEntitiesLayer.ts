@@ -12,6 +12,7 @@ import {
   drawEffect,
   EFFECT_DURATION,
   getEventEffect,
+  getCommandEffect,
   getEventSfx,
   isInCombat,
   renderEntitiesLayer,
@@ -132,6 +133,18 @@ export const useEntitiesLayer = ({
   useEffect(
     () =>
       gameEvents.subscribe(event => {
+        if (event.type === 'COMMAND_SUCCEEDED') {
+          const effect = getCommandEffect(
+            event.command,
+            isVisible,
+            performance.now(),
+          );
+          if (effect) {
+            effects.current.push({ ...effect, ai: aiTurn });
+            audio.play('clearForest');
+            redraw.current();
+          }
+        }
         const entity =
           event.type === 'UNIT_DESTROYED'
             ? event.unit
@@ -140,7 +153,7 @@ export const useEntitiesLayer = ({
               : null;
         if (entity) deaths.current.set(entity.id, { x: entity.x, y: entity.y });
       }),
-    [],
+    [aiTurn, isVisible],
   );
 
   const { buildings, units, snapshots, staffed } = scene;

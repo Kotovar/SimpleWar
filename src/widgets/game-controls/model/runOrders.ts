@@ -33,6 +33,6 @@ export const runOrders = (
   clearInteraction();
   useSelectionStore.getState().selectUnit(unit.id);
   useMovementStore.getState().calculateActionHighlights(unit.id);
-  useSettingsStore.getState().centerOn(unit.x + 0.5, unit.y + 0.5);
+  useSettingsStore.getState().centerOn(unit.x + 0.5, unit.y + 0.5, true);
   return true;
 };

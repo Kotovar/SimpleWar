@@ -1,4 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vite-plus/test';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vite-plus/test';
 import {
   CELL_SIZE,
   CELL_SIZE_LIMITS,
@@ -154,5 +161,57 @@ describe('камера', () => {
     store().resetStore();
     expect(store().viewport).toEqual({ width: 320, height: 160 });
     expect(store().camera).toEqual({ x: 0, y: 0 });
+  });
+});
+
+describe('плавное центрирование камеры', () => {
+  const store = () => useSettingsStore.getState();
+  let tick: FrameRequestCallback;
+  let time: number;
+
+  beforeEach(() => {
+    store().resetStore();
+    store().setGridSize(100, 60);
+    store().setViewport(320, 160);
+    time = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => time);
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      tick = callback;
+      return 1;
+    });
+    vi.stubGlobal('cancelAnimationFrame', vi.fn());
+    vi.stubGlobal('matchMedia', () => ({ matches: false }));
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('не прыгает сразу, проходит промежуточную позицию и достигает цели', () => {
+    store().centerOn(50, 30, true);
+    expect(store().camera).toEqual({ x: 0, y: 0 });
+    time = 100;
+    tick(time);
+    expect(store().camera.x).toBeGreaterThan(0);
+    expect(store().camera.x).toBeLessThan(45);
+    time = 1000;
+    tick(time);
+    expect(store().camera).toEqual({ x: 45, y: 27.5 });
+  });
+
+  it('ручное движение прерывает переход', () => {
+    store().centerOn(50, 30, true);
+    store().panBy(32, 32);
+    const manual = store().camera;
+    time = 100;
+    tick(time);
+    expect(store().camera).toEqual(manual);
+  });
+
+  it('при reduced motion центрирует сразу', () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
+    store().centerOn(50, 30, true);
+    expect(store().camera).toEqual({ x: 45, y: 27.5 });
   });
 });
