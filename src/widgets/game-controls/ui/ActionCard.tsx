@@ -31,42 +31,54 @@ export const ActionCard = ({
     aria-pressed={button.pressed ?? false}
     aria-disabled={!!button.reason}
     data-unavailable={!!button.reason}
+    data-done={!!button.done}
     data-portrait={!!button.portrait}
     title={[button.hint, button.reason].filter(Boolean).join('\n')}
     onClick={onPress}
   >
     {button.portrait ? (
-      <EntityPortrait type={button.portrait} owner={owner} size={34} />
+      <EntityPortrait type={button.portrait} owner={owner} size={30} />
     ) : (
       <span className={styles.Icon}>
-        <ActionIcon id={button.id} />
+        <ActionIcon id={button.id} size={24} />
       </span>
     )}
-    <span className={styles.Label}>{button.label}</span>
-    {button.cost && (
-      <span className={styles.Cost}>
-        {button.cost.gold > 0 && (
-          <span>
-            <GoldIcon size={9} /> {button.cost.gold}
-          </span>
-        )}
-        {button.cost.wood > 0 && (
-          <span>
-            <WoodIcon size={9} /> {button.cost.wood}
-          </span>
-        )}
-        {!!button.cost.population && (
-          <span>
-            <PopulationIcon size={9} /> {button.cost.population}
-          </span>
-        )}
-      </span>
+    <span className={styles.Label}>{button.short ?? button.label}</span>
+    {button.note ? (
+      <span className={styles.Note}>{button.note}</span>
+    ) : (
+      button.cost && (
+        <span className={styles.Cost}>
+          {button.cost.gold > 0 && (
+            <span>
+              <GoldIcon size={9} /> {button.cost.gold}
+            </span>
+          )}
+          {button.cost.wood > 0 && (
+            <span>
+              <WoodIcon size={9} /> {button.cost.wood}
+            </span>
+          )}
+          {!!button.cost.population && (
+            <span>
+              <PopulationIcon size={9} /> {button.cost.population}
+            </span>
+          )}
+        </span>
+      )
     )}
     {keyLabel && <kbd className={styles.Key}>{keyLabel}</kbd>}
-    {button.reason && (
-      <span className={styles.Reason} aria-hidden>
-        !
+    {button.done ? (
+      <span className={styles.Done} aria-hidden>
+        ✓
       </span>
+    ) : (
+      button.reason &&
+      !button.pressed && (
+        <span className={styles.Reason} aria-hidden>
+          !
+        </span>
+      )
     )}
   </button>
 );

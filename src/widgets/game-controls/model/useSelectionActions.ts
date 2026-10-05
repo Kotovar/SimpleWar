@@ -96,6 +96,9 @@ export const useSelectionActions = () => {
   const researching = useResearchStore(
     state => state.current[owner]?.type ?? null,
   );
+  const researchTurnsLeft = useResearchStore(
+    state => state.current[owner]?.turnsLeft,
+  );
   const freeBuild = useDebugException(owner, 'freeBuild');
   const freeSpawn = useDebugException(owner, 'freeSpawn');
   const { highlight, modeBuilding, modeUnit, mapMode, rally } = useMapMode(
@@ -115,6 +118,7 @@ export const useSelectionActions = () => {
     population,
     researched,
     researching,
+    researchTurnsLeft,
     // Рабочий внутри здания работает и с самим зданием.
     nearby: unit
       ? own.filter(

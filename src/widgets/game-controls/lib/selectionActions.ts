@@ -10,7 +10,7 @@ import {
   type Unit,
   type UnitType,
 } from '@shared/config';
-import { canSpawnUnit } from '@shared/lib';
+import { canSpawnUnit, pluralRu } from '@shared/lib';
 import {
   action,
   slot,
@@ -85,14 +85,20 @@ const spawnSlots = (
         };
       });
 
+const turnsNote = (turns: number) =>
+  `${turns} ${pluralRu(turns, ['ход', 'хода', 'ходов'])}`;
+
 const researchSlots = ({
   researched,
   researching,
+  researchTurnsLeft,
   stock,
 }: SelectionActionInput): ActionButton[] =>
   RESEARCH_TYPES.map((type, index) => {
-    const { name, effect, cost } = RESEARCH_CONFIG[type];
-    const reason = researched.includes(type)
+    const { name, effect, cost, turns } = RESEARCH_CONFIG[type];
+    const done = researched.includes(type);
+    const active = researching === type;
+    const reason = done
       ? REJECTION_MESSAGE.researched
       : researching
         ? REJECTION_MESSAGE.researching
@@ -103,10 +109,16 @@ const researchSlots = ({
       id: `research:${type}`,
       label: name,
       code: slot(index),
-      hint: effect,
+      hint: `${effect}. Срок: ${turnsNote(turns)}`,
       reason,
-      pressed: researching === type,
+      pressed: active,
       cost,
+      done,
+      note: done
+        ? 'Изучено'
+        : active && researchTurnsLeft
+          ? `ещё ${turnsNote(researchTurnsLeft)}`
+          : undefined,
     };
   });
 
@@ -117,7 +129,8 @@ const buildingActions = (
   const buttons = [...spawnSlots(building, input)];
   if (building.type === 'forge') {
     buttons.push(...researchSlots(input));
-    if (input.researching) buttons.push(action('cancelResearch'));
+    if (input.researching)
+      buttons.push(action('cancelResearch', { short: 'Отменить' }));
   }
   if (building.role === 'resource') {
     const reason = input.workerInside ? undefined : 'Внутри нет рабочего';

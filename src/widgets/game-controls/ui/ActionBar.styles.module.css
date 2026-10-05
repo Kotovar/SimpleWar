@@ -125,7 +125,7 @@
 
 /* С портретом содержимое занимает всю высоту: сверху полоса под клавишу и «!». */
 .Card {
-  padding-top: 16px;
+  padding-top: 14px;
 }
 
 .Card:hover,
@@ -149,7 +149,7 @@
 .Icon {
   display: grid;
   place-items: center;
-  height: 30px;
+  height: 24px;
   color: var(--text-muted);
   transition: color 0.12s;
 }
@@ -183,9 +183,42 @@
   -webkit-line-clamp: 2;
   font-size: 0.75rem;
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.15;
   text-align: center;
   hyphens: auto;
+}
+
+/* Строка состояния вместо цены: «Изучено», «ещё 2 хода». */
+.Note {
+  color: var(--research);
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Идущее исследование не приглушено: это включённый режим, а не запрет. */
+.Card[aria-pressed='true'][data-unavailable='true'] {
+  opacity: 1;
+}
+
+/* Изученное: не приглушено как недоступное, отмечено галочкой. */
+.Card[data-done='true'] {
+  opacity: 1;
+  border-color: rgb(185 164 242 / 0.45);
+  background: linear-gradient(180deg, rgb(185 164 242 / 0.14), var(--surface));
+
+  & .Icon {
+    color: var(--research);
+  }
+}
+
+.Done {
+  position: absolute;
+  top: 2px;
+  right: 5px;
+  color: var(--research);
+  font-size: 0.8rem;
+  font-weight: 800;
 }
 
 /* Цена с пиктограммами; на узких карточках значения переносятся. */

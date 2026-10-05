@@ -1,5 +1,6 @@
 import { version as GAME_VERSION } from '../../../package.json';
 import {
+  DEBUG_AVAILABLE,
   DEFAULT_AI_SETUP,
   MAP_GENERATOR_VERSION,
   type ParticipantId,
@@ -148,7 +149,10 @@ export const applySnapshot = (input: GameSnapshot) => {
     });
     useMapStore.setState(snapshot.map);
     useSettingsStore.setState({ ...snapshot.rules, ...snapshot.view });
-    useDebugStore.setState(snapshot.debug);
+    useDebugStore.setState({
+      ...snapshot.debug,
+      enabled: snapshot.debug.enabled && DEBUG_AVAILABLE,
+    });
     useUnitsStore.setState({
       units: snapshot.units,
       selectedUnitForSpawn: null,

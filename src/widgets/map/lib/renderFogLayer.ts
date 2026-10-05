@@ -5,9 +5,9 @@ import type { ParticipantKnowledge } from '@entities/perceptions';
 const snap = (value: number, ratio: number) =>
   Math.round(value * ratio) / ratio;
 
-/** Сторона плитки облаков, px; плитка покрывает 8 × 8 клеток. */
-const CLOUD_TILE = 256;
-const CLOUD_CELLS = 8;
+/** Сторона плитки облаков, px; плитка покрывает 13 × 13 клеток. */
+const CLOUD_TILE = 384;
+const CLOUD_CELLS = 13;
 
 let cloudTile: HTMLCanvasElement | null | undefined;
 
@@ -28,10 +28,10 @@ const getCloudTile = () => {
   // Детерминированный разброс: рисунок не меняется между запусками.
   let seed = 7;
   const random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
-  for (let i = 0; i < 26; i++) {
+  for (let i = 0; i < 60; i++) {
     const x = random() * CLOUD_TILE;
     const y = random() * CLOUD_TILE;
-    const r = 30 + random() * 70;
+    const r = 20 + random() ** 2 * 110;
     const light = i % 3 !== 0;
     const color = light ? '120 140 165' : '0 0 0';
     const alpha = light ? 0.03 + random() * 0.04 : 0.18;

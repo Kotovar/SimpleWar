@@ -10,12 +10,11 @@
   overscroll-behavior: contain;
   user-select: none;
   touch-action: none;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--frame);
-  background:
-    radial-gradient(ellipse at 50% 45%, rgb(48 60 74 / 0.35), transparent 75%),
-    #0d1115;
-  box-shadow: var(--shadow-panel);
+  border-radius: 16px;
+  border: 1px solid rgb(201 164 98 / 0.18);
+  /* Цвет за краем мира повторяет OUTSIDE в lib/drawWorldEdge. */
+  background: #0b0e12;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.45);
 }
 
 /* Виньетка по краю окна карты: поле уходит в тень, панели читаются. */
@@ -26,7 +25,7 @@
   z-index: 45;
   pointer-events: none;
   border-radius: inherit;
-  box-shadow: inset 0 0 48px rgb(0 0 0 / 0.55);
+  box-shadow: inset 0 0 64px 8px rgb(0 0 0 / 0.5);
 }
 
 /* Карта — игровое поле: фокус клавиатуры не обводит её рамкой. */

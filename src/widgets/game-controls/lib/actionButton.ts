@@ -27,6 +27,12 @@ export type ActionButton = {
   /** Режим кнопки включён: выбрано здание, прицел, расчистка. */
   pressed?: boolean;
   cost?: Cost & { population?: number };
+  /** Короткая подпись на карточке, если `label` не помещается. */
+  short?: string;
+  /** Строка вместо цены: «Изучено», «ещё 2 хода». */
+  note?: string;
+  /** Уже получено (изученное исследование): отметка вместо «!». */
+  done?: boolean;
   /** Портрет объекта для слотов стройки и найма. */
   portrait?: UnitType | BuildingType;
   /** Подменю: кнопка открывает слоты `1`…`0`. */
@@ -49,6 +55,8 @@ export type SelectionActionInput = {
   population: PopulationCap;
   researched: readonly ResearchType[];
   researching: ResearchType | null;
+  /** Сколько своих ходов осталось текущему исследованию. */
+  researchTurnsLeft?: number;
   /** Свои здания рядом с юнитом или под ним. */
   nearby: readonly Building[];
   /** Рабочие места, занятые другими рабочими. */

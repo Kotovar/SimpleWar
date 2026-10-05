@@ -116,6 +116,28 @@ describe('getSelectionActions', () => {
     expect(buttons.some(({ id }) => id === 'cancelResearch')).toBe(true);
   });
 
+  it('кузница: изученное отмечено, у текущего — остаток ходов', () => {
+    const buttons = Object.fromEntries(
+      getSelectionActions(
+        input({
+          building: building('forge'),
+          researched: ['formation'],
+          researching: 'cartography',
+          researchTurnsLeft: 2,
+        }),
+      ).map(button => [button.id, button]),
+    );
+    expect(buttons['research:formation']).toMatchObject({
+      done: true,
+      note: 'Изучено',
+    });
+    expect(buttons['research:cartography']).toMatchObject({
+      pressed: true,
+      note: 'ещё 2 хода',
+    });
+    expect(buttons['research:artel'].note).toBeUndefined();
+  });
+
   it('рудник: без рабочего внутри выбор и снятие недоступны', () => {
     const { pickWorker, unassign } = byId(
       getSelectionActions(input({ building: building('mine') })),

@@ -70,10 +70,11 @@ export const PhaseInProgress = ({ minimap, onOpenSaves }: Props) => {
   const { resetStore: clearMovement } = useMovementStore();
   const { resetStore: clearHighlight } = useHighlightStore();
   const { humanId } = useGameLoopSelectors();
-  const hasOrders = useUnitsStore(state =>
-    Object.values(state.units).some(
-      unit => unit.owner === humanId && unit.order && !unit.order.stopped,
-    ),
+  const ordersCount = useUnitsStore(
+    state =>
+      Object.values(state.units).filter(
+        unit => unit.owner === humanId && unit.order && !unit.order.stopped,
+      ).length,
   );
 
   const clearInteraction = () => {
@@ -163,9 +164,8 @@ export const PhaseInProgress = ({ minimap, onOpenSaves }: Props) => {
         <TurnControls
           onOpenSaves={onOpenSaves}
           onNextTurn={onNextTurn}
-          onRunOrders={
-            hasOrders ? () => runOrders(humanId, clearInteraction) : undefined
-          }
+          ordersCount={ordersCount}
+          onRunOrders={() => runOrders(humanId, clearInteraction)}
           onReset={() => setShowResetConfirm(true)}
           onSurrender={humanId ? () => setShowSurrender(true) : undefined}
         />

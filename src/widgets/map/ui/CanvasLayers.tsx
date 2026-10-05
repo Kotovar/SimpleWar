@@ -8,6 +8,7 @@ import { useGameLoopStore } from '@entities/games';
 import { useSelectionStore } from '@features/selection';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import {
+  drawWorldEdge,
   renderFogLayer,
   renderMovementLayer,
   renderSelectionLayer,
@@ -135,8 +136,9 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
 
     withClear(ctx, () => {
       if (fog) renderFogLayer(ctx, fog, cellSize, range);
+      drawWorldEdge(ctx, mapSize.columns, mapSize.rows, cellSize);
     });
-  }, [fog, view]);
+  }, [fog, mapSize, view]);
 
   useEffect(() => {
     const { cellSize, viewport, offset } = view;

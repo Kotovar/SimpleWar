@@ -46,155 +46,11 @@
   }
 }
 
-.DangerButton {
-  background-color: var(--danger);
-  color: var(--text);
-  border: none;
-  border-radius: var(--radius);
-  padding: 8px 16px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: var(--danger-strong);
-  }
-}
-
-.Menu {
-  position: relative;
-}
-
-.MenuHeading {
-  margin: 6px 0 0;
-  padding: 12px 10px 4px;
-  border-top: 1px solid var(--border);
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
-.Playback {
-  display: grid;
-  gap: 4px;
-  padding: 8px 10px;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-/* Свой маркер: стандартный треугольник details не вписывается в панель. */
-.Menu summary {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background-color: var(--surface-sunken);
-  color: var(--text-muted);
-  cursor: pointer;
-  list-style: none;
-  user-select: none;
-  transition:
-    background-color 0.15s,
-    border-color 0.15s,
-    color 0.15s;
-}
-
-.Menu summary::-webkit-details-marker {
-  display: none;
-}
-
-.Menu summary::after {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: translateY(-2px) rotate(45deg);
-  transition: transform 0.15s;
-}
-
-.Menu summary:hover {
-  background-color: var(--surface-strong);
-  border-color: var(--border-strong);
-  color: var(--text);
-}
-
-.Menu[open] summary {
-  background-color: var(--surface-strong);
-  border-color: var(--border-strong);
-  color: var(--text);
-}
-
-.Menu[open] summary::after {
-  transform: translateY(1px) rotate(-135deg);
-}
-
-.Dropdown {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 6px);
-  z-index: 100;
-  width: 300px;
-  max-width: calc(100vw - 32px);
-  max-height: calc(100dvh - 110px);
-  overflow-y: auto;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background-color: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-
-.Dropdown .DangerButton {
-  width: 100%;
-  text-align: left;
-  white-space: nowrap;
-  background-color: transparent;
-  color: var(--danger-strong);
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
-
-  &:hover {
-    background-color: var(--danger);
-    color: #20130f;
-  }
-}
-
-.Dropdown .MenuButton {
-  width: 100%;
-  text-align: left;
-  white-space: nowrap;
-  background-color: transparent;
-  color: var(--text);
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: var(--surface-strong);
-  }
-}
-
-/* Ссылка на гайдбук выглядит как пункт меню. */
-.Dropdown a.MenuButton {
-  display: block;
-  box-sizing: border-box;
-  text-decoration: none;
-}
-
-/* Флажок настроек партии в меню: в ряд с пунктами, тот же отступ. */
-.MenuCheck {
-  padding: 8px 10px;
-  font-size: 0.9rem;
-}
-
 /* Вторичная кнопка рядом с концом хода — в стиле кнопки «Меню». */
 .OrdersButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   padding: 8px 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -214,6 +70,37 @@
   }
 }
 
+/* Полная подпись — на широком экране, иначе короткая: шапка не сжимается. */
+.Long {
+  display: none;
+}
+
+@media (min-width: 1600px) {
+  .Long {
+    display: inline;
+  }
+  .Short {
+    display: none;
+  }
+}
+
+.Play {
+  color: var(--success-strong);
+  font-size: 0.7rem;
+}
+
+/* Число юнитов с приказом. */
+.Count {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background-color: rgb(201 164 98 / 0.22);
+  color: var(--frame-strong);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 @media (max-width: 700px) {
   .ButtonRow {
     justify-content: flex-start;
@@ -225,8 +112,7 @@
     padding: 10px 8px;
     font-size: 0.875rem;
   }
-  .OrdersButton,
-  .Menu summary {
+  .OrdersButton {
     padding: 10px 8px;
     font-size: 0.875rem;
   }
@@ -235,13 +121,5 @@
   }
   .ButtonRow > button[aria-label='Справка по клавишам'] {
     width: 32px;
-  }
-  .Dropdown {
-    position: fixed;
-    inset: auto 16px 16px;
-    width: auto;
-    max-width: none;
-    max-height: calc(100dvh - 230px);
-    border-radius: var(--radius-lg);
   }
 }

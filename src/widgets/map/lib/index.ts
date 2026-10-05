@@ -17,6 +17,7 @@ export * from './withClear';
 export * from './buildScene';
 export * from './cellRange';
 export * from './renderFogLayer';
+export * from './drawWorldEdge';
 export * from './renderSnapshots';
 export * from './renderMinimap';
 export * from './diffScene';

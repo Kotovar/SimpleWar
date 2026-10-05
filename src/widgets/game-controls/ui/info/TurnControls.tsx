@@ -1,19 +1,15 @@
-import { useEffect, useRef } from 'react';
-import { GUIDEBOOK_URL, type AiPlayback } from '@shared/config';
-import { Checkbox, Select } from '@shared/ui';
 import { useGameLoopSelectors } from '@features/game-loop';
-import { useDebugStore, usePreferencesStore } from '@entities/settings';
-import { useGuidanceStore } from '../../model/guidanceStore';
-import { useConfirmEndTurn } from '../../model/confirmEndTurn';
-import { AudioSettings } from './AudioSettings';
 import { KeyboardHelp } from '../KeyboardHelp';
+import { GameMenu } from './GameMenu';
 import styles from './TurnControls.styles.module.css';
 
 type Props = {
   onOpenSaves?: () => void;
   onNextTurn: () => void;
-  /** Исполнить приказы «Идти в точку»; нет — активных приказов нет. */
+  /** Исполнить отложенные приказы: идти в точку, строить, работать. */
   onRunOrders?: () => void;
+  /** Сколько своих юнитов с активным приказом; без них кнопки нет. */
+  ordersCount?: number;
   onReset: () => void;
   /** Сдача; нет — участника за экраном нет, кнопка скрыта. */
   onSurrender?: () => void;
@@ -22,63 +18,38 @@ type Props = {
 export const TurnControls = ({
   onNextTurn,
   onRunOrders,
+  ordersCount = 0,
   onReset,
   onSurrender,
   onOpenSaves,
 }: Props) => {
   const { activePlayer, humanId } = useGameLoopSelectors();
   const isOwnTurn = activePlayer === humanId;
-  const isDebug = useDebugStore(state => state.enabled);
-  const setDebug = useDebugStore(state => state.setEnabled);
-  const menu = useRef<HTMLDetailsElement>(null);
-  const [confirmEndTurn, setConfirmEndTurn] = useConfirmEndTurn();
-  const preferences = usePreferencesStore();
-  const restartTutorial = useGuidanceStore(state => state.restartTutorial);
-
-  useEffect(() => {
-    const close = (event: Event) => {
-      const element = menu.current;
-      if (!element?.open) return;
-      if (event.type === 'pointerdown' && event.target instanceof Node) {
-        if (element.contains(event.target)) return;
-      }
-      element.open = false;
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || !menu.current?.open) return;
-      // Esc закрыл меню — карта не должна заодно снимать выбор.
-      event.preventDefault();
-      close(event);
-    };
-
-    document.addEventListener('pointerdown', close);
-    document.addEventListener('keydown', onKeyDown);
-
-    return () => {
-      document.removeEventListener('pointerdown', close);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, []);
 
   return (
     <div className={styles.ButtonRow}>
       {humanId && (
         <>
-          <button
-            className={styles.OrdersButton}
-            aria-label='Выполнить приказы'
-            title={
-              !isOwnTurn
-                ? 'Доступно в свой ход'
-                : onRunOrders
-                  ? 'Юниты с приказом «Идти в точку» пойдут на оставшиеся очки'
-                  : 'Нет активных приказов'
-            }
-            onClick={onRunOrders}
-            disabled={!isOwnTurn || !onRunOrders}
-          >
-            Приказы
-          </button>
+          {onRunOrders && ordersCount > 0 && (
+            <button
+              className={styles.OrdersButton}
+              aria-label='Выполнить приказы'
+              title={
+                isOwnTurn
+                  ? `Юниты с отложенным приказом (идти в точку, строить, работать) продолжат его сейчас на оставшиеся очки. При «Завершить ход» это происходит само. Юнитов с приказом: ${ordersCount}`
+                  : 'Доступно в свой ход'
+              }
+              onClick={onRunOrders}
+              disabled={!isOwnTurn}
+            >
+              <span className={styles.Play} aria-hidden>
+                ▶
+              </span>
+              <span className={styles.Long}>Выполнить приказы</span>
+              <span className={styles.Short}>Приказы</span>
+              <span className={styles.Count}>{ordersCount}</span>
+            </button>
+          )}
           <button
             className={styles.EndTurnButton}
             onClick={onNextTurn}
@@ -88,113 +59,11 @@ export const TurnControls = ({
           </button>
         </>
       )}
-
-      <details className={styles.Menu} ref={menu}>
-        <summary>Меню</summary>
-        <div className={styles.Dropdown}>
-          {onOpenSaves && (
-            <button
-              className={styles.MenuButton}
-              onClick={() => {
-                if (menu.current) menu.current.open = false;
-                onOpenSaves();
-              }}
-            >
-              Сохранения
-            </button>
-          )}
-          <button
-            className={styles.MenuButton}
-            aria-pressed={isDebug}
-            onClick={() => {
-              if (menu.current) menu.current.open = false;
-              setDebug(!isDebug);
-            }}
-          >
-            {isDebug ? 'Выключить режим отладки' : 'Режим отладки'}
-          </button>
-          <a
-            className={styles.MenuButton}
-            href={GUIDEBOOK_URL}
-            target='_blank'
-            rel='noopener'
-            aria-label='Гайдбук (откроется в новой вкладке)'
-            onClick={() => {
-              if (menu.current) menu.current.open = false;
-            }}
-          >
-            Гайдбук <span aria-hidden='true'>↗</span>
-          </a>
-          <h3 className={styles.MenuHeading}>Настройки партии</h3>
-          <Checkbox
-            className={styles.MenuCheck}
-            checked={confirmEndTurn}
-            onChange={setConfirmEndTurn}
-          >
-            Предупреждать об непоходивших юнитах
-          </Checkbox>
-          <AudioSettings />
-          <label className={styles.Playback}>
-            Ход ИИ
-            <Select<AiPlayback>
-              value={preferences.aiPlayback}
-              onChange={preferences.setAiPlayback}
-              options={[
-                { value: 'normal', label: 'Обычная скорость' },
-                { value: 'fast', label: 'Быстрая ×2' },
-                { value: 'instant', label: 'Без анимаций' },
-              ]}
-            />
-          </label>
-          <h3 className={styles.MenuHeading}>Помощь и обучение</h3>
-          <Checkbox
-            className={styles.MenuCheck}
-            checked={preferences.hintsEnabled}
-            onChange={preferences.setHintsEnabled}
-          >
-            Диалоги-подсказки
-          </Checkbox>
-          <Checkbox
-            className={styles.MenuCheck}
-            checked={preferences.tutorialEnabled}
-            onChange={preferences.setTutorialEnabled}
-          >
-            Обучение
-          </Checkbox>
-          {humanId && (
-            <button
-              className={styles.MenuButton}
-              onClick={() => {
-                if (menu.current) menu.current.open = false;
-                restartTutorial();
-              }}
-            >
-              Начать обучение заново
-            </button>
-          )}
-          <h3 className={styles.MenuHeading}>Завершение партии</h3>
-          {onSurrender && (
-            <button
-              className={styles.DangerButton}
-              onClick={() => {
-                if (menu.current) menu.current.open = false;
-                onSurrender();
-              }}
-            >
-              Сдаться
-            </button>
-          )}
-          <button
-            className={styles.DangerButton}
-            onClick={() => {
-              if (menu.current) menu.current.open = false;
-              onReset();
-            }}
-          >
-            Сбросить игру
-          </button>
-        </div>
-      </details>
+      <GameMenu
+        onOpenSaves={onOpenSaves}
+        onReset={onReset}
+        onSurrender={onSurrender}
+      />
       <KeyboardHelp />
     </div>
   );
