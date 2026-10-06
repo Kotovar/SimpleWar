@@ -68,6 +68,10 @@
     color: var(--text-muted);
     cursor: default;
   }
+
+  &[data-idle] {
+    visibility: hidden;
+  }
 }
 
 /* Полная подпись — на широком экране, иначе короткая: шапка не сжимается. */
@@ -89,9 +93,11 @@
   font-size: 0.7rem;
 }
 
-/* Число юнитов с приказом. */
+/* Число юнитов с приказом: место под две цифры, ширина кнопки постоянна. */
 .Count {
-  min-width: 20px;
+  box-sizing: content-box;
+  min-width: 2ch;
+  text-align: center;
   padding: 1px 6px;
   border-radius: 999px;
   background-color: rgb(201 164 98 / 0.22);

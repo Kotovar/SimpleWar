@@ -13,13 +13,15 @@ import { useSelectionStore } from '@features/selection';
 import { getContextBuildings } from '@features/build';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { getContextWorkplace } from '@features/workers';
-import { useMovementStore } from '@features/pathfinding';
+import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import {
+  pushMapEffect,
   useCameraInput,
   useGameHotkeys,
   useMapCellClick,
   useScene,
 } from './utils';
+import { orderWork } from './utils/workerOrders';
 import { CanvasLayers } from './CanvasLayers';
 import { MapControls } from './MapControls';
 import { ContextBuildMenu } from './ContextBuildMenu';
@@ -101,17 +103,28 @@ export const Map = ({ focusOnMount = true }: { focusOnMount?: boolean }) => {
         : null;
     // В режиме выбора места ПКМ закладывает здание, а не открывает меню.
     const placing = !!useBuildingsStore.getState().selectedBuildingForSpawn;
-    if (
-      order &&
-      !placing &&
-      unit &&
-      humanId &&
-      !getTurnRejection(humanId) &&
-      (getContextBuildings(unit, humanId, { x, y }).length ||
-        getContextWorkplace(unit, humanId, { x, y }))
-    ) {
-      setBuildMenu({ workerId: unit.id, x, y });
-      return;
+    if (order && !placing && unit && humanId && !getTurnRejection(humanId)) {
+      if (getContextBuildings(unit, humanId, { x, y }).length) {
+        setBuildMenu({ workerId: unit.id, x, y });
+        return;
+      }
+      // Свой пустой рудник или лесопилка: сразу «Работать», путь виден.
+      const workplace = getContextWorkplace(unit, humanId, { x, y });
+      if (workplace) {
+        const result = orderWork({
+          actor: humanId,
+          workerId: unit.id,
+          buildingId: workplace.id,
+        });
+        if (!result.ok) {
+          pushMapEffect({ x, y, signal: 'reject', start: performance.now() });
+          return;
+        }
+        useMovementStore.getState().resetStore();
+        useHighlightStore.getState().resetStore();
+        useMovementStore.getState().calculateActionHighlights(unit.id);
+        return;
+      }
     }
     handleCellClick(x, y, order);
   };

@@ -8,7 +8,7 @@ type Props = {
   onNextTurn: () => void;
   /** Исполнить отложенные приказы: идти в точку, строить, работать. */
   onRunOrders?: () => void;
-  /** Сколько своих юнитов с активным приказом; без них кнопки нет. */
+  /** Сколько своих юнитов с активным приказом; без них кнопка скрыта. */
   ordersCount?: number;
   onReset: () => void;
   /** Сдача; нет — участника за экраном нет, кнопка скрыта. */
@@ -30,9 +30,13 @@ export const TurnControls = ({
     <div className={styles.ButtonRow}>
       {humanId && (
         <>
-          {onRunOrders && ordersCount > 0 && (
+          {onRunOrders && (
+            // Без приказов кнопка невидима, но держит место: шапка не сдвигается.
             <button
               className={styles.OrdersButton}
+              data-idle={ordersCount === 0 || undefined}
+              aria-hidden={ordersCount === 0 || undefined}
+              tabIndex={ordersCount === 0 ? -1 : undefined}
               aria-label='Выполнить приказы'
               title={
                 isOwnTurn
@@ -40,7 +44,7 @@ export const TurnControls = ({
                   : 'Доступно в свой ход'
               }
               onClick={onRunOrders}
-              disabled={!isOwnTurn}
+              disabled={!isOwnTurn || ordersCount === 0}
             >
               <span className={styles.Play} aria-hidden>
                 ▶

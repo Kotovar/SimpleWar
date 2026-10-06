@@ -20,7 +20,7 @@ import {
 import type { CommandResult } from '@shared/config';
 import { handleMapCellClick, handleMapCellOrder } from './mapClickHandler';
 import { pushMapEffect } from './mapSignals';
-import { orderBuild } from './orderBuild';
+import { orderBuild } from './workerOrders';
 
 /**
  * Отказ приказа по клетке: «×» над клеткой. Причину и звук отказа даёт

@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { useEffect, useMemo, useRef, type MouseEvent } from 'react';
-import type { Owner, Position } from '@shared/config';
+import type { Owner, Position, UnitOrder } from '@shared/config';
 import { audio, collectStrikeMarks } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
@@ -9,6 +9,7 @@ import { usePreferencesStore } from '@entities/settings';
 import { useSelectionStore } from '@features/selection';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import { getPlacementRejection } from '@features/build';
+import { getContextWorkplace } from '@features/workers';
 import {
   drawWorldEdge,
   renderFogLayer,
@@ -193,17 +194,44 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     if (!canOrder || !placing || !hover || !humanId) return null;
     if (hover.x < 0 || hover.y < 0) return null;
     if (hover.x >= mapSize.columns || hover.y >= mapSize.rows) return null;
-    const worker =
-      selection?.kind === 'unit'
-        ? useUnitsStore.getState().units[selection.id]
-        : null;
+    const worker = selection?.kind === 'unit' ? worldUnits[selection.id] : null;
     // Кандидаты дешёвые (местность и путь); проход — только под курсором.
     const valid =
       !!worker &&
       !!placeCells?.some(({ x, y }) => x === hover.x && y === hover.y) &&
       !getPlacementRejection(worker, humanId, placing, hover);
     return { ...hover, type: placing, owner: humanId, valid };
-  }, [canOrder, hover, humanId, mapSize, placeCells, placing, selection]);
+    // Здания читает проверка места из стора: при их смене — пересчёт.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    canOrder,
+    hover,
+    humanId,
+    mapSize,
+    placeCells,
+    placing,
+    selection,
+    worldBuildings,
+    worldUnits,
+  ]);
+
+  // Какой приказ даст клик под курсором: путь к нему виден до клика.
+  const hoverOrder = useMemo((): UnitOrder | false | null => {
+    if (ghost) {
+      return ghost.valid
+        ? { type: 'build', buildingType: ghost.type, x: ghost.x, y: ghost.y }
+        : false;
+    }
+    if (!canOrder || !hover || !humanId || selection?.kind !== 'unit')
+      return null;
+    const worker = worldUnits[selection.id];
+    const workplace = worker && getContextWorkplace(worker, humanId, hover);
+    return workplace
+      ? { type: 'work', buildingId: workplace.id, x: hover.x, y: hover.y }
+      : null;
+    // Здания читает getContextWorkplace из стора: при их смене — пересчёт.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canOrder, ghost, hover, humanId, selection, worldBuildings, worldUnits]);
 
   const hoverPath = useHoverPath(
     canOrder ? hover : null,
@@ -211,7 +239,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     units,
     humanId,
     plannedTarget,
-    ghost,
+    hoverOrder,
   );
 
   useEffect(() => {

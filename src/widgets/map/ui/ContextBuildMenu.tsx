@@ -11,17 +11,9 @@ import { useUnitsStore } from '@entities/units';
 import { useEconomyStore } from '@entities/economies';
 import { getTurnRejection } from '@entities/games';
 import { useSelectionStore } from '@features/selection';
-import { build, getContextBuildings, giveBuildOrder } from '@features/build';
-import {
-  assignWorker,
-  getContextWorkplace,
-  giveWorkOrder,
-} from '@features/workers';
-import {
-  advanceOrder,
-  useHighlightStore,
-  useMovementStore,
-} from '@features/pathfinding';
+import { getContextBuildings } from '@features/build';
+import { useHighlightStore, useMovementStore } from '@features/pathfinding';
+import { orderBuild } from './utils/workerOrders';
 import styles from './styles.module.css';
 
 type Props = {
@@ -58,32 +50,19 @@ export const ContextBuildMenu = ({
     worker.id,
   );
   const menuOptions = getContextBuildings(worker, humanId, target);
-  const menuWorkplace = getContextWorkplace(worker, humanId, target);
+  // Рабочий остаётся выбранным: виден путь к стройке.
   const finishOrder = (workerId: string) => {
-    const stopped = advanceOrder(humanId, workerId, unit =>
-      unit.order.type === 'work'
-        ? assignWorker({
-            actor: humanId,
-            workerId: unit.id,
-            buildingId: unit.order.buildingId,
-          })
-        : build({ actor: humanId, workerId: unit.id, ...unit.order }),
-    );
     onClose();
-    useSelectionStore.getState().clearSelection();
     useMovementStore.getState().resetStore();
     useHighlightStore.getState().resetStore();
-    if (stopped) {
-      useSelectionStore.getState().selectUnit(workerId);
-      useMovementStore.getState().calculateActionHighlights(workerId);
-    }
+    useMovementStore.getState().calculateActionHighlights(workerId);
     onFocus();
   };
   const menuPoint = worldToScreen(camera, cellSize, {
     x: target.x + 0.5,
     y: target.y,
   });
-  if (!menuOptions.length && !menuWorkplace) return null;
+  if (!menuOptions.length) return null;
   return (
     <div
       className={styles.BuildMenu}
@@ -96,11 +75,7 @@ export const ContextBuildMenu = ({
       onPointerDown={event => event.stopPropagation()}
       onKeyDown={event => event.stopPropagation()}
     >
-      <strong>
-        {menuWorkplace
-          ? BUILDINGS_NAME[menuWorkplace.type]
-          : `Построить (${target.x + 1}, ${target.y + 1})`}
-      </strong>
+      <strong>{`Построить (${target.x + 1}, ${target.y + 1})`}</strong>
       {menuOptions.map(buildingType => {
         const cost = BUILDINGS_CONFIG[buildingType].cost;
         const missingGold = resources.gold < cost.gold;
@@ -121,7 +96,7 @@ export const ContextBuildMenu = ({
             aria-description={warning}
             title={warning}
             onClick={() => {
-              const result = giveBuildOrder({
+              const result = orderBuild({
                 actor: humanId,
                 workerId: target.workerId,
                 buildingType,
@@ -162,21 +137,6 @@ export const ContextBuildMenu = ({
           </button>
         );
       })}
-      {menuWorkplace && (
-        <button
-          type='button'
-          onClick={() => {
-            const result = giveWorkOrder({
-              actor: humanId,
-              workerId: target.workerId,
-              buildingId: menuWorkplace.id,
-            });
-            if (result.ok) finishOrder(target.workerId);
-          }}
-        >
-          Работать
-        </button>
-      )}
       <button
         type='button'
         onClick={() => {
