@@ -242,8 +242,9 @@ export const renderEntitiesLayer = (
 
     if (detail === 'icon') {
       drawRoleIcon(ctx, unit.role, x + dx, y + dy, cellSize, owner);
-      if (hourglass) {
-        drawHourglass(ctx, x + dx, y + dy, cellSize, hourglass, shifted);
+      // Издалека сдвинутые часы уходят в соседнюю клетку: хватит значка.
+      if (hourglass && !shifted) {
+        drawHourglass(ctx, x + dx, y + dy, cellSize, hourglass);
       }
       if (owner === humanId) {
         drawRestBadge(ctx, x + dx, y + dy, cellSize, unit.restMode);

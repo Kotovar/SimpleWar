@@ -4,6 +4,7 @@ export * from './drawTerrain';
 export * from './drawUnits';
 export * from './drawHpBar';
 export * from './drawHourglass';
+export * from './hourglasses';
 export * from './drawActionPips';
 export * from './drawFormationBadge';
 export * from './drawMovement';

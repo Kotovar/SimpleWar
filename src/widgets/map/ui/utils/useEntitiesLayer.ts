@@ -14,15 +14,17 @@ import {
   getEventEffect,
   getCommandEffect,
   getEventSfx,
+  getHourglassFrames,
   getSpentIds,
   isInCombat,
   renderEntitiesLayer,
   renderSnapshots,
+  updateHourglasses,
   withClear,
   type CellOffsets,
   type Effect,
   type EffectLayer,
-  type HourglassState,
+  type Hourglass,
   type Scene,
   type Tracked,
 } from '@widgets/map/lib';
@@ -34,10 +36,6 @@ import type { MapView } from './useMapView';
 const MOVE_DURATION = 220;
 const SPAWN_DURATION = 420;
 const LUNGE_DURATION = 260;
-/** Пересыпание песка, когда своя сущность потратила ход. */
-const POUR_DURATION = 1200;
-/** Переворот часов в начале нового хода. */
-const FLIP_DURATION = 700;
 /** Выпад к цели в долях клетки. */
 const LUNGE_DEPTH = 0.28;
 /** Кадр эффекта без движения для reduced motion: число стоит на месте. */
@@ -131,10 +129,9 @@ export const useEntitiesLayer = ({
   const spawns = useRef(new Map<string, { start: number; ai: boolean }>());
   const effects = useRef<(Effect & { ai?: boolean })[]>([]);
   /** Песочные часы отходивших: пересыпание, затем переворот при новом ходе. */
-  const hourglasses = useRef(
-    new Map<string, { kind: 'pour' | 'flip'; start: number }>(),
-  );
-  const spentIds = useRef<ReadonlySet<string> | null>(null);
+  const hourglasses = useRef<ReadonlyMap<string, Hourglass>>(new Map());
+  /** Чьи часы показаны: смена участника начинает историю заново. */
+  const hourglassOwner = useRef<Owner | null | undefined>(undefined);
   /** Запускает перерисовку, если цикл анимации сейчас стоит. */
   const redraw = useRef<() => void>(() => {});
   const isFirstRun = useRef(true);
@@ -259,20 +256,21 @@ export const useEntitiesLayer = ({
       Object.values(worldUnits),
       stuck,
     );
-    const glasses = hourglasses.current;
-    // При первом показе часы уже пересыпаны: ход потрачен до загрузки.
-    const start = spentIds.current ? now : -Infinity;
-    spent.forEach(id => {
-      if (glasses.get(id)?.kind !== 'pour')
-        glasses.set(id, { kind: 'pour', start });
-    });
-    glasses.forEach((glass, id) => {
-      if (glass.kind !== 'pour' || spent.has(id)) return;
-      if (units[id] ?? buildings[id])
-        glasses.set(id, { kind: 'flip', start: now });
-      else glasses.delete(id);
-    });
-    spentIds.current = spent;
+    const fresh = hourglassOwner.current !== humanId;
+    hourglasses.current = updateHourglasses(
+      fresh ? new Map() : hourglasses.current,
+      spent,
+      id => {
+        const unit = units[id];
+        // Здание перестаёт быть отходившим, только вернув очки.
+        if (!unit) return buildings[id] ? true : null;
+        return unit.movePoints === unit.maxMovePoints;
+      },
+      now,
+      // При первом показе часы уже пересыпаны: ход потрачен до него.
+      fresh,
+    );
+    hourglassOwner.current = humanId;
   }, [buildings, humanId, stuck, units, worldUnits]);
 
   // Внешний сигнал (отказ приказа) запускает перерисовку без смены сцены.
@@ -348,25 +346,19 @@ export const useEntitiesLayer = ({
         });
       });
 
-      const glasses = new Map<string, HourglassState>();
-      let pouring = false;
-      hourglasses.current.forEach((glass, id) => {
-        const progress = still
-          ? 1
-          : (time - glass.start) /
-            (glass.kind === 'pour' ? POUR_DURATION : FLIP_DURATION);
-        if (glass.kind === 'flip' && progress >= 1) {
-          hourglasses.current.delete(id);
-          return;
-        }
-        if (progress < 1) pouring = true;
-        glasses.set(
-          id,
-          glass.kind === 'pour'
-            ? { sand: Math.min(1, progress), flip: 0 }
-            : { sand: 1, flip: progress },
+      // Без движения часы завершаются насовсем: иначе после отмены песок вернётся.
+      if (still) {
+        hourglasses.current = new Map(
+          [...hourglasses.current]
+            .filter(([, glass]) => glass.kind !== 'flip')
+            .map(([id, glass]) => [id, { ...glass, start: -Infinity }]),
         );
-      });
+      }
+      const { frames: glasses, animating: pouring } = getHourglassFrames(
+        hourglasses.current,
+        time,
+        still,
+      );
 
       effects.current = effects.current.filter(
         effect => elapsed(effect.start, effect.ai) < EFFECT_DURATION,
