@@ -14,6 +14,7 @@ import {
   getEventEffect,
   getCommandEffect,
   getEventSfx,
+  getSpentIds,
   isInCombat,
   renderEntitiesLayer,
   renderSnapshots,
@@ -21,6 +22,7 @@ import {
   type CellOffsets,
   type Effect,
   type EffectLayer,
+  type HourglassState,
   type Scene,
   type Tracked,
 } from '@widgets/map/lib';
@@ -32,6 +34,10 @@ import type { MapView } from './useMapView';
 const MOVE_DURATION = 220;
 const SPAWN_DURATION = 420;
 const LUNGE_DURATION = 260;
+/** Пересыпание песка, когда своя сущность потратила ход. */
+const POUR_DURATION = 1200;
+/** Переворот часов в начале нового хода. */
+const FLIP_DURATION = 700;
 /** Выпад к цели в долях клетки. */
 const LUNGE_DEPTH = 0.28;
 /** Кадр эффекта без движения для reduced motion: число стоит на месте. */
@@ -124,6 +130,11 @@ export const useEntitiesLayer = ({
   );
   const spawns = useRef(new Map<string, { start: number; ai: boolean }>());
   const effects = useRef<(Effect & { ai?: boolean })[]>([]);
+  /** Песочные часы отходивших: пересыпание, затем переворот при новом ходе. */
+  const hourglasses = useRef(
+    new Map<string, { kind: 'pour' | 'flip'; start: number }>(),
+  );
+  const spentIds = useRef<ReadonlySet<string> | null>(null);
   /** Запускает перерисовку, если цикл анимации сейчас стоит. */
   const redraw = useRef<() => void>(() => {});
   const isFirstRun = useRef(true);
@@ -237,6 +248,33 @@ export const useEntitiesLayer = ({
     previousAiTurn.current = aiTurn;
   }, [aiTurn]);
 
+  // Отходившие: новые пересыпают песок, вернувшие очки переворачивают часы.
+  // Перерисует эффект слоя ниже: он зависит от тех же данных.
+  useEffect(() => {
+    const now = performance.now();
+    const spent = getSpentIds(
+      buildings,
+      units,
+      humanId,
+      Object.values(worldUnits),
+      stuck,
+    );
+    const glasses = hourglasses.current;
+    // При первом показе часы уже пересыпаны: ход потрачен до загрузки.
+    const start = spentIds.current ? now : -Infinity;
+    spent.forEach(id => {
+      if (glasses.get(id)?.kind !== 'pour')
+        glasses.set(id, { kind: 'pour', start });
+    });
+    glasses.forEach((glass, id) => {
+      if (glass.kind !== 'pour' || spent.has(id)) return;
+      if (units[id] ?? buildings[id])
+        glasses.set(id, { kind: 'flip', start: now });
+      else glasses.delete(id);
+    });
+    spentIds.current = spent;
+  }, [buildings, humanId, stuck, units, worldUnits]);
+
   // Внешний сигнал (отказ приказа) запускает перерисовку без смены сцены.
   useEffect(
     () =>
@@ -310,6 +348,26 @@ export const useEntitiesLayer = ({
         });
       });
 
+      const glasses = new Map<string, HourglassState>();
+      let pouring = false;
+      hourglasses.current.forEach((glass, id) => {
+        const progress = still
+          ? 1
+          : (time - glass.start) /
+            (glass.kind === 'pour' ? POUR_DURATION : FLIP_DURATION);
+        if (glass.kind === 'flip' && progress >= 1) {
+          hourglasses.current.delete(id);
+          return;
+        }
+        if (progress < 1) pouring = true;
+        glasses.set(
+          id,
+          glass.kind === 'pour'
+            ? { sand: Math.min(1, progress), flip: 0 }
+            : { sand: 1, flip: progress },
+        );
+      });
+
       effects.current = effects.current.filter(
         effect => elapsed(effect.start, effect.ai) < EFFECT_DURATION,
       );
@@ -339,8 +397,7 @@ export const useEntitiesLayer = ({
           humanId,
           range,
           staffed,
-          Object.values(worldUnits),
-          stuck,
+          glasses,
         );
         drawEffects('over');
       });
@@ -349,6 +406,7 @@ export const useEntitiesLayer = ({
         moves.current.size > 0 ||
         lunges.current.size > 0 ||
         spawns.current.size > 0 ||
+        pouring ||
         effects.current.length > 0;
       frame = 0;
       if (animating) frame = requestAnimationFrame(draw);

@@ -37,6 +37,7 @@ import { drawActionPips } from './drawActionPips';
 import { drawWorkBadge } from './drawWorkBadge';
 import { drawIdleBadge } from './drawIdleBadge';
 import { drawFormationBadge } from './drawFormationBadge';
+import { drawHourglass, type HourglassState } from './drawHourglass';
 import {
   drawDamagedBuilding,
   drawRoleIcon,
@@ -53,8 +54,6 @@ export type CellOffsets = Map<
   string,
   { dx: number; dy: number; scale?: number }
 >;
-
-const SPENT_ALPHA = 0.45;
 
 const BUILDING_DRAWERS = {
   base: drawBase,
@@ -104,7 +103,7 @@ const isOutside = (range: CellRange | undefined, x: number, y: number) =>
   !!range && (x < range.x0 || x >= range.x1 || y < range.y0 || y >= range.y1);
 
 /**
- * Свою сущность без полезных действий гасим: видно, кем ещё можно ходить.
+ * Своя сущность без полезных действий: видно, кем ещё можно ходить.
  * Военный без очков движения считается отходившим и с очком атаки, если
  * в его дальности нет видимых врагов. Очки, которых не хватает ни на одну
  * соседнюю клетку (`stuck`), — то же, что их отсутствие.
@@ -132,34 +131,26 @@ const isSpentBuilding = (building: Building, humanId: Owner | null) => {
 };
 
 /**
- * Рисует здания и юнитов с текущими смещениями и состоянием действий.
+ * Свои сущности, потратившие полезные действия хода: им рисуются
+ * песочные часы.
  *
- * @param ctx - Контекст холста.
- * @param buildings - Здания на карте.
- * @param units - Юниты на карте.
- * @param cellSize - Размер клетки в пикселях.
- * @param offsets - Смещения в клетках и масштабы анимируемых сущностей.
- * @param humanId - Участник интерфейса: его сущности гаснут без очков и показывают очки.
- * @param range - Клетки в окне камеры с запасом; без него рисуется всё.
- * @param staffed - Свои рудники и лесопилки с рабочим внутри.
+ * @param humanId - Участник интерфейса; чужие сущности не отмечаются.
  * @param healingUnits - Юниты для проверки лечения, включая рабочих внутри зданий;
- *   цели фильтруются по владельцу лекаря и не рисуются этим параметром.
+ *   цели фильтруются по владельцу лекаря.
  * @param stuck - Свои юниты с очками хода, которым некуда шагнуть.
+ * @returns ID отходивших юнитов и зданий.
  */
-export const renderEntitiesLayer = (
-  ctx: CanvasRenderingContext2D,
+export const getSpentIds = (
   buildings: Record<string, Building>,
   units: Record<string, Unit>,
-  cellSize: number,
-  offsets?: CellOffsets,
-  humanId: Owner | null = null,
-  range?: CellRange,
-  staffed: ReadonlySet<string> = new Set(),
+  humanId: Owner | null,
   healingUnits: Iterable<Unit> = Object.values(units),
   stuck: ReadonlySet<string> = new Set(),
 ) => {
+  const spent = new Set<string>();
+  if (humanId === null) return spent;
   const enemies = [...Object.values(units), ...Object.values(buildings)].filter(
-    entity => humanId !== null && isHostile(humanId, entity.owner),
+    entity => isHostile(humanId, entity.owner),
   );
   const hasTarget = (unit: Unit) =>
     unit.role === 'military' &&
@@ -170,7 +161,40 @@ export const renderEntitiesLayer = (
             Math.abs(enemy.x - unit.x) + Math.abs(enemy.y - unit.y) <=
             unit.attackRange,
         ));
+  Object.values(buildings).forEach(building => {
+    if (isSpentBuilding(building, humanId)) spent.add(building.id);
+  });
+  Object.values(units).forEach(unit => {
+    if (isSpentUnit(unit, humanId, hasTarget, stuck)) spent.add(unit.id);
+  });
+  return spent;
+};
 
+/**
+ * Рисует здания и юнитов с текущими смещениями и состоянием действий.
+ *
+ * @param ctx - Контекст холста.
+ * @param buildings - Здания на карте.
+ * @param units - Юниты на карте.
+ * @param cellSize - Размер клетки в пикселях.
+ * @param offsets - Смещения в клетках и масштабы анимируемых сущностей.
+ * @param humanId - Участник интерфейса: его сущности показывают очки и значки.
+ * @param range - Клетки в окне камеры с запасом; без него рисуется всё.
+ * @param staffed - Свои рудники и лесопилки с рабочим внутри.
+ * @param hourglasses - Кадры песочных часов отходивших сущностей
+ *   (см. {@link getSpentIds}).
+ */
+export const renderEntitiesLayer = (
+  ctx: CanvasRenderingContext2D,
+  buildings: Record<string, Building>,
+  units: Record<string, Unit>,
+  cellSize: number,
+  offsets?: CellOffsets,
+  humanId: Owner | null = null,
+  range?: CellRange,
+  staffed: ReadonlySet<string> = new Set(),
+  hourglasses: ReadonlyMap<string, HourglassState> = new Map(),
+) => {
   // Издалека — значки роли и владельца, вблизи — рисунок и мелкие значки.
   const detail = getDetailLevel(cellSize);
 
@@ -180,21 +204,20 @@ export const renderEntitiesLayer = (
     const hpRatio = hp / maxHp;
     const { dx = 0, dy = 0, scale = 1 } = offsets?.get(id) ?? {};
 
-    ctx.save();
-    if (isSpentBuilding(building, humanId)) ctx.globalAlpha = SPENT_ALPHA;
+    const hourglass = hourglasses.get(id);
 
     if (detail === 'icon') {
       drawRoleIcon(ctx, 'building', x + dx, y + dy, cellSize, owner);
-      ctx.restore();
+      if (hourglass) drawHourglass(ctx, x + dx, y + dy, cellSize, hourglass);
       return;
     }
     drawBuildingModel(ctx, type, x + dx, y + dy, cellSize, owner, scale);
-    ctx.restore();
     if (hpRatio <= DAMAGED_BUILDING_RATIO) {
       drawDamagedBuilding(ctx, x + dx, y + dy, cellSize);
     }
 
     drawHpBar(ctx, x + dx, y + dy, cellSize, hpRatio);
+    if (hourglass) drawHourglass(ctx, x + dx, y + dy, cellSize, hourglass);
     // Свой рудник или лесопилка: рабочий внутри или простой без него.
     if (
       detail === 'detail' &&
@@ -213,14 +236,15 @@ export const renderEntitiesLayer = (
     const hpRatio = hp / maxHp;
     const { dx = 0, dy = 0, scale = 1 } = offsets?.get(id) ?? {};
 
-    ctx.save();
-    if (isSpentUnit(unit, humanId, hasTarget, stuck)) {
-      ctx.globalAlpha = SPENT_ALPHA;
-    }
+    const hourglass = hourglasses.get(id);
+    // Сон и приказ занимают тот же угол: часы встают рядом.
+    const shifted = !!(unit.restMode || unit.order);
 
     if (detail === 'icon') {
       drawRoleIcon(ctx, unit.role, x + dx, y + dy, cellSize, owner);
-      ctx.restore();
+      if (hourglass) {
+        drawHourglass(ctx, x + dx, y + dy, cellSize, hourglass, shifted);
+      }
       if (owner === humanId) {
         drawRestBadge(ctx, x + dx, y + dy, cellSize, unit.restMode);
         drawOrderBadge(ctx, x + dx, y + dy, cellSize, unit.order);
@@ -228,10 +252,10 @@ export const renderEntitiesLayer = (
       return;
     }
     UNIT_DRAWERS[type](ctx, x + dx, y + dy, cellSize, owner, scale);
-    ctx.restore();
-
-    // Полоса здоровья и очки остаются контрастными даже у отходившего юнита.
     drawHpBar(ctx, x + dx, y + dy, cellSize, hpRatio);
+    if (hourglass) {
+      drawHourglass(ctx, x + dx, y + dy, cellSize, hourglass, shifted);
+    }
     if (owner === humanId) {
       drawRestBadge(ctx, x + dx, y + dy, cellSize, unit.restMode);
       drawOrderBadge(ctx, x + dx, y + dy, cellSize, unit.order);

@@ -12,7 +12,7 @@ import { move, useMovementStore } from '@features/pathfinding';
 import { build } from '@features/build';
 import { spawn } from '@features/spawn';
 import { buildScene } from './buildScene';
-import { renderEntitiesLayer } from './renderEntitiesLayer';
+import { getSpentIds } from './renderEntitiesLayer';
 import { renderSelectionLayer } from './renderSelectionLayer';
 import { handleMapCellOrder } from '../ui/utils/mapClickHandler';
 
@@ -68,9 +68,8 @@ const setup = () => {
   return { healer, worker, mine, scene };
 };
 
-/** Записывает текст и назначение прозрачности, остальные операции Canvas пропускает. */
+/** Записывает текст, остальные операции Canvas пропускает. */
 const canvas = () => {
-  const alphas: number[] = [];
   const texts: string[] = [];
   const ctx = new Proxy({} as CanvasRenderingContext2D, {
     get: (_, key) =>
@@ -81,12 +80,9 @@ const canvas = () => {
           : key === 'fillText'
             ? (text: string) => texts.push(text)
             : () => {},
-    set: (_, key, value) => {
-      if (key === 'globalAlpha') alphas.push(value);
-      return true;
-    },
+    set: () => true,
   });
-  return { ctx, alphas, texts };
+  return { ctx, texts };
 };
 
 it('лечит скрытого внутри здания рабочего кликом и показывает размер лечения', () => {
@@ -141,26 +137,18 @@ it('лечит скрытого внутри здания рабочего кл�
   expect(selectBuilding).not.toHaveBeenCalled();
 });
 
-it('не приглушает лекаря с доступным лечением внутри здания, приглушает после лечения', () => {
-  const { healer, worker, scene } = setup();
-  const draw = () => {
-    const { ctx, alphas } = canvas();
-    renderEntitiesLayer(
-      ctx,
+it('не отмечает лекаря часами при лечении внутри здания, отмечает после лечения', () => {
+  const { healer, worker } = setup();
+  const spent = () =>
+    getSpentIds(
       {},
       { [healer]: units().units[healer] },
-      32,
-      undefined,
       'p1',
-      undefined,
-      scene.staffed,
       Object.values(units().units),
-    );
-    return alphas;
-  };
-  expect(draw()).not.toContain(0.45);
+    ).has(healer);
+  expect(spent()).toBe(false);
   expect(heal({ actor: 'p1', healerId: healer, targetId: worker }).ok).toBe(
     true,
   );
-  expect(draw()).toContain(0.45);
+  expect(spent()).toBe(true);
 });

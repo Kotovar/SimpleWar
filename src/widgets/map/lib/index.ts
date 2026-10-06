@@ -3,6 +3,7 @@ export * from './drawGrid';
 export * from './drawTerrain';
 export * from './drawUnits';
 export * from './drawHpBar';
+export * from './drawHourglass';
 export * from './drawActionPips';
 export * from './drawFormationBadge';
 export * from './drawMovement';
