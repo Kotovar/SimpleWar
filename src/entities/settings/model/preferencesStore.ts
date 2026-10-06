@@ -7,6 +7,9 @@ type Offset = { x: number; y: number };
 /** Мини-карта поверх карты: непрозрачная, полупрозрачная или скрыта. */
 export type MinimapMode = 'solid' | 'translucent' | 'hidden';
 
+/** Качество сглаживания кромки тумана: `low` вдвое дешевле при панораме. */
+export type FogQuality = 'high' | 'low';
+
 type PreferencesState = {
   /**
    * Партия (номер из журнала), в которой игрок отключил вопрос перед
@@ -29,11 +32,14 @@ type PreferencesState = {
   markTutorialStarted: () => void;
   aiPlayback: AiPlayback;
   setAiPlayback: (playback: AiPlayback) => void;
+  fogQuality: FogQuality;
+  setFogQuality: (quality: FogQuality) => void;
 };
 
 /**
  * Предпочтения игрока в интерфейсе. В браузере сохраняются положение
- * панели действий, вид мини-карты, настройки помощника и скорость ИИ;
+ * панели действий, вид мини-карты, настройки помощника, скорость ИИ
+ * и качество графики;
  * предупреждение конца хода живёт до перезагрузки.
  */
 export const usePreferencesStore = create<PreferencesState>()(
@@ -53,6 +59,8 @@ export const usePreferencesStore = create<PreferencesState>()(
       markTutorialStarted: () => set({ tutorialStarted: true }),
       aiPlayback: 'normal',
       setAiPlayback: aiPlayback => set({ aiPlayback }),
+      fogQuality: 'high',
+      setFogQuality: fogQuality => set({ fogQuality }),
     }),
     {
       name: 'simplewar:preferences',
@@ -65,6 +73,7 @@ export const usePreferencesStore = create<PreferencesState>()(
         tutorialEnabled,
         tutorialStarted,
         aiPlayback,
+        fogQuality,
       }) => ({
         actionBarOffset,
         minimapMode,
@@ -72,6 +81,7 @@ export const usePreferencesStore = create<PreferencesState>()(
         tutorialEnabled,
         tutorialStarted,
         aiPlayback,
+        fogQuality,
       }),
       migrate: persisted => ({
         actionBarOffset: (persisted as Partial<PreferencesState> | null)

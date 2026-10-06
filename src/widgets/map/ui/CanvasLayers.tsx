@@ -5,6 +5,7 @@ import { audio, collectStrikeMarks } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useGameLoopStore } from '@entities/games';
+import { usePreferencesStore } from '@entities/settings';
 import { useSelectionStore } from '@features/selection';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import {
@@ -58,6 +59,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   const healTargets = useMovementStore(state => state.healTargets);
   const plannedTarget = useMovementStore(state => state.plannedTarget);
   const buildableCells = useProduceCells();
+  const fogQuality = usePreferencesStore(state => state.fogQuality);
 
   const canOrder = phase === 'inProgress' && activePlayer === humanId;
   const isInteractive = canOrder || phase === 'gameOver';
@@ -135,10 +137,10 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     if (!ctx) return;
 
     withClear(ctx, () => {
-      if (fog) renderFogLayer(ctx, fog, cellSize, range);
+      if (fog) renderFogLayer(ctx, fog, cellSize, range, fogQuality);
       drawWorldEdge(ctx, mapSize.columns, mapSize.rows, cellSize);
     });
-  }, [fog, mapSize, view]);
+  }, [fog, fogQuality, mapSize, view]);
 
   useEffect(() => {
     const { cellSize, viewport, offset } = view;

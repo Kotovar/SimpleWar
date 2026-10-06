@@ -112,13 +112,15 @@ const [EXPLORED_R, EXPLORED_G, EXPLORED_B, EXPLORED_A] = (
 
 type Masks = { explored: HTMLCanvasElement; unknown: HTMLCanvasElement };
 let masksKey = '';
-let masksKnowledge: ParticipantKnowledge | null = null;
+let masksVisible: Uint8Array | null = null;
+let masksTerrain: Uint8Array | null = null;
 let masks: Masks | null = null;
 let layer: HTMLCanvasElement | null = null;
 
 /**
  * Маски слоёв в низком разрешении: разведанное — уже в цвете затемнения,
- * неизвестное — альфа под облака. Кэш по знаниям и диапазону: панорама
+ * неизвестное — альфа под облака. Кэш по массивам знаний и диапазону:
+ * `observe` сохраняет прежние массивы, если обзор не изменился; панорама
  * внутри клетки не пересчитывает поле.
  */
 const getMasks = (
@@ -129,8 +131,15 @@ const getMasks = (
   x1: number,
   y1: number,
 ) => {
-  const key = `${x0},${y0},${x1},${y1}`;
-  if (masks && masksKnowledge === knowledge && masksKey === key) return masks;
+  const key = `${knowledge.width},${x0},${y0},${x1},${y1}`;
+  if (
+    masks &&
+    masksVisible === knowledge.visible &&
+    masksTerrain === knowledge.terrain &&
+    masksKey === key
+  ) {
+    return masks;
+  }
   masks ??= {
     explored: document.createElement('canvas'),
     unknown: document.createElement('canvas'),
@@ -162,7 +171,8 @@ const getMasks = (
     canvas.height = height;
     canvas.getContext('2d')?.putImageData(data, 0, 0);
   }
-  masksKnowledge = knowledge;
+  masksVisible = knowledge.visible;
+  masksTerrain = knowledge.terrain;
   masksKey = key;
   return masks;
 };
@@ -179,12 +189,14 @@ const getMasks = (
  * @param knowledge - Знания смотрящего участника.
  * @param cellSize - Размер клетки в CSS-пикселях.
  * @param range - Клетки в окне камеры.
+ * @param quality - Сглаживание растяжения маски из настроек графики.
  */
 export const renderFogLayer = (
   ctx: CanvasRenderingContext2D,
   knowledge: ParticipantKnowledge,
   cellSize: number,
   range: CellRange,
+  quality: ImageSmoothingQuality = 'high',
 ) => {
   const { width, height, visible, terrain } = knowledge;
   if (!width || !height || range.x0 >= range.x1 || range.y0 >= range.y1) return;
@@ -214,7 +226,8 @@ export const renderFogLayer = (
   if (!layerCtx) return;
   layerCtx.setTransform(ctx.getTransform());
   layerCtx.imageSmoothingEnabled = true;
-  layerCtx.imageSmoothingQuality = 'high';
+  // 'low' дешевле вдвое, но при сильном растяжении маски кромка грубеет.
+  layerCtx.imageSmoothingQuality = quality;
   const left = x0 * cellSize;
   const top = y0 * cellSize;
   const w = (x1 - x0) * cellSize;

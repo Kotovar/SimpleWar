@@ -6,7 +6,11 @@ import {
   type AiPlayback,
 } from '@shared/config';
 import { Checkbox, Select } from '@shared/ui';
-import { useDebugStore, usePreferencesStore } from '@entities/settings';
+import {
+  useDebugStore,
+  usePreferencesStore,
+  type FogQuality,
+} from '@entities/settings';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { useGuidanceStore } from '../../model/guidanceStore';
 import { useConfirmEndTurn } from '../../model/confirmEndTurn';
@@ -174,6 +178,20 @@ export const GameMenu = ({ onOpenSaves, onReset, onSurrender }: Props) => {
                 </section>
                 <section className={styles.Group}>
                   <AudioSettings />
+                </section>
+                <section className={styles.Group}>
+                  <h3>Графика</h3>
+                  <label className={styles.Field}>
+                    Качество тумана
+                    <Select<FogQuality>
+                      value={preferences.fogQuality}
+                      onChange={preferences.setFogQuality}
+                      options={[
+                        { value: 'high', label: 'Высокое' },
+                        { value: 'low', label: 'Быстрое' },
+                      ]}
+                    />
+                  </label>
                 </section>
                 <section className={styles.Group}>
                   <h3>Помощь</h3>
