@@ -37,7 +37,7 @@ export const RESEARCH_CONFIG: Record<ResearchType, ResearchConfig> = {
   engineering: {
     name: 'Инженерия',
     effect:
-      'Рабочий строит частокол: непроходимое укрепление на поле или холме',
+      'Рабочий строит частокол: непроходимое укрепление на равнине или холме',
     cost: { gold: 100, wood: 100 },
     turns: 3,
   },

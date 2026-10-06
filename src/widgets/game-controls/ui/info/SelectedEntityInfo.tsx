@@ -46,7 +46,7 @@ const EntityHeader = ({ cell, unit, building }: Props) => {
             ? UNITS_NAME[unit.type]
             : building
               ? BUILDINGS_NAME[building.type]
-              : 'Клетка'}
+              : cell && TERRAIN_NAME[cell.type]}
         </h3>
         {entity && (
           <span className={styles.Owner} data-owner={entity.owner}>
@@ -54,7 +54,7 @@ const EntityHeader = ({ cell, unit, building }: Props) => {
             {entity.owner === humanId ? 'Вы' : OWNER_NAME[entity.owner]}
           </span>
         )}
-        {cell && (
+        {cell && entity && (
           <span className={styles.Owner}>{TERRAIN_NAME[cell.type]}</span>
         )}
       </div>
