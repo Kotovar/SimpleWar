@@ -8,6 +8,7 @@ import { useGameLoopStore } from '@entities/games';
 import { usePreferencesStore } from '@entities/settings';
 import { useSelectionStore } from '@features/selection';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
+import { getPlacementRejection } from '@features/build';
 import {
   drawWorldEdge,
   renderFogLayer,
@@ -58,7 +59,12 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   const strikeCells = useHighlightStore(state => state.strikeCells);
   const healTargets = useMovementStore(state => state.healTargets);
   const plannedTarget = useMovementStore(state => state.plannedTarget);
-  const buildableCells = useProduceCells();
+  const produceCells = useProduceCells();
+  const placing = useBuildingsStore(state => state.selectedBuildingForSpawn);
+  // Места стройки не заливаются: их слишком много, годность видна по
+  // призраку под курсором. Подсветка остаётся у расчистки.
+  const buildableCells = placing ? null : produceCells;
+  const placeCells = useHighlightStore(state => state.buildableCells);
   const fogQuality = usePreferencesStore(state => state.fogQuality);
 
   const canOrder = phase === 'inProgress' && activePlayer === humanId;
@@ -182,12 +188,30 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     view,
   ]);
 
+  // Режим выбора места: здание-призрак под курсором и путь рабочего к нему.
+  const ghost = useMemo(() => {
+    if (!canOrder || !placing || !hover || !humanId) return null;
+    if (hover.x < 0 || hover.y < 0) return null;
+    if (hover.x >= mapSize.columns || hover.y >= mapSize.rows) return null;
+    const worker =
+      selection?.kind === 'unit'
+        ? useUnitsStore.getState().units[selection.id]
+        : null;
+    // Кандидаты дешёвые (местность и путь); проход — только под курсором.
+    const valid =
+      !!worker &&
+      !!placeCells?.some(({ x, y }) => x === hover.x && y === hover.y) &&
+      !getPlacementRejection(worker, humanId, placing, hover);
+    return { ...hover, type: placing, owner: humanId, valid };
+  }, [canOrder, hover, humanId, mapSize, placeCells, placing, selection]);
+
   const hoverPath = useHoverPath(
     canOrder ? hover : null,
     selection,
     units,
     humanId,
     plannedTarget,
+    ghost,
   );
 
   useEffect(() => {
@@ -207,6 +231,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
           path: hoverPath,
           attackableTargets,
           healTargets,
+          ghost,
           showRallyPoint:
             !!humanId &&
             selection?.kind === 'building' &&
@@ -218,6 +243,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   }, [
     attackableTargets,
     buildings,
+    ghost,
     healTargets,
     hover,
     hoverPath,

@@ -36,8 +36,8 @@ export const getModePrompt = (mode: MapMode) => {
       const place =
         PLACE[BUILDINGS_CONFIG[mode.type].requiredField ?? 'grass'] ?? '';
       return mode.cells
-        ? `Кликните по подсвеченной клетке${place}, чтобы построить «${BUILDINGS_NAME[mode.type]}».`
-        : `Рядом с рабочим нет свободной клетки${place}, где здание не перекроет последний проход.`;
+        ? `Наведите на клетку${place}: зелёная — можно строить «${BUILDINGS_NAME[mode.type]}». ЛКМ или ПКМ — заложить, рабочий дойдёт сам, цена сразу уйдёт в резерв.`
+        : `Нет известной свободной клетки${place}, куда рабочий дойдёт и где здание не перекроет последний проход.`;
     }
     case 'spawn':
       return mode.cells

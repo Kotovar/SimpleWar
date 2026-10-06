@@ -20,6 +20,7 @@ import {
 import type { CommandResult } from '@shared/config';
 import { handleMapCellClick, handleMapCellOrder } from './mapClickHandler';
 import { pushMapEffect } from './mapSignals';
+import { orderBuild } from './orderBuild';
 
 /**
  * Отказ приказа по клетке: «×» над клеткой. Причину и звук отказа даёт
@@ -39,6 +40,7 @@ const getCommands = (x: number, y: number) => ({
   move: withRejectSignal(move, x, y),
   attack: withRejectSignal(attack, x, y),
   build: withRejectSignal(build, x, y),
+  orderBuild: withRejectSignal(orderBuild, x, y),
   spawn: withRejectSignal(spawn, x, y),
   setRallyPoint: withRejectSignal(setRallyPoint, x, y),
   clearForest: withRejectSignal(clearForest, x, y),

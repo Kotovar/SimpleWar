@@ -5,7 +5,6 @@ import type { Cell, Position } from '@shared/config';
 import { useMapStore } from '@entities/maps';
 import { getCellsAround } from '../lib/getCellsAround';
 import { useBuildingsStore } from '@entities/buildings';
-import { useUnitsStore } from '@entities/units';
 
 interface HighlightState {
   spawnableCells: Position[] | null;
@@ -16,15 +15,8 @@ interface HighlightState {
   strikeCells: Position[] | null;
 
   calculateSpawnableCells: (buildingId: string, cellType: Cell['type']) => void;
-  /**
-   * Клетки для стройки рядом с рабочим. `allow` отсеивает клетки по
-   * правилам команды, например перекрытие последнего прохода.
-   */
-  calculateBuildableCells: (
-    unitId: string,
-    cellType: Cell['type'],
-    allow?: (cell: Position) => boolean,
-  ) => void;
+  /** Клетки, где можно заложить здание; не `null` — режим выбора места. */
+  setBuildableCells: (cells: Position[] | null) => void;
   setClearableCells: (cells: Position[] | null) => void;
   setStrikeCells: (cells: Position[] | null) => void;
 
@@ -52,21 +44,10 @@ export const useHighlightStore = create<HighlightState>()(
       });
     },
 
-    calculateBuildableCells: (unitId, cellType, allow) => {
-      const unit = useUnitsStore.getState().units[unitId];
-
-      if (!unit) return;
-
-      const grid = useMapStore.getState().grid;
-
-      const buildable = getCellsAround(grid, unit.x, unit.y, cellType).filter(
-        cell => !allow || allow(cell),
-      );
-
+    setBuildableCells: cells =>
       set(state => {
-        state.buildableCells = buildable;
-      });
-    },
+        state.buildableCells = cells;
+      }),
 
     setClearableCells: cells =>
       set(state => {

@@ -4,9 +4,10 @@ import {
   type ParticipantId,
   type ResearchType,
 } from '@shared/config';
-import { ok, reject } from '@shared/lib';
+import { getAvailableResources, ok, reject } from '@shared/lib';
 import { useBuildingsStore } from '@entities/buildings';
 import { useEconomyStore } from '@entities/economies';
+import { useUnitsStore } from '@entities/units';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand } from '@entities/journals';
 import { hasResearch, useResearchStore } from '@entities/researches';
@@ -41,7 +42,11 @@ const validateAndStart = ({
   if (hasResearch(actor, research)) return reject('researched');
   if (useResearchStore.getState().current[actor]) return reject('researching');
 
-  const stock = useEconomyStore.getState().resources[actor];
+  const stock = getAvailableResources(
+    useEconomyStore.getState().resources[actor],
+    Object.values(useUnitsStore.getState().units),
+    actor,
+  );
   if (stock.gold < config.cost.gold || stock.wood < config.cost.wood) {
     return reject('resources');
   }

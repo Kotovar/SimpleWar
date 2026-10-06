@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { Owner, Position, Unit } from '@shared/config';
+import type { BuildingType, Owner, Position, Unit } from '@shared/config';
 import type { Selection } from '@features/selection';
 import { getOrderRoutePreview, getRoutePreview } from '@features/pathfinding';
 
@@ -15,6 +15,8 @@ import { getOrderRoutePreview, getRoutePreview } from '@features/pathfinding';
  * @param humanId - Участник за этим экраном.
  * @param planned - Цель, ждущая подтверждения вторым кликом; чужая
  *   отметка (другого юнита) не показывается.
+ * @param placing - Режим выбора места: к допустимой клетке под курсором
+ *   показывается путь рабочего к стройке, к недопустимой — никакой.
  * @returns Путь с ценой и ходом прибытия или `null`, если показывать нечего.
  */
 export const useHoverPath = (
@@ -23,6 +25,7 @@ export const useHoverPath = (
   units: Record<string, Unit>,
   humanId: Owner | null,
   planned: (Position & { unitId: string }) | null = null,
+  placing: { type: BuildingType; valid: boolean } | null = null,
 ) =>
   useMemo(() => {
     if (!humanId || selection?.kind !== 'unit') return null;
@@ -30,9 +33,17 @@ export const useHoverPath = (
     if (unit?.owner !== humanId) return null;
     const mark = planned?.unitId === unit.id ? planned : null;
     if (mark) return getRoutePreview(unit, humanId, mark);
+    if (placing && hover)
+      return placing.valid
+        ? getOrderRoutePreview(unit, humanId, {
+            type: 'build',
+            buildingType: placing.type,
+            ...hover,
+          })
+        : null;
     if (unit.order && !unit.order.stopped && unit.order.type !== 'goto')
       return getOrderRoutePreview(unit, humanId, unit.order);
     const route = hover && getRoutePreview(unit, humanId, hover);
     if (route) return route;
     return unit.order ? getOrderRoutePreview(unit, humanId, unit.order) : null;
-  }, [hover, humanId, planned, selection, units]);
+  }, [hover, humanId, placing, planned, selection, units]);

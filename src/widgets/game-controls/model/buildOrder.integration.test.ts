@@ -4,7 +4,7 @@ import {
   DEFAULT_PARTICIPANTS,
   type Cell,
 } from '@shared/config';
-import { ok } from '@shared/lib';
+import { getAvailableResources, ok } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
@@ -20,7 +20,13 @@ import {
   giveWorkOrder,
 } from '@features/workers';
 import { runOrders } from './runOrders';
-import { build, giveBuildOrder, getContextBuildings } from '@features/build';
+import {
+  build,
+  getBuildPlacements,
+  giveBuildOrder,
+  getContextBuildings,
+} from '@features/build';
+import { startResearch } from '@features/research';
 import {
   advanceOrder,
   executeOrders,
@@ -325,5 +331,94 @@ describe('контекстное назначение на работу', () => 
       return ok;
     });
     expect(units().units[workerId]).toEqual(before);
+  });
+});
+
+describe('резерв ресурсов стройки', () => {
+  const stock = () => useEconomyStore.getState().resources.p1;
+  const available = () =>
+    getAvailableResources(stock(), Object.values(units().units), 'p1');
+  const mine = BUILDINGS_CONFIG.mine.cost;
+
+  it('приказ резервирует цену, отмена и другая команда возвращают её', () => {
+    const before = available();
+    expect(order()).toEqual(ok);
+    expect(available()).toEqual({
+      gold: before.gold - mine.gold,
+      wood: before.wood - mine.wood,
+    });
+    expect(stock()).toEqual(before);
+    expect(cancelOrder({ actor: 'p1', unitId: workerId })).toEqual(ok);
+    expect(available()).toEqual(before);
+    order();
+    expect(move({ actor: 'p1', unitId: workerId, x: 1, y: 1 })).toEqual(ok);
+    expect(available()).toEqual(before);
+  });
+
+  it('резерв недоступен другим покупкам, а стройка по прибытии тратит его', () => {
+    useEconomyStore.setState({
+      resources: {
+        ...useEconomyStore.getState().resources,
+        p1: { ...mine },
+      },
+    });
+    expect(order()).toEqual(ok);
+    const second = units().spawnUnit('worker', 0, 0, 'p1')!;
+    units().resetUnitsForNewTurn('p1');
+    expect(
+      giveBuildOrder({
+        actor: 'p1',
+        workerId: second,
+        buildingType: 'mine',
+        ...target,
+      }),
+    ).toMatchObject({ code: 'resources' });
+    useBuildingsStore.getState().spawnBuilding('forge', 0, 2, 'p1');
+    expect(startResearch({ actor: 'p1', research: 'formation' })).toMatchObject(
+      { code: 'resources' },
+    );
+    units().placeUnit(workerId, 9, 1);
+    expect(execute()).toEqual([]);
+    expect(useBuildingsStore.getState().getBuildingAt(10, 1)?.type).toBe(
+      'mine',
+    );
+    expect(stock()).toEqual({ gold: 0, wood: 0 });
+  });
+
+  it('без ресурсов приказ не ставится', () => {
+    useEconomyStore.setState({
+      resources: {
+        ...useEconomyStore.getState().resources,
+        p1: { gold: 0, wood: 0 },
+      },
+    });
+    expect(order()).toMatchObject({ code: 'resources' });
+    expect(units().units[workerId].order).toBeUndefined();
+  });
+
+  it('остановленный приказ и гибель рабочего возвращают резерв', () => {
+    const before = available();
+    order();
+    units().spawnUnit('swordsman', 6, 1, 'p2');
+    expect(execute()).toEqual([workerId]);
+    expect(available()).toEqual(before);
+    order();
+    units().damageUnit(workerId, 999);
+    expect(units().units[workerId]).toBeUndefined();
+    expect(available()).toEqual(before);
+  });
+
+  it('ферма закладывается далеко от рабочего', () => {
+    const farm = { x: 8, y: 0 };
+    const worker = units().units[workerId];
+    expect(getBuildPlacements(worker, 'p1', 'farm')).toContainEqual(farm);
+    expect(
+      giveBuildOrder({ actor: 'p1', workerId, buildingType: 'farm', ...farm }),
+    ).toEqual(ok);
+    for (let i = 0; i < 3; i++) {
+      execute();
+      units().resetUnitsForNewTurn('p1');
+    }
+    expect(useBuildingsStore.getState().getBuildingAt(8, 0)?.type).toBe('farm');
   });
 });

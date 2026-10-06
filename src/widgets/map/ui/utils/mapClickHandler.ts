@@ -42,13 +42,43 @@ const selectClicked = (x: number, y: number, ctx: MapClickContext) => {
   ui.selectCell(x, y);
 };
 
+/**
+ * Закладывает выбранное здание на подсвеченной клетке. Рабочий остаётся
+ * выбранным: виден маршрут до стройки или новое здание рядом.
+ */
+const placeBuilding = (
+  unit: Unit,
+  x: number,
+  y: number,
+  ctx: MapClickContext,
+) => {
+  const { selection, commands, humanId: actor } = ctx;
+  const buildingType = selection.buildingTypeToPlace;
+  if (!buildingType) return;
+  const place = commands.orderBuild ?? commands.build;
+  const result = place({ actor, workerId: unit.id, buildingType, x, y });
+  if (!result.ok) return;
+  resetInteraction(ctx);
+  ctx.ui.selectUnit(unit.id);
+  ctx.ui.calculateActionHighlights(unit.id);
+};
+
+/**
+ * Режим выбора места: любой клик по карте — попытка заложить здание.
+ * Негодная клетка даёт отказ с причиной, режим остаётся (как в Warcraft III).
+ */
+const isPlacing = (unit: Unit, ctx: MapClickContext) =>
+  unit.type === 'worker' &&
+  unit.role === 'civil' &&
+  !!ctx.selection.buildingTypeToPlace;
+
 const clickWithOwnUnit = (
   unit: Unit,
   x: number,
   y: number,
   ctx: MapClickContext,
 ) => {
-  const { selection, highlights, commands, humanId: actor } = ctx;
+  const { highlights, commands, humanId: actor } = ctx;
 
   // Режим прицела осады важнее движения: клетки могут совпадать.
   if (
@@ -71,20 +101,8 @@ const clickWithOwnUnit = (
     return;
   }
 
-  if (
-    unit.type === 'worker' &&
-    unit.role === 'civil' &&
-    selection.buildingTypeToPlace &&
-    isHighlighted(highlights.buildable, x, y)
-  ) {
-    commands.build({
-      actor,
-      workerId: unit.id,
-      buildingType: selection.buildingTypeToPlace,
-      x,
-      y,
-    });
-    resetInteraction(ctx);
+  if (isPlacing(unit, ctx)) {
+    placeBuilding(unit, x, y, ctx);
     return;
   }
 
@@ -165,6 +183,11 @@ export const handleMapCellOrder = (
   const { selection, clicked, highlights, commands, humanId: actor } = ctx;
   const entity = selection.unit ?? selection.building;
   if (!entity || entity.owner !== actor) return;
+  // ПКМ в режиме выбора места закладывает здание, как и ЛКМ.
+  if (selection.unit && isPlacing(selection.unit, ctx)) {
+    placeBuilding(selection.unit, x, y, ctx);
+    return;
+  }
   const onCurrent = selection.isCurrent(x, y);
   if (onCurrent && selection.building?.role !== 'production') return;
   const target = clicked.unit ?? clicked.building;

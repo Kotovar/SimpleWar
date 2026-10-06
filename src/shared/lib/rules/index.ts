@@ -9,3 +9,4 @@ export * from './workplace';
 export * from './access';
 export * from './damage';
 export * from './strikes';
+export * from './reservations';

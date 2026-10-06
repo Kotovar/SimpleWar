@@ -5,7 +5,7 @@ import {
   MAP_GENERATOR_VERSION,
   type ParticipantId,
 } from '@shared/config';
-import { restoreGameState } from '@shared/lib';
+import { restoreGameState, stopUnpaidBuildOrders } from '@shared/lib';
 import { useSettingsStore, useDebugStore } from '@entities/settings';
 import { useGameLoopStore } from '@entities/games';
 import { useMapStore } from '@entities/maps';
@@ -154,7 +154,8 @@ export const applySnapshot = (input: GameSnapshot) => {
       enabled: snapshot.debug.enabled && DEBUG_AVAILABLE,
     });
     useUnitsStore.setState({
-      units: snapshot.units,
+      // Старые сохранения ставили приказ стройки без резерва.
+      units: stopUnpaidBuildOrders(snapshot.units, snapshot.economy.resources),
       selectedUnitForSpawn: null,
     });
     useBuildingsStore.setState({

@@ -1,6 +1,10 @@
 import { useState, type ReactNode } from 'react';
 import type { Building, BuildingType, Unit } from '@shared/config';
-import { findServingWorker } from '@shared/lib';
+import {
+  findServingWorker,
+  getAvailableResources,
+  getReservedResources,
+} from '@shared/lib';
 import { useBuildingsSelectors } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
 import { useResearchStore } from '@entities/researches';
@@ -120,6 +124,12 @@ export const ResourcesInfo = () => {
     artel,
   });
   const { occupied, max } = populationCap[humanId];
+  // Показываем запас без резерва под назначенные стройки: его не потратить.
+  const all = Object.values(units);
+  const stock = getAvailableResources(resources[humanId], all, humanId);
+  const reserved = getReservedResources(all, humanId);
+  const extra = (perTurn: number, held: number) =>
+    held ? `+${perTurn}/ход · резерв ${held}` : `+${perTurn}/ход`;
 
   return (
     <div className={styles.Resources}>
@@ -127,9 +137,9 @@ export const ResourcesInfo = () => {
         tone='gold'
         icon={<GoldIcon size={18} />}
         label='Золото'
-        value={resources[humanId].gold}
-        amount={resources[humanId].gold}
-        extra={`+${income.gold}/ход`}
+        value={stock.gold}
+        amount={stock.gold}
+        extra={extra(income.gold, reserved.gold)}
         warning={idleWarning(
           countIdle(ownBuildings, ownUnits, 'mine'),
           'рудн.',
@@ -139,9 +149,9 @@ export const ResourcesInfo = () => {
         tone='wood'
         icon={<WoodIcon size={18} />}
         label='Древесина'
-        value={resources[humanId].wood}
-        amount={resources[humanId].wood}
-        extra={`+${income.wood}/ход`}
+        value={stock.wood}
+        amount={stock.wood}
+        extra={extra(income.wood, reserved.wood)}
         warning={idleWarning(
           countIdle(ownBuildings, ownUnits, 'sawmill'),
           'лесоп.',

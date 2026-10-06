@@ -10,9 +10,7 @@ export const useHighlightSelectors = () => {
   const setClearableCells = useHighlightStore(state => state.setClearableCells);
   const strikeCells = useHighlightStore(state => state.strikeCells);
   const resetStore = useHighlightStore(state => state.resetStore);
-  const calculateBuildableCells = useHighlightStore(
-    state => state.calculateBuildableCells,
-  );
+  const setBuildableCells = useHighlightStore(state => state.setBuildableCells);
 
   return {
     spawnableCells,
@@ -21,7 +19,7 @@ export const useHighlightSelectors = () => {
     setClearableCells,
     strikeCells,
     calculateSpawnableCells,
-    calculateBuildableCells,
+    setBuildableCells,
     resetStore,
   };
 };

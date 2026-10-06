@@ -4,7 +4,7 @@ import {
   type ParticipantId,
   type Position,
 } from '@shared/config';
-import { worldToScreen } from '@shared/lib';
+import { getAvailableResources, worldToScreen } from '@shared/lib';
 import { GoldIcon, WoodIcon } from '@shared/ui';
 import { useSettingsStore } from '@entities/settings';
 import { useUnitsStore } from '@entities/units';
@@ -43,13 +43,20 @@ export const ContextBuildMenu = ({
   const mapSize = useSettingsStore(state => state.viewport);
   const selection = useSelectionStore(state => state.selection);
   const worker = useUnitsStore(state => state.units[target.workerId]);
-  const resources = useEconomyStore(state =>
+  const stock = useEconomyStore(state =>
     humanId ? state.resources[humanId] : null,
   );
+  const units = useUnitsStore(state => state.units);
   if (selection?.kind !== 'unit' || selection.id !== target.workerId)
     return null;
-  if (!worker || !humanId || !resources || getTurnRejection(humanId))
-    return null;
+  if (!worker || !humanId || !stock || getTurnRejection(humanId)) return null;
+  // Свой прежний приказ рабочий заменит: его резерв доступен.
+  const resources = getAvailableResources(
+    stock,
+    Object.values(units),
+    humanId,
+    worker.id,
+  );
   const menuOptions = getContextBuildings(worker, humanId, target);
   const menuWorkplace = getContextWorkplace(worker, humanId, target);
   const finishOrder = (workerId: string) => {
@@ -103,7 +110,7 @@ export const ContextBuildMenu = ({
           missingWood && 'древесины',
         ].filter(Boolean);
         const warning = missingResources.length
-          ? `Не хватает ${missingResources.join(' и ')}. Ресурсы будут проверены при исполнении приказа.`
+          ? `Не хватает ${missingResources.join(' и ')}.`
           : undefined;
         return (
           <button

@@ -14,6 +14,7 @@ import {
   isCellVisible,
   ok,
   reject,
+  getAvailableResources,
 } from '@shared/lib';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
@@ -88,10 +89,17 @@ const validateAndBuild = (
   if (isPlacementBlocking(actor, { x, y })) return reject('blocked');
 
   const { resources, removeResources } = useEconomyStore.getState();
+  // Резерв приказа этого рабочего — его же: стройка по прибытии тратит его.
+  const available = getAvailableResources(
+    resources[actor],
+    Object.values(useUnitsStore.getState().units),
+    actor,
+    workerId,
+  );
   // Бесплатность снимает только цену: очки, место и тип проверены как обычно.
   const check = canSpawnBuilding(
     buildingType,
-    getPayableResources(resources[actor], isFree),
+    getPayableResources(available, isFree),
     worker.buildPoints,
   );
   if (!check.canSpawn) {

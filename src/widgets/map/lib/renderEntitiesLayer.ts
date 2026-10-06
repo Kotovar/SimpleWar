@@ -1,25 +1,11 @@
 import {
   DAMAGED_BUILDING_RATIO,
   type Building,
-  type BuildingType,
   type Owner,
   type Unit,
   type UnitType,
 } from '@shared/config';
 import type { CellRange } from '@shared/lib';
-import {
-  drawBarracks,
-  drawBase,
-  drawFarm,
-  drawForge,
-  drawPalisade,
-  drawGoldMine,
-  drawSanctuary,
-  drawSawmill,
-  drawStable,
-  drawTower,
-  drawWorkshop,
-} from './drawBuildings';
 import {
   drawArcher,
   drawGriffon,
@@ -38,6 +24,8 @@ import { drawWorkBadge } from './drawWorkBadge';
 import { drawIdleBadge } from './drawIdleBadge';
 import { drawFormationBadge } from './drawFormationBadge';
 import { drawHourglass, type HourglassState } from './drawHourglass';
+import { drawBuildingGhost } from './drawBuildingGhost';
+import { drawBuildingModel } from './drawBuildingModel';
 import {
   drawDamagedBuilding,
   drawRoleIcon,
@@ -55,20 +43,6 @@ export type CellOffsets = Map<
   { dx: number; dy: number; scale?: number }
 >;
 
-const BUILDING_DRAWERS = {
-  base: drawBase,
-  mine: drawGoldMine,
-  sawmill: drawSawmill,
-  farm: drawFarm,
-  barracks: drawBarracks,
-  tower: drawTower,
-  stable: drawStable,
-  workshop: drawWorkshop,
-  forge: drawForge,
-  palisade: drawPalisade,
-  sanctuary: drawSanctuary,
-} satisfies Record<BuildingType, unknown>;
-
 const UNIT_DRAWERS = {
   worker: drawWorker,
   swordsman: drawSwordsman,
@@ -82,21 +56,7 @@ const UNIT_DRAWERS = {
   griffon: drawGriffon,
 } satisfies Record<UnitType, unknown>;
 
-/**
- * Рисует модель здания без полосы здоровья.
- *
- * @param x - Столбец клетки, может быть дробным во время анимации.
- * @param y - Строка клетки.
- */
-export const drawBuildingModel = (
-  ctx: CanvasRenderingContext2D,
-  type: BuildingType,
-  x: number,
-  y: number,
-  cellSize: number,
-  owner: Owner,
-  scale = 1,
-) => BUILDING_DRAWERS[type](ctx, x, y, cellSize, owner, scale);
+export { drawBuildingModel } from './drawBuildingModel';
 
 /** Объект целиком вне окна камеры: его не рисуем. */
 const isOutside = (range: CellRange | undefined, x: number, y: number) =>
@@ -183,6 +143,8 @@ export const getSpentIds = (
  * @param staffed - Свои рудники и лесопилки с рабочим внутри.
  * @param hourglasses - Кадры песочных часов отходивших сущностей
  *   (см. {@link getSpentIds}).
+ * @param orderUnits - Юниты с приказами стройки для зданий-призраков,
+ *   включая рабочих внутри зданий; рисуются только свои.
  */
 export const renderEntitiesLayer = (
   ctx: CanvasRenderingContext2D,
@@ -194,9 +156,24 @@ export const renderEntitiesLayer = (
   range?: CellRange,
   staffed: ReadonlySet<string> = new Set(),
   hourglasses: ReadonlyMap<string, HourglassState> = new Map(),
+  orderUnits: Iterable<Unit> = Object.values(units),
 ) => {
   // Издалека — значки роли и владельца, вблизи — рисунок и мелкие значки.
   const detail = getDetailLevel(cellSize);
+
+  // Назначенные стройки: здание-призрак ждёт рабочего, ресурсы в резерве.
+  [...orderUnits].forEach(({ owner, order }) => {
+    if (owner !== humanId || order?.type !== 'build' || order.stopped) return;
+    if (isOutside(range, order.x, order.y)) return;
+    drawBuildingGhost(
+      ctx,
+      order.buildingType,
+      order.x,
+      order.y,
+      cellSize,
+      owner,
+    );
+  });
 
   Object.values(buildings).forEach(building => {
     const { id, x, y, type, hp, maxHp, owner } = building;

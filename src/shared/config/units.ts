@@ -32,7 +32,8 @@ type UnitRole = 'military' | 'civil';
 export type UnitOrder = (
   | { type: 'goto' }
   | { type: 'explore' }
-  | { type: 'build'; buildingType: BuildingType }
+  /** `free` — поставлен с отладочной бесплатной стройкой: без резерва. */
+  | { type: 'build'; buildingType: BuildingType; free?: true }
   | { type: 'work'; buildingId: string }
 ) & {
   x: number;

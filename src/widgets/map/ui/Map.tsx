@@ -8,6 +8,7 @@ import {
 import type { Position } from '@shared/config';
 import { useSettingsStore } from '@entities/settings';
 import { useUnitsStore } from '@entities/units';
+import { useBuildingsStore } from '@entities/buildings';
 import { useSelectionStore } from '@features/selection';
 import { getContextBuildings } from '@features/build';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
@@ -98,8 +99,11 @@ export const Map = ({ focusOnMount = true }: { focusOnMount?: boolean }) => {
       selection?.kind === 'unit'
         ? useUnitsStore.getState().units[selection.id]
         : null;
+    // В режиме выбора места ПКМ закладывает здание, а не открывает меню.
+    const placing = !!useBuildingsStore.getState().selectedBuildingForSpawn;
     if (
       order &&
+      !placing &&
       unit &&
       humanId &&
       !getTurnRejection(humanId) &&

@@ -1,4 +1,10 @@
-import type { Building, Position, Unit } from '@shared/config';
+import type {
+  Building,
+  BuildingType,
+  Owner,
+  Position,
+  Unit,
+} from '@shared/config';
 import { getHealAmount } from '@features/combat';
 import { calculateDamage } from '@shared/lib';
 import { getResearchArmor } from '@entities/researches';
@@ -10,6 +16,7 @@ import {
 import { drawAttackRange, drawPath, type MovePath } from './drawPath';
 import { drawTerrainHighlight } from './drawTerrain';
 import { drawDamagePreview } from './drawDamagePreview';
+import { drawBuildingGhost } from './drawBuildingGhost';
 
 type Options = {
   /** Клетка под курсором. */
@@ -24,6 +31,10 @@ type Options = {
   showRallyPoint?: boolean;
   /** Фаза пульсации выделения от 0 до 1. */
   pulse?: number;
+  /** Здание под курсором в режиме выбора места и можно ли его там заложить. */
+  ghost?:
+    | (Position & { type: BuildingType; owner: Owner; valid: boolean })
+    | null;
 };
 
 export const renderSelectionLayer = (
@@ -39,9 +50,14 @@ export const renderSelectionLayer = (
     healTargets,
     showRallyPoint = false,
     pulse = 0,
+    ghost,
   }: Options = {},
 ) => {
   if (hover) drawHoverHighlight(ctx, hover.x, hover.y, cellSize);
+  if (ghost) {
+    const { type, x, y, owner, valid } = ghost;
+    drawBuildingGhost(ctx, type, x, y, cellSize, owner, valid);
+  }
 
   if (!selection) return;
 

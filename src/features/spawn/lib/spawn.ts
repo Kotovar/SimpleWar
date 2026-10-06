@@ -12,6 +12,7 @@ import {
   isCellVisible,
   ok,
   reject,
+  getAvailableResources,
 } from '@shared/lib';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
@@ -70,7 +71,7 @@ const validateAndSpawn = (
   if (Math.max(Math.abs(building.x - x), Math.abs(building.y - y)) !== 1) {
     return reject('distance');
   }
-  const { spawnUnit, getUnitAt } = useUnitsStore.getState();
+  const { spawnUnit, getUnitAt, units } = useUnitsStore.getState();
   if (getUnitAt(x, y) || getBuildingAt(x, y)) return reject('occupied');
 
   const { resources, populationCap, removeResources } =
@@ -78,7 +79,10 @@ const validateAndSpawn = (
   // Бесплатность снимает только цену: население и очки найма проверены как обычно.
   const check = canSpawnUnit(
     unitType,
-    getPayableResources(resources[actor], isFree),
+    getPayableResources(
+      getAvailableResources(resources[actor], Object.values(units), actor),
+      isFree,
+    ),
     populationCap[actor],
     building.spawnPoints,
   );

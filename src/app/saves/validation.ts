@@ -116,6 +116,7 @@ const order: Check = v => {
         'explored',
         'threat',
       ]),
+      ...(v.type === 'build' ? { free: one([true]) } : {}),
     },
   )(v);
 };

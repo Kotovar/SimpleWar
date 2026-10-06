@@ -1,5 +1,4 @@
 import {
-  BUILDINGS_CONFIG,
   type Building,
   type BuildingType,
   type ParticipantId,
@@ -9,7 +8,7 @@ import {
 } from '@shared/config';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
-import { demolish, isPlacementBlocking } from '@features/build';
+import { demolish } from '@features/build';
 import { getStrikeCells } from '@features/combat';
 import {
   autoExplore,
@@ -20,6 +19,7 @@ import {
 import { cancelResearch, startResearch } from '@features/research';
 import { useSelectionStore } from '@features/selection';
 import { spawnAtRallyPoint } from './spawnAtRallyPoint';
+import { getReachableBuildPlacements } from './buildPlacements';
 import { setRallyPoint } from '@features/spawn';
 import { setUnitRest } from '@features/game-loop';
 import {
@@ -124,14 +124,10 @@ export const runSelectionAction = (
         return;
       }
       useBuildingsStore.getState().selectBuildingForSpawn(type);
-      // Клетки, где здание перекроет последний проход, не подсвечиваются.
+      // Место выбирается по всей известной карте: рабочий дойдёт сам.
       useHighlightStore
         .getState()
-        .calculateBuildableCells(
-          unit.id,
-          BUILDINGS_CONFIG[type].requiredField ?? 'grass',
-          cell => !isPlacementBlocking(actor, cell),
-        );
+        .setBuildableCells(getReachableBuildPlacements(unit, actor, type));
       return;
     }
     case 'spawn': {

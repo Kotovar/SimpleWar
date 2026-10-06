@@ -1,5 +1,5 @@
 import { REPAIR, type CommandResult, type ParticipantId } from '@shared/config';
-import { isAdjacent, ok, reject } from '@shared/lib';
+import { getAvailableResources, isAdjacent, ok, reject } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useEconomyStore } from '@entities/economies';
@@ -41,7 +41,11 @@ const validateAndRepair = ({
   if (worker.buildPoints <= 0) return reject('points');
 
   const { resources, removeResources } = useEconomyStore.getState();
-  const { gold, wood } = resources[actor];
+  const { gold, wood } = getAvailableResources(
+    resources[actor],
+    Object.values(useUnitsStore.getState().units),
+    actor,
+  );
   if (gold < REPAIR.cost.gold || wood < REPAIR.cost.wood) {
     return reject('resources');
   }

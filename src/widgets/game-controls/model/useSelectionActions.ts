@@ -1,5 +1,5 @@
 import type { ResearchType } from '@shared/config';
-import { isAdjacent } from '@shared/lib';
+import { getAvailableResources, isAdjacent } from '@shared/lib';
 import { useBuildingsStore } from '@entities/buildings';
 import { useEconomyStore } from '@entities/economies';
 import { useGameLoopStore } from '@entities/games';
@@ -107,14 +107,23 @@ export const useSelectionActions = () => {
   );
 
   const own = Object.values(buildings).filter(b => b.owner === humanId);
+  // Резерв приказов стройки недоступен; свой приказ рабочий может заменить.
+  const allUnits = Object.values(units);
+  const available = getAvailableResources(resources, allUnits, owner);
+  const availableBuild = getAvailableResources(
+    resources,
+    allUnits,
+    owner,
+    unit?.id,
+  );
   const workers = Object.values(units).filter(u => u.role === 'civil');
   const input: SelectionActionInput = {
     unit,
     building,
     isTurn,
-    payableBuild: getPayableResources(resources, freeBuild),
-    payableSpawn: getPayableResources(resources, freeSpawn),
-    stock: resources,
+    payableBuild: getPayableResources(availableBuild, freeBuild),
+    payableSpawn: getPayableResources(available, freeSpawn),
+    stock: available,
     population,
     researched,
     researching,

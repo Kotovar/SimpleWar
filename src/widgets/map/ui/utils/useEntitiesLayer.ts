@@ -390,6 +390,7 @@ export const useEntitiesLayer = ({
           range,
           staffed,
           glasses,
+          Object.values(worldUnits),
         );
         drawEffects('over');
       });

@@ -103,20 +103,24 @@ describe('handleMapCellClick', () => {
     expect(m.setPlannedTarget).not.toHaveBeenCalled();
   });
 
-  it('первый дальний ПКМ закрепляет цель без движения и заменяет режим стройки', () => {
+  it('ПКМ в режиме стройки закладывает здание, а не ведёт рабочего', () => {
     const selectedUnit = unitAt('worker', 1, 1);
     const m = makeContext({ selectedUnit, buildingTypeToPlace: 'farm' });
     m.canPlanRoute.mockReturnValue(true);
+    m.build.mockReturnValue(reject('blocked'));
     handleMapCellOrder(8, 1, m.ctx);
-    expect(m.setPlannedTarget).toHaveBeenCalledWith({
-      unitId: selectedUnit.id,
+    expect(m.build).toHaveBeenCalledWith({
+      actor: 'p1',
+      workerId: selectedUnit.id,
+      buildingType: 'farm',
       x: 8,
       y: 1,
     });
+    // Отказ размещения: режим и выбор остаются, рабочий не идёт.
+    expect(m.setPlannedTarget).not.toHaveBeenCalled();
     expect(m.goTo).not.toHaveBeenCalled();
     expect(m.move).not.toHaveBeenCalled();
-    expect(m.clearHighlight).toHaveBeenCalled();
-    expect(m.selectUnit).toHaveBeenCalledWith(selectedUnit.id);
+    expect(m.clearHighlight).not.toHaveBeenCalled();
   });
 
   it('второй дальний ПКМ отдаёт приказ и снимает выбор без повторного выбора', () => {
@@ -451,7 +455,7 @@ describe('handleMapCellClick', () => {
     expect(m.clearSelection).toHaveBeenCalled();
   });
 
-  it('builds the chosen building type on a highlighted cell', () => {
+  it('builds the chosen building type on a clicked cell', () => {
     const selectedUnit = unitAt('worker', 1, 1);
     const m = makeContext({
       selectedUnit,

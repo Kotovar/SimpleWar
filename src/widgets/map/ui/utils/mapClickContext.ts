@@ -54,6 +54,8 @@ export type MapClickContext = {
     move: (command: MoveCommand) => CommandResult;
     attack: (command: AttackCommand) => CommandResult;
     build: (command: BuildCommand) => CommandResult;
+    /** Приказ «идти и построить»: место может быть далеко от рабочего. */
+    orderBuild?: (command: BuildCommand) => CommandResult;
     spawn: (command: SpawnCommand) => CommandResult;
     setRallyPoint?: (command: RallyPointCommand) => CommandResult;
     clearForest?: (command: ClearForestCommand) => CommandResult;
