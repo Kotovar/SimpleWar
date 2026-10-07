@@ -215,8 +215,11 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     worldUnits,
   ]);
 
+  const clearableCells = useHighlightStore(state => state.clearableCells);
   // Какой приказ даст клик под курсором: путь к нему виден до клика.
+  // Прицел и расчистка не ведут юнит: пути нет.
   const hoverOrder = useMemo((): UnitOrder | false | null => {
+    if (strikeCells || clearableCells) return false;
     if (ghost) {
       return ghost.valid
         ? { type: 'build', buildingType: ghost.type, x: ghost.x, y: ghost.y }
@@ -231,7 +234,29 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
       : null;
     // Здания читает getContextWorkplace из стора: при их смене — пересчёт.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canOrder, ghost, hover, humanId, selection, worldBuildings, worldUnits]);
+  }, [
+    canOrder,
+    clearableCells,
+    ghost,
+    hover,
+    humanId,
+    selection,
+    strikeCells,
+    worldBuildings,
+    worldUnits,
+  ]);
+
+  // Прицел осады: дуга полёта камня к допустимой клетке под курсором.
+  const strikeArc = useMemo(() => {
+    if (!hover || selection?.kind !== 'unit') return null;
+    const siege = worldUnits[selection.id];
+    const aimed = strikeCells?.some(
+      ({ x, y }) => x === hover.x && y === hover.y,
+    );
+    return siege && aimed
+      ? { from: { x: siege.x, y: siege.y }, to: hover }
+      : null;
+  }, [hover, selection, strikeCells, worldUnits]);
 
   const hoverPath = useHoverPath(
     canOrder ? hover : null,
@@ -260,6 +285,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
           attackableTargets,
           healTargets,
           ghost,
+          arc: strikeArc,
           showRallyPoint:
             !!humanId &&
             selection?.kind === 'building' &&
@@ -275,6 +301,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     healTargets,
     hover,
     hoverPath,
+    strikeArc,
     humanId,
     selection,
     units,

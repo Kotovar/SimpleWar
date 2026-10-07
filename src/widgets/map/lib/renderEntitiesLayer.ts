@@ -3,21 +3,8 @@ import {
   type Building,
   type Owner,
   type Unit,
-  type UnitType,
 } from '@shared/config';
 import type { CellRange } from '@shared/lib';
-import {
-  drawArcher,
-  drawGriffon,
-  drawHealer,
-  drawMage,
-  drawRider,
-  drawScout,
-  drawSiege,
-  drawSpearman,
-  drawSwordsman,
-  drawWorker,
-} from './drawUnits';
 import { drawHpBar } from './drawHpBar';
 import { drawActionPips } from './drawActionPips';
 import { drawWorkBadge } from './drawWorkBadge';
@@ -25,7 +12,7 @@ import { drawIdleBadge } from './drawIdleBadge';
 import { drawFormationBadge } from './drawFormationBadge';
 import { drawHourglass, type HourglassState } from './drawHourglass';
 import { drawBuildingGhost } from './drawBuildingGhost';
-import { drawBuildingModel } from './drawBuildingModel';
+import { drawBuildingModel, drawUnitModel } from './drawModels';
 import {
   drawDamagedBuilding,
   drawRoleIcon,
@@ -37,26 +24,25 @@ import { isHostile } from '@shared/lib';
 import { getHealTargets } from '@features/combat';
 import { getResearchArmor } from '@entities/researches';
 
-/** Смещение в клетках и масштаб сущностей, которые сейчас анимируются. */
+/**
+ * Смещение в клетках и масштаб сущностей, которые сейчас анимируются;
+ * `hp` — показываемое HP до попадания летящего удара.
+ */
 export type CellOffsets = Map<
   string,
-  { dx: number; dy: number; scale?: number }
+  {
+    dx: number;
+    dy: number;
+    scale?: number;
+    hp?: number;
+    /** Поза рычага катапульты: `0` — поднят, `1` — взведён. */
+    arm?: number;
+    /** Камень в чаше катапульты; после выстрела — нет до перезарядки. */
+    loaded?: boolean;
+  }
 >;
 
-const UNIT_DRAWERS = {
-  worker: drawWorker,
-  swordsman: drawSwordsman,
-  archer: drawArcher,
-  scout: drawScout,
-  spearman: drawSpearman,
-  rider: drawRider,
-  siege: drawSiege,
-  mage: drawMage,
-  healer: drawHealer,
-  griffon: drawGriffon,
-} satisfies Record<UnitType, unknown>;
-
-export { drawBuildingModel } from './drawBuildingModel';
+export { drawBuildingModel, drawUnitModel } from './drawModels';
 
 /** Объект целиком вне окна камеры: его не рисуем. */
 const isOutside = (range: CellRange | undefined, x: number, y: number) =>
@@ -145,6 +131,8 @@ export const getSpentIds = (
  *   (см. {@link getSpentIds}).
  * @param orderUnits - Юниты с приказами стройки для зданий-призраков,
  *   включая рабочих внутри зданий; рисуются только свои.
+ * @param cocked - Катапульты со взведённым рычагом: удар подготовлен и
+ *   смотрящему это известно.
  */
 export const renderEntitiesLayer = (
   ctx: CanvasRenderingContext2D,
@@ -157,6 +145,7 @@ export const renderEntitiesLayer = (
   staffed: ReadonlySet<string> = new Set(),
   hourglasses: ReadonlyMap<string, HourglassState> = new Map(),
   orderUnits: Iterable<Unit> = Object.values(units),
+  cocked: ReadonlySet<string> = new Set(),
 ) => {
   // Издалека — значки роли и владельца, вблизи — рисунок и мелкие значки.
   const detail = getDetailLevel(cellSize);
@@ -178,8 +167,13 @@ export const renderEntitiesLayer = (
   Object.values(buildings).forEach(building => {
     const { id, x, y, type, hp, maxHp, owner } = building;
     if (isOutside(range, x, y)) return;
-    const hpRatio = hp / maxHp;
-    const { dx = 0, dy = 0, scale = 1 } = offsets?.get(id) ?? {};
+    const {
+      dx = 0,
+      dy = 0,
+      scale = 1,
+      hp: shown = hp,
+    } = offsets?.get(id) ?? {};
+    const hpRatio = shown / maxHp;
 
     const hourglass = hourglasses.get(id);
 
@@ -210,8 +204,13 @@ export const renderEntitiesLayer = (
   unitList.forEach(unit => {
     const { id, x, y, type, hp, maxHp, owner } = unit;
     if (isOutside(range, x, y)) return;
-    const hpRatio = hp / maxHp;
-    const { dx = 0, dy = 0, scale = 1 } = offsets?.get(id) ?? {};
+    const {
+      dx = 0,
+      dy = 0,
+      scale = 1,
+      hp: shown = hp,
+    } = offsets?.get(id) ?? {};
+    const hpRatio = shown / maxHp;
 
     const hourglass = hourglasses.get(id);
     // Сон и приказ занимают тот же угол: часы встают рядом.
@@ -229,7 +228,11 @@ export const renderEntitiesLayer = (
       }
       return;
     }
-    UNIT_DRAWERS[type](ctx, x + dx, y + dy, cellSize, owner, scale);
+    const motion = offsets?.get(id);
+    drawUnitModel(ctx, type, x + dx, y + dy, cellSize, owner, scale, {
+      arm: motion?.arm ?? (cocked.has(id) ? 1 : 0),
+      loaded: motion?.loaded ?? true,
+    });
     drawHpBar(ctx, x + dx, y + dy, cellSize, hpRatio);
     if (hourglass) {
       drawHourglass(ctx, x + dx, y + dy, cellSize, hourglass, shifted);

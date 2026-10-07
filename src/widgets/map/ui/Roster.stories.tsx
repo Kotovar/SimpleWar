@@ -93,7 +93,7 @@ const Roster = ({ cellSize, monochrome }: Args) => {
  * переключает детализацию: значки, силуэты, детали.
  */
 const meta = {
-  title: 'Map/Состав',
+  title: 'Roster',
   component: Roster,
   args: { cellSize: 40, monochrome: false },
   argTypes: { cellSize: { control: { type: 'range', min: 6, max: 64 } } },

@@ -63,6 +63,7 @@ const makeContext = (o: Overrides = {}) => {
     setRallyPoint: vi.fn(done),
     canPlanRoute: vi.fn((_unit: Unit, _x: number, _y: number) => false),
     setPlannedTarget: vi.fn(),
+    hasOrder: vi.fn((_id: string) => true),
   };
   const { move, attack, build, spawn, goTo, heal, setRallyPoint, ...ui } =
     mocks;
@@ -472,6 +473,19 @@ describe('handleMapCellClick', () => {
       x: 2,
       y: 2,
     });
+  });
+
+  it('построивший сразу рабочий теряет выбор, идущий к стройке — остаётся', () => {
+    const selectedUnit = unitAt('worker', 1, 1);
+    const built = makeContext({ selectedUnit, buildingTypeToPlace: 'farm' });
+    built.hasOrder.mockReturnValue(false);
+    handleMapCellClick(2, 2, built.ctx);
+    expect(built.clearSelection).toHaveBeenCalled();
+    expect(built.selectUnit).not.toHaveBeenCalled();
+
+    const walking = makeContext({ selectedUnit, buildingTypeToPlace: 'farm' });
+    handleMapCellClick(5, 5, walking.ctx);
+    expect(walking.selectUnit).toHaveBeenCalledWith(selectedUnit.id);
   });
 
   it('does not build without a chosen building type', () => {

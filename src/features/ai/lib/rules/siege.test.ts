@@ -45,7 +45,13 @@ describe('O02: удар по зданию', () => {
     );
     useAiMemoryStore.getState().resetStore();
     useAiMemoryStore.getState().setMemory('p2', memory);
-    gameEvents.emit({ type: 'SIEGE_STRIKE_EXECUTED', owner: 'p2', x: 9, y: 5 });
+    gameEvents.emit({
+      type: 'SIEGE_STRIKE_EXECUTED',
+      owner: 'p2',
+      siegeId: 'siege',
+      x: 9,
+      y: 5,
+    });
     const fired = useAiMemoryStore.getState().byParticipant.p2!;
     useAiMemoryStore.getState().resetStore();
     expect(O02.evaluate(buildContext(obs, fired, createTurnState()))).toEqual(

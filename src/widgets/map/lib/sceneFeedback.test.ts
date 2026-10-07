@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { getCommandEffect } from './sceneFeedback';
+import { CLEARING_DURATION } from './drawEffects';
 
 describe('эффект расчистки', () => {
   const command = {
@@ -11,7 +12,13 @@ describe('эффект расчистки', () => {
   it('показывает эффект только для видимой расчистки', () => {
     expect(
       getCommandEffect(command, (x, y) => x === 4 && y === 7, 100),
-    ).toEqual({ x: 4, y: 7, clearing: true, start: 100 });
+    ).toEqual({
+      x: 4,
+      y: 7,
+      clearing: true,
+      start: 100,
+      duration: CLEARING_DURATION,
+    });
     expect(getCommandEffect(command, () => false, 100)).toBeNull();
   });
 

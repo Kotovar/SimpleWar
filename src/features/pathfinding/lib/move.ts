@@ -1,5 +1,12 @@
 import type { CommandResult, ParticipantId } from '@shared/config';
-import { getMoveCost, isFlyingType, isHostile, ok, reject } from '@shared/lib';
+import {
+  gameEvents,
+  getMoveCost,
+  isFlyingType,
+  isHostile,
+  ok,
+  reject,
+} from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
@@ -110,7 +117,10 @@ const moveAlong = (
     if (!cost || !current || pending + cost > current.movePoints) break;
     if (!flying && blocksGroundTransit(step.x, step.y, actor)) break;
     pending += cost;
-    if (isCellOccupied(step.x, step.y)) continue;
+    if (isCellOccupied(step.x, step.y)) {
+      gameEvents.emit({ type: 'UNIT_PASSED', unitId, x: step.x, y: step.y });
+      continue;
+    }
 
     moveUnit(unitId, step.x, step.y, pending);
     pending = 0;

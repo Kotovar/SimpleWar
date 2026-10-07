@@ -6,6 +6,7 @@ import {
   useState,
 } from 'react';
 import type { Position } from '@shared/config';
+import { gameEvents } from '@shared/lib';
 import { useSettingsStore } from '@entities/settings';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
@@ -91,6 +92,23 @@ export const Map = ({ focusOnMount = true }: { focusOnMount?: boolean }) => {
   }, [scene, selection, viewer]);
 
   const selectedUnitId = selection?.kind === 'unit' ? selection.id : null;
+  // Рабочий достроил здание (сразу или дойдя по приказу) — выбор снимается.
+  useEffect(
+    () =>
+      gameEvents.subscribe(event => {
+        if (
+          event.type !== 'COMMAND_SUCCEEDED' ||
+          event.command.type !== 'build' ||
+          !selectedUnitId ||
+          event.command.details?.workerId !== selectedUnitId
+        )
+          return;
+        useSelectionStore.getState().clearSelection();
+        useMovementStore.getState().resetStore();
+        useHighlightStore.getState().resetStore();
+      }),
+    [selectedUnitId],
+  );
   useEffect(() => {
     setBuildMenu(null);
   }, [selectedUnitId, activePlayer]);

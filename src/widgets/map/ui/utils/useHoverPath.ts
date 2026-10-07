@@ -9,7 +9,8 @@ import { getOrderRoutePreview, getRoutePreview } from '@features/pathfinding';
  */
 const getOrderPath = (unit: Unit, humanId: Owner, order: UnitOrder) => {
   const route = getOrderRoutePreview(unit, humanId, order);
-  if (order.type === 'goto' || order.type === 'explore') return route;
+  if (order.type === 'goto' || order.type === 'explore')
+    return route && { ...route, goal: true };
   const target = { x: order.x, y: order.y };
   if (route) return { ...route, path: [...route.path, target] };
   const near = Math.max(Math.abs(unit.x - order.x), Math.abs(unit.y - order.y));
@@ -47,12 +48,16 @@ export const useHoverPath = (
     const unit = units[selection.id];
     if (unit?.owner !== humanId) return null;
     const mark = planned?.unitId === unit.id ? planned : null;
-    if (mark) return getRoutePreview(unit, humanId, mark);
+    const toCell = (target: Position) => {
+      const route = getRoutePreview(unit, humanId, target);
+      return route && { ...route, goal: true };
+    };
+    if (mark) return toCell(mark);
     if (hoverOrder === false) return null;
     if (hoverOrder) return getOrderPath(unit, humanId, hoverOrder);
     if (unit.order && !unit.order.stopped && unit.order.type !== 'goto')
       return getOrderPath(unit, humanId, unit.order);
-    const route = hover && getRoutePreview(unit, humanId, hover);
+    const route = hover && toCell(hover);
     if (route) return route;
     return unit.order ? getOrderPath(unit, humanId, unit.order) : null;
   }, [hover, hoverOrder, humanId, planned, selection, units]);

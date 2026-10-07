@@ -26,3 +26,6 @@ export * from './diffScene';
 export * from './sceneFeedback';
 export * from './drawEntityStatus';
 export * from './nextUnit';
+export * from './unitAnimations';
+export * from './drawProjectile';
+export * from './animationFrame';

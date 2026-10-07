@@ -148,6 +148,7 @@ export const useMapCellClick = (scene: Scene) => {
         canPlanRoute: (unit, cellX, cellY) =>
           !!getRoutePreview(unit, humanId, { x: cellX, y: cellY }),
         setPlannedTarget: useMovementStore.getState().setPlannedTarget,
+        hasOrder: id => !!useUnitsStore.getState().units[id]?.order,
       },
     });
   };

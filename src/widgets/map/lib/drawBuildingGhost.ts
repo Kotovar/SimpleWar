@@ -1,5 +1,5 @@
 import type { BuildingType, Owner } from '@shared/config';
-import { drawBuildingModel } from './drawBuildingModel';
+import { drawBuildingModel } from './drawModels';
 
 /**
  * Полупрозрачное здание на месте будущей стройки. С `valid` клетка

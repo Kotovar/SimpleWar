@@ -11,7 +11,7 @@ import {
 } from '@shared/config';
 import { isHostile } from '@shared/lib';
 import type { SceneEvent } from './diffScene';
-import type { Effect } from './drawEffects';
+import { CLEARING_DURATION, type Effect } from './drawEffects';
 
 /** Расчистка озвучивается только после успеха и в видимой клетке. */
 export const getCommandEffect = (
@@ -23,7 +23,7 @@ export const getCommandEffect = (
   const { x, y } = command.details ?? {};
   if (typeof x !== 'number' || typeof y !== 'number' || !isVisible(x, y))
     return null;
-  return { x, y, clearing: true, start };
+  return { x, y, clearing: true, start, duration: CLEARING_DURATION };
 };
 
 /**

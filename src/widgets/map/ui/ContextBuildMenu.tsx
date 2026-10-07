@@ -50,12 +50,14 @@ export const ContextBuildMenu = ({
     worker.id,
   );
   const menuOptions = getContextBuildings(worker, humanId, target);
-  // Рабочий остаётся выбранным: виден путь к стройке.
+  // Идущий к стройке рабочий остаётся выбранным — виден путь; построившего
+  // сразу выбор уже снят (Map).
   const finishOrder = (workerId: string) => {
     onClose();
     useMovementStore.getState().resetStore();
     useHighlightStore.getState().resetStore();
-    useMovementStore.getState().calculateActionHighlights(workerId);
+    if (useUnitsStore.getState().units[workerId]?.order)
+      useMovementStore.getState().calculateActionHighlights(workerId);
     onFocus();
   };
   const menuPoint = worldToScreen(camera, cellSize, {

@@ -17,6 +17,8 @@ export type Tracked = {
   building: boolean;
   /** Тип нужен звуку гибели: у грифона он свой. */
   type: UnitType | BuildingType;
+  /** Владелец: модель погибшего видна до попадания снаряда. */
+  owner: Owner;
 };
 
 /** Видимое изменение сцены для эффекта и звука. */
@@ -24,6 +26,7 @@ export type SceneEvent =
   | { kind: 'move'; id: string; fromX: number; fromY: number }
   | {
       kind: 'damage';
+      id: string;
       x: number;
       y: number;
       amount: number;
@@ -34,11 +37,13 @@ export type SceneEvent =
   | { kind: 'heal'; x: number; y: number; amount: number }
   | {
       kind: 'death';
+      id: string;
       x: number;
       y: number;
       hp: number;
       building: boolean;
       type: UnitType | BuildingType;
+      owner: Owner;
     }
   | {
       kind: 'spawn';
@@ -56,7 +61,14 @@ export type SceneEvent =
       /** Видимая цель для выпада; без неё только звук. */
       target?: { x: number; y: number };
     }
-  | { kind: 'prepare'; x: number; y: number }
+  | {
+      kind: 'prepare';
+      id: string;
+      x: number;
+      y: number;
+      /** Видимая отметка прицела: орудие наводится на неё. */
+      target: { x: number; y: number };
+    }
   | { kind: 'threat'; x: number; y: number };
 
 type Entity = Unit | Building;
@@ -128,7 +140,15 @@ export const diffScene = (
     const { id, x, y, hp, owner } = entity;
     const attackPoints = attackPointsOf(entity);
     const building = isBuilding(entity);
-    tracked.set(id, { x, y, hp, attackPoints, building, type: entity.type });
+    tracked.set(id, {
+      x,
+      y,
+      hp,
+      attackPoints,
+      building,
+      type: entity.type,
+      owner,
+    });
     const before = previous.get(id);
 
     if (!before) {
@@ -153,6 +173,7 @@ export const diffScene = (
     if (hp < before.hp) {
       events.push({
         kind: 'damage',
+        id,
         x,
         y,
         amount: before.hp - hp,
@@ -179,35 +200,52 @@ export const diffScene = (
     if (worldIds.has(id) || !isVisible(cell.x, cell.y)) continue;
     events.push({
       kind: 'death',
+      id,
       x: cell.x,
       y: cell.y,
       hp: before.hp,
       building: before.building,
       type: before.type,
+      owner: before.owner,
     });
   }
 
   const hits = events.filter(
     event => event.kind === 'damage' || event.kind === 'death',
   );
+  const claimed = new Set<string>();
   for (const attacker of attackers) {
     if (attacker.type === 'siege') {
       // Скрытая наводка прячет отметку — тогда и подготовка не слышна.
       const aim = attacker.role === 'military' ? attacker.preparedStrike : null;
       if (aim && visibleStrikes?.has(`${aim.x},${aim.y}`)) {
-        events.push({ kind: 'prepare', x: attacker.x, y: attacker.y });
+        events.push({
+          kind: 'prepare',
+          id: attacker.id,
+          x: attacker.x,
+          y: attacker.y,
+          target: { x: aim.x, y: aim.y },
+        });
       }
       continue;
     }
     // Лечение озвучивает само восстановление HP.
     if (attacker.type === 'healer') continue;
+    // Повреждённый в дальности атакующего, ещё не занятый другим, ближайший.
+    const range = 'attackRange' in attacker ? attacker.attackRange : 1;
     const target = hits
       .map(hit => ({
         x: hit.x,
         y: hit.y,
         distance: Math.abs(hit.x - attacker.x) + Math.abs(hit.y - attacker.y),
+        taken: claimed.has(`${hit.x},${hit.y}`),
       }))
-      .sort((a, b) => a.distance - b.distance)[0];
+      // Вне дальности не бьют: такой урон нанёс кто-то другой.
+      .filter(({ distance }) => distance <= range)
+      .sort(
+        (a, b) => Number(a.taken) - Number(b.taken) || a.distance - b.distance,
+      )[0];
+    if (target) claimed.add(`${target.x},${target.y}`);
     events.push({
       kind: 'attack',
       id: attacker.id,

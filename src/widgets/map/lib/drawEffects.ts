@@ -1,8 +1,10 @@
 import type { Owner } from '@shared/config';
 import { DETAIL_LEVEL } from '@shared/config';
 import {
+  drawAim,
   drawClearing,
   drawConstruction,
+  drawImpact,
   drawSignal,
   drawSpawn,
 } from './drawEventEffects';
@@ -22,12 +24,24 @@ export type Effect = {
   building?: boolean;
   /** Падающие деревья и щепки после расчистки леса. */
   clearing?: boolean;
+  /** Куда падает дерево: от рабочего вправо (`1`) или влево (`-1`). */
+  fall?: 1 | -1;
+  /** Падение камня осады: воронка, пыль, обломки. */
+  impact?: boolean;
+  /** Наводка орудия на отметку удара. */
+  aim?: boolean;
   /** Сигнал над клеткой: замеченная угроза или отказ приказа. */
   signal?: 'threat' | 'reject';
+  /** Начало, мс; может быть позже начала показа — эффект ждёт попадания. */
   start: number;
+  /** Длительность, мс; по умолчанию {@link EFFECT_DURATION}. */
+  duration?: number;
 };
 
 export const EFFECT_DURATION = 700;
+/** Вырубка: три удара топором, затем падение дерева. */
+export const CLEARING_DURATION = 1500;
+export { CHOP_PART, CHOPS } from './drawEventEffects';
 const FLASH_PART = 0.3;
 
 /** Слой эффекта относительно моделей: под ними или поверх. */
@@ -52,11 +66,24 @@ export const drawEffect = (
   const { x, y, damage, healing, lethal, spawn, building, clearing, signal } =
     effect;
 
+  // Удар ещё летит: эффекта пока нет.
+  if (progress < 0) return;
+
+  if (effect.impact || effect.aim) {
+    if (effect.aim && layer === 'under') return;
+    ctx.save();
+    ctx.translate(x * cellSize, y * cellSize);
+    if (effect.impact) drawImpact(ctx, progress, cellSize, layer);
+    else drawAim(ctx, progress, cellSize);
+    ctx.restore();
+    return;
+  }
+
   if (clearing) {
     if (layer === 'under') return;
     ctx.save();
     ctx.translate(x * cellSize, y * cellSize);
-    drawClearing(ctx, x, y, progress, cellSize);
+    drawClearing(ctx, progress, cellSize, effect.fall);
     ctx.restore();
     return;
   }

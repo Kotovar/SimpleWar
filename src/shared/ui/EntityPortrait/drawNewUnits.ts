@@ -120,6 +120,21 @@ export const drawRider = (
   ctx.restore();
 };
 
+/** Поза катапульты: `arm` — рычаг от поднятого (`0`) до взведённого (`1`). */
+export type SiegePose = { arm?: number; loaded?: boolean };
+
+/**
+ * Ось рычага, его плечи и углы: в покое длинное плечо смотрит влево и
+ * вверх, при взводе опускается к раме, при выстреле поднимается обратно.
+ */
+const PIVOT_X = 15.5;
+const PIVOT_Y = 11.5;
+const ARM_LONG = 11;
+const ARM_SHORT = 6;
+const ARM_WIDTH = 1.1;
+const REST_ANGLE = Math.atan2(-6, -9.25);
+const COCK_SWEEP = (41 / 180) * Math.PI;
+
 /** Осадная машина: катапульта на колёсах, рама цвета стороны. */
 export const drawSiege = (
   ctx: CanvasRenderingContext2D,
@@ -128,6 +143,7 @@ export const drawSiege = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  { arm = 0, loaded = true }: SiegePose = {},
 ) => {
   beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
   const team = TEAM_MARKERS[owner];
@@ -136,20 +152,51 @@ export const drawSiege = (
   shape(ctx, '#9c7446', [9, 17, 14, 9, 16, 10, 12, 17]);
   shape(ctx, '#9c7446', [15, 9, 17, 9, 23, 17, 20, 17]);
   rect(ctx, team.color, 4, 17, 24, 1.4);
-  // Метательный рычаг с чашей и камнем.
-  shape(ctx, '#c49a60', [11, 16, 9, 14, 24, 4.5, 25.5, 6.5]);
-  circle(ctx, '#9aa5a3', 25, 4.5, 2.5);
-  shape(ctx, '#8a6238', [21, 4.5, 24.5, 6, 29, 4.5, 27, 8, 23.5, 8]);
-  circle(ctx, '#dbc89f', 15.5, 11.5, 1.8);
+  // Метательный рычаг: балка поворачивается вокруг оси — от упора вверху
+  // до взвода у рамы; чаша на конце всегда открыта вверх.
+  const angle = REST_ANGLE - arm * COCK_SWEEP;
+  const [ux, uy] = [Math.cos(angle), Math.sin(angle)];
+  const end = (length: number) => [
+    PIVOT_X + ux * length,
+    PIVOT_Y + uy * length,
+  ];
+  const [cupX, cupY] = end(ARM_LONG);
+  const [backX, backY] = end(-ARM_SHORT);
   // Натяжной канат от короткого плеча к вороту.
   ctx.strokeStyle = '#e0cba2';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(11, 15);
-  ctx.lineTo(8, 18);
+  ctx.moveTo(backX, backY);
+  // Ворот — со стороны короткого плеча.
+  ctx.lineTo(23, 18);
   ctx.stroke();
   ctx.strokeStyle = OUTLINE;
   ctx.lineWidth = 1.2;
+  const [nx, ny] = [-uy * ARM_WIDTH, ux * ARM_WIDTH];
+  shape(ctx, '#c49a60', [
+    backX + nx,
+    backY + ny,
+    backX - nx,
+    backY - ny,
+    cupX - nx,
+    cupY - ny,
+    cupX + nx,
+    cupY + ny,
+  ]);
+  if (loaded) circle(ctx, '#9aa5a3', cupX + 0.25, cupY - 1, 2.5);
+  shape(ctx, '#8a6238', [
+    cupX - 3.75,
+    cupY - 1,
+    cupX - 0.25,
+    cupY + 0.5,
+    cupX + 4.25,
+    cupY - 1,
+    cupX + 2.25,
+    cupY + 2.5,
+    cupX - 1.25,
+    cupY + 2.5,
+  ]);
+  circle(ctx, '#dbc89f', PIVOT_X, PIVOT_Y, 1.8);
   // Колёса.
   for (const x of [8, 24]) {
     circle(ctx, '#5b4430', x, 22, 3.4);

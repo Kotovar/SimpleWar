@@ -32,7 +32,13 @@ export const executePreparedStrikes = (owner: ParticipantId) => {
     if (siege?.role !== 'military' || !siege.preparedStrike) continue;
     const { x, y } = siege.preparedStrike;
     useUnitsStore.getState().setPreparedStrike(siege.id, null);
-    gameEvents.emit({ type: 'SIEGE_STRIKE_EXECUTED', owner, x, y });
+    gameEvents.emit({
+      type: 'SIEGE_STRIKE_EXECUTED',
+      owner,
+      siegeId: siege.id,
+      x,
+      y,
+    });
 
     // Воздух ударом не поражается.
     const units = Object.values(useUnitsStore.getState().units).filter(

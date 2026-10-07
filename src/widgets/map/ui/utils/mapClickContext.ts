@@ -77,6 +77,8 @@ export type MapClickContext = {
     clearHighlight: () => void;
     /** Есть ли маршрут до клетки, где юнит может остановиться. */
     canPlanRoute?: (unit: Unit, x: number, y: number) => boolean;
+    /** Есть ли у юнита приказ (например, ещё идёт строить). */
+    hasOrder?: (unitId: string) => boolean;
     /** Отмечает далёкую цель до подтверждения; `null` снимает отметку. */
     setPlannedTarget?: (target: (Position & { unitId: string }) | null) => void;
   };

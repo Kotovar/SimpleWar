@@ -13,7 +13,12 @@ import {
   drawHoverHighlight,
   drawSelectionHighlight,
 } from './drawSelectionHighlight';
-import { drawAttackRange, drawPath, type MovePath } from './drawPath';
+import {
+  drawAttackRange,
+  drawPath,
+  drawStrikeArc,
+  type MovePath,
+} from './drawPath';
 import { drawTerrainHighlight } from './drawTerrain';
 import { drawDamagePreview } from './drawDamagePreview';
 import { drawBuildingGhost } from './drawBuildingGhost';
@@ -31,6 +36,8 @@ type Options = {
   showRallyPoint?: boolean;
   /** Фаза пульсации выделения от 0 до 1. */
   pulse?: number;
+  /** Дуга полёта камня осады к выбираемой клетке удара. */
+  arc?: { from: Position; to: Position } | null;
   /** Здание под курсором в режиме выбора места и можно ли его там заложить. */
   ghost?:
     | (Position & { type: BuildingType; owner: Owner; valid: boolean })
@@ -51,6 +58,7 @@ export const renderSelectionLayer = (
     showRallyPoint = false,
     pulse = 0,
     ghost,
+    arc,
   }: Options = {},
 ) => {
   if (hover) drawHoverHighlight(ctx, hover.x, hover.y, cellSize);
@@ -120,6 +128,7 @@ export const renderSelectionLayer = (
   }
 
   if (path) drawPath(ctx, path, cellSize);
+  if (arc) drawStrikeArc(ctx, arc.from, arc.to, cellSize);
 
   // Ожидаемый урон по цели под курсором: та же формула, что у команды.
   const attacker =

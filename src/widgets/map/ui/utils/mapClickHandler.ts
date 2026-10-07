@@ -43,8 +43,8 @@ const selectClicked = (x: number, y: number, ctx: MapClickContext) => {
 };
 
 /**
- * Закладывает выбранное здание на подсвеченной клетке. Рабочий остаётся
- * выбранным: виден маршрут до стройки или новое здание рядом.
+ * Закладывает выбранное здание. Рабочий, идущий к стройке, остаётся
+ * выбранным — виден маршрут; построивший сразу теряет выбор.
  */
 const placeBuilding = (
   unit: Unit,
@@ -59,6 +59,7 @@ const placeBuilding = (
   const result = place({ actor, workerId: unit.id, buildingType, x, y });
   if (!result.ok) return;
   resetInteraction(ctx);
+  if (ctx.ui.hasOrder && !ctx.ui.hasOrder(unit.id)) return;
   ctx.ui.selectUnit(unit.id);
   ctx.ui.calculateActionHighlights(unit.id);
 };

@@ -1,38 +1,174 @@
 import { TEAM_MARKERS, type Owner } from '@shared/config';
-import { drawForest } from '@shared/ui';
 
-/** Заваливает деревья поверх уже расчищенной клетки, разбрасывая щепки. */
-export const drawClearing = (
+/** Доля вырубки на удары топором; остальное — падение деревьев. */
+export const CHOP_PART = 0.6;
+/** Сколько ударов топором до падения. */
+export const CHOPS = 3;
+
+/** Основание ствола в единицах клетки 32 × 32: ось падения. */
+const BASE_X = 16;
+const BASE_Y = 27;
+
+/**
+ * Одиночное дерево: ствол с зарубкой со стороны рабочего и крона.
+ * Рисуется от основания ствола вверх; `notch` — глубина зарубки 0…1.
+ */
+const drawTree = (
   ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  progress: number,
-  cellSize: number,
+  notch: number,
+  side: number,
 ) => {
-  ctx.save();
-  ctx.globalAlpha = Math.max(0, 1 - progress * 1.4);
-  ctx.translate(cellSize * 0.5, cellSize * 0.85);
-  ctx.rotate(progress * 1.1);
-  ctx.scale(1, 1 - progress * 0.5);
-  ctx.translate(-cellSize * 0.5, -cellSize * 0.85);
-  ctx.translate(-x * cellSize, -y * cellSize);
-  drawForest(ctx, x, y, cellSize);
-  ctx.restore();
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = 0.9;
+  ctx.strokeStyle = '#1c2420';
+  ctx.fillStyle = '#7a5532';
+  ctx.beginPath();
+  ctx.rect(-1.7, -11, 3.4, 11);
+  ctx.fill();
+  ctx.stroke();
+  if (notch > 0) {
+    // Зарубка со стороны рабочего: светлая древесина в треугольном вырезе.
+    ctx.fillStyle = '#e2c28c';
+    ctx.beginPath();
+    ctx.moveTo(-side * 1.7, -3.6);
+    ctx.lineTo(-side * (1.7 - notch * 2.2), -2.6);
+    ctx.lineTo(-side * 1.7, -1.6);
+    ctx.closePath();
+    ctx.fill();
+  }
+  for (const [cx, cy, r, color] of [
+    [-4, -12, 5, '#2f6a3e'],
+    [4, -12, 5, '#2f6a3e'],
+    [0, -16, 6.5, '#3f8a4a'],
+    [-1.5, -18, 3, '#5aa45c'],
+  ] as const) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+};
 
-  ctx.globalAlpha = 1 - progress;
-  for (let i = 0; i < 8; i++) {
-    const angle = (i * Math.PI * 2) / 8;
-    const distance = cellSize * progress * 0.7;
-    ctx.fillStyle = i % 2 ? '#b58a54' : '#76a35a';
+const drawStump = (ctx: CanvasRenderingContext2D) => {
+  ctx.lineWidth = 0.9;
+  ctx.strokeStyle = '#1c2420';
+  ctx.fillStyle = '#7a5532';
+  ctx.beginPath();
+  ctx.rect(BASE_X - 1.7, BASE_Y - 2.4, 3.4, 2.4);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#e2c28c';
+  ctx.beginPath();
+  ctx.ellipse(BASE_X, BASE_Y - 2.4, 1.7, 0.7, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+};
+
+/** Щепки от удара: летят от зарубки в сторону рабочего и вниз. */
+const drawChips = (
+  ctx: CanvasRenderingContext2D,
+  t: number,
+  side: number,
+  seed: number,
+) => {
+  ctx.globalAlpha = 1 - t;
+  for (let i = 0; i < 6; i++) {
+    const spread = 0.35 + ((i * 0.23 + seed * 0.37) % 0.9);
+    const vx = -side * (3 + spread * 7);
+    const vy = -4 - (i % 3) * 2;
+    ctx.fillStyle = i % 2 ? '#e2c28c' : '#b58a54';
     ctx.fillRect(
-      cellSize * 0.5 + Math.cos(angle) * distance,
-      cellSize * 0.65 +
-        Math.sin(angle) * distance * 0.45 -
-        Math.sin(progress * Math.PI) * cellSize * 0.25,
-      cellSize * 0.07,
-      cellSize * 0.04,
+      BASE_X - side * 1.7 + vx * t,
+      BASE_Y - 2.6 + vy * t + 9 * t * t,
+      1.6,
+      0.9,
     );
   }
+  ctx.globalAlpha = 1;
+};
+
+/**
+ * Вырубка поверх уже расчищенной клетки. Пока рабочий трижды рубит (удар —
+ * в пике его выпада), дерево вздрагивает, зарубка растёт, летят щепки.
+ * Затем дерево падает от рабочего — с ускорением, с отскоком о землю,
+ * пылью и листьями, — лежащий ствол растворяется, остаётся пень.
+ *
+ * @param fall - Куда падает дерево: от рабочего вправо (`1`) или влево.
+ */
+export const drawClearing = (
+  ctx: CanvasRenderingContext2D,
+  progress: number,
+  cellSize: number,
+  fall: 1 | -1 = 1,
+) => {
+  ctx.save();
+  ctx.scale(cellSize / 32, cellSize / 32);
+  const tree = (angle: number, notch: number, alpha = 1) => {
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(BASE_X, BASE_Y);
+    ctx.rotate(angle);
+    drawTree(ctx, notch, fall);
+    ctx.restore();
+  };
+
+  if (progress < CHOP_PART) {
+    const local = (progress / CHOP_PART) * CHOPS;
+    // Удар — на середине каждого замаха.
+    const sinceHit = (local % 1) - 0.5;
+    const hits = Math.floor(local) + (sinceHit >= 0 ? 1 : 0);
+    const shake =
+      sinceHit >= 0 ? Math.sin(sinceHit * Math.PI * 6) * (1 - sinceHit * 2) : 0;
+    tree(shake * 0.05 * fall, hits / CHOPS);
+    if (sinceHit >= 0) drawChips(ctx, sinceHit * 2, fall, Math.floor(local));
+    ctx.restore();
+    return;
+  }
+
+  const q = (progress - CHOP_PART) / (1 - CHOP_PART);
+  const IMPACT = 0.5;
+  drawStump(ctx);
+  if (q < IMPACT) {
+    // Падение под собственным весом: угол растёт с ускорением.
+    const t = q / IMPACT;
+    tree(fall * (Math.PI / 2) * t * t, 1);
+    ctx.restore();
+    return;
+  }
+  const after = (q - IMPACT) / (1 - IMPACT);
+  // Отскок о землю и растворение лежащего ствола.
+  const bounce = Math.sin(Math.min(1, after * 2.5) * Math.PI) * 0.12;
+  tree(fall * (Math.PI / 2 - bounce), 1, Math.max(0, 1 - after * 1.3));
+
+  // Пыль в месте удара кроны и разлетающиеся листья.
+  const landX = BASE_X + fall * 17;
+  ctx.fillStyle = 'rgba(214, 196, 160, 0.85)';
+  for (let i = 0; i < 6; i++) {
+    ctx.globalAlpha = (1 - after) * 0.8;
+    ctx.beginPath();
+    ctx.arc(
+      landX - fall * (i * 2.5) + Math.sin(i * 2.1) * 2,
+      BASE_Y - 1 - after * (2 + (i % 3) * 1.5),
+      (1.6 + (i % 3) * 0.6) * (0.6 + after * 1.2),
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  for (let i = 0; i < 7; i++) {
+    const angle = -Math.PI * (0.1 + (i / 7) * 0.8);
+    const distance = 3 + after * (6 + (i % 3) * 2);
+    ctx.globalAlpha = 1 - after;
+    ctx.fillStyle = i % 2 ? '#5aa45c' : '#3f8a4a';
+    ctx.fillRect(
+      landX - fall * 6 + Math.cos(angle) * distance,
+      BASE_Y - 4 + Math.sin(angle) * distance + after * after * 6,
+      1.4,
+      1,
+    );
+  }
+  ctx.restore();
 };
 
 /**
@@ -228,4 +364,90 @@ export const drawSignal = (
   ctx.lineWidth = 2.4;
   ctx.strokeStyle = '#ff8a72';
   ctx.stroke();
+};
+
+/**
+ * Падение камня осады: тёмная воронка под моделями, поверх — кольцо удара,
+ * пыль и разлетающиеся обломки. Видно и при ударе по пустой клетке.
+ *
+ * @param ctx - Контекст, сдвинутый в левый верхний угол клетки.
+ * @param progress - Доля прошедшего времени от 0 до 1.
+ * @param layer - Воронка под моделью, удар поверх.
+ */
+export const drawImpact = (
+  ctx: CanvasRenderingContext2D,
+  progress: number,
+  cellSize: number,
+  layer: 'under' | 'over',
+) => {
+  const fade = 1 - progress;
+  ctx.scale(cellSize / 32, cellSize / 32);
+  if (layer === 'under') {
+    ctx.globalAlpha = Math.min(1, fade * 2) * 0.55;
+    ctx.fillStyle = '#3a2f24';
+    ctx.beginPath();
+    ctx.ellipse(16, 22, 9, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+  ctx.globalAlpha = fade;
+  ctx.strokeStyle = '#f2d39a';
+  ctx.lineWidth = 2.2 * fade + 0.4;
+  ctx.beginPath();
+  ctx.ellipse(
+    16,
+    22,
+    6 + progress * 12,
+    2.5 + progress * 4.5,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(214, 196, 160, 0.85)';
+  for (let i = 0; i < 7; i++) {
+    const angle = (Math.PI * 2 * i) / 7;
+    ctx.beginPath();
+    ctx.arc(
+      16 + Math.cos(angle) * (4 + progress * 9),
+      21 + Math.sin(angle) * (2 + progress * 3) - progress * 4,
+      (2.6 - (i % 2)) * (0.6 + progress),
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  ctx.fillStyle = '#7d7f78';
+  for (let i = 0; i < 6; i++) {
+    const angle = -Math.PI * (0.1 + (i / 6) * 0.8);
+    const distance = 3 + progress * (8 + (i % 3) * 3);
+    ctx.fillRect(
+      16 + Math.cos(angle) * distance,
+      20 + Math.sin(angle) * distance + progress * progress * 10,
+      1.6,
+      1.6,
+    );
+  }
+};
+
+/**
+ * Наводка орудия: кольцо сходится к отметке удара и гаснет — цель взята.
+ *
+ * @param ctx - Контекст, сдвинутый в левый верхний угол клетки.
+ * @param progress - Доля прошедшего времени от 0 до 1.
+ */
+export const drawAim = (
+  ctx: CanvasRenderingContext2D,
+  progress: number,
+  cellSize: number,
+) => {
+  ctx.scale(cellSize / 32, cellSize / 32);
+  ctx.globalAlpha = Math.min(1, (1 - progress) * 2);
+  ctx.strokeStyle = '#ff8a72';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath();
+  ctx.arc(16, 16, 18 - progress * 10, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
 };

@@ -10,10 +10,17 @@ type GameEvent =
   | {
       type: 'SIEGE_STRIKE_EXECUTED';
       owner: ParticipantId;
+      /** Орудие: его видимый выстрел показывает летящий камень. */
+      siegeId: string;
       x: number;
       y: number;
     }
   | { type: 'GAME_RESET' }
+  /**
+   * Транзит через клетку своего: позиция в сторе не меняется, но показ
+   * хода идёт через эту клетку.
+   */
+  | { type: 'UNIT_PASSED'; unitId: string; x: number; y: number }
   | { type: 'COMMAND_SUCCEEDED'; command: CommandMeta }
   | { type: 'BASE_DESTROYED'; owner: ParticipantId }
   /** Выбывание уже применено; `turn` — ход, в котором оно произошло. */

@@ -67,11 +67,13 @@ describe('diffScene', () => {
     expect(events).toEqual([
       {
         kind: 'death',
+        id: gone.id,
         x: 1,
         y: 0,
         hp: gone.hp,
         building: false,
         type: 'archer',
+        owner: 'p2',
       },
     ]);
     expect(events.map(getEventSfx)).toEqual(['death']);
@@ -96,6 +98,7 @@ describe('diffScene', () => {
     expect(events).toEqual([
       {
         kind: 'damage',
+        id: target.id,
         x: 2,
         y: 0,
         amount: 10,
@@ -232,6 +235,8 @@ describe('getEventSfx по типу', () => {
 
     const death = {
       kind: 'death',
+      id: 'u',
+      owner: 'p2',
       x: 0,
       y: 0,
       hp: 1,
@@ -239,5 +244,65 @@ describe('getEventSfx по типу', () => {
     } as const;
     expect(getEventSfx({ ...death, type: 'griffon' })).toBe('griffonDeath');
     expect(getEventSfx({ ...death, type: 'rider' })).toBe('death');
+  });
+});
+
+describe('diffScene — цель атаки', () => {
+  it('два атакующих разбирают две повреждённые цели', () => {
+    const sword = unit('swordsman', 2, 'p1', { attackPoints: 1 });
+    const archer = unit('archer', 0, 'p1', { attackPoints: 1 });
+    const left = unit('spearman', 1, 'p2');
+    const right = unit('spearman', 3, 'p2');
+    const previous = before(sword, archer, left, right);
+    const { events } = diffScene(
+      previous,
+      [
+        { ...sword, attackPoints: 0 } as Unit,
+        { ...archer, attackPoints: 0 } as Unit,
+        { ...left, hp: left.hp - 5 },
+        { ...right, hp: right.hp - 5 },
+      ],
+      context(),
+    );
+    const targets = events.flatMap(event =>
+      event.kind === 'attack' ? [event.target?.x] : [],
+    );
+    expect(new Set(targets)).toEqual(new Set([1, 3]));
+  });
+
+  it('мечник не уходит к дальней цели, даже если ближняя занята', () => {
+    const archer = unit('archer', 0, 'p1', { attackPoints: 1 });
+    const sword = unit('swordsman', 2, 'p1', { attackPoints: 1 });
+    const near = unit('spearman', 3, 'p2');
+    const far = unit('spearman', 5, 'p2');
+    const previous = before(archer, sword, near, far);
+    const { events } = diffScene(
+      previous,
+      [
+        { ...archer, attackPoints: 0 } as Unit,
+        { ...sword, attackPoints: 0 } as Unit,
+        { ...near, hp: near.hp - 5 },
+        { ...far, hp: far.hp - 5 },
+      ],
+      context(),
+    );
+    const swordAttack = events.find(
+      event => event.kind === 'attack' && event.id === sword.id,
+    );
+    expect(swordAttack).toMatchObject({ target: { x: 3 } });
+  });
+
+  it('цель вне дальности не приписывается атакующему', () => {
+    const archer = unit('archer', 0, 'p1', { attackPoints: 1 });
+    const far = unit('spearman', 9, 'p2');
+    const previous = before(archer, far);
+    const { events } = diffScene(
+      previous,
+      [{ ...archer, attackPoints: 0 } as Unit, { ...far, hp: far.hp - 5 }],
+      context(),
+    );
+    const shot = events.find(event => event.kind === 'attack');
+    expect(shot).toMatchObject({ kind: 'attack', id: archer.id });
+    expect(shot && 'target' in shot ? shot.target : undefined).toBeUndefined();
   });
 });

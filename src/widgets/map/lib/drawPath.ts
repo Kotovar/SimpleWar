@@ -5,7 +5,61 @@ import { pluralRu } from '@shared/lib';
  * Маршрут и его цена в очках движения, как их отдаёт `getPath`;
  * `turns` — на каком ходу юнит дойдёт (`1` — в этот).
  */
-export type MovePath = { path: Position[]; cost: number; turns?: number };
+export type MovePath = {
+  path: Position[];
+  cost: number;
+  turns?: number;
+  /** Путь к клетке, а не к зданию: в конце дальнего пути — флажок цели. */
+  goal?: boolean;
+};
+
+/**
+ * Флажок цели маршрута в клетке: тень на земле, древко и вымпел цвета
+ * пути. Конец дальнего пути не обрывается в пустоте.
+ */
+export const drawGoalFlag = (
+  ctx: CanvasRenderingContext2D,
+  { x, y }: Position,
+  cellSize: number,
+) => {
+  const scale = cellSize / 32;
+  ctx.save();
+  ctx.translate((x + 0.5) * cellSize, (y + 0.5) * cellSize);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = 'rgba(20, 26, 22, 0.35)';
+  ctx.beginPath();
+  ctx.ellipse(0, 7, 7, 2.6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = SELECTED.freeOutline;
+  ctx.lineWidth = 1.4;
+  ctx.setLineDash([2.5, 2]);
+  ctx.beginPath();
+  ctx.ellipse(0, 7, 7, 2.6, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#1c2420';
+  ctx.lineWidth = 2.6;
+  ctx.beginPath();
+  ctx.moveTo(-1, 7);
+  ctx.lineTo(-1, -9);
+  ctx.stroke();
+  ctx.strokeStyle = '#e8edf2';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-1, -9);
+  ctx.quadraticCurveTo(4, -9.5, 8, -7);
+  ctx.quadraticCurveTo(4, -5, -1, -3);
+  ctx.closePath();
+  ctx.fillStyle = SELECTED.freeOutline;
+  ctx.strokeStyle = '#1c2420';
+  ctx.lineWidth = 0.9;
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+};
 
 /**
  * Рисует маршрут до клетки под курсором и подпись в середине пути, сбоку
@@ -15,7 +69,7 @@ export type MovePath = { path: Position[]; cost: number; turns?: number };
  */
 export const drawPath = (
   ctx: CanvasRenderingContext2D,
-  { path, cost, turns = 1 }: MovePath,
+  { path, cost, turns = 1, goal = false }: MovePath,
   cellSize: number,
 ) => {
   if (path.length < 2) return;
@@ -43,6 +97,8 @@ export const drawPath = (
   ctx.setLineDash([4 * scale, 4 * scale]);
   ctx.stroke();
   ctx.setLineDash([]);
+  // Дальний путь к клетке: флажок цели, чтобы конец был виден.
+  if (goal && turns > 1) drawGoalFlag(ctx, path[path.length - 1], cellSize);
 
   // Столько очков движения спишется: холм и болото стоят дороже поля.
   // Далёкая цель — сколько ходов идти, считая текущий. Здание вплотную
@@ -194,6 +250,36 @@ export const drawAttackRange = (
   ctx.strokeStyle = SELECTED.enemyOutline;
   ctx.lineWidth = 1.4 * scale;
   ctx.setLineDash([5 * scale, 4 * scale]);
+  ctx.stroke();
+  ctx.restore();
+};
+
+/**
+ * Дуга полёта камня осады от орудия к клетке удара: пунктир цвета цели
+ * атаки — видно, что выбирается цель, а не путь хода.
+ */
+export const drawStrikeArc = (
+  ctx: CanvasRenderingContext2D,
+  from: Position,
+  to: Position,
+  cellSize: number,
+) => {
+  const scale = cellSize / 32;
+  const [fx, fy] = [(from.x + 0.5) * cellSize, (from.y + 0.5) * cellSize];
+  const [tx, ty] = [(to.x + 0.5) * cellSize, (to.y + 0.5) * cellSize];
+  // Вершина дуги выше середины: высота растёт с дальностью.
+  const lift = Math.max(cellSize, Math.hypot(tx - fx, ty - fy) * 0.45);
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(fx, fy);
+  ctx.quadraticCurveTo((fx + tx) / 2, (fy + ty) / 2 - lift * 2, tx, ty);
+  ctx.strokeStyle = 'rgba(28, 36, 32, 0.5)';
+  ctx.lineWidth = 4 * scale;
+  ctx.stroke();
+  ctx.strokeStyle = SELECTED.enemyOutline;
+  ctx.lineWidth = 2 * scale;
+  ctx.setLineDash([4 * scale, 4 * scale]);
   ctx.stroke();
   ctx.restore();
 };
