@@ -1,5 +1,6 @@
 import {
   DAMAGE_TYPE,
+  MOVE_SFX,
   type Building,
   type Position,
   type Sfx,
@@ -211,8 +212,11 @@ export const planSceneAnimations = (
 
   for (const event of events) {
     if (event.kind !== 'move') continue;
-    plan.sounds.push({ sfx: getEventSfx(event), at: 0 });
     const moved = entity(event.id);
+    plan.sounds.push({
+      sfx: (moved && MOVE_SFX[moved.type]) ?? getEventSfx(event),
+      at: 0,
+    });
     if (!moved || instant) continue;
     const from = { x: event.fromX, y: event.fromY };
     const to = { x: moved.x, y: moved.y };

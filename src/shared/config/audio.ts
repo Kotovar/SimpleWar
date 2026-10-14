@@ -10,6 +10,8 @@ export type Sfx =
   | 'shot'
   | 'griffonAttack'
   | 'griffonDeath'
+  /** Полёт грифона: взмахи крыльев на ходу. */
+  | 'griffonFlight'
   | 'magic'
   | 'hitUnit'
   | 'hitBuilding'
@@ -57,6 +59,9 @@ export const SFX_TONES: Record<Sfx, SfxTone[]> = {
   ],
   click: [{ wave: 'triangle', from: 520, to: 520, duration: 0.03, gain: 0.15 }],
   move: [{ wave: 'noise', from: 900, to: 900, duration: 0.12, gain: 0.18 }],
+  griffonFlight: [
+    { wave: 'noise', from: 500, to: 500, duration: 0.4, gain: 0.2 },
+  ],
   attack: [
     { wave: 'noise', from: 2400, to: 2400, duration: 0.09, gain: 0.35 },
     { wave: 'sawtooth', from: 320, to: 120, duration: 0.1, gain: 0.12 },
@@ -194,22 +199,14 @@ export const SFX_TONES: Record<Sfx, SfxTone[]> = {
     { wave: 'sawtooth', from: 160, to: 40, duration: 0.45, gain: 0.15 },
   ],
   turnStart: [
-    { wave: 'triangle', from: 523, to: 523, duration: 0.12, gain: 0.22 },
+    { wave: 'sine', from: 523, to: 523, duration: 1, gain: 0.1 },
     {
-      wave: 'triangle',
-      from: 659,
-      to: 659,
-      duration: 0.12,
-      gain: 0.22,
-      delay: 0.12,
-    },
-    {
-      wave: 'triangle',
+      wave: 'sine',
       from: 784,
       to: 784,
-      duration: 0.22,
-      gain: 0.22,
-      delay: 0.24,
+      duration: 0.8,
+      gain: 0.04,
+      delay: 0.05,
     },
   ],
   reject: [
@@ -262,6 +259,7 @@ export const SFX_VARIANTS: Partial<Record<Sfx, number>> = {
   shot: 3,
   griffonAttack: 3,
   griffonDeath: 2,
+  griffonFlight: 1,
   death: 3,
 };
 
@@ -278,7 +276,6 @@ export const SFX_LOUDNESS_OVERRIDE: Partial<Record<Sfx, number>> = {
   move: -27,
   reject: -26,
   heal: -24,
-  turnStart: -22,
   destroy: -18,
   strike: -18,
 };
@@ -299,6 +296,11 @@ export const ATTACK_SFX: Partial<Record<UnitType | BuildingType, Sfx>> = {
   archer: 'shot',
   tower: 'shot',
   griffon: 'griffonAttack',
+};
+
+/** Звук хода по типу юнита; остальные — `move`. */
+export const MOVE_SFX: Partial<Record<UnitType | BuildingType, Sfx>> = {
+  griffon: 'griffonFlight',
 };
 
 /** Звук гибели по типу юнита; остальные — `death`. */

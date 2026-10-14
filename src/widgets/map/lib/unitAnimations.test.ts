@@ -137,6 +137,21 @@ describe('planSceneAnimations', () => {
     expect(result.lunges.get(sword.id)?.start).toBe(getMoveDuration(walked));
   });
 
+  it('ход грифона озвучивается полётом, остальные — ходом', () => {
+    const griffon = unit('griffon', 1, 1, 'p1');
+    const scout = unit('scout', 0, 1, 'p1');
+    const flight = plan(
+      [{ kind: 'move', id: griffon.id, fromX: 0, fromY: 1 }],
+      [griffon],
+    );
+    expect(flight.sounds).toEqual([{ sfx: 'griffonFlight', at: 0 }]);
+    const walk = plan(
+      [{ kind: 'move', id: scout.id, fromX: 0, fromY: 0 }],
+      [scout],
+    );
+    expect(walk.sounds).toEqual([{ sfx: 'move', at: 0 }]);
+  });
+
   it('погибший стоит до попадания; камень осады; без движения — всё сразу', () => {
     const archer = unit('archer', 0, 1, 'p1');
     const events: SceneEvent[] = [
