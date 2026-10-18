@@ -12,6 +12,10 @@ export type Sfx =
   | 'griffonDeath'
   /** Полёт грифона: взмахи крыльев на ходу. */
   | 'griffonFlight'
+  /** Катапульта едет: скрип колёс и дерева. */
+  | 'siegeMove'
+  /** Всадник едет: стук копыт. */
+  | 'riderMove'
   | 'magic'
   | 'hitUnit'
   | 'hitBuilding'
@@ -61,6 +65,21 @@ export const SFX_TONES: Record<Sfx, SfxTone[]> = {
   move: [{ wave: 'noise', from: 900, to: 900, duration: 0.12, gain: 0.18 }],
   griffonFlight: [
     { wave: 'noise', from: 500, to: 500, duration: 0.4, gain: 0.2 },
+  ],
+  siegeMove: [
+    { wave: 'noise', from: 200, to: 200, duration: 0.5, gain: 0.25 },
+    { wave: 'sawtooth', from: 110, to: 90, duration: 0.3, gain: 0.08 },
+  ],
+  riderMove: [
+    { wave: 'noise', from: 600, to: 600, duration: 0.05, gain: 0.25 },
+    {
+      wave: 'noise',
+      from: 600,
+      to: 600,
+      duration: 0.05,
+      gain: 0.25,
+      delay: 0.15,
+    },
   ],
   attack: [
     { wave: 'noise', from: 2400, to: 2400, duration: 0.09, gain: 0.35 },
@@ -246,7 +265,7 @@ export const SFX_VARIANTS: Partial<Record<Sfx, number>> = {
   magic: 2,
   hitUnit: 2,
   hitBuilding: 2,
-  heal: 2,
+  heal: 5,
   strikePrepare: 1,
   strike: 2,
   build: 3,
@@ -260,6 +279,8 @@ export const SFX_VARIANTS: Partial<Record<Sfx, number>> = {
   griffonAttack: 3,
   griffonDeath: 2,
   griffonFlight: 1,
+  siegeMove: 2,
+  riderMove: 2,
   death: 3,
 };
 
@@ -276,6 +297,7 @@ export const SFX_LOUDNESS_OVERRIDE: Partial<Record<Sfx, number>> = {
   move: -27,
   reject: -26,
   heal: -24,
+  turnStart: -24,
   destroy: -18,
   strike: -18,
 };
@@ -301,6 +323,8 @@ export const ATTACK_SFX: Partial<Record<UnitType | BuildingType, Sfx>> = {
 /** Звук хода по типу юнита; остальные — `move`. */
 export const MOVE_SFX: Partial<Record<UnitType | BuildingType, Sfx>> = {
   griffon: 'griffonFlight',
+  siege: 'siegeMove',
+  rider: 'riderMove',
 };
 
 /** Звук гибели по типу юнита; остальные — `death`. */

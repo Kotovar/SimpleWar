@@ -145,6 +145,11 @@ describe('planSceneAnimations', () => {
       [griffon],
     );
     expect(flight.sounds).toEqual([{ sfx: 'griffonFlight', at: 0 }]);
+    const siege = unit('siege', 1, 1, 'p1');
+    expect(
+      plan([{ kind: 'move', id: siege.id, fromX: 0, fromY: 1 }], [siege])
+        .sounds,
+    ).toEqual([{ sfx: 'siegeMove', at: 0 }]);
     const walk = plan(
       [{ kind: 'move', id: scout.id, fromX: 0, fromY: 0 }],
       [scout],
