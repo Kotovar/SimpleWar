@@ -199,7 +199,7 @@ const stressFrames = async () => {
     await click('Загрузить', 0);
     await click('Загрузить');
     await wait(
-      '!!document.querySelector("canvas") && !document.querySelector("dialog[open]")',
+      '!!document.querySelector("canvas[class*=CanvasLayer]") && !document.querySelector("dialog[open]")',
     );
     for (const dpr of [1, 2]) {
       await send('Emulation.setDeviceMetricsOverride', {
@@ -299,14 +299,14 @@ try {
     );
     if (small) await click(small);
     await click('Начать игру');
-    await wait('!!document.querySelector("canvas")');
+    await wait('!!document.querySelector("canvas[class*=CanvasLayer]")');
     await click('Меню');
     await click('Сохранения');
     await wait('!!document.querySelector("dialog[open] ul")');
     await click('Сохранить', 0);
     if (cycle > 0) {
       await wait('document.querySelectorAll("dialog[open]").length===2');
-      await click('Подтвердить');
+      await click('Перезаписать');
     }
     await wait(`!!localStorage.getItem('simplewar:saves:manual:0')`);
     const saved = await evaluate(
@@ -323,7 +323,7 @@ try {
     await click('Сбросить игру');
     await click('Да, сбросить');
     await wait(
-      '!!document.querySelector("h1") && !document.querySelector("canvas")',
+      '!!document.querySelector("h1") && !document.querySelector("canvas[class*=CanvasLayer]")',
     );
     await frames();
     await send('HeapProfiler.collectGarbage');

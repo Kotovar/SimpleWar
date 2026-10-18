@@ -110,69 +110,133 @@ const [EXPLORED_R, EXPLORED_G, EXPLORED_B, EXPLORED_A] = (
   FOG.explored.match(/[\d.]+/g) ?? []
 ).map(Number);
 
-type Masks = { explored: HTMLCanvasElement; unknown: HTMLCanvasElement };
+/**
+ * Клетки, у которых изменилось покрытие туманом: рамка `[x0, x1) × [y0, y1)`
+ * либо `null`, если покрытие то же. Значения сравниваются как флаги:
+ * счётчик обзора, ставший 2 вместо 1, туман не меняет.
+ */
+export const changedCells = (
+  width: number,
+  prev: { visible: Uint8Array; terrain: Uint8Array },
+  next: { visible: Uint8Array; terrain: Uint8Array },
+) => {
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (let i = 0; i < next.visible.length; i++) {
+    if (
+      !prev.visible[i] === !next.visible[i] &&
+      !prev.terrain[i] === !next.terrain[i]
+    )
+      continue;
+    const x = i % width;
+    const y = (i - x) / width;
+    x0 = Math.min(x0, x);
+    y0 = Math.min(y0, y);
+    x1 = Math.max(x1, x + 1);
+    y1 = Math.max(y1, y + 1);
+  }
+  return x0 === Infinity ? null : { x0, y0, x1, y1 };
+};
+
+type Masks = {
+  explored: HTMLCanvasElement;
+  unknown: HTMLCanvasElement;
+  exploredData: ImageData;
+  unknownData: ImageData;
+};
 let masksKey = '';
 let masksVisible: Uint8Array | null = null;
 let masksTerrain: Uint8Array | null = null;
+// Копии: `observe` может заменить массивы, и сравнивать надо с нарисованным.
+let drawnVisible: Uint8Array | null = null;
+let drawnTerrain: Uint8Array | null = null;
 let masks: Masks | null = null;
 let layer: HTMLCanvasElement | null = null;
 
 /**
- * Маски слоёв в низком разрешении: разведанное — уже в цвете затемнения,
- * неизвестное — альфа под облака. Кэш по массивам знаний и диапазону:
- * `observe` сохраняет прежние массивы, если обзор не изменился; панорама
- * внутри клетки не пересчитывает поле.
+ * Маски слоёв в низком разрешении на всю карту с запасом в клетку:
+ * разведанное — уже в цвете затемнения, неизвестное — альфа под облака.
+ * Панорама и масштаб поле не пересчитывают; изменение обзора пересчитывает
+ * только изменившиеся клетки с соседями — плотность точки зависит от
+ * клеток в пределах одной. Несколько очагов сливаются в общую рамку.
  */
 const getMasks = (
   knowledge: ParticipantKnowledge,
   covered: (x: number, y: number, unknown: boolean) => boolean,
-  x0: number,
-  y0: number,
-  x1: number,
-  y1: number,
 ) => {
-  const key = `${knowledge.width},${x0},${y0},${x1},${y1}`;
-  if (
-    masks &&
-    masksVisible === knowledge.visible &&
-    masksTerrain === knowledge.terrain &&
-    masksKey === key
-  ) {
+  const { width: columns, height: rows, visible, terrain } = knowledge;
+  if (masks && masksVisible === visible && masksTerrain === terrain) {
     return masks;
   }
-  masks ??= {
-    explored: document.createElement('canvas'),
-    unknown: document.createElement('canvas'),
-  };
-  const width = (x1 - x0) * MASK_RES;
-  const height = (y1 - y0) * MASK_RES;
-  const explored = new ImageData(width, height);
-  const unknown = new ImageData(width, height);
+  const key = `${columns},${rows}`;
+  const width = (columns + 2) * MASK_RES;
+  const height = (rows + 2) * MASK_RES;
+  // Клетки маски от −1 до размера карты включительно.
+  let cells = { x0: -1, y0: -1, x1: columns + 1, y1: rows + 1 };
+  if (masks && masksKey === key && drawnVisible && drawnTerrain) {
+    const dirty = changedCells(
+      columns,
+      { visible: drawnVisible, terrain: drawnTerrain },
+      { visible, terrain },
+    );
+    if (dirty) {
+      cells = {
+        x0: Math.max(-1, dirty.x0 - 1),
+        y0: Math.max(-1, dirty.y0 - 1),
+        x1: Math.min(columns + 1, dirty.x1 + 1),
+        y1: Math.min(rows + 1, dirty.y1 + 1),
+      };
+    } else {
+      cells = { x0: 0, y0: 0, x1: 0, y1: 0 };
+    }
+  } else {
+    const explored = document.createElement('canvas');
+    const unknown = document.createElement('canvas');
+    explored.width = unknown.width = width;
+    explored.height = unknown.height = height;
+    masks = {
+      explored,
+      unknown,
+      exploredData: new ImageData(width, height),
+      unknownData: new ImageData(width, height),
+    };
+  }
+  const { exploredData, unknownData } = masks;
   const isExplored = (x: number, y: number) => covered(x, y, false);
   const isUnknown = (x: number, y: number) => covered(x, y, true);
-  for (let j = 0; j < height; j++) {
-    const y = y0 + (j + 0.5) / MASK_RES;
-    for (let i = 0; i < width; i++) {
-      const x = x0 + (i + 0.5) / MASK_RES;
+  const i0 = (cells.x0 + 1) * MASK_RES;
+  const i1 = (cells.x1 + 1) * MASK_RES;
+  const j0 = (cells.y0 + 1) * MASK_RES;
+  const j1 = (cells.y1 + 1) * MASK_RES;
+  for (let j = j0; j < j1; j++) {
+    const y = -1 + (j + 0.5) / MASK_RES;
+    for (let i = i0; i < i1; i++) {
+      const x = -1 + (i + 0.5) / MASK_RES;
       const p = (j * width + i) * 4;
-      explored.data[p] = EXPLORED_R;
-      explored.data[p + 1] = EXPLORED_G;
-      explored.data[p + 2] = EXPLORED_B;
-      explored.data[p + 3] =
+      exploredData.data[p] = EXPLORED_R;
+      exploredData.data[p + 1] = EXPLORED_G;
+      exploredData.data[p + 2] = EXPLORED_B;
+      exploredData.data[p + 3] =
         255 * EXPLORED_A * fogDensity(isExplored, x, y, 11);
-      unknown.data[p + 3] = 255 * fogDensity(isUnknown, x, y, 23);
+      unknownData.data[p + 3] = 255 * fogDensity(isUnknown, x, y, 23);
     }
   }
-  for (const [canvas, data] of [
-    [masks.explored, explored],
-    [masks.unknown, unknown],
-  ] as const) {
-    canvas.width = width;
-    canvas.height = height;
-    canvas.getContext('2d')?.putImageData(data, 0, 0);
+  if (i1 > i0 && j1 > j0) {
+    for (const [canvas, data] of [
+      [masks.explored, exploredData],
+      [masks.unknown, unknownData],
+    ] as const) {
+      canvas
+        .getContext('2d')
+        ?.putImageData(data, 0, 0, i0, j0, i1 - i0, j1 - j0);
+    }
   }
-  masksVisible = knowledge.visible;
-  masksTerrain = knowledge.terrain;
+  masksVisible = visible;
+  masksTerrain = terrain;
+  drawnVisible = visible.slice();
+  drawnTerrain = terrain.slice();
   masksKey = key;
   return masks;
 };
@@ -216,15 +280,35 @@ export const renderFogLayer = (
       Math.min(width - 1, Math.max(0, x));
     return !visible[index] && (!unknown || !terrain[index]);
   };
-  const { explored, unknown } = getMasks(knowledge, covered, x0, y0, x1, y1);
+  const { explored, unknown } = getMasks(knowledge, covered);
 
   // Облака маскируются на отдельном слое: холст под туманом не трогаем.
+  // Слой — в CSS-пикселях: размытому туману плотность экрана не нужна, а
+  // сглаживание «высокое» на DPR 2 вчетверо дороже. Размер меняется только
+  // вслед за холстом: присваивание сбрасывает буфер.
+  const k = Math.min(1, 1 / (globalThis.devicePixelRatio || 1));
+  const lw = Math.ceil(canvas.width * k);
+  const lh = Math.ceil(canvas.height * k);
   layer ??= document.createElement('canvas');
-  layer.width = ctx.canvas.width;
-  layer.height = ctx.canvas.height;
+  if (layer.width !== lw || layer.height !== lh) {
+    layer.width = lw;
+    layer.height = lh;
+  }
   const layerCtx = layer.getContext('2d');
   if (!layerCtx) return;
-  layerCtx.setTransform(ctx.getTransform());
+  // Очистка и перенос — только карта в окне, в пикселях слоя.
+  const m = ctx.getTransform();
+  const lx0 = Math.max(0, Math.floor(m.e * k));
+  const ly0 = Math.max(0, Math.floor(m.f * k));
+  const lx1 = Math.min(lw, Math.ceil((m.a * width * cellSize + m.e) * k));
+  const ly1 = Math.min(lh, Math.ceil((m.d * height * cellSize + m.f) * k));
+  if (lx0 >= lx1 || ly0 >= ly1) return;
+  layerCtx.setTransform(1, 0, 0, 1, 0, 0);
+  layerCtx.globalCompositeOperation = 'source-over';
+  // Запас в 2 пикселя: растяжение слоя при копии подмешивает соседние
+  // пиксели, и за краем карты не должен оставаться туман прошлого кадра.
+  layerCtx.clearRect(lx0 - 2, ly0 - 2, lx1 - lx0 + 4, ly1 - ly0 + 4);
+  layerCtx.setTransform(new DOMMatrix([k, 0, 0, k, 0, 0]).multiply(m));
   layerCtx.imageSmoothingEnabled = true;
   // 'low' дешевле вдвое, но при сильном растяжении маски кромка грубеет.
   layerCtx.imageSmoothingQuality = quality;
@@ -232,19 +316,22 @@ export const renderFogLayer = (
   const top = y0 * cellSize;
   const w = (x1 - x0) * cellSize;
   const h = (y1 - y0) * cellSize;
-  layerCtx.drawImage(unknown, left, top, w, h);
+  // Фрагмент маски окна: маска начинается с клетки −1.
+  const sx = (x0 + 1) * MASK_RES;
+  const sy = (y0 + 1) * MASK_RES;
+  const sw = (x1 - x0) * MASK_RES;
+  const sh = (y1 - y0) * MASK_RES;
+  layerCtx.drawImage(unknown, sx, sy, sw, sh, left, top, w, h);
   layerCtx.globalCompositeOperation = 'source-in';
   layerCtx.fillStyle = unknownFill(layerCtx, cellSize);
   layerCtx.fillRect(left, top, w, h);
   // Затемнение разведанного — под облаками: на кромке они смешиваются.
   layerCtx.globalCompositeOperation = 'destination-over';
-  layerCtx.drawImage(explored, left, top, w, h);
+  layerCtx.drawImage(explored, sx, sy, sw, sh, left, top, w, h);
 
   ctx.save();
-  ctx.beginPath();
-  ctx.rect(0, 0, width * cellSize, height * cellSize);
-  ctx.clip();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.drawImage(layer, 0, 0);
+  const [lw0, lh0] = [lx1 - lx0, ly1 - ly0];
+  ctx.drawImage(layer, lx0, ly0, lw0, lh0, lx0 / k, ly0 / k, lw0 / k, lh0 / k);
   ctx.restore();
 };
