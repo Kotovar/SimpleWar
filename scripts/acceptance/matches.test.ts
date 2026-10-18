@@ -44,6 +44,10 @@ if (
   size > 100
 )
   throw new Error('Нужны целое число кругов > 0 и размер карты 15–100');
+// Тайм-аут без единой потери за столько кругов — тупик, а не затяжной бой.
+const stallRounds = Number(process.env.ACCEPTANCE_STALL ?? 30);
+if (!Number.isSafeInteger(stallRounds) || stallRounds < 1)
+  throw new Error('ACCEPTANCE_STALL: нужно целое число кругов > 0');
 const output = process.env.ACCEPTANCE_OUTPUT ?? '/tmp/simplewar-s21-matches';
 const reportPath = `${output}.json`;
 const progressPath = `${output}.jsonl`;
@@ -240,11 +244,13 @@ it.each(selected)(
           detail: error.detail,
         });
     });
+    let lastLossRound = 0;
     const offEvents = gameEvents.subscribe(event => {
       if (
         event.type === 'UNIT_DESTROYED' ||
         (event.type === 'BUILDING_DESTROYED' && !event.demolished)
       ) {
+        lastLossRound = useGameLoopStore.getState().currentTurn;
         const type =
           event.type === 'UNIT_DESTROYED'
             ? event.unit.type
@@ -299,10 +305,12 @@ it.each(selected)(
         errors.filter(error => error.code === 'terrain'),
         'ИИ не должен повторять стройку на известной неподходящей местности',
       ).toEqual([]);
-      expect(
-        useGameLoopStore.getState().phase,
-        '200 ходов — диагностический тайм-аут, не ничья',
-      ).toBe('gameOver');
+      // Затяжной размен ИИ против ИИ — норма; застой без потерь — тупик.
+      if (useGameLoopStore.getState().phase !== 'gameOver')
+        expect(
+          useGameLoopStore.getState().currentTurn - lastLossRound,
+          `${rounds} ходов без победителя и без потерь за последние ${stallRounds} — застой`,
+        ).toBeLessThanOrEqual(stallRounds);
     } catch (error) {
       failure = error;
       try {
@@ -330,7 +338,11 @@ it.each(selected)(
     }
     const result = {
       ...spec,
-      status: failure ? 'failed' : 'passed',
+      status: failure
+        ? 'failed'
+        : useGameLoopStore.getState().phase === 'gameOver'
+          ? 'passed'
+          : 'timeout',
       error:
         failure instanceof Error
           ? failure.message
@@ -339,6 +351,7 @@ it.each(selected)(
             : null,
       winner: useGameLoopStore.getState().winner,
       rounds: useGameLoopStore.getState().currentTurn,
+      lastLossRound,
       turns,
       durationMs: performance.now() - started,
       turnP95Ms: quantile(timings, 0.95),

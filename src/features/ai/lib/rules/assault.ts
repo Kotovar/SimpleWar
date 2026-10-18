@@ -195,18 +195,57 @@ export const M04: AiRule = {
         const goal = pickAssaultCell(ctx, unit, target, goals);
         const cell = goal ?? closestReachable(ctx, unit, target);
         const step = cell && stepToward(ctx, unit, [cell]);
-        return step
-          ? [
-              moveTo(
-                'M04',
-                unit,
-                step.next,
-                50,
-                goal ? 'наступаю на цель' : 'подходы заняты: подхожу ближе',
-                { group: 'attack', basis: { x: target.x, y: target.y } },
-              ),
-            ]
-          : [];
+        if (!step) return cell ? yieldPassage(ctx, unit, cell) : [];
+        return [
+          moveTo(
+            'M04',
+            unit,
+            step.next,
+            50,
+            goal ? 'наступаю на цель' : 'подходы заняты: подхожу ближе',
+            { group: 'attack', basis: { x: target.x, y: target.y } },
+          ),
+        ];
       });
   },
+};
+
+/**
+ * Свой юнит на первых клетках пути закрывает узкий проход: он идёт тем же
+ * маршрутом вперёд. Иначе лучник, ждущий пехоту, и пехота за ним стоят вечно.
+ */
+const yieldPassage = (
+  ctx: AiContext,
+  unit: MilitaryUnit,
+  goal: Position,
+): Candidate[] => {
+  const { cost, previous, width } = pathsFrom(ctx, unit);
+  const key = cellKey(goal.x, goal.y, width);
+  if (!cost.get(key)) return [];
+  const path: Position[] = [];
+  for (let k: number | undefined = key; k !== undefined; k = previous.get(k))
+    path.push(fromKey(k, width));
+  path.reverse();
+  // Уступают только бойцы группы, по порядку пути: рабочий или разведчик
+  // ради прохода под удар не идёт, а застрявший первый пропускает дальнего.
+  const group = strikeGroup(ctx);
+  for (const cell of path.slice(1, unit.movePoints + 1)) {
+    const blocker = group.find(
+      own =>
+        own.id !== unit.id &&
+        own.x === cell.x &&
+        own.y === cell.y &&
+        own.movePoints > 0 &&
+        !ctx.turn.done.has(own.id),
+    );
+    const step = blocker && stepToward(ctx, blocker, [goal]);
+    if (blocker && step)
+      return [
+        moveTo('M04', blocker, step.next, 45, 'пропускаю группу в проходе', {
+          group: 'attack',
+          basis: { x: unit.x, y: unit.y },
+        }),
+      ];
+  }
+  return [];
 };

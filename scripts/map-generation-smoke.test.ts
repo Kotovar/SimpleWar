@@ -78,7 +78,7 @@ it('accepts 100 fixed seeds for each preset and both supported party sizes', () 
         let sourceSeed: number | null = null;
         let expectedGrid: ReturnType<typeof generateMap> | null = null;
         for (let attempt = 0; attempt < MAP_ATTEMPTS; attempt++) {
-          const attemptSeed = seed + attempt;
+          const attemptSeed = seed + attempt * 0x100000000;
           const candidate = generateMap(cols, height, attemptSeed);
           for (const { base } of starts) {
             prepareStartArea(candidate, base.x, base.y);

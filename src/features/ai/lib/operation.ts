@@ -1,4 +1,5 @@
 import type { MilitaryUnit, Position } from '@shared/config';
+import { isFlyingType } from '@shared/lib';
 import type { AiOperation } from '@entities/ai-memories';
 import type { AiContext } from './context';
 import { enemyPower } from './composition';
@@ -98,7 +99,11 @@ export const planOperation = (
   // Гарнизон нужен при известной угрозе базе или стратегии G10.
   const wantsGarrison =
     alarm.length > 0 || memory.strategy === 'G10' || memory.strategy === 'G01';
-  let garrison = memory.garrison.filter(id => alive.has(id));
+  // Повторы из сохранения не считаются дважды; добор сверх базового
+  // размера не копится, а каждый раз пересчитывается по силе тревоги.
+  let garrison = [...new Set(memory.garrison)]
+    .filter(id => alive.has(id))
+    .slice(0, config.garrisonSize);
   if (wantsGarrison && base && garrison.length < config.garrisonSize) {
     const garrisonIds = new Set(garrison);
     const free = guards
@@ -110,6 +115,41 @@ export const planOperation = (
     ];
   }
   if (!wantsGarrison) garrison = [];
+
+  // Воздух и землю считаем раздельно: гарнизон, не поражающий грифона,
+  // не закрывает его наземной силой против соседнего мечника.
+  const threats = [
+    alarm.filter(({ type }) => isFlyingType(type)),
+    alarm.filter(({ type }) => !isFlyingType(type)),
+  ].filter(part => part.length > 0);
+  const byId = new Map(guards.map(unit => [unit.id, unit]));
+  const covered = (ids: string[]) =>
+    threats.every(part => {
+      const types = part.map(({ type }) => type);
+      const defense = ids.reduce((s, id) => {
+        const unit = byId.get(id)!;
+        return (
+          s + powerOf(unit.type, unit.hp) * effectiveness(unit.type, types)
+        );
+      }, 0);
+      return defense > part.reduce((s, e) => s + powerOf(e.type, e.hp), 0);
+    });
+  // Сильной тревоге — гарнизон по её силе из ближайших к ратуше, а не
+  // отзыв всей группы: иначе отряд у ратуши бесконечно срывает наступление.
+  if (base && !covered(garrison)) {
+    const taken = new Set(garrison);
+    const busy = taskedUnits(ctx);
+    const reserve = guards
+      .filter(u => !taken.has(u.id) && !busy.has(u.id))
+      .sort((a, b) => manhattan(a, base) - manhattan(b, base));
+    const extended = [...garrison];
+    for (const unit of reserve) {
+      if (covered(extended)) break;
+      extended.push(unit.id);
+    }
+    // Если не хватает всех, группу не раздеваем: она отходит целиком.
+    if (covered(extended)) garrison = extended;
+  }
 
   const ctxWithGarrison = { ...ctx, memory: { ...memory, garrison } };
   const group = strikeGroup(ctxWithGarrison);
@@ -123,14 +163,7 @@ export const planOperation = (
     since: phase === op.phase ? op.since : turn,
   });
 
-  const alarmPower = alarm.reduce((s, e) => s + powerOf(e.type, e.hp), 0);
-  // Гарнизон, не поражающий нападающих (воздух), защитой не считается.
-  const alarmTypes = alarm.map(({ type }) => type);
-  const defense = garrisonUnits(ctxWithGarrison).reduce(
-    (s, u) => s + powerOf(u.type, u.hp) * effectiveness(u.type, alarmTypes),
-    0,
-  );
-  const serious = alarm.length > 0 && alarmPower > defense;
+  const serious = alarm.length > 0 && !covered(garrison);
   if (serious && op.phase !== 'gather') {
     return { operation: next('retreat'), garrison };
   }

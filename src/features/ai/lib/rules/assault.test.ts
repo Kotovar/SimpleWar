@@ -190,3 +190,68 @@ describe('M04: занятые подходы к цели', () => {
     expect(M04.evaluate(ctx)).toEqual([]);
   });
 });
+
+it('M04: лучник в проходе шириной в клетку пропускает пехоту, а не стоит вечно', () => {
+  const sword = own('swordsman', 0, 1);
+  const archer = own('archer', 1, 1);
+  const { ctx } = scene({
+    // По холмам мечнику с 3 очками некуда встать: первую клетку занял лучник.
+    map: ['wwwwwwwwww', 'hhhhhhhh..', 'wwwwwwwwww'],
+    units: [sword, archer],
+    enemies: [foe('base', 9, 1)],
+    memory: {
+      operation: {
+        phase: 'advance',
+        target: { x: 9, y: 1 },
+        rally: null,
+        since: 1,
+      },
+    },
+  });
+  const [candidate] = M04.evaluate(ctx);
+  expect(candidate.actorId).toBe(archer.id);
+  expect(cellOf(candidate.action).x).toBeGreaterThan(archer.x);
+});
+
+describe('M04: уступка прохода', () => {
+  const corridor = ['wwwwwwwwww', 'hhhhhhhh..', 'wwwwwwwwww'];
+  const advance = {
+    operation: {
+      phase: 'advance' as const,
+      target: { x: 9, y: 1 },
+      rally: null,
+      since: 1,
+    },
+  };
+
+  it.each([false, true])(
+    'цепочка лучников: проход освобождает дальний (обратный порядок: %s)',
+    reversed => {
+      const sword = own('swordsman', 0, 1);
+      const near = own('archer', 1, 1);
+      const far = own('archer', 2, 1);
+      const { ctx } = scene({
+        map: corridor,
+        units: reversed ? [sword, far, near] : [sword, near, far],
+        enemies: [foe('base', 9, 1)],
+        memory: advance,
+      });
+      const moves = M04.evaluate(ctx);
+      expect(moves.map(({ actorId }) => actorId)).toContain(far.id);
+    },
+  );
+
+  it('рабочий в проходе не получает приказ уступить', () => {
+    const sword = own('swordsman', 0, 1);
+    const worker = own('worker', 1, 1);
+    const { ctx } = scene({
+      map: corridor,
+      units: [sword, worker],
+      enemies: [foe('base', 9, 1)],
+      memory: advance,
+    });
+    expect(M04.evaluate(ctx).map(({ actorId }) => actorId)).not.toContain(
+      worker.id,
+    );
+  });
+});

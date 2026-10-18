@@ -159,10 +159,13 @@ export const initializeGame = (
       attempt < (emptyField ? 0 : MAP_ATTEMPTS);
       attempt++
     ) {
+      // Повтор сдвигает старшие биты: с шагом 1 отбракованный сид 16
+      // получал карту сида 17, и соседние сиды давали одну карту.
+      const step = attempt * 0x100000000;
       const seed =
-        initialSeed > Number.MAX_SAFE_INTEGER - attempt
-          ? attempt - (Number.MAX_SAFE_INTEGER - initialSeed) - 1
-          : initialSeed + attempt;
+        initialSeed > Number.MAX_SAFE_INTEGER - step
+          ? step - (Number.MAX_SAFE_INTEGER - initialSeed) - 1
+          : initialSeed + step;
       const grid = generateMap(gridColumns, gridRows, seed);
       for (const { base } of starts) prepareStartArea(grid, base.x, base.y);
       placeStartResources(grid, starts);

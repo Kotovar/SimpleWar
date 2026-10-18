@@ -197,6 +197,93 @@ describe('операция ударной группы', () => {
     expect(planOperation(ctx).operation.phase).not.toBe('retreat');
   });
 
+  it('сильная тревога забирает в гарнизон часть группы, остальные наступают', () => {
+    const units = [
+      [9, 10],
+      [10, 9],
+      [10, 10],
+      [9, 9],
+      [8, 10],
+      [10, 8],
+    ].map(([x, y]) => own('swordsman', x, y));
+    const { ctx } = scene({
+      map,
+      units,
+      buildings: [base()],
+      enemies: [
+        foe('swordsman', 4, 2),
+        foe('swordsman', 2, 4),
+        foe('archer', 5, 3),
+        enemyBase(),
+      ],
+      memory: {
+        strategy: 'G08',
+        operation: operation({ phase: 'advance', target: { x: 11, y: 11 } }),
+      },
+    });
+
+    const result = planOperation(ctx);
+    expect(result.operation.phase).not.toBe('retreat');
+    expect(result.garrison.length).toBeGreaterThan(0);
+    expect(result.garrison.length).toBeLessThan(units.length);
+  });
+
+  it('мечники не закрывают грифона в смешанной тревоге наземной силой', () => {
+    const { ctx } = scene({
+      map,
+      units: [9, 10, 11].map(x => own('swordsman', x, 10)),
+      buildings: [base()],
+      enemies: [
+        foe('griffon', 4, 2),
+        foe('swordsman', 2, 4, { hp: 40 }),
+        enemyBase(),
+      ],
+      memory: {
+        strategy: 'G08',
+        operation: operation({ phase: 'advance', target: { x: 11, y: 11 } }),
+      },
+    });
+    expect(planOperation(ctx).operation.phase).toBe('retreat');
+  });
+
+  it('после ослабления тревоги добор возвращается в группу', () => {
+    const units = [9, 10, 11, 8].map(x => own('swordsman', x, 10));
+    const { ctx } = scene({
+      map,
+      units,
+      buildings: [base()],
+      enemies: [foe('swordsman', 4, 2, { hp: 1 }), enemyBase()],
+      memory: {
+        strategy: 'G08',
+        garrison: units.slice(0, 3).map(({ id }) => id),
+        operation: operation({ phase: 'advance', target: { x: 11, y: 11 } }),
+      },
+    });
+    expect(planOperation(ctx).garrison).toHaveLength(ctx.config.garrisonSize);
+  });
+
+  it('повторы id в сохранённом гарнизоне не завышают защиту', () => {
+    const guard = own('swordsman', 3, 3);
+    const { ctx } = scene({
+      map,
+      units: [guard, own('swordsman', 10, 10)],
+      buildings: [base()],
+      enemies: [
+        foe('swordsman', 4, 2),
+        foe('swordsman', 2, 4),
+        foe('archer', 5, 3),
+      ],
+      memory: {
+        strategy: 'G08',
+        garrison: [guard.id, guard.id, guard.id],
+        operation: operation({ phase: 'advance', target: { x: 11, y: 11 } }),
+      },
+    });
+    const result = planOperation(ctx);
+    expect(new Set(result.garrison).size).toBe(result.garrison.length);
+    expect(result.operation.phase).toBe('retreat');
+  });
+
   it('потерянная цель сменяется границей разведки', () => {
     const fog = map.map((row, y) => (y === 13 ? '?'.repeat(14) : row));
     const { ctx } = scene({
