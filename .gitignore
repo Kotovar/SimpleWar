@@ -25,3 +25,8 @@ coverage
 *.sw?
 
 .env
+*.tsbuildinfo
+
+# Storybook
+storybook-static
+debug-storybook.log

@@ -1,0 +1,211 @@
+/* Общие элементы форм: флажок, список, ползунок, поля ввода. */
+
+.Check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.Check[data-disabled='true'] {
+  cursor: default;
+  color: var(--text-disabled);
+}
+
+.Box {
+  appearance: none;
+  flex-shrink: 0;
+  display: grid;
+  place-content: center;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background-color: var(--surface-sunken);
+  cursor: inherit;
+  transition:
+    background-color 0.12s,
+    border-color 0.12s;
+}
+
+.Box::after {
+  content: '';
+  width: 10px;
+  height: 6px;
+  border-left: 2px solid var(--bg);
+  border-bottom: 2px solid var(--bg);
+  transform: translateY(-1px) rotate(-45deg) scale(0);
+  transition: transform 0.12s;
+}
+
+.Box:checked,
+.Box:indeterminate {
+  border-color: var(--accent);
+  background-color: var(--accent);
+}
+
+.Box:checked::after {
+  transform: translateY(-1px) rotate(-45deg) scale(1);
+}
+
+.Box:indeterminate::after {
+  height: 0;
+  border-left: none;
+  transform: none;
+}
+
+.Check:hover .Box:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.Box:disabled {
+  opacity: 0.5;
+}
+
+.Select,
+.Field {
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-sunken);
+  color: var(--text);
+  font: inherit;
+  transition: border-color 0.12s;
+}
+
+.Select {
+  appearance: none;
+  padding-right: 30px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%239dabb9' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+}
+
+.Select option {
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+.Select:hover:not(:disabled),
+.Field:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.Select:disabled,
+.Field:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.Field::placeholder {
+  color: var(--text-disabled);
+}
+
+.Field[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.Slider {
+  --fill: 50%;
+  appearance: none;
+  min-width: 80px;
+  height: 18px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.Slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--fill),
+    var(--surface-hover) var(--fill)
+  );
+}
+
+.Slider::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background-color: var(--surface-hover);
+}
+
+.Slider::-moz-range-progress {
+  height: 6px;
+  border-radius: 3px;
+  background-color: var(--accent);
+}
+
+.Slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -5px;
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  background-color: var(--text);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.Slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  background-color: var(--text);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.Slider:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.Number {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.Number .Field {
+  width: 4ch;
+  min-width: 0;
+  padding: 4px 2px;
+  border-radius: 0;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.Number button {
+  width: 24px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  background-color: var(--surface-strong);
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.Number button:first-child {
+  border-right: none;
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.Number button:last-child {
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.Number button:hover:not(:disabled) {
+  background-color: var(--surface-hover);
+  color: var(--text);
+}
+
+.Number button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

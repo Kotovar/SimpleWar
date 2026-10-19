@@ -1,0 +1,130 @@
+.Dialog {
+  border: 1px solid var(--frame);
+  border-radius: 16px;
+  background: var(--panel-bg, var(--surface));
+  color: var(--text);
+  padding: 0;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  width: 420px;
+  box-shadow: 0 20px 50px oklab(0% 0 0 / 0.8);
+  animation: fadeIn 0.25s ease-out;
+
+  &::backdrop {
+    background-color: rgb(0 0 0 / 0.65);
+    backdrop-filter: blur(5px);
+    animation: backdropFade 0.3s ease-out;
+  }
+}
+
+.Content {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: left;
+}
+
+.Title {
+  font-family: var(--font-display, inherit);
+  font-size: 1.6em;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  margin: 0;
+  color: var(--text);
+}
+
+.Message {
+  margin: 0;
+  font-size: 1.1em;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.Buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.Dialog[data-centered='true'] {
+  .Content {
+    text-align: center;
+  }
+  .Buttons {
+    justify-content: center;
+  }
+}
+
+.ConfirmButton {
+  background-color: var(--danger);
+  color: #20130f;
+  font-weight: 700;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  padding: 10px 24px;
+  font-size: 1em;
+  cursor: pointer;
+
+  &:hover {
+    filter: brightness(1.12);
+  }
+}
+
+.CancelButton {
+  background-color: var(--surface-strong);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 10px 24px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--border-strong);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    scale: 0.95;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes backdropFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.Dialog[data-intent='primary'] .ConfirmButton {
+  background-color: var(--accent);
+  color: #102136;
+}
+@media (max-width: 540px) {
+  .Content {
+    padding: 20px;
+    gap: 16px;
+  }
+  .Buttons > button {
+    flex: 1;
+    padding-inline: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .Dialog {
+    animation: none;
+  }
+  .Dialog::backdrop {
+    animation: none;
+  }
+}

@@ -1,0 +1,99 @@
+.Main {
+  display: grid;
+  box-sizing: border-box;
+  height: 100dvh;
+  padding: 10px;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas: 'toolbar' 'map';
+  background-color: var(--bg);
+}
+
+@media (max-width: 700px) {
+  .Main {
+    height: auto;
+    min-height: 100dvh;
+    padding: 8px;
+    gap: 8px;
+    grid-template-rows: auto clamp(280px, 48dvh, 420px) auto auto;
+    grid-template-areas: 'toolbar' 'map' 'selection' 'guidance';
+  }
+  .Setup {
+    width: calc(100% - 16px);
+    margin: 8px auto;
+  }
+}
+
+.Setup {
+  position: relative;
+  box-sizing: border-box;
+  width: min(860px, calc(100% - 24px));
+  margin: clamp(16px, 6vh, 64px) auto 16px;
+  padding: clamp(16px, 3vw, 24px);
+  background: linear-gradient(
+    180deg,
+    rgb(33 39 47 / 0.9),
+    rgb(22 27 33 / 0.92)
+  );
+  border: 1px solid var(--frame);
+  border-radius: 16px;
+  box-shadow:
+    0 1px 0 rgb(255 236 200 / 0.08) inset,
+    0 24px 64px rgb(0 0 0 / 0.6);
+  backdrop-filter: blur(6px);
+  animation: rise 0.5s ease-out;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Фон меню: живая карта под затемнением, медленно плывёт. */
+.Backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+
+  & > canvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    filter: saturate(0.85) brightness(0.62);
+    animation: drift 70s ease-in-out infinite alternate;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        ellipse at 50% 45%,
+        transparent 20%,
+        rgb(10 13 17 / 0.75) 85%
+      ),
+      linear-gradient(180deg, rgb(10 13 17 / 0.35), rgb(10 13 17 / 0.6));
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: scale(1.04) translate(-2%, -1%);
+  }
+  to {
+    transform: scale(1.1) translate(2%, 1.5%);
+  }
+}
+
+@media (min-width: 1000px) {
+  .Setup:has([data-sandbox='true']) {
+    width: min(1080px, calc(100% - 48px));
+  }
+}

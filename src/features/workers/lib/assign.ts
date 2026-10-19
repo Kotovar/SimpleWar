@@ -1,0 +1,126 @@
+import type { CommandResult, ParticipantId, Position } from '@shared/config';
+import {
+  canHouseWorker,
+  findServingWorker,
+  isAdjacent,
+  ok,
+  reject,
+} from '@shared/lib';
+import { useUnitsStore } from '@entities/units';
+import { useBuildingsStore } from '@entities/buildings';
+import { getOwnWorker, isRejection, runWorkerCommand } from './common';
+import { findExit } from './shelter';
+
+const isInside = (a: Position, b: Position) => a.x === b.x && a.y === b.y;
+
+/** Приказ назначения: кто, какого рабочего и на какое здание. */
+export type AssignCommand = {
+  actor: ParticipantId;
+  workerId: string;
+  buildingId: string;
+};
+
+/**
+ * Занят ли рудник или лесопилка другим рабочим.
+ *
+ * @param buildingId - Здание.
+ * @param exceptWorkerId - Рабочий, который сам на него претендует.
+ * @returns ID занявшего рабочего или `null`.
+ */
+export const getWorkplaceHolder = (
+  buildingId: string,
+  exceptWorkerId?: string,
+) => {
+  const units = Object.values(useUnitsStore.getState().units);
+  return (
+    units.find(
+      unit =>
+        unit.id !== exceptWorkerId &&
+        unit.role === 'civil' &&
+        unit.workplaceId === buildingId,
+    )?.id ?? null
+  );
+};
+
+const validateAndAssign = ({
+  actor,
+  workerId,
+  buildingId,
+}: AssignCommand): CommandResult => {
+  const worker = getOwnWorker(actor, workerId);
+  if (isRejection(worker)) return worker;
+
+  const building = useBuildingsStore.getState().buildings[buildingId];
+  if (!building) return reject('notFound');
+  if (building.owner !== actor) return reject('owner');
+  if (!canHouseWorker(building)) return reject('target');
+  if (!isAdjacent(worker, building) && !isInside(worker, building)) {
+    return reject('distance');
+  }
+  // Одно место: второй рабочий не войдёт в занятое здание.
+  if (getWorkplaceHolder(buildingId, workerId)) return reject('workplace');
+
+  // Рабочий входит в здание: удар по клетке теперь приходится в здание.
+  useUnitsStore.getState().setWorkplace(workerId, buildingId);
+  useUnitsStore.getState().placeUnit(workerId, building.x, building.y);
+  return ok;
+};
+
+/**
+ * Назначает своего рабочего на соседний рудник или лесопилку либо прячет в
+ * своей ратуше (одно место, дохода нет): рабочий входит в здание. Прежнее назначение рабочего заменяется. Действие тратится позже — при добыче
+ * в конце своего хода.
+ *
+ * @param command - Участник, рабочий и здание.
+ * @returns Успех либо причина отказа; при отказе состояние не меняется.
+ */
+export const assignWorker = (command: AssignCommand) =>
+  runWorkerCommand(
+    {
+      type: 'assign',
+      actor: command.actor,
+      details: { workerId: command.workerId, buildingId: command.buildingId },
+    },
+    () => validateAndAssign(command),
+  );
+
+/** Приказ снять рабочего с работы. */
+export type UnassignCommand = { actor: ParticipantId; workerId: string };
+
+/**
+ * Снимает назначение рабочего: он выходит на свободную соседнюю клетку
+ * (нет такой — отказ `occupied`); повторное снятие отклоняется.
+ *
+ * @param command - Участник и рабочий.
+ * @returns Успех либо причина отказа.
+ */
+export const unassignWorker = ({ actor, workerId }: UnassignCommand) =>
+  runWorkerCommand({ type: 'unassign', actor, details: { workerId } }, () => {
+    const worker = getOwnWorker(actor, workerId);
+    if (isRejection(worker)) return worker;
+    if (!worker.workplaceId) return reject('target');
+    // Рабочий выходит из здания на свободную соседнюю клетку.
+    const workplace =
+      useBuildingsStore.getState().buildings[worker.workplaceId];
+    if (workplace && isInside(worker, workplace)) {
+      const exit = findExit(worker);
+      if (!exit) return reject('occupied');
+      useUnitsStore.getState().placeUnit(workerId, exit.x, exit.y);
+    }
+    useUnitsStore.getState().setWorkplace(workerId, null);
+    return ok;
+  });
+
+/**
+ * Рабочий, который обслуживает здание прямо сейчас (для интерфейса и ИИ).
+ *
+ * @param buildingId - Рудник или лесопилка.
+ */
+export const getServingWorker = (buildingId: string) => {
+  const building = useBuildingsStore.getState().buildings[buildingId];
+  if (!building) return null;
+  return findServingWorker(
+    building,
+    Object.values(useUnitsStore.getState().units),
+  );
+};

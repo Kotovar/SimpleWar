@@ -1,0 +1,131 @@
+.ButtonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.EndTurnButton {
+  /* Обе подписи помещаются без сдвига соседей при передаче хода. */
+  min-width: 12em;
+  background: linear-gradient(180deg, var(--success-strong), var(--success));
+  color: #0f1f12;
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: var(--radius);
+  padding: 9px 18px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  align-self: center;
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.25) inset,
+    0 3px 10px rgb(87 167 92 / 0.25);
+  transition:
+    filter 0.15s,
+    transform 0.1s;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.25) inset,
+      0 4px 18px rgb(87 167 92 / 0.45);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:disabled {
+    background: var(--surface-strong);
+    border-color: var(--border);
+    color: var(--text-muted);
+    box-shadow: none;
+  }
+}
+
+/* Вторичная кнопка рядом с концом хода — в стиле кнопки «Меню». */
+.OrdersButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface-sunken);
+  color: var(--text);
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background-color: var(--surface-strong);
+    border-color: var(--border-strong);
+  }
+
+  &:disabled {
+    color: var(--text-muted);
+    cursor: default;
+  }
+
+  &[data-idle] {
+    visibility: hidden;
+  }
+}
+
+/* Полная подпись — на широком экране, иначе короткая: шапка не сжимается. */
+.Long {
+  display: none;
+}
+
+@media (min-width: 1600px) {
+  .Long {
+    display: inline;
+  }
+  .Short {
+    display: none;
+  }
+}
+
+.Play {
+  color: var(--success-strong);
+  font-size: 0.7rem;
+}
+
+/* Число юнитов с приказом: место под две цифры, ширина кнопки постоянна. */
+.Count {
+  box-sizing: content-box;
+  min-width: 2ch;
+  text-align: center;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background-color: rgb(201 164 98 / 0.22);
+  color: var(--frame-strong);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 700px) {
+  .ButtonRow {
+    justify-content: flex-start;
+    gap: 6px;
+  }
+  .EndTurnButton {
+    flex: 1;
+    min-width: 10.5em;
+    padding: 10px 8px;
+    font-size: 0.875rem;
+  }
+  .OrdersButton {
+    padding: 10px 8px;
+    font-size: 0.875rem;
+  }
+  .OrdersButton {
+    padding-inline: 6px;
+  }
+  .ButtonRow > button[aria-label='Справка по клавишам'] {
+    width: 32px;
+  }
+}

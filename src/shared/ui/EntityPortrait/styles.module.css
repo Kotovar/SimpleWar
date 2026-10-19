@@ -1,0 +1,7 @@
+.Portrait {
+  display: block;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: radial-gradient(ellipse at 50% 75%, #3c4a40, #202a2c 80%);
+  box-shadow: inset 0 0 0 1px rgb(202 221 195 / 0.1);
+}

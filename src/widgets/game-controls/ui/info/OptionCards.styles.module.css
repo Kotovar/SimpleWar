@@ -1,0 +1,54 @@
+/* Кнопка отмены исследования в списке исследований шапки. */
+.List {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.Card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px 8px 8px;
+  background-color: var(--surface-strong);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: left;
+  min-width: 0;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+
+  &:hover:not(:disabled) {
+    background-color: var(--surface-hover);
+    border-color: var(--border-strong);
+  }
+
+  &:disabled {
+    background-color: var(--surface-sunken);
+    border-style: dashed;
+
+    .Name {
+      color: var(--text-muted);
+    }
+  }
+}
+
+.Content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.Name {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.Info {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}

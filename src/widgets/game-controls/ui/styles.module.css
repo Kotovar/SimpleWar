@@ -1,0 +1,637 @@
+.GameLayout {
+  display: contents;
+}
+
+.GameControls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.Toolbar {
+  grid-area: toolbar;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--panel-bg);
+  border: 1px solid var(--frame);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+}
+
+.Title {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 7vw, 3.6rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  background: linear-gradient(180deg, #fff3cf 10%, #e7bf6a 55%, #a87a35 95%);
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.55))
+    drop-shadow(0 0 18px rgb(231 191 106 / 0.25));
+}
+
+.Intro {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+  padding-inline: 28px;
+}
+
+.Selection {
+  grid-area: map;
+  align-self: end;
+  justify-self: start;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  max-width: calc(100% - 396px);
+  max-height: calc(100% - 96px);
+  margin: 16px 16px 64px;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.Selection:empty {
+  display: none;
+}
+
+.Selection > :is(aside, div) {
+  pointer-events: auto;
+  margin: 0;
+  max-width: 100%;
+}
+
+.Selection > aside {
+  flex-shrink: 0;
+  max-height: inherit;
+}
+
+@media (max-width: 1150px) {
+  .Selection {
+    max-width: calc(100% - 32px);
+  }
+}
+
+@media (max-width: 700px) {
+  .Selection {
+    grid-area: selection;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .Selection > aside {
+    width: 100%;
+  }
+  .Selection > div {
+    width: 100%;
+    translate: none !important;
+  }
+}
+
+.Wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  color: var(--text);
+}
+
+.Section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.Label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.ButtonGroup {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.SizeGroup {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+}
+
+@media (min-width: 780px) {
+  .SizeGroup {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+.AiGroup {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  width: 100%;
+
+  & .ToggleButton {
+    gap: 4px;
+  }
+}
+
+.ToggleButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background-color: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+
+  &:hover {
+    background-color: var(--surface-hover);
+    border-color: var(--border-strong);
+  }
+
+  &.Active {
+    background-color: rgb(201 164 98 / 0.16);
+    border-color: var(--frame-strong);
+    color: var(--text);
+    box-shadow:
+      inset 0 0 0 1px rgb(201 164 98 / 0.35),
+      0 0 14px rgb(201 164 98 / 0.18);
+  }
+}
+
+.ToggleTitle {
+  font-weight: 600;
+}
+
+.SavesButton {
+  font-weight: 600;
+  justify-content: center;
+}
+
+.StartActions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+
+  > button {
+    flex: 1;
+    min-width: 0;
+    max-width: 220px;
+    align-self: stretch;
+    padding-inline: 12px;
+    font-size: 1rem;
+  }
+}
+
+.ToggleMeta {
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.PrimaryButton {
+  min-width: 220px;
+  background: linear-gradient(180deg, var(--success-strong), var(--success));
+  color: #0f1f12;
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: var(--radius);
+  padding: 12px 28px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  align-self: center;
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.25) inset,
+    0 4px 14px rgb(87 167 92 / 0.3);
+
+  transition:
+    filter 0.15s,
+    transform 0.15s,
+    box-shadow 0.15s;
+
+  &:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.25) inset,
+      0 6px 22px rgb(87 167 92 / 0.45);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+.Error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgb(255 138 114 / 0.4);
+  background-color: rgb(212 97 76 / 0.12);
+  color: #ffc2b4;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.GameOverTitle {
+  margin: 0;
+  text-align: center;
+  line-height: 1.2;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  background: linear-gradient(180deg, #fff3cf 10%, #e7bf6a 55%, #a87a35 95%);
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.55))
+    drop-shadow(0 0 22px rgb(231 191 106 / 0.35));
+}
+
+.GameOverTitle[data-defeat='true'] {
+  background-image: linear-gradient(
+    180deg,
+    #ffd2c4 10%,
+    #ff8a72 55%,
+    #b04a35 95%
+  );
+  filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.55))
+    drop-shadow(0 0 22px rgb(255 138 114 / 0.3));
+}
+
+.GameOverText {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+}
+
+.Hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.Intro .Hint {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
+.Legend,
+.Controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 0 0;
+  list-style: none;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.Legend li,
+.Controls li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Образцы повторяют подсветку на карте: SELECTED в shared/config/draws. */
+.Swatch {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  background-color: rgb(160 222 255 / 0.25);
+  box-shadow: inset 0 0 0 1.5px rgb(214 240 255 / 0.9);
+}
+
+.Swatch[data-kind='produce'] {
+  background-color: rgb(245 205 110 / 0.28);
+  box-shadow: inset 0 0 0 1.5px #f5d98f;
+}
+
+.Swatch[data-kind='attack'] {
+  background-color: transparent;
+  box-shadow: none;
+  border: 2px solid #ffac91;
+  clip-path: polygon(
+    0 0,
+    40% 0,
+    40% 20%,
+    60% 20%,
+    60% 0,
+    100% 0,
+    100% 40%,
+    80% 40%,
+    80% 60%,
+    100% 60%,
+    100% 100%,
+    60% 100%,
+    60% 80%,
+    40% 80%,
+    40% 100%,
+    0 100%,
+    0 60%,
+    20% 60%,
+    20% 40%,
+    0 40%
+  );
+}
+
+.Controls kbd {
+  min-width: 56px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  background-color: var(--surface-sunken);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text);
+}
+
+.SeedInputWrapper {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.SeedLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.SeedInput {
+  width: 120px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-variant-numeric: tabular-nums;
+  background: var(--surface-sunken);
+  color: var(--text);
+  min-width: 60px;
+
+  &[aria-invalid='true'] {
+    border-color: var(--danger-strong);
+  }
+}
+
+.GuideLink {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: var(--text);
+  }
+}
+
+.SeedWarning {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.Toolbar:has([aria-controls='tools-drawer']) {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+@media (min-width: 1151px) and (max-width: 1400px) {
+  .Toolbar:has([aria-controls='tools-drawer']) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .Toolbar:has([aria-controls='tools-drawer'])
+    > :nth-child(2):not([aria-controls]) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+
+@media (max-width: 1150px) {
+  .Toolbar,
+  .Toolbar:has([aria-controls='tools-drawer']) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+  .Toolbar > :nth-child(2):not([aria-controls]) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .Toolbar > :last-child {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 700px) {
+  .Toolbar,
+  .Toolbar:has([aria-controls='tools-drawer']) {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 10px;
+  }
+  .Toolbar > :nth-child(2):not([aria-controls]) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .Toolbar > :last-child {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+.SetupMenu {
+  gap: 12px;
+
+  & .Section {
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  & .Section + .Section {
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  & .ButtonGroup {
+    justify-content: flex-start;
+  }
+
+  & .GuideLink {
+    text-align: center;
+  }
+
+  & button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+}
+
+.ModeGroup {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  & .ToggleButton {
+    align-items: flex-start;
+    text-align: left;
+    gap: 4px;
+    padding: 10px 14px;
+  }
+}
+
+@media (max-width: 520px) {
+  .SizeGroup,
+  .ModeGroup {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .AiGroup {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-flow: row;
+  }
+
+  .ToggleButton {
+    padding: 10px;
+  }
+}
+
+@media (min-width: 1000px) {
+  .SetupMenu[data-sandbox='true'] {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 16px 28px;
+    align-items: start;
+
+    /* Порядок шагов: режим, карта, составы сторон, старт. */
+    & > .Section:first-of-type,
+    & > .Section:last-of-type {
+      grid-column: 1 / -1;
+    }
+
+    & > .Section:nth-of-type(3) {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    & .SizeGroup {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+/* Номер шага главного меню. */
+.Step {
+  display: inline-grid;
+  place-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #e7bf6a, #a87a35);
+  color: #1d1608;
+  font-size: 0.75rem;
+  letter-spacing: 0;
+}
+
+/* Свёрнутые настройки шага: генерация карты и сид. */
+.More {
+  display: flex;
+  flex-direction: column;
+
+  & > summary {
+    width: fit-content;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  & > summary:hover {
+    color: var(--text);
+  }
+
+  &[open] > summary {
+    margin-bottom: 10px;
+  }
+
+  & .SeedInputWrapper {
+    align-items: flex-start;
+  }
+}
+
+/* Звук — значок в правом верхнем углу карточки меню. */
+.SoundCorner {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+
+  & > summary {
+    display: grid;
+    place-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background-color: var(--surface-sunken);
+    color: var(--text-muted);
+    list-style: none;
+    cursor: pointer;
+  }
+
+  & > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  & > summary:hover,
+  &[open] > summary {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+}
+
+.SoundPopup {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 260px;
+  padding-top: 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background-color: var(--surface);
+  box-shadow: var(--shadow);
+
+  & > fieldset {
+    border-top: none;
+  }
+}

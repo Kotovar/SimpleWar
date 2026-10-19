@@ -1,0 +1,153 @@
+import {
+  BUILDINGS_NAME,
+  BUILDINGS_CONFIG,
+  type ParticipantId,
+  type Position,
+} from '@shared/config';
+import { getAvailableResources, worldToScreen } from '@shared/lib';
+import { GoldIcon, WoodIcon } from '@shared/ui';
+import { useSettingsStore } from '@entities/settings';
+import { useUnitsStore } from '@entities/units';
+import { useEconomyStore } from '@entities/economies';
+import { getTurnRejection } from '@entities/games';
+import { useSelectionStore } from '@features/selection';
+import { getContextBuildings } from '@features/build';
+import { useHighlightStore, useMovementStore } from '@features/pathfinding';
+import { orderBuild } from './utils/workerOrders';
+import styles from './styles.module.css';
+
+type Props = {
+  target: Position & { workerId: string };
+  humanId: ParticipantId | null;
+  onClose: () => void;
+  onFocus: () => void;
+};
+
+/** Контекстные приказы рабочего и их немедленное исполнение на оставшиеся очки. */
+export const ContextBuildMenu = ({
+  target,
+  humanId,
+  onClose,
+  onFocus,
+}: Props) => {
+  const camera = useSettingsStore(state => state.camera);
+  const cellSize = useSettingsStore(state => state.cellSize);
+  const mapSize = useSettingsStore(state => state.viewport);
+  const selection = useSelectionStore(state => state.selection);
+  const worker = useUnitsStore(state => state.units[target.workerId]);
+  const stock = useEconomyStore(state =>
+    humanId ? state.resources[humanId] : null,
+  );
+  const units = useUnitsStore(state => state.units);
+  if (selection?.kind !== 'unit' || selection.id !== target.workerId)
+    return null;
+  if (!worker || !humanId || !stock || getTurnRejection(humanId)) return null;
+  // Свой прежний приказ рабочий заменит: его резерв доступен.
+  const resources = getAvailableResources(
+    stock,
+    Object.values(units),
+    humanId,
+    worker.id,
+  );
+  const menuOptions = getContextBuildings(worker, humanId, target);
+  // Идущий к стройке рабочий остаётся выбранным — виден путь; построившего
+  // сразу выбор уже снят (Map).
+  const finishOrder = (workerId: string) => {
+    onClose();
+    useMovementStore.getState().resetStore();
+    useHighlightStore.getState().resetStore();
+    if (useUnitsStore.getState().units[workerId]?.order)
+      useMovementStore.getState().calculateActionHighlights(workerId);
+    onFocus();
+  };
+  const menuPoint = worldToScreen(camera, cellSize, {
+    x: target.x + 0.5,
+    y: target.y,
+  });
+  if (!menuOptions.length) return null;
+  return (
+    <div
+      className={styles.BuildMenu}
+      role='group'
+      aria-label='Контекстная стройка'
+      style={{
+        left: Math.max(4, Math.min(menuPoint.x, mapSize.width - 240)),
+        top: Math.max(4, Math.min(menuPoint.y, mapSize.height - 280)),
+      }}
+      onPointerDown={event => event.stopPropagation()}
+      onKeyDown={event => event.stopPropagation()}
+    >
+      <strong>{`Построить (${target.x + 1}, ${target.y + 1})`}</strong>
+      {menuOptions.map(buildingType => {
+        const cost = BUILDINGS_CONFIG[buildingType].cost;
+        const missingGold = resources.gold < cost.gold;
+        const missingWood = resources.wood < cost.wood;
+        const missingResources = [
+          missingGold && 'золота',
+          missingWood && 'древесины',
+        ].filter(Boolean);
+        const warning = missingResources.length
+          ? `Не хватает ${missingResources.join(' и ')}.`
+          : undefined;
+        return (
+          <button
+            key={buildingType}
+            type='button'
+            data-unaffordable={missingGold || missingWood}
+            aria-label={`${BUILDINGS_NAME[buildingType]}: ${cost.gold} золота, ${cost.wood} древесины`}
+            aria-description={warning}
+            title={warning}
+            onClick={() => {
+              const result = orderBuild({
+                actor: humanId,
+                workerId: target.workerId,
+                buildingType,
+                x: target.x,
+                y: target.y,
+              });
+              if (!result.ok) return;
+              finishOrder(target.workerId);
+            }}
+          >
+            <span>{BUILDINGS_NAME[buildingType]}</span>
+            <span className={styles.ContextCost}>
+              <span
+                data-shortage={missingGold}
+                aria-label={`${cost.gold} золота${missingGold ? ' — недостаточно' : ''}`}
+                title={
+                  missingGold
+                    ? `Не хватает ${cost.gold - resources.gold} золота`
+                    : 'Золото'
+                }
+              >
+                <GoldIcon />
+                {cost.gold}
+              </span>
+              <span
+                data-shortage={missingWood}
+                aria-label={`${cost.wood} древесины${missingWood ? ' — недостаточно' : ''}`}
+                title={
+                  missingWood
+                    ? `Не хватает ${cost.wood - resources.wood} древесины`
+                    : 'Древесина'
+                }
+              >
+                <WoodIcon />
+                {cost.wood}
+              </span>
+            </span>
+          </button>
+        );
+      })}
+      <button
+        type='button'
+        onClick={() => {
+          onClose();
+          onFocus();
+        }}
+      >
+        Отмена
+      </button>
+    </div>
+  );
+};

@@ -1,0 +1,126 @@
+import { describe, expect, it } from 'vite-plus/test';
+import type { AiRule, Candidate } from '../model/types';
+import { actionKey, decideStep } from './decide';
+import { grass, own, scene } from './scene.test-utils';
+
+describe('выбор действия шага', () => {
+  const offer =
+    (group: Candidate['group'], score: number, x = 1): AiRule['evaluate'] =>
+    () => [
+      {
+        ruleId: `R-${group}-${x}`,
+        group,
+        actorId: 'u1',
+        action: { type: 'move', unitId: 'u1', x, y: 0 },
+        score,
+        reason: 'тест',
+      },
+    ];
+  const rule = (
+    id: string,
+    group: Candidate['group'],
+    evaluate: AiRule['evaluate'],
+  ): AiRule => ({ id, group, title: id, evaluate });
+  const economy = rule('E', 'economy', offer('economy', 50, 1));
+  const attack = rule('A', 'attack', offer('attack', 60, 2));
+
+  it('рабочего в ходу двигает первое правило; оборона перехватывает', () => {
+    const worker = own('worker', 0, 0, { id: 'u1' });
+    const { ctx } = scene({ map: grass(4, 4), units: [worker] });
+    const defense = rule('D', 'defense', offer('defense', 40, 3));
+    ctx.turn.movedBy.set('u1', { ruleId: 'R-attack-2', group: 'attack' });
+
+    // Другое мирное правило не уводит рабочего обратно.
+    expect(decideStep(ctx, [economy]).chosen).toBeNull();
+    expect(decideStep(ctx, [economy, defense]).chosen?.group).toBe('defense');
+    ctx.turn.movedBy.set('u1', { ruleId: 'R-defense-3', group: 'defense' });
+    expect(decideStep(ctx, [economy, attack]).chosen).toBeNull();
+  });
+
+  it('стратегия меняет выбор весом группы', () => {
+    const economic = scene({ map: grass(4, 4), memory: { strategy: 'G02' } });
+    const offensive = scene({ map: grass(4, 4), memory: { strategy: 'G08' } });
+
+    expect(decideStep(economic.ctx, [economy, attack]).chosen?.group).toBe(
+      'economy',
+    );
+    expect(decideStep(offensive.ctx, [economy, attack]).chosen?.group).toBe(
+      'attack',
+    );
+  });
+
+  it('при равных оценках выбор воспроизводим и не зависит от порядка правил', () => {
+    const tiedA = rule('A', 'economy', offer('economy', 50, 1));
+    const tiedB = rule('B', 'economy', offer('economy', 50, 2));
+    const { ctx } = scene({ map: grass(4, 4) });
+
+    const first = decideStep(ctx, [tiedA, tiedB]).chosen?.ruleId;
+
+    expect(decideStep(ctx, [tiedA, tiedB]).chosen?.ruleId).toBe(first);
+    expect(decideStep(ctx, [tiedB, tiedA]).chosen?.ruleId).toBe(first);
+  });
+
+  it('равенство разрешается по типу и клетке, а не по ID объектов', () => {
+    // Равные предложения для каждого своего юнита: выбор решает жребий.
+    const moveEach = rule('M', 'economy', ctx =>
+      ctx.obs.ownUnits.map(unit => ({
+        ruleId: 'M',
+        group: 'economy' as const,
+        actorId: unit.id,
+        action: { type: 'move' as const, unitId: unit.id, x: unit.x, y: 3 },
+        score: 50,
+        reason: 'тест',
+      })),
+    );
+    const chosenCell = (suffix: number) => {
+      const { ctx } = scene({
+        map: grass(6, 6),
+        units: [0, 1, 2, 3].map(x =>
+          own('swordsman', x, 1, { id: `unit_${suffix}_${x}` }),
+        ),
+      });
+      const action = decideStep(ctx, [moveEach]).chosen?.action;
+      return action?.type === 'move' ? action.x : null;
+    };
+
+    const cells = new Set(Array.from({ length: 20 }, (_, i) => chosenCell(i)));
+
+    expect(cells.size).toBe(1);
+  });
+
+  it('пропускает отклонённое в этом ходу действие и закончившего ход', () => {
+    const { ctx } = scene({ map: grass(4, 4) });
+    const first = decideStep(ctx, [economy, attack]).chosen!;
+    ctx.turn.failed.add(actionKey(first));
+
+    expect(decideStep(ctx, [economy, attack]).chosen?.ruleId).not.toBe(
+      first.ruleId,
+    );
+
+    ctx.turn.done.add('u1');
+    expect(decideStep(ctx, [economy, attack])).toMatchObject({
+      chosen: null,
+      endReason: 'нет законных действий',
+    });
+  });
+
+  it('ожидание и слабые действия не выполняются', () => {
+    const { ctx } = scene({ map: grass(4, 4) });
+    const wait = rule('W', 'defense', () => [
+      {
+        ruleId: 'W',
+        group: 'defense',
+        actorId: 't1',
+        action: { type: 'wait', actorId: 't1' },
+        score: 100,
+        reason: 'тест',
+      },
+    ]);
+    const weak = rule('Z', 'economy', offer('economy', 0.1));
+
+    expect(decideStep(ctx, [wait, weak])).toMatchObject({
+      chosen: null,
+      endReason: 'нет полезных действий',
+    });
+  });
+});

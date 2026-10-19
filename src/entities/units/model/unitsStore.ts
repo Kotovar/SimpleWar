@@ -1,0 +1,240 @@
+import { create } from 'zustand';
+import { gameEvents, withDevtools } from '@shared/lib';
+import type { Owner, Position, Unit, UnitType } from '@shared/config';
+import { createUnit } from './createUnit';
+
+type UnitsState = {
+  units: Record<string, Unit>;
+  selectedUnitForSpawn: UnitType | null;
+
+  spawnUnit: (
+    type: UnitType,
+    x: number,
+    y: number,
+    owner: Owner,
+    initialSpawn?: boolean,
+  ) => string | null;
+  moveUnit: (id: string, x: number, y: number, cost: number) => void;
+  getUnitAt: (x: number, y: number) => Unit | null;
+  damageUnit: (id: string, damage: number) => void;
+  /** Лечение живого юнита: HP не выше максимума. */
+  healUnit: (id: string, amount: number) => void;
+  changeAttackPoints: (id: string) => void;
+  changeBuildPoints: (id: string) => void;
+  /** Назначает рабочего на рудник или лесопилку; `null` снимает назначение. */
+  setWorkplace: (id: string, buildingId: string | null) => void;
+  /** Ставит юнита на клетку без траты очков: вход в здание и выход из него. */
+  placeUnit: (id: string, x: number, y: number) => void;
+  /** Подготовленный удар осадной машины; `null` снимает его. */
+  setPreparedStrike: (id: string, target: Position | null) => void;
+  selectUnitForSpawn: (unitType: UnitType) => void;
+  clearSelectedUnitForSpawn: () => void;
+  resetUnitsForNewTurn: (owner: Owner) => void;
+  /** Пропуск сжигает очки; сон сохраняет их, null снимает режим. */
+  setRestMode: (id: string, mode: Unit['restMode'] | null) => void;
+  /** Ставит, меняет статус или (null) снимает приказ «Идти в точку». */
+  setOrder: (id: string, order: Unit['order'] | null) => void;
+  /** Удаляет юнитов выбывшего участника без событий гибели. */
+  removeOwnerUnits: (owner: Owner) => void;
+  resetStore: () => void;
+};
+
+export const useUnitsStore = create<UnitsState>()(
+  withDevtools('units', (set, get) => ({
+    units: {},
+    selectedUnitForSpawn: null,
+
+    spawnUnit: (type, x, y, owner, initialSpawn = false) => {
+      const unit = createUnit(type, x, y, owner, initialSpawn);
+      if (!unit) return null;
+
+      set(state => {
+        state.units[unit.id] = unit;
+      });
+
+      gameEvents.emit({ type: 'UNIT_SPAWNED', unit, owner });
+
+      return unit.id;
+    },
+
+    moveUnit: (id, x, y, cost) =>
+      set(state => {
+        const unit = state.units[id];
+        if (!unit) return;
+
+        if (!Number.isInteger(cost) || cost <= 0 || cost > unit.movePoints)
+          return;
+
+        unit.x = x;
+        unit.y = y;
+        unit.movePoints -= cost;
+        // Новый приказ движения снимает назначение: рабочий ушёл от здания.
+        if (unit.role === 'civil') unit.workplaceId = null;
+        // Движение орудия отменяет подготовленный удар.
+        else unit.preparedStrike = null;
+      }),
+
+    damageUnit: (id, damage) => {
+      const unit = get().units[id];
+      if (!unit) return;
+
+      const hp = unit.hp - damage;
+
+      set(state => {
+        if (hp > 0) state.units[id].hp = hp;
+        else delete state.units[id];
+      });
+
+      if (hp <= 0) {
+        gameEvents.emit({ type: 'UNIT_DESTROYED', unit, owner: unit.owner });
+      }
+    },
+
+    healUnit: (id, amount) =>
+      set(state => {
+        const unit = state.units[id];
+        if (unit) unit.hp = Math.min(unit.maxHp, unit.hp + amount);
+      }),
+
+    getUnitAt: (x, y) => {
+      return (
+        Object.values(get().units).find(unit => unit.x === x && unit.y === y) ??
+        null
+      );
+    },
+
+    changeAttackPoints: id => {
+      set(state => {
+        const unit = state.units[id];
+        if (unit?.role === 'military' && unit.attackPoints > 0) {
+          unit.attackPoints--;
+          if (unit.attackPoints === 0) unit.movePoints = 0;
+        }
+      });
+    },
+
+    changeBuildPoints: id => {
+      set(state => {
+        const unit = state.units[id];
+        if (unit?.role === 'civil' && unit.buildPoints > 0) {
+          unit.buildPoints--;
+          if (unit.buildPoints === 0) unit.movePoints = 0;
+        }
+      });
+    },
+
+    setWorkplace: (id, buildingId) =>
+      set(state => {
+        const unit = state.units[id];
+        if (unit?.role === 'civil') unit.workplaceId = buildingId;
+      }),
+
+    placeUnit: (id, x, y) =>
+      set(state => {
+        const unit = state.units[id];
+        if (!unit) return;
+        unit.x = x;
+        unit.y = y;
+      }),
+
+    setPreparedStrike: (id, target) =>
+      set(state => {
+        const unit = state.units[id];
+        if (unit?.role === 'military') unit.preparedStrike = target;
+      }),
+
+    selectUnitForSpawn: unitType => {
+      set(state => {
+        state.selectedUnitForSpawn = unitType;
+      });
+    },
+
+    clearSelectedUnitForSpawn: () => {
+      set(state => {
+        state.selectedUnitForSpawn = null;
+      });
+    },
+
+    setRestMode: (id, mode) =>
+      set(state => {
+        const unit = state.units[id];
+        if (!unit) return;
+        if (mode) unit.restMode = mode;
+        else delete unit.restMode;
+        if (mode === 'skip') {
+          unit.movePoints = 0;
+          if (unit.role === 'civil') unit.buildPoints = 0;
+          else unit.attackPoints = 0;
+        }
+      }),
+
+    setOrder: (id, order) =>
+      set(state => {
+        const unit = state.units[id];
+        if (!unit) return;
+        if (order) unit.order = order;
+        else delete unit.order;
+      }),
+
+    resetUnitsForNewTurn: owner =>
+      set(state => {
+        Object.values(state.units).forEach(unit => {
+          if (unit.owner !== owner) return;
+          if (unit.restMode === 'skip') delete unit.restMode;
+
+          unit.movePoints = unit.maxMovePoints;
+
+          if (unit.role === 'military') {
+            unit.attackPoints = unit.maxAttackPoints;
+          } else {
+            unit.buildPoints = unit.maxBuildPoints;
+          }
+        });
+      }),
+
+    removeOwnerUnits: owner =>
+      set(state => {
+        for (const unit of Object.values(state.units)) {
+          if (unit.owner === owner) delete state.units[unit.id];
+        }
+      }),
+
+    resetStore: () => {
+      set(state => {
+        state.units = {};
+        state.selectedUnitForSpawn = null;
+      });
+    },
+  })),
+);
+
+// Разрушение или снос здания разрывает назначение его рабочего.
+gameEvents.subscribe(event => {
+  // Успешный прямой приказ будит юнита и заменяет приказ «Идти в точку»;
+  // шаги самого приказа (`move` с `partial`) его не снимают.
+  if (event.type === 'COMMAND_SUCCEEDED') {
+    const { command } = event;
+    const id =
+      command.details?.unitId ??
+      command.details?.workerId ??
+      command.details?.attackerId ??
+      command.details?.healerId;
+    if (typeof id !== 'string') return;
+    const { units, setRestMode, setOrder } = useUnitsStore.getState();
+    const unit = units[id];
+    if (unit?.owner !== command.actor) return;
+    if (command.type !== 'rest' && unit.restMode) setRestMode(id, null);
+    const byOrder =
+      command.type === 'order' ||
+      (command.type === 'move' && !!command.details?.partial);
+    if (!byOrder && unit.order) setOrder(id, null);
+    return;
+  }
+  if (event.type !== 'BUILDING_DESTROYED') return;
+  const { units, setWorkplace } = useUnitsStore.getState();
+  for (const unit of Object.values(units)) {
+    if (unit.role === 'civil' && unit.workplaceId === event.building.id) {
+      setWorkplace(unit.id, null);
+    }
+  }
+});

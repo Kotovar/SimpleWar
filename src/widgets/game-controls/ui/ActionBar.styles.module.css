@@ -1,0 +1,284 @@
+/* Нижняя панель действий: по центру низа карты, поверх неё. */
+/* Панель с подсказкой режима над ней: двигаются вместе. */
+.Dock {
+  grid-area: map;
+  align-self: end;
+  justify-self: center;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 32px);
+  margin-bottom: 16px;
+}
+
+/* Подсказка над панелью не меняет её ширину: панель не прыгает. */
+.Dock {
+  position: relative;
+}
+
+.Prompt {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  width: max-content;
+  max-width: min(520px, calc(100vw - 32px));
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid rgb(242 199 68 / 0.45);
+  border-radius: var(--radius);
+  background-color: rgb(24 29 35 / 0.94);
+  color: var(--text);
+  font-size: 0.85rem;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.Inline {
+  padding: 0 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  font:
+    600 0.75rem / 1.4 ui-monospace,
+    monospace;
+}
+
+.Bar {
+  --size: 90px;
+  display: grid;
+  grid-template-rows: repeat(var(--rows, 1), var(--size));
+  grid-template-columns: 10px repeat(
+      var(--cols, 1),
+      var(--card-width, var(--size))
+    );
+  gap: 6px;
+  max-width: 100%;
+  padding: 6px 8px 6px 4px;
+  border: 1px solid var(--frame);
+  border-radius: var(--radius-lg);
+  background: var(--panel-bg);
+  box-shadow: var(--shadow-panel);
+}
+
+.Handle {
+  grid-row: 1 / -1;
+  border-radius: var(--radius-sm);
+  background-image: radial-gradient(
+    var(--text-disabled) 1px,
+    transparent 1.5px
+  );
+  background-size: 5px 5px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.Handle:active {
+  cursor: grabbing;
+}
+
+.Card,
+.Back {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 1px;
+  width: var(--card-width, var(--size));
+  height: var(--size);
+  padding: 3px 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.05) inset;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.12s,
+    background-color 0.12s,
+    transform 0.12s,
+    box-shadow 0.12s;
+}
+
+@media (max-width: 700px) {
+  .Prompt {
+    position: static;
+    width: auto;
+  }
+  .Bar {
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: none;
+    grid-auto-rows: 96px;
+    padding: 8px;
+  }
+  .Handle {
+    display: none;
+  }
+  .Card,
+  .Back {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* С портретом содержимое занимает всю высоту: сверху полоса под клавишу и «!». */
+.Card {
+  padding-top: 14px;
+}
+
+.Card:hover,
+.Back:hover {
+  border-color: var(--frame-strong);
+  background: linear-gradient(180deg, var(--surface-hover), var(--surface));
+}
+
+.Card:not([data-unavailable='true']):hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.06) inset,
+    0 6px 14px rgb(0 0 0 / 0.4);
+}
+
+.Card:not([data-unavailable='true']):active {
+  transform: translateY(0);
+}
+
+/* Значок команды: тот же цвет, что у надписи; в наведении — бронза. */
+.Icon {
+  display: grid;
+  place-items: center;
+  height: 24px;
+  color: var(--text-muted);
+  transition: color 0.12s;
+}
+
+.Card:not([data-unavailable='true']):hover .Icon,
+.Card[aria-pressed='true'] .Icon {
+  color: var(--frame-strong);
+}
+
+.Card[aria-pressed='true'] {
+  border-color: var(--frame-strong);
+  background: rgb(201 164 98 / 0.18);
+  box-shadow: 0 0 12px rgb(201 164 98 / 0.25);
+}
+
+/* Недоступное видно сразу: приглушено, причина — в подсказке. */
+.Card[data-unavailable='true'] {
+  opacity: 0.62;
+  cursor: default;
+}
+
+.Card[data-unavailable='true']:hover {
+  border-color: var(--border);
+  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+}
+
+.Label {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.15;
+  text-align: center;
+  hyphens: auto;
+}
+
+/* Строка состояния вместо цены: «Изучено», «ещё 2 хода». */
+.Note {
+  color: var(--research);
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Идущее исследование не приглушено: это включённый режим, а не запрет. */
+.Card[aria-pressed='true'][data-unavailable='true'] {
+  opacity: 1;
+}
+
+/* Изученное: не приглушено как недоступное, отмечено галочкой. */
+.Card[data-done='true'] {
+  opacity: 1;
+  border-color: rgb(185 164 242 / 0.45);
+  background: linear-gradient(180deg, rgb(185 164 242 / 0.14), var(--surface));
+
+  & .Icon {
+    color: var(--research);
+  }
+}
+
+.Done {
+  position: absolute;
+  top: 2px;
+  right: 5px;
+  color: var(--research);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+/* Цена с пиктограммами; на узких карточках значения переносятся. */
+.Cost {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.Cost > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+/* Не хватает этой части цены. */
+.Cost > span[data-shortage='true'] {
+  color: var(--danger-strong);
+  font-weight: 700;
+}
+
+/* Клавиша в углу оставляет место названию и цене. */
+.Key {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  min-width: 16px;
+  padding: 0 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background-color: var(--surface-sunken);
+  color: var(--text-muted);
+  font:
+    600 0.7rem / 1.4 ui-monospace,
+    monospace;
+  text-align: center;
+}
+
+.Reason {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  color: var(--danger-strong);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.Back {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+@media (min-width: 701px) and (max-width: 900px) {
+  .Bar {
+    --size: 104px;
+    --card-width: 70px;
+  }
+}

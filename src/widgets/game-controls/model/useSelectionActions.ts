@@ -1,0 +1,170 @@
+import type { ResearchType } from '@shared/config';
+import { getAvailableResources, isAdjacent } from '@shared/lib';
+import { useBuildingsStore } from '@entities/buildings';
+import { useEconomyStore } from '@entities/economies';
+import { useGameLoopStore } from '@entities/games';
+import { useResearchStore } from '@entities/researches';
+import { getPayableResources, useDebugException } from '@entities/settings';
+import { useUnitsStore } from '@entities/units';
+import { useGameLoopSelectors } from '@features/game-loop';
+import { useHighlightStore, useMovementStore } from '@features/pathfinding';
+import { useSelectionStore } from '@features/selection';
+import {
+  getSelectionActions,
+  type ActionButton,
+  type SelectionActionInput,
+} from '../lib/selectionActions';
+import { getModePrompt, type MapMode } from '../lib/modePrompt';
+import { runSelectionAction } from './runSelectionAction';
+
+const EMPTY: readonly ResearchType[] = [];
+
+/** Выбранный свой объект и данные для поиска рабочих и соседних зданий. */
+const useOwnSelection = () => {
+  const { humanId } = useGameLoopSelectors();
+  const selection = useSelectionStore(state => state.selection);
+  const units = useUnitsStore(state => state.units);
+  const buildings = useBuildingsStore(state => state.buildings);
+
+  const selectedUnit =
+    selection?.kind === 'unit' ? (units[selection.id] ?? null) : null;
+  const selectedBuilding =
+    selection?.kind === 'building' ? (buildings[selection.id] ?? null) : null;
+  const unit = selectedUnit?.owner === humanId ? selectedUnit : null;
+  const building =
+    selectedBuilding?.owner === humanId ? selectedBuilding : null;
+  return { humanId, units, buildings, unit, building };
+};
+
+/** Режим карты для кнопок и подсказки следующего шага. */
+const useMapMode = (
+  selectedUnitId: string | null,
+  selectedBuildingId: string | null,
+) => {
+  const rallyBuildingId = useBuildingsStore(
+    state => state.selectedRallyBuildingId,
+  );
+  const rally = !!selectedBuildingId && rallyBuildingId === selectedBuildingId;
+  const highlight = useHighlightStore();
+  const modeBuilding = useBuildingsStore(
+    state => state.selectedBuildingForSpawn,
+  );
+  const modeUnit = useUnitsStore(state => state.selectedUnitForSpawn);
+  const planned = useMovementStore(state => state.plannedTarget);
+
+  // Подсказка следующего шага во включённом режиме карты.
+  let mapMode: MapMode | null = null;
+  if (rally) {
+    mapMode = { kind: 'rally' };
+  } else if (modeBuilding) {
+    mapMode = {
+      kind: 'build',
+      type: modeBuilding,
+      cells: highlight.buildableCells?.length ?? 0,
+    };
+  } else if (modeUnit) {
+    mapMode = {
+      kind: 'spawn',
+      type: modeUnit,
+      cells: highlight.spawnableCells?.length ?? 0,
+    };
+  } else if (highlight.clearableCells) {
+    mapMode = { kind: 'clear', cells: highlight.clearableCells.length };
+  } else if (highlight.strikeCells) {
+    mapMode = { kind: 'strike', cells: highlight.strikeCells.length };
+  } else if (planned && planned.unitId === selectedUnitId) {
+    mapMode = { kind: 'goto' };
+  }
+  return { highlight, modeBuilding, modeUnit, mapMode, rally };
+};
+
+/**
+ * Кнопки нижней панели для своего выбранного объекта: собирает сведения
+ * из хранилищ и строит кнопки чистой функцией; исполнение — тем же
+ * путём, что у карты и ИИ.
+ *
+ * @returns Кнопки, `run` — выполнить кнопку (подменю не открывает) и
+ *   ключ выбранного для сброса подменю.
+ */
+export const useSelectionActions = () => {
+  const { humanId, units, buildings, unit, building } = useOwnSelection();
+  const owner = humanId ?? 'p1';
+  const isTurn = useGameLoopStore(state => state.activePlayer === humanId);
+  const resources = useEconomyStore(state => state.resources[owner]);
+  const population = useEconomyStore(state => state.populationCap[owner]);
+  const researched = useResearchStore(state => state.completed[owner] ?? EMPTY);
+  const researching = useResearchStore(
+    state => state.current[owner]?.type ?? null,
+  );
+  const researchTurnsLeft = useResearchStore(
+    state => state.current[owner]?.turnsLeft,
+  );
+  const freeBuild = useDebugException(owner, 'freeBuild');
+  const freeSpawn = useDebugException(owner, 'freeSpawn');
+  const { highlight, modeBuilding, modeUnit, mapMode, rally } = useMapMode(
+    unit?.id ?? null,
+    building?.id ?? null,
+  );
+
+  const own = Object.values(buildings).filter(b => b.owner === humanId);
+  // Резерв приказов стройки недоступен; свой приказ рабочий может заменить.
+  const allUnits = Object.values(units);
+  const available = getAvailableResources(resources, allUnits, owner);
+  const availableBuild = getAvailableResources(
+    resources,
+    allUnits,
+    owner,
+    unit?.id,
+  );
+  const workers = Object.values(units).filter(u => u.role === 'civil');
+  const input: SelectionActionInput = {
+    unit,
+    building,
+    isTurn,
+    payableBuild: getPayableResources(availableBuild, freeBuild),
+    payableSpawn: getPayableResources(available, freeSpawn),
+    stock: available,
+    population,
+    researched,
+    researching,
+    researchTurnsLeft,
+    // Рабочий внутри здания работает и с самим зданием.
+    nearby: unit
+      ? own.filter(
+          b => isAdjacent(unit, b) || (b.x === unit.x && b.y === unit.y),
+        )
+      : [],
+    takenWorkplaces: new Set(
+      workers.flatMap(w =>
+        w.role === 'civil' && w.id !== unit?.id && w.workplaceId
+          ? [w.workplaceId]
+          : [],
+      ),
+    ),
+    workerInside: building
+      ? (workers.find(
+          w => w.role === 'civil' && w.workplaceId === building.id,
+        ) ?? null)
+      : null,
+    mode: {
+      building: modeBuilding,
+      unit: modeUnit,
+      clearing: !!highlight.clearableCells,
+      striking: !!highlight.strikeCells,
+      rally,
+    },
+  };
+  const buttons = humanId ? getSelectionActions(input) : [];
+
+  const run = (button: ActionButton) =>
+    runSelectionAction(button, { humanId, unit, building, input });
+
+  const prompt = mapMode && (unit || building) ? getModePrompt(mapMode) : null;
+
+  return {
+    buttons,
+    run,
+    prompt,
+    selectionKey: unit?.id ?? building?.id ?? null,
+  };
+};

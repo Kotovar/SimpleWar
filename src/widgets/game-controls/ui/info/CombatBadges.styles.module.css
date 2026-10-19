@@ -1,0 +1,16 @@
+.Badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
+.Badges:empty {
+  display: none;
+}
+
+.Bonus {
+  color: var(--text-muted);
+  font-weight: 600;
+}

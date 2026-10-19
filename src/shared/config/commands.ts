@@ -1,0 +1,128 @@
+import type { ParticipantId } from './gameLoop';
+
+/** Игровые команды, общие для интерфейса и ИИ. */
+export type CommandType =
+  | 'start'
+  | 'save'
+  | 'load'
+  | 'import'
+  | 'export'
+  | 'move'
+  | 'rest'
+  /** Отдать или снять приказ «Идти в точку» либо точку сбора здания. */
+  | 'order'
+  | 'attack'
+  | 'build'
+  | 'spawn'
+  | 'endTurn'
+  | 'surrender'
+  | 'assign'
+  | 'unassign'
+  | 'repair'
+  | 'clearForest'
+  | 'demolish'
+  | 'prepareStrike'
+  | 'heal'
+  | 'startResearch'
+  | 'cancelResearch';
+
+/** Последствия действий, которые журнал записывает помимо самих команд. */
+export type GameOutcomeType =
+  | 'unitDestroyed'
+  | 'buildingDestroyed'
+  | 'eliminated'
+  | 'gameOver'
+  | 'strike'
+  | 'researchDone'
+  /** Снимок полученного удара без сведений о скрытом атакующем. */
+  | 'attackObserved'
+  /** Фактически начисленные ресурсы в конце своего хода. */
+  | 'income'
+  /** В обзоре появились вражеские бойцы, которых участник не помнил. */
+  | 'enemySpotted';
+
+/** Тип записи журнала: команда либо её последствие. */
+export type JournalEventType = CommandType | GameOutcomeType;
+
+/** Кому запись видна в обычном журнале; `all` — служебные события партии. */
+export type JournalVisibility = ParticipantId[] | 'all';
+
+/** Причина отказа команды. */
+export type RejectionCode =
+  | 'busy'
+  | 'phase'
+  | 'turn'
+  | 'notFound'
+  | 'owner'
+  | 'actionType'
+  | 'bounds'
+  | 'hidden'
+  | 'terrain'
+  | 'occupied'
+  | 'distance'
+  | 'path'
+  | 'points'
+  | 'resources'
+  | 'population'
+  | 'target'
+  | 'workplace'
+  | 'blocked'
+  | 'map'
+  | 'forge'
+  | 'researched'
+  | 'researching'
+  | 'research'
+  | 'failure';
+
+/**
+ * Текст отказа для игрока. Формулировки общие и не раскрывают скрытый мир:
+ * подробности — только в `detail` для отладки.
+ */
+export const REJECTION_MESSAGE: Record<RejectionCode, string> = {
+  busy: 'Предыдущее действие ещё выполняется',
+  phase: 'Партия сейчас не идёт',
+  turn: 'Сейчас не ваш ход',
+  notFound: 'Объект недоступен',
+  owner: 'Этим объектом управляет другой участник',
+  actionType: 'Этот объект не может выполнить такое действие',
+  bounds: 'Клетка за пределами карты',
+  hidden: 'Клетка вне обзора',
+  terrain: 'Неподходящая местность',
+  occupied: 'Клетка занята',
+  distance: 'Слишком далеко',
+  path: 'Нет пути',
+  points: 'Не хватает очков действий',
+  resources: 'Недостаточно ресурсов',
+  population: 'Не хватает лимита населения',
+  target: 'Недопустимая цель',
+  workplace: 'Здание занято другим рабочим',
+  blocked: 'Постройка перекроет последний проход',
+  map: 'Не удалось подготовить карту',
+  forge: 'Нужна кузница',
+  researched: 'Исследование уже изучено',
+  researching: 'Кузница уже ведёт исследование',
+  research: 'Сначала нужно исследование',
+  failure: 'Внутренняя ошибка игры',
+};
+
+/**
+ * Отказ команды. `rejected` — ожидаемое нарушение правил,
+ * `failure` — сбой кода, которого при верных правилах быть не должно.
+ */
+export type CommandRejection = {
+  ok: false;
+  kind: 'rejected' | 'failure';
+  code: RejectionCode;
+  message: string;
+  detail?: string;
+};
+
+/** Итог команды: успех либо отказ без изменения состояния. */
+export type CommandResult = { ok: true } | CommandRejection;
+
+/** Кто и что сделал; `null` — служебное действие партии (старт). */
+export type CommandMeta = {
+  type: CommandType;
+  actor: ParticipantId | null;
+  details?: Record<string, string | number>;
+};

@@ -1,0 +1,33 @@
+import { useUnitsStore } from './unitsStore';
+
+export const useUnitsSelectors = () => {
+  const units = useUnitsStore(state => state.units);
+  const selectedUnitForSpawn = useUnitsStore(
+    state => state.selectedUnitForSpawn,
+  );
+  const getUnitAt = useUnitsStore(state => state.getUnitAt);
+  const changeAttackPoints = useUnitsStore(state => state.changeAttackPoints);
+  const changeBuildPoints = useUnitsStore(state => state.changeBuildPoints);
+  const spawnUnit = useUnitsStore(state => state.spawnUnit);
+  const selectUnitForSpawn = useUnitsStore(state => state.selectUnitForSpawn);
+  const clearSelectedUnitForSpawn = useUnitsStore(
+    state => state.clearSelectedUnitForSpawn,
+  );
+  const resetStore = useUnitsStore(state => state.resetStore);
+  const resetUnitsForNewTurn = useUnitsStore(
+    state => state.resetUnitsForNewTurn,
+  );
+
+  return {
+    units,
+    selectedUnitForSpawn,
+    getUnitAt,
+    changeAttackPoints,
+    changeBuildPoints,
+    spawnUnit,
+    resetStore,
+    resetUnitsForNewTurn,
+    selectUnitForSpawn,
+    clearSelectedUnitForSpawn,
+  };
+};

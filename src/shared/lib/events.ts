@@ -1,0 +1,80 @@
+import type {
+  Building,
+  CommandMeta,
+  ParticipantId,
+  Unit,
+} from '@shared/config';
+
+type GameEvent =
+  | { type: 'ATTACK_LANDED'; target: Unit | Building; damage: number }
+  | {
+      type: 'SIEGE_STRIKE_EXECUTED';
+      owner: ParticipantId;
+      /** Орудие: его видимый выстрел показывает летящий камень. */
+      siegeId: string;
+      x: number;
+      y: number;
+    }
+  | { type: 'GAME_RESET' }
+  /**
+   * Транзит через клетку своего: позиция в сторе не меняется, но показ
+   * хода идёт через эту клетку.
+   */
+  | { type: 'UNIT_PASSED'; unitId: string; x: number; y: number }
+  | { type: 'COMMAND_SUCCEEDED'; command: CommandMeta }
+  | { type: 'BASE_DESTROYED'; owner: ParticipantId }
+  /** Выбывание уже применено; `turn` — ход, в котором оно произошло. */
+  | { type: 'PARTICIPANT_ELIMINATED'; owner: ParticipantId; turn: number }
+  | { type: 'BUILDING_SPAWNED'; building: Building; owner: ParticipantId }
+  /** Собственная потеря известна владельцу даже при скрытой наводке. */
+  | {
+      type: 'SIEGE_BUILDING_DESTROYED';
+      owner: ParticipantId;
+      x: number;
+      y: number;
+      turn: number;
+    }
+  | {
+      type: 'BUILDING_DESTROYED';
+      building: Building;
+      owner: ParticipantId;
+      /** Снесено владельцем, а не разрушено уроном. */
+      demolished?: boolean;
+    }
+  | { type: 'UNIT_SPAWNED'; unit: Unit; owner: ParticipantId }
+  | { type: 'UNIT_DESTROYED'; unit: Unit; owner: ParticipantId };
+
+type EventHandler = (event: GameEvent) => void;
+
+class EventBus {
+  private handlers = new Set<EventHandler>();
+
+  /**
+   * Подписывает обработчик на игровые события.
+   *
+   * @param handler - Функция обработки события.
+   * @returns Функция отмены именно этой подписки.
+   */
+  subscribe(handler: EventHandler) {
+    // Обёртка позволяет подписать один обработчик несколько раз независимо.
+    const subscription = (event: GameEvent) => handler(event);
+    this.handlers.add(subscription);
+
+    return () => {
+      this.handlers.delete(subscription);
+    };
+  }
+
+  /**
+   * Рассылает событие по снимку подписок, пропуская отписавшихся.
+   *
+   * @param event - Игровое событие для рассылки.
+   */
+  emit(event: GameEvent) {
+    for (const handler of Array.from(this.handlers)) {
+      if (this.handlers.has(handler)) handler(event);
+    }
+  }
+}
+
+export const gameEvents = new EventBus();

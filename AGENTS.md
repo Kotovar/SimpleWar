@@ -1,0 +1,34 @@
+# SimpleWar
+
+Браузерная пошаговая стратегия Simple Wars. React + TypeScript, Zustand/Immer,
+Canvas; сборка Vite+. Описание игры: [docs/README.md](docs/README.md).
+
+- Перед работой прочитай `~/.agents/AGENTS.md`.
+- Слои: `src/app` → `widgets` → `features` → `entities` → `shared`.
+  Сохраняй существующие публичные экспорты `index.ts` и алиасы `@…/*`.
+- Баланс и типы — `src/shared/config`; состояние — `entities/*/model`;
+  игровые действия — `features`; карта и управление — `widgets`.
+- Для поиска кода предпочитай codebase-memory-mcp; проверь путь индекса,
+  при отсутствии индекса вызови `index_repository`. При неполных результатах
+  читай файлы напрямую: индексатор может пропускать `src/features/build`.
+- Для документации по библиотекам используй Context7: `resolve-library-id`,
+  затем `query-docs`.
+- При написании unit-тестов по заданным файлам/папкам прочитай проектный скил
+  [simplewar-unit-tests](.agents/skills/simplewar-unit-tests/SKILL.md).
+- При написании JSDoc на русском для указанных функций прочитай проектный скил
+  [simplewar-jsdoc-ru](.agents/skills/simplewar-jsdoc-ru/SKILL.md).
+- Для smoke-симуляций ходов, решений ИИ и статистики карт по сидам прочитай
+  [simplewar-simulation-smoke](.agents/skills/simplewar-simulation-smoke/SKILL.md).
+- Для историй компонентов и игровых объектов в Storybook прочитай
+  [simplewar-storybook-stories](.agents/skills/simplewar-storybook-stories/SKILL.md).
+- Для приёмки сценариев через браузер прочитай
+  [simplewar-browser-acceptance](.agents/skills/simplewar-browser-acceptance/SKILL.md).
+- Для воспроизведения бага регрессионным тестом без исправления игры прочитай
+  [simplewar-bug-regression](.agents/skills/simplewar-bug-regression/SKILL.md).
+- Для актуализации документации по коду или diff прочитай
+  [simplewar-docs-sync](.agents/skills/simplewar-docs-sync/SKILL.md).
+- После изменений кода: `pnpm type-check`, `pnpm lint`, `pnpm build`;
+  `pnpm test`; после изменений структуры также `pnpm fsd-check`.
+- При изменении механик обновляй соответствующий файл в `docs`.
+  Отличай реализованное поведение от конфигурации и заготовок.
+- Не меняй посторонние файлы; коммиты и push — только по просьбе.

@@ -1,0 +1,133 @@
+import { describe, expect, it } from 'vite-plus/test';
+import { cellOf, grass, own, ownBuilding, scene } from '../scene.test-utils';
+import { W10 } from './passage';
+
+describe('W10: освободить проход', () => {
+  const ring = (x: number, y: number) =>
+    [-1, 0, 1].flatMap(dy =>
+      [-1, 0, 1].flatMap(dx =>
+        dx || dy ? [own('worker', x + dx, y + dy)] : [],
+      ),
+    );
+
+  it('свой юнит уступает выход найма у ратуши', () => {
+    const base = ownBuilding('base', 2, 2);
+    const { ctx } = scene({
+      map: grass(8, 8),
+      units: ring(2, 2),
+      buildings: [base],
+    });
+
+    const [candidate] = W10.evaluate(ctx);
+
+    expect(candidate).toMatchObject({
+      ruleId: 'W10',
+      action: { type: 'move' },
+    });
+    const cell = cellOf(candidate.action);
+    expect(Math.max(Math.abs(cell.x - 2), Math.abs(cell.y - 2))).toBe(2);
+  });
+
+  it('укрытого в ратуше рабочего не выводит: выход он не занимает', () => {
+    const base = ownBuilding('base', 5, 5);
+    const farms = [-1, 0, 1].flatMap(dy =>
+      [-1, 0, 1].flatMap(dx =>
+        (dx || dy) && !(dx === 1 && dy === 0)
+          ? [ownBuilding('farm', 5 + dx, 5 + dy)]
+          : [],
+      ),
+    );
+    const hider = own('worker', 5, 5, { workplaceId: base.id });
+    const { ctx } = scene({
+      map: grass(10, 10),
+      units: [hider, own('worker', 6, 5, { movePoints: 0 })],
+      buildings: [base, ...farms],
+    });
+
+    expect(W10.evaluate(ctx).some(c => c.actorId === hider.id)).toBe(false);
+  });
+
+  it('сносит своё здание, если ратуша замурована', () => {
+    const farms = [
+      ownBuilding('farm', 1, 0),
+      ownBuilding('farm', 0, 1),
+      ownBuilding('farm', 1, 1),
+    ];
+    const { ctx } = scene({
+      map: grass(6, 6),
+      buildings: [ownBuilding('base', 0, 0), ...farms],
+    });
+
+    const [candidate] = W10.evaluate(ctx);
+
+    expect(candidate.action.type).toBe('demolish');
+    expect(farms.map(({ id }) => id)).toContain(candidate.actorId);
+  });
+
+  it('молчит, когда выход свободен и группа не застряла', () => {
+    const { ctx } = scene({
+      map: grass(8, 8),
+      units: ring(2, 2).slice(1),
+      buildings: [ownBuilding('base', 2, 2)],
+    });
+
+    expect(W10.evaluate(ctx)).toEqual([]);
+  });
+
+  it('уступает проход группе, застрявшей в коридоре за своими', () => {
+    // Свободный карман рядом с мечником не ведёт к цели: путь — только
+    // через рабочих в коридоре.
+    const blocker = own('worker', 1, 2);
+    const { ctx } = scene({
+      map: [
+        '^^^^^^^^^',
+        '^..^^^^^^',
+        '^..^^^^^^',
+        '^.^^^^^^^',
+        '^.^^^^^^^',
+        '^.^^^^^^^',
+        '^.......^',
+        '^^^^^^^^^',
+      ],
+      units: [
+        own('swordsman', 1, 1, { movePoints: 3 }),
+        blocker,
+        own('worker', 1, 3),
+        own('worker', 1, 4),
+      ],
+      memory: {
+        operation: {
+          phase: 'gather',
+          rally: { x: 7, y: 6 },
+          target: null,
+          since: 0,
+        },
+      },
+    });
+
+    expect(W10.evaluate(ctx)).toMatchObject([
+      {
+        actorId: blocker.id,
+        action: { type: 'move', unitId: blocker.id, x: 2, y: 2 },
+      },
+    ]);
+  });
+
+  it('не отводит рабочего, если группа может пройти через него', () => {
+    const worker = own('worker', 2, 1);
+    const { ctx } = scene({
+      map: ['^^^^^^^^', '........', '^^^.^^^^', '^^^^^^^^'],
+      units: [own('swordsman', 0, 1), worker],
+      memory: {
+        operation: {
+          phase: 'gather',
+          rally: { x: 7, y: 1 },
+          target: null,
+          since: 0,
+        },
+      },
+    });
+
+    expect(W10.evaluate(ctx)).toEqual([]);
+  });
+});

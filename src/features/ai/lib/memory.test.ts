@@ -1,0 +1,252 @@
+import { describe, expect, it } from 'vite-plus/test';
+import { BUILDINGS_CONFIG } from '@shared/config';
+import type { AiTask } from '@entities/ai-memories';
+import type { Candidate } from '../model/types';
+import { buildContext } from './context';
+import { scarceResource } from './facts';
+import { affordable } from './saving';
+import { applyOutcome, createTurnState, refreshMemory } from './memory';
+import { grass, own, ownBuilding, scene } from './scene.test-utils';
+
+const buildTask = (unitId: string, patch: Partial<AiTask> = {}): AiTask => ({
+  id: 't1',
+  kind: 'build',
+  ruleId: 'W05',
+  unitId,
+  target: { x: 5, y: 2 },
+  buildingType: 'mine',
+  reserve: BUILDINGS_CONFIG.mine.cost,
+  createdTurn: 1,
+  reviewTurn: 9,
+  ...patch,
+});
+
+const walk = (
+  unitId: string,
+  task?: Candidate['task'],
+  type: 'move' | 'build' = 'move',
+): Candidate => ({
+  ruleId: 'W05',
+  group: 'build',
+  actorId: unitId,
+  action:
+    type === 'move'
+      ? { type: 'move', unitId, x: 1, y: 1 }
+      : { type: 'build', workerId: unitId, buildingType: 'mine', x: 5, y: 2 },
+  score: 50,
+  reason: 'тест',
+  task,
+});
+
+describe('задачи и резервы', () => {
+  it('отменяет лесопилку после наблюдаемой расчистки её площадки', () => {
+    const worker = own('worker', 4, 2);
+    const task = buildTask(worker.id, {
+      buildingType: 'sawmill',
+      reserve: BUILDINGS_CONFIG.sawmill.cost,
+    });
+    const spec = { units: [worker], memory: { tasks: [task] }, turn: 5 };
+    expect(
+      refreshMemory(
+        scene({
+          ...spec,
+          map: ['........', '........', '.....f..', '........'],
+        }).ctx,
+      ).memory.tasks,
+    ).toHaveLength(1);
+    expect(
+      refreshMemory(scene({ ...spec, map: grass(8, 4) }).ctx).memory.tasks,
+    ).toEqual([]);
+  });
+  it('пересматривает старую стройку на месте потери, если есть другой ресурс', () => {
+    const worker = own('worker', 4, 2);
+    const spec = {
+      map: ['........', '........', '.....gg.', '........'],
+      units: [worker],
+      buildings: [ownBuilding('base', 0, 0)],
+      memory: { tasks: [buildTask(worker.id)], siegeLosses: { '5,2': 7 } },
+    };
+    expect(refreshMemory(scene(spec).ctx).memory.tasks).toEqual([]);
+    expect(
+      refreshMemory(
+        scene({
+          ...spec,
+          map: ['........', '........', '.....g..', '........'],
+        }).ctx,
+      ).memory.tasks,
+    ).toHaveLength(1);
+  });
+  it('резерв задачи не входит в свободный бюджет', () => {
+    const worker = own('worker', 1, 1);
+    const { ctx } = scene({
+      map: grass(8, 4),
+      units: [worker],
+      stock: { gold: 200, wood: 50 },
+      memory: { tasks: [buildTask(worker.id)] },
+    });
+
+    expect(ctx.budget).toEqual({ gold: 80, wood: 50 });
+  });
+
+  it('успешная стройка закрывает задачу и освобождает резерв', () => {
+    const worker = own('worker', 1, 1);
+    const { memory, obs } = scene({
+      map: grass(8, 4),
+      units: [worker],
+      stock: { gold: 200, wood: 50 },
+      memory: { tasks: [buildTask(worker.id)] },
+    });
+
+    const next = applyOutcome(
+      memory,
+      walk(worker.id, undefined, 'build'),
+      true,
+      5,
+      8,
+    );
+
+    expect(next.tasks).toEqual([]);
+    expect(buildContext(obs, next, createTurnState()).budget).toEqual({
+      gold: 200,
+      wood: 50,
+    });
+  });
+
+  it('у юнита одна задача: новая заменяет прежнюю', () => {
+    const worker = own('worker', 1, 1);
+    const { memory } = scene({
+      map: grass(8, 4),
+      units: [worker],
+      memory: { tasks: [buildTask(worker.id)], nextTaskId: 2 },
+    });
+
+    const next = applyOutcome(
+      memory,
+      walk(worker.id, {
+        kind: 'build',
+        ruleId: 'W06',
+        unitId: worker.id,
+        target: { x: 3, y: 3 },
+        buildingType: 'farm',
+        reserve: BUILDINGS_CONFIG.farm.cost,
+      }),
+      true,
+      5,
+      8,
+    );
+
+    expect(next.tasks).toHaveLength(1);
+    expect(next.tasks[0]).toMatchObject({
+      id: 't2',
+      ruleId: 'W06',
+      createdTurn: 5,
+      reviewTurn: 13,
+    });
+  });
+
+  it('отказ команды не создаёт задачу', () => {
+    const { memory } = scene({ map: grass(4, 4) });
+    const task: Candidate['task'] = {
+      kind: 'scout',
+      ruleId: 'G05',
+      unitId: 'u1',
+      target: { x: 3, y: 3 },
+      reserve: { gold: 0, wood: 0 },
+    };
+
+    expect(applyOutcome(memory, walk('u1', task), false, 5, 8)).toBe(memory);
+  });
+
+  it('координаты задачи не сохраняют метаданные ресурсной клетки', () => {
+    const target = { x: 5, y: 2, type: 'gold' as const };
+    const { memory } = scene({ map: grass(8, 4) });
+    const next = applyOutcome(
+      memory,
+      walk('u1', {
+        kind: 'build',
+        ruleId: 'W05',
+        unitId: 'u1',
+        target,
+        buildingType: 'mine',
+        reserve: BUILDINGS_CONFIG.mine.cost,
+      }),
+      true,
+      5,
+      8,
+    );
+    expect(next.tasks[0].target).toEqual({ x: 5, y: 2 });
+  });
+
+  it('пересмотр снимает задачи погибших, просроченные и с занятой площадкой', () => {
+    const alive = own('worker', 1, 1);
+    const late = own('worker', 2, 1);
+    const blocked = own('worker', 3, 1);
+    const kept = buildTask(alive.id, {
+      id: 'ok',
+      target: { x: 6, y: 3 },
+      reviewTurn: 12,
+      buildingType: 'farm',
+    });
+    const { ctx } = scene({
+      map: grass(8, 4),
+      units: [alive, late, blocked],
+      buildings: [ownBuilding('farm', 5, 2)],
+      turn: 10,
+      memory: {
+        tasks: [
+          kept,
+          buildTask('dead', { id: 'dead' }),
+          buildTask(late.id, { id: 'late', reviewTurn: 9 }),
+          buildTask(blocked.id, { id: 'busy', reviewTurn: 12 }),
+        ],
+      },
+    });
+
+    expect(refreshMemory(ctx).memory.tasks.map(({ id }) => id)).toEqual(['ok']);
+  });
+
+  it('исполнитель на площадке не закрывает свою задачу стройки', () => {
+    // Рабочий, снятый с добычи, вышел прямо на площадку фермы.
+    const worker = own('worker', 5, 2);
+    const { ctx } = scene({
+      map: grass(8, 4),
+      units: [worker],
+      memory: {
+        tasks: [buildTask(worker.id, { reviewTurn: 12, buildingType: 'farm' })],
+      },
+    });
+
+    expect(refreshMemory(ctx).memory.tasks).toHaveLength(1);
+  });
+
+  it('накопление: цель ниже по важности не тратит отложенное на более важную', () => {
+    const map = ['........', '.g......', '........', '........'];
+    const { ctx } = scene({
+      map,
+      units: [own('worker', 3, 3)],
+      buildings: [ownBuilding('base', 5, 2)],
+      stock: { gold: 150, wood: 500 },
+    });
+
+    expect(affordable(ctx, BUILDINGS_CONFIG.mine.cost, 'mine')).toBe(true);
+    expect(affordable(ctx, BUILDINGS_CONFIG.barracks.cost, 'barracks')).toBe(
+      false,
+    );
+  });
+
+  it('дефицитный ресурс меняется вместе с запасами', () => {
+    const lowGold = scene({
+      map: grass(6, 6),
+      buildings: [ownBuilding('base', 2, 2)],
+      stock: { gold: 0, wood: 500 },
+    });
+    const lowWood = scene({
+      map: grass(6, 6),
+      buildings: [ownBuilding('base', 2, 2)],
+      stock: { gold: 500, wood: 0 },
+    });
+
+    expect(scarceResource(lowGold.ctx)).toBe('gold');
+    expect(scarceResource(lowWood.ctx)).toBe('wood');
+  });
+});
