@@ -20,7 +20,7 @@ export type Participant = {
   ai?: AiSetup;
 };
 
-/** Состав обычной партии: человек против одного ИИ. */
+/** Состав партии по умолчанию: человек против одного ИИ. */
 export const DEFAULT_PARTICIPANTS: Participant[] = [
   { id: 'p1', controller: 'human' },
   { id: 'p2', controller: 'ai', ai: DEFAULT_AI_SETUP },

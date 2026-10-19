@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { GUIDEBOOK_URL, MAP_PRESET_LABELS, MAP_PRESETS } from '@shared/config';
 import { TextField } from '@shared/ui';
 import { isValidSeed } from '@entities/maps';
-import { useSettingsSelectors } from '@entities/settings';
+import { useSettingsSelectors, useSettingsStore } from '@entities/settings';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { useSandboxStore } from '@features/sandbox';
 import { AiSetupSection } from './AiSetupSection';
@@ -24,7 +24,7 @@ const parseSeed = (text: string) => {
 };
 
 /**
- * Главное меню: шаги «режим → карта → противник» (в тестировании баланса —
+ * Главное меню: шаги «режим → карта → противники» (в тестировании баланса —
  * составы сторон), сид — в свёрнутом блоке «Дополнительно», звук — в углу.
  */
 export const PhaseSetup = ({ onStartGame, onOpenSaves }: Props) => {
@@ -40,6 +40,9 @@ export const PhaseSetup = ({ onStartGame, onOpenSaves }: Props) => {
   const { startError } = useGameLoopSelectors();
   const sandbox = useSandboxStore(state => state.enabled);
   const setSandbox = useSandboxStore(state => state.setEnabled);
+  const aiCount = useSettingsStore(state => state.aiSetups.length);
+  const setAiCount = useSettingsStore(state => state.setAiCount);
+  const groupGame = !sandbox && aiCount > 1;
 
   // Текст поля хранится отдельно от стора: неверный ввод остаётся в поле
   // как есть и подсвечивается. После неудачного старта с пустым вводом
@@ -75,7 +78,10 @@ export const PhaseSetup = ({ onStartGame, onOpenSaves }: Props) => {
               [styles.Active]: !sandbox,
             })}
             aria-pressed={!sandbox}
-            onClick={() => setSandbox(false)}
+            onClick={() => {
+              setSandbox(false);
+              setAiCount(aiCount);
+            }}
           >
             <span className={styles.ToggleTitle}>Обычная партия</span>
             <span className={styles.ToggleMeta}>Развитие и сражения</span>
@@ -105,6 +111,11 @@ export const PhaseSetup = ({ onStartGame, onOpenSaves }: Props) => {
                 [styles.Active]: gridRows === preset.rows,
               })}
               aria-pressed={gridRows === preset.rows}
+              disabled={
+                groupGame &&
+                (preset.cols < MAP_PRESETS.large.cols ||
+                  preset.rows < MAP_PRESETS.large.rows)
+              }
               onClick={() => setGridSize(preset.cols, preset.rows)}
             >
               <span className={styles.ToggleTitle}>
@@ -116,6 +127,12 @@ export const PhaseSetup = ({ onStartGame, onOpenSaves }: Props) => {
             </button>
           ))}
         </div>
+
+        {groupGame && (
+          <p className={styles.SeedWarning}>
+            Для 3–4 участников доступны карты от 30 × 30 клеток.
+          </p>
+        )}
 
         <details className={styles.More} open={moreOpen}>
           <summary>Дополнительно</summary>

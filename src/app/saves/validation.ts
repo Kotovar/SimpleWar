@@ -5,6 +5,7 @@ import {
   CELL_SIZE_LIMITS,
   DEBUG_EXCEPTIONS,
   MAP_SIDE_LIMIT,
+  MAX_PARTICIPANTS,
   MAX_POPULATION_LIMIT,
   MOVE_COST,
   PARTICIPANT_IDS,
@@ -322,7 +323,8 @@ const snapshotShape = shape({
     gridRows: int(1, 100),
     mapGenerationMode: one(['random', 'fixed']),
     customSeed: int(0, Number.MAX_SAFE_INTEGER),
-    aiSetup: setup,
+    aiSetups: v =>
+      Array.isArray(v) && v.length > 0 && list(setup, MAX_PARTICIPANTS - 1)(v),
   }),
   view: shape({
     cellSize: int(CELL_SIZE_LIMITS.min, CELL_SIZE_LIMITS.max),
@@ -465,6 +467,16 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
     obj(value) && value.version === SAVE_VERSION,
     'Неизвестная версия сохранения',
   );
+  // Снимки 1.0 хранили настройку единственного противника.
+  if (
+    obj(value) &&
+    obj(value.rules) &&
+    !Object.hasOwn(value.rules, 'aiSetups') &&
+    Object.hasOwn(value.rules, 'aiSetup')
+  ) {
+    value.rules.aiSetups = [value.rules.aiSetup];
+    delete value.rules.aiSetup;
+  }
   requireValid(
     snapshotShape(value),
     'Сохранение повреждено: неверные поля, типы или диапазоны',

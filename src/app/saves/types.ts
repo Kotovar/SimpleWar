@@ -37,7 +37,7 @@ export type GameSnapshot = {
   >;
   rules: Pick<
     ReturnType<typeof useSettingsStore.getState>,
-    'gridColumns' | 'gridRows' | 'mapGenerationMode' | 'customSeed' | 'aiSetup'
+    'gridColumns' | 'gridRows' | 'mapGenerationMode' | 'customSeed' | 'aiSetups'
   >;
   view: Pick<
     ReturnType<typeof useSettingsStore.getState>,

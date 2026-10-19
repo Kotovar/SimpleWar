@@ -14,6 +14,7 @@ import {
   CELL_SIZE_LIMITS,
   DEFAULT_AI_SETUP,
   MAP_PRESETS,
+  MAX_PARTICIPANTS,
   TEMP_START_SEED,
   type AiSetup,
   type Position,
@@ -33,12 +34,13 @@ type SettingsState = {
 
   mapGenerationMode: MapGenerationMode;
   customSeed: number;
-  /** Профиль и сложность ИИ обычной партии (S17–S17a). */
-  aiSetup: AiSetup;
+  /** Профиль и сложность каждого противника обычной партии. */
+  aiSetups: AiSetup[];
 
   setMapGenerationMode: (mode: MapGenerationMode) => void;
   setCustomSeed: (seed: number) => void;
-  setAiSetup: (patch: Partial<AiSetup>) => void;
+  setAiCount: (count: number) => void;
+  setAiSetup: (index: number, patch: Partial<AiSetup>) => void;
   setGridSize: (columns: number, rows: number) => void;
   /** Масштаб на `steps` шагов к точке экрана; по умолчанию к центру окна. */
   zoomBy: (steps: number, anchor?: Position) => void;
@@ -94,7 +96,7 @@ const DEFAULTS = {
   viewport: { width: 0, height: 0 },
   mapGenerationMode: 'random' as MapGenerationMode,
   customSeed: TEMP_START_SEED,
-  aiSetup: DEFAULT_AI_SETUP,
+  aiSetups: [DEFAULT_AI_SETUP],
 };
 
 let cameraFrame = 0;
@@ -113,9 +115,29 @@ export const useSettingsStore = create<SettingsState>()(
         state.customSeed = seed;
       }),
 
-    setAiSetup: patch =>
+    setAiCount: count =>
       set(state => {
-        state.aiSetup = { ...state.aiSetup, ...patch };
+        if (!Number.isInteger(count) || count < 1 || count >= MAX_PARTICIPANTS)
+          return;
+        state.aiSetups = Array.from(
+          { length: count },
+          (_, index) => state.aiSetups[index] ?? { ...DEFAULT_AI_SETUP },
+        );
+        if (
+          count > 1 &&
+          (state.gridColumns < MAP_PRESETS.large.cols ||
+            state.gridRows < MAP_PRESETS.large.rows)
+        ) {
+          state.gridColumns = MAP_PRESETS.large.cols;
+          state.gridRows = MAP_PRESETS.large.rows;
+          settle(state, state.camera);
+        }
+      }),
+
+    setAiSetup: (index, patch) =>
+      set(state => {
+        if (state.aiSetups[index])
+          state.aiSetups[index] = { ...state.aiSetups[index], ...patch };
       }),
 
     zoomBy: (steps, anchor) =>

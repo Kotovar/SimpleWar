@@ -86,7 +86,7 @@ export const captureSnapshot = (): GameSnapshot => {
       customSeed: Number.isFinite(settings.customSeed)
         ? settings.customSeed
         : 0,
-      aiSetup: settings.aiSetup,
+      aiSetups: settings.aiSetups,
     },
     view: { camera: settings.camera, cellSize: settings.cellSize },
     debug: data(useDebugStore.getState()),

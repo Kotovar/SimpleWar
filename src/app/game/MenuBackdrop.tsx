@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { Cell, Owner } from '@shared/config';
+import { PARTICIPANT_IDS, type Cell } from '@shared/config';
 import {
   drawArcher,
   drawBarracks,
@@ -10,6 +10,8 @@ import {
   drawWorker,
 } from '@shared/ui';
 import { generateMap } from '@entities/maps';
+import { useSettingsStore } from '@entities/settings';
+import { useSandboxStore } from '@features/sandbox';
 import { renderTerrainLayer } from '@widgets/map';
 import styles from './styles.module.css';
 
@@ -18,18 +20,16 @@ const CELL = 44;
 
 type Draw = typeof drawBase;
 
-/** Две базы с охраной: левая — игрока, правая — противника. */
-const CAMPS: { owner: Owner; at: number; entities: Draw[] }[] = [
-  {
-    owner: 'p1',
-    at: 0.13,
-    entities: [drawBase, drawBarracks, drawSwordsman, drawArcher, drawWorker],
-  },
-  {
-    owner: 'p2',
-    at: 0.87,
-    entities: [drawBase, drawTower, drawRider, drawSwordsman, drawArcher],
-  },
+/** Охрана лагеря игрока и лагерей ИИ. */
+const GUARDS: Draw[][] = [
+  [drawBase, drawBarracks, drawSwordsman, drawArcher, drawWorker],
+  [drawBase, drawTower, drawRider, drawSwordsman, drawArcher],
+];
+const CAMP_POSITIONS = [
+  { x: 0.13, y: 0.2 },
+  { x: 0.87, y: 0.8 },
+  { x: 0.87, y: 0.2 },
+  { x: 0.13, y: 0.8 },
 ];
 
 /** Ближайшие к точке клетки травы по спирали квадратов. */
@@ -48,11 +48,16 @@ const grassAround = (grid: Cell[][], cx: number, cy: number, count: number) => {
 };
 
 /**
- * Фон главного меню: случайная карта с двумя лагерями, медленно плывёт под
- * затемнением. Рисуется один раз на открытие меню тем же кодом, что и карта.
+ * Фон главного меню: случайная карта с лагерями выбранных сторон.
+ * Рисуется тем же кодом, что и карта; обновляется при смене числа сторон.
  */
 export const MenuBackdrop = () => {
   const ref = useRef<HTMLCanvasElement>(null);
+  const aiCount = useSettingsStore(state => state.aiSetups.length);
+  const sandboxCount = useSandboxStore(state =>
+    state.enabled ? state.scenario.sides.length : null,
+  );
+  const count = sandboxCount ?? aiCount + 1;
 
   useEffect(() => {
     const canvas = ref.current;
@@ -69,18 +74,20 @@ export const MenuBackdrop = () => {
     canvas.style.height = `${rows * CELL}px`;
     ctx.scale(ratio, ratio);
     renderTerrainLayer(ctx, grid, CELL, columns);
-    for (const camp of CAMPS) {
+    for (const [index, owner] of PARTICIPANT_IDS.slice(0, count).entries()) {
+      const at = CAMP_POSITIONS[index];
+      const entities = GUARDS[index === 0 ? 0 : 1];
       const cells = grassAround(
         grid,
-        Math.round(columns * camp.at),
-        Math.round(rows * 0.5),
-        camp.entities.length,
+        Math.round(columns * at.x),
+        Math.round(rows * (count === 2 ? 0.5 : at.y)),
+        entities.length,
       );
       cells.forEach((cell, index) =>
-        camp.entities[index](ctx, cell.x, cell.y, CELL, camp.owner),
+        entities[index](ctx, cell.x, cell.y, CELL, owner),
       );
     }
-  }, []);
+  }, [count]);
 
   return (
     <div className={styles.Backdrop} aria-hidden>

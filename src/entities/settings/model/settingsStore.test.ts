@@ -9,6 +9,7 @@ import {
 import {
   CELL_SIZE,
   CELL_SIZE_LIMITS,
+  DEFAULT_AI_SETUP,
   MAP_PRESETS,
   TEMP_START_SEED,
 } from '@shared/config';
@@ -23,6 +24,60 @@ const zoomTo = (edge: 'min' | 'max') => {
 
   return useSettingsStore.getState().cellSize;
 };
+
+describe('противники обычной партии', () => {
+  const store = () => useSettingsStore.getState();
+  beforeEach(() => store().resetStore());
+
+  it('по умолчанию один сбалансированный противник обычной сложности', () => {
+    expect(store().aiSetups).toEqual([DEFAULT_AI_SETUP]);
+  });
+
+  it('добавляет противников с настройками по умолчанию и меняет их независимо', () => {
+    store().setAiSetup(0, { profile: 'economic', difficulty: 'hard' });
+    store().setAiCount(3);
+    store().setAiSetup(1, { difficulty: 'easy' });
+    store().setAiSetup(2, { profile: 'defensive' });
+    expect(store().aiSetups).toEqual([
+      { profile: 'economic', difficulty: 'hard' },
+      { profile: 'balanced', difficulty: 'easy' },
+      { profile: 'defensive', difficulty: 'normal' },
+    ]);
+    store().setAiCount(1);
+    expect(store().aiSetups).toEqual([
+      { profile: 'economic', difficulty: 'hard' },
+    ]);
+    store().resetStore();
+    expect(store().aiSetups).toEqual([DEFAULT_AI_SETUP]);
+  });
+
+  it.each([0, 4, -1, 1.5, NaN, Infinity])(
+    'отклоняет число противников %s',
+    count => {
+      store().setAiCount(count);
+      expect(store().aiSetups).toEqual([DEFAULT_AI_SETUP]);
+    },
+  );
+
+  it.each([2, 3])('переключает малую карту на Большую для %s ИИ', count => {
+    store().setGridSize(24, 24);
+    store().setAiCount(count);
+    expect(store()).toMatchObject({ gridColumns: 30, gridRows: 30 });
+  });
+
+  it('сохраняет большую карту и не уменьшает её после удаления противников', () => {
+    store().setGridSize(100, 60);
+    store().setAiCount(3);
+    store().setAiCount(1);
+    expect(store()).toMatchObject({ gridColumns: 100, gridRows: 60 });
+  });
+
+  it('одному противнику оставляет малую карту', () => {
+    store().setGridSize(15, 15);
+    store().setAiCount(1);
+    expect(store()).toMatchObject({ gridColumns: 15, gridRows: 15 });
+  });
+});
 
 describe('масштаб карты', () => {
   beforeEach(() => {

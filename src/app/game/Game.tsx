@@ -2,17 +2,12 @@ import { useEffect, useState } from 'react';
 import {
   AI_TURN_DELAY_MS,
   AI_PLAYBACK_RATE,
-  type Participant,
   type ParticipantId,
 } from '@shared/config';
 import { ConfirmDialog } from '@shared/ui';
 import { useJournalStore } from '@entities/journals';
 import { useGameLoopStore } from '@entities/games';
-import {
-  useDebugStore,
-  useSettingsStore,
-  usePreferencesStore,
-} from '@entities/settings';
+import { useDebugStore, usePreferencesStore } from '@entities/settings';
 import {
   initGameLoopEvents,
   nextTurn,
@@ -21,7 +16,7 @@ import {
 import { initVisibilitySystem } from '@features/visibility';
 import { initBattleStats, useSandboxStore } from '@features/sandbox';
 import { Map, Minimap } from '@widgets/map';
-import { initializeGame, initializeSandbox } from '@widgets/start-game';
+import { initializeStandardGame, initializeSandbox } from '@widgets/start-game';
 import { GameControls, initGuidanceSystem } from '@widgets/game-controls';
 import {
   initAudioSystem,
@@ -96,11 +91,8 @@ export const Game = () => {
 
   const handleStartGame = () => {
     if (!sandbox) {
-      const participants: Participant[] = [
-        { id: 'p1', controller: 'human' },
-        { id: 'p2', controller: 'ai', ai: useSettingsStore.getState().aiSetup },
-      ];
-      if (initializeGame(participants)) startGame(participants);
+      const participants = initializeStandardGame();
+      if (participants) startGame(participants);
       return;
     }
     const started = initializeSandbox(useSandboxStore.getState().scenario);

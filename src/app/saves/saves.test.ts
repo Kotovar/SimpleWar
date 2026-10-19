@@ -35,7 +35,11 @@ import {
 } from '@features/game-loop';
 import { prepareStrike } from '@features/combat';
 import { useSelectionStore } from '@features/selection';
-import { initializeGame, initializeSandbox } from '@widgets/start-game';
+import {
+  initializeGame,
+  initializeSandbox,
+  initializeStandardGame,
+} from '@widgets/start-game';
 import { initGuidanceSystem, useGuidanceStore } from '@widgets/game-controls';
 import { initJournalSystem, initPopulationSystem } from '@app/system';
 import { runAITurn } from '@app/game/ai';
@@ -127,6 +131,66 @@ afterEach(() => {
 });
 
 describe('формат и восстановление партии', () => {
+  it('сохраняет и восстанавливает настройки всех противников меню', () => {
+    resetGame();
+    useSettingsStore.getState().setAiCount(3);
+    useSettingsStore
+      .getState()
+      .setAiSetup(0, { profile: 'aggressive', difficulty: 'hard' });
+    useSettingsStore
+      .getState()
+      .setAiSetup(1, { profile: 'economic', difficulty: 'easy' });
+    useSettingsStore.getState().setAiSetup(2, { profile: 'defensive' });
+    const participants = initializeStandardGame();
+    expect(participants).not.toBeNull();
+    useGameLoopStore.getState().startGame(participants!);
+    const saved = captureSnapshot();
+    const expected = [
+      { profile: 'aggressive', difficulty: 'hard' },
+      { profile: 'economic', difficulty: 'easy' },
+      { profile: 'defensive', difficulty: 'normal' },
+    ];
+    expect(saved.rules.aiSetups).toEqual(expected);
+    useSettingsStore.getState().resetStore();
+    applySnapshot(parseSnapshot(JSON.stringify(saved)));
+    expect(useSettingsStore.getState().aiSetups).toEqual(expected);
+  });
+
+  it('переносит старый aiSetup в список при чтении снимка и файла сохранения', () => {
+    const saved = record();
+    const { aiSetups: _old, ...rules } = saved.snapshot.rules;
+    const legacy = {
+      ...saved.snapshot,
+      rules: { ...rules, aiSetup: { profile: 'economic', difficulty: 'hard' } },
+    };
+    const expected = [{ profile: 'economic', difficulty: 'hard' }];
+    expect(parseSnapshot(JSON.stringify(legacy)).rules.aiSetups).toEqual(
+      expected,
+    );
+    expect(
+      parseRecord(JSON.stringify({ ...saved, snapshot: legacy })).snapshot.rules
+        .aiSetups,
+    ).toEqual(expected);
+  });
+
+  it.each([
+    [],
+    Array.from({ length: 4 }, () => ({
+      profile: 'balanced',
+      difficulty: 'normal',
+    })),
+    [{ profile: 'unknown', difficulty: 'normal' }],
+    [{ profile: 'balanced', difficulty: 'unknown' }],
+    null,
+  ])('отклоняет повреждённый список настроек ИИ: %j', aiSetups => {
+    const saved = captureSnapshot();
+    expect(() =>
+      parseSnapshot(
+        JSON.stringify({ ...saved, rules: { ...saved.rules, aiSetups } }),
+      ),
+    ).toThrow();
+  });
+
   it('восстанавливает режим тестирования, настройки ИИ по умолчанию и боевой счёт', () => {
     resetGame();
     useSettingsStore.setState({ gridColumns: 15, gridRows: 15 });
