@@ -2,10 +2,27 @@ import type { AiRule, Candidate, Decision } from '../model/types';
 import type { AiContext } from './context';
 import { tieBreak } from './geometry';
 import { AI_RULES } from './rules';
+import { movedByOther } from './rules/common';
 
 /** Ключ действия: одинаковое действие одного правила — одна попытка. */
 export const actionKey = (candidate: Pick<Candidate, 'ruleId' | 'action'>) =>
   `${candidate.ruleId}:${JSON.stringify(candidate.action)}`;
+
+/**
+ * Рабочего в этом ходу уже двигало другое правило: шаг отбрасывается.
+ * Оборона может один раз перехватить его у мирного правила — угроза
+ * появилась. Армию цепочки разных правил (сбор → наступление) двигают законно.
+ */
+const breaksCommitment = (ctx: AiContext, candidate: Candidate) => {
+  const { actorId } = candidate;
+  if (candidate.action.type !== 'move' || actorId === null) return false;
+  if (!ctx.workers.some(({ id }) => id === actorId)) return false;
+  if (!movedByOther(ctx, actorId, candidate.ruleId)) return false;
+  return !(
+    candidate.group === 'defense' &&
+    ctx.turn.movedBy.get(actorId)?.group !== 'defense'
+  );
+};
 
 /**
  * Ключ для разрешения равных оценок: ID объектов случайны, поэтому вместо
@@ -29,8 +46,9 @@ const stableKeys = (ctx: AiContext) => {
 
 /**
  * Выбирает одно действие шага: собирает предложения всех правил, применяет
- * вес текущей стратегии, отбрасывает исполнителей, закончивших ход, и
- * действия, уже отклонённые в этом ходу. Равные оценки разрешаются по сиду.
+ * вес текущей стратегии, отбрасывает исполнителей, закончивших ход,
+ * действия, уже отклонённые в этом ходу, и шаги юнита, которого в этом ходу
+ * уже двигало другое правило. Равные оценки разрешаются по сиду.
  *
  * @param ctx - Контекст шага.
  * @param rules - Реестр правил; в тестах можно подменить.
@@ -49,7 +67,8 @@ export const decideStep = (
     .filter(
       candidate =>
         (candidate.actorId === null || !ctx.turn.done.has(candidate.actorId)) &&
-        !ctx.turn.failed.has(actionKey(candidate)),
+        !ctx.turn.failed.has(actionKey(candidate)) &&
+        !breaksCommitment(ctx, candidate),
     )
     .map(candidate => ({
       ...candidate,

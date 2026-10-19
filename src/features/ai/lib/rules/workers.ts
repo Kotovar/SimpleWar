@@ -59,7 +59,7 @@ const takeWorkplace =
     if (!places.length) return [];
     const score = scarceResource(ctx) === resource ? 70 : 50;
     const claimed = new Set<string>();
-    return idleWorkers(ctx).flatMap((worker): Candidate[] => {
+    return idleWorkers(ctx, ruleId).flatMap((worker): Candidate[] => {
       const place = nearest(
         worker,
         places.filter(({ id }) => !claimed.has(id)),
@@ -133,7 +133,9 @@ export const W04: AiRule = {
         manhattan(cell, base) <= ctx.config.workerScoutRadius &&
         ctx.threatAt(cell) === 0,
     );
-    const worker = idleWorkers(ctx).find(({ movePoints }) => movePoints > 0);
+    const worker = idleWorkers(ctx, 'W04').find(
+      ({ movePoints }) => movePoints > 0,
+    );
     if (!worker || !frontier.length) return [];
     const step = stepToward(ctx, worker, frontier);
     const reason = `ищу ${need === 'gold' ? 'золото' : 'лес'}`;
@@ -180,7 +182,7 @@ export const W05: AiRule = {
         ),
       );
       if (!site) continue;
-      const worker = [...idleWorkers(ctx)].sort(
+      const worker = [...idleWorkers(ctx, 'W05')].sort(
         (a, b) => manhattan(a, site) - manhattan(b, site),
       )[0];
       if (!worker || taskOf(ctx, worker.id)) continue;

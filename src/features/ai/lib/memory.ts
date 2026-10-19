@@ -14,6 +14,7 @@ export const createTurnState = (): TurnState => ({
   done: new Set(),
   failed: new Set(),
   plannedDamage: new Map(),
+  movedBy: new Map(),
   step: 0,
 });
 

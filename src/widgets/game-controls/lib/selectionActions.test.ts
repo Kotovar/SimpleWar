@@ -90,6 +90,26 @@ describe('getSelectionActions', () => {
     ).toBe(false);
   });
 
+  it('нехватающая часть цены отмечена отдельно', () => {
+    const [swordsman, archer] = getSelectionActions(
+      input({
+        building: building('barracks'),
+        payableSpawn: { gold: 200, wood: 50 },
+        population: { occupied: 9, max: 10 },
+      }),
+    );
+    expect(swordsman.lacking).toEqual({
+      gold: false,
+      wood: false,
+      population: true,
+    });
+    expect(archer.lacking).toEqual({
+      gold: true,
+      wood: true,
+      population: true,
+    });
+  });
+
   it('найм без лимита населения — причина у слота', () => {
     const [first] = getSelectionActions(
       input({

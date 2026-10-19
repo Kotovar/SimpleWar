@@ -239,6 +239,12 @@
   gap: 1px;
 }
 
+/* Не хватает этой части цены. */
+.Cost > span[data-shortage='true'] {
+  color: var(--danger-strong);
+  font-weight: 700;
+}
+
 /* Клавиша в углу оставляет место названию и цене. */
 .Key {
   position: absolute;

@@ -27,6 +27,8 @@ export type ActionButton = {
   /** Режим кнопки включён: выбрано здание, прицел, расчистка. */
   pressed?: boolean;
   cost?: Cost & { population?: number };
+  /** Чего из цены не хватает: подсвечивается красным. */
+  lacking?: Lacking;
   /** Короткая подпись на карточке, если `label` не помещается. */
   short?: string;
   /** Строка вместо цены: «Изучено», «ещё 2 хода». */
@@ -38,6 +40,22 @@ export type ActionButton = {
   /** Подменю: кнопка открывает слоты `1`…`0`. */
   children?: ActionButton[];
 };
+
+export type Lacking = { gold: boolean; wood: boolean; population: boolean };
+
+/** Каких частей цены не хватает при данных запасах и населении. */
+export const lackingOf = (
+  cost: Cost & { population?: number },
+  stock: Resources,
+  population?: PopulationCap,
+): Lacking => ({
+  gold: stock.gold < cost.gold,
+  wood: stock.wood < cost.wood,
+  population:
+    !!population &&
+    !!cost.population &&
+    population.occupied + cost.population > population.max,
+});
 
 /** Сведения для кнопок выбранного; собираются из хранилищ вызывающим. */
 export type SelectionActionInput = {

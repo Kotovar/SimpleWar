@@ -89,6 +89,7 @@ export const findSegmentedPath = (
  * путь может идти транзитом через своих; если такой отрезок дороже полного
  * запаса очков, ищется путь с допустимыми отрезками транзита.
  *
+ * @param avoid - Маска клеток `y * width + x`, куда не входить (`1`).
  * @returns Путь и цена (пустой путь и `Infinity` — пути нет), ход прибытия
  * (`Infinity` — не дойти), цены клеток и проверка остановки.
  */
@@ -96,9 +97,15 @@ export const findUnitRoute = (
   unit: Unit,
   actor: ParticipantId,
   target: Position,
+  avoid?: ArrayLike<number>,
 ) => {
   const canLand = createLandingCheck(actor);
-  const costs = createUnitMovementGrid(unit, actor, TURN_UNKNOWN_COST);
+  const grid = createUnitMovementGrid(unit, actor, TURN_UNKNOWN_COST);
+  const costs = avoid
+    ? grid.map((row, y) =>
+        row.map((cost, x) => (avoid[y * row.length + x] ? 0 : cost)),
+      )
+    : grid;
   const turnsOf = (path: Position[]) =>
     countRouteTurns(path, costs, unit.movePoints, unit.maxMovePoints, canLand);
   let route = getPath(unit, target, costs);

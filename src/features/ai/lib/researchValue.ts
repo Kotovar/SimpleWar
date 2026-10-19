@@ -5,7 +5,7 @@ import {
 } from '@shared/config';
 import type { StrategyScore } from '../model/types';
 import type { AiContext } from './context';
-import { nearest } from './facts';
+import { hasStrikeArmy, nearest } from './facts';
 import { manhattan } from './geometry';
 
 /**
@@ -75,8 +75,8 @@ export const researchStrategy = (ctx: AiContext): Omit<StrategyScore, 'id'> => {
   const hasForge = ctx.obs.ownBuildings.some(({ type }) => type === 'forge');
   if (hasForge)
     return { score: 25 + best.value / 2, reason: `польза: ${name}` };
-  // Кузница — когда армия и доход уже есть: экономика важнее.
-  return ctx.military.length >= 3 && ctx.income.gold + ctx.income.wood >= 15
+  // Кузница — когда ударная группа и доход уже есть: войска важнее.
+  return hasStrikeArmy(ctx) && ctx.income.gold + ctx.income.wood >= 15
     ? { score: 25, reason: `нужна кузница: ${name}` }
     : { score: 0, reason: 'кузница пока не по силам' };
 };

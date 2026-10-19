@@ -3,7 +3,8 @@ import { findUnitRoute } from './findUnitRoute';
 
 /**
  * Маршрут юнита до клетки по известной участнику карте — те же цены, что
- * у приказа на ход, — и ход прибытия (`1` — этот).
+ * у приказа на ход, — и ход прибытия (`1` — этот). `avoid` — маска клеток,
+ * куда не входить.
  *
  * @returns Путь, цена, ходы и `firstStop` — цена до первой свободной
  * клетки (шаги через своих — транзит) — либо `null`: на клетке нельзя
@@ -14,11 +15,13 @@ export const getRoutePreview = (
   unit: Unit,
   actor: ParticipantId,
   target: Position,
+  avoid?: ArrayLike<number>,
 ) => {
   const { path, cost, turns, costs, canLand } = findUnitRoute(
     unit,
     actor,
     target,
+    avoid,
   );
   if (!canLand(target) || path.length < 2 || turns === Infinity) return null;
   let firstStop = 0;

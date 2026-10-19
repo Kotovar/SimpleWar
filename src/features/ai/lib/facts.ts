@@ -77,6 +77,14 @@ export const desiredWorkers = (ctx: AiContext) => {
   return Math.min(max, Math.max(min, places + 1));
 };
 
+/**
+ * Боевых юнитов (без разведчиков) на ударную группу: войска важнее кузницы
+ * и исследований.
+ */
+export const hasStrikeArmy = (ctx: AiContext) =>
+  ctx.military.filter(({ type }) => type !== 'scout').length >=
+  ctx.config.strikeGroup.size;
+
 /** Желаемый размер армии: растёт со временем партии. */
 export const desiredArmy = (ctx: AiContext) => {
   const { base, every, max } = ctx.config.army;

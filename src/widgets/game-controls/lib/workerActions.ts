@@ -12,6 +12,7 @@ import {
 } from '@shared/lib';
 import {
   action,
+  lackingOf,
   NO_BUILD_POINT,
   slot,
   type ActionButton,
@@ -47,6 +48,7 @@ export const workerActions = (
           reason: check.canSpawn ? undefined : check.message,
           pressed: mode.building === type,
           cost: BUILDINGS_CONFIG[type].cost,
+          lacking: lackingOf(BUILDINGS_CONFIG[type].cost, payableBuild),
           portrait: type,
         };
       }),
@@ -87,6 +89,7 @@ export const workerActions = (
         id: `repair:${damaged.id}`,
         hint: `Починить: ${BUILDINGS_NAME[damaged.type]} (+${Math.min(REPAIR.hp, damaged.maxHp - damaged.hp)} HP)`,
         cost: REPAIR.cost,
+        lacking: lackingOf(REPAIR.cost, stock),
         reason: !hasPoint
           ? NO_BUILD_POINT
           : canPay

@@ -70,3 +70,13 @@
 .Toast[data-kind='research'] .Mark {
   color: var(--success-strong);
 }
+
+/* Сообщение с местом события кликабельно; наведение удерживает его. */
+.Toast[data-link] {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.Toast[data-link]:hover {
+  animation-play-state: paused;
+}

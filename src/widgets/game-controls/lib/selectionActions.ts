@@ -13,6 +13,7 @@ import {
 import { canSpawnUnit, pluralRu } from '@shared/lib';
 import {
   action,
+  lackingOf,
   slot,
   type ActionButton,
   type SelectionActionInput,
@@ -73,6 +74,7 @@ const spawnSlots = (
           building.spawnPoints,
         );
         const { cost, requiresLimit } = UNITS_CONFIG[type];
+        const price = { ...cost, population: requiresLimit };
         return {
           id: `spawn:${type}`,
           label: UNITS_NAME[type],
@@ -80,7 +82,8 @@ const spawnSlots = (
           hint: `${UNITS_NAME[type]}: ${unitStats(type)}`,
           reason: check.canSpawn ? undefined : check.message,
           pressed: mode.unit === type,
-          cost: { ...cost, population: requiresLimit },
+          cost: price,
+          lacking: lackingOf(price, payableSpawn, population),
           portrait: type,
         };
       });
@@ -113,6 +116,7 @@ const researchSlots = ({
       reason,
       pressed: active,
       cost,
+      lacking: done || active ? undefined : lackingOf(cost, stock),
       done,
       note: done
         ? 'Изучено'

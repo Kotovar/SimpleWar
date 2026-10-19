@@ -11,9 +11,12 @@ import { bestResearch } from './researchValue';
 import {
   baseAlarm,
   desiredArmy,
+  desiredWorkers,
+  hasStrikeArmy,
   idleWorkplaces,
   nextRecruit,
   resourceSites,
+  scarceResource,
 } from './facts';
 
 /** Накопление: какие покупки важнее и что из бюджета отложено под них. */
@@ -21,30 +24,43 @@ import {
 const NOTHING: Cost = { gold: 0, wood: 0 };
 
 /**
- * Нужен ли ещё один рудник/лесопилка: по ходу партии +1 каждые
- * `expansion.every` ходов (до `max`), если есть безопасная площадка и нет
- * простаивающего места этого типа. Первое здание — отдельная цель.
+ * Нужен ли ещё один рудник/лесопилка: `expansion.start` с начала партии,
+ * затем +1 каждые `expansion.every` ходов (до `max`) нехватающего ресурса,
+ * если есть безопасная площадка и нет простаивающего места этого типа. Первое здание — отдельная цель.
  */
 export const expansionWanted = (ctx: AiContext, type: 'mine' | 'sawmill') => {
-  const { every, max } = ctx.config.expansion;
-  const target = Math.min(max, 1 + Math.floor(ctx.obs.turn / every));
+  const { start, every, max } = ctx.config.expansion;
+  const target = Math.min(max, start + Math.floor(ctx.obs.turn / every));
   const count = ctx.obs.ownBuildings.filter(b => b.type === type).length;
+  const resource = type === 'mine' ? 'gold' : 'wood';
   return (
     count > 0 &&
     count < target &&
+    // Сверх стартовой — только нехватающий ресурс: излишек не нужен.
+    (count < start || scarceResource(ctx) === resource) &&
     resourceSites(ctx, type === 'mine' ? 'gold' : 'forest').length > 0 &&
     !idleWorkplaces(ctx).some(b => b.type === type)
   );
 };
+
+/** Стартовая добыча этого типа ещё не набрана, а казарм нет. */
+const inOpening = (ctx: AiContext, type: 'mine' | 'sawmill') =>
+  !ctx.obs.ownBuildings.some(b => b.type === 'barracks') &&
+  expansionWanted(ctx, type) &&
+  ctx.obs.ownBuildings.filter(b => b.type === type).length <
+    ctx.config.expansion.start;
+
+/** Стартовая добыча не закрыта: казармы ждут её (W07). */
+export const openingPending = (ctx: AiContext) =>
+  inOpening(ctx, 'mine') || inOpening(ctx, 'sawmill');
 
 /** Цель накопления: ключ покупки и её цена. */
 export type SavingGoal = { key: string; cost: Cost };
 
 /**
  * Две первые по важности покупки, на которые копит ИИ: рудник → второй
- * рабочий → лесопилка → казармы → ферма → ещё рудник/лесопилка → кузница →
- * исследование → здание
- * найма нужной роли → армия. Их цена откладывается от
+ * рабочий → лесопилка → рабочие до нормы → стартовая добыча → казармы →
+ * ферма → ещё рудник/лесопилка → кузница → исследование → здание найма нужной роли → армия. Их цена откладывается от
  * бюджета остальных правил, иначе мелкие траты не дают накопить на добычу.
  */
 export const savingGoals = (ctx: AiContext): SavingGoal[] => {
@@ -72,6 +88,15 @@ export const savingGoals = (ctx: AiContext): SavingGoal[] => {
       !has('sawmill') && resourceSites(ctx, 'forest').length > 0,
       BUILDINGS_CONFIG.sawmill.cost,
     ],
+    // Рабочие до нормы: иначе все на добыче и строить казармы некому.
+    [
+      'worker',
+      has('sawmill') && ctx.workers.length < desiredWorkers(ctx),
+      UNITS_CONFIG.worker.cost,
+    ],
+    // Стартовая добыча до казарм: без дохода армия копится слишком долго.
+    ['mine', inOpening(ctx, 'mine'), BUILDINGS_CONFIG.mine.cost],
+    ['sawmill', inOpening(ctx, 'sawmill'), BUILDINGS_CONFIG.sawmill.cost],
     ['barracks', !has('barracks'), BUILDINGS_CONFIG.barracks.cost],
     // Ферма раньше здания найма: без населения найм невозможен вовсе.
     ['farm', max - occupied < 3 && max < 30, BUILDINGS_CONFIG.farm.cost],
@@ -82,6 +107,7 @@ export const savingGoals = (ctx: AiContext): SavingGoal[] => {
       'forge',
       !has('forge') &&
         defended &&
+        hasStrikeArmy(ctx) &&
         ctx.obs.turn >= ctx.config.forgeTurn &&
         ctx.obs.researched.length < RESEARCH_TYPES.length,
       BUILDINGS_CONFIG.forge.cost,

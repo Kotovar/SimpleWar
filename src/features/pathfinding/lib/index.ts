@@ -12,3 +12,4 @@ export * from './countRouteTurns';
 export * from './goTo';
 export * from './findUnitRoute';
 export * from './autoExplore';
+export * from './explorationDanger';

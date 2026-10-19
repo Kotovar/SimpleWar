@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vite-plus/test';
 import { DEFAULT_PARTICIPANTS, type Cell } from '@shared/config';
-import { ok } from '@shared/lib';
+import { gameEvents, ok } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
@@ -10,7 +10,11 @@ import { runCommand, useJournalStore } from '@entities/journals';
 import { useDebugStore } from '@entities/settings';
 import { useResearchStore } from '@entities/researches';
 import { initVisibilitySystem } from '@features/visibility';
-import { autoExplore, getExplorationTarget } from '@features/pathfinding';
+import {
+  autoExplore,
+  getExplorationDanger,
+  getExplorationTarget,
+} from '@features/pathfinding';
 import {
   advanceOrder,
   cancelOrder,
@@ -93,24 +97,90 @@ describe('авторазведка', () => {
     expect(units().units[unitId]).toMatchObject({ x: 5 });
     expect(units().units[unitId].order?.stopped).toBeUndefined();
   });
-  it('враг, уже видимый при включении, останавливает без шага', () => {
-    units().spawnUnit('swordsman', 5, 0, 'p2');
-    autoExplore({ actor: 'p1', unitId });
-    expect(units().units[unitId]).toMatchObject({
-      x: 0,
-      movePoints: 5,
-      order: { stopped: 'enemy' },
-    });
+  it('видимый враг не останавливает: разведчик обходит его стороной', () => {
+    const grid: Cell[][] = Array.from({ length: 9 }, (_, y) =>
+      Array.from({ length: 25 }, (_, x) => ({
+        x,
+        y,
+        type: 'grass',
+        isWalkable: true,
+      })),
+    );
+    useMapStore.setState({ grid });
+    units().placeUnit(unitId, 0, 1);
+    units().spawnUnit('swordsman', 6, 1, 'p2');
+    units().spawnUnit('worker', 2, 4, 'p2');
+    useKnowledgeStore.getState().resetStore();
+    initVisibilitySystem();
+    const width = 25;
+    for (let turn = 0; turn < 4; turn++) {
+      if (turn) {
+        units().resetUnitsForNewTurn('p1');
+        executeOrders('p1');
+      } else expect(autoExplore({ actor: 'p1', unitId })).toEqual(ok);
+      const scout = units().units[unitId];
+      expect(scout.order?.stopped).toBeUndefined();
+      // Мечник бьёт на 1 клетку: запас 2 — разведчик не ближе 4 клеток.
+      expect(Math.abs(scout.x - 6) + Math.abs(scout.y - 1)).toBeGreaterThan(3);
+    }
+    expect(units().units[unitId].x).toBeGreaterThan(6);
+    const danger = getExplorationDanger(
+      'p1',
+      width,
+      9,
+      new Uint8Array(width * 9).fill(1),
+    );
+    // Рабочий опасности не создаёт.
+    expect(danger[4 * width + 2]).toBe(0);
+    expect(danger[1 * width + 6]).toBeGreaterThan(0);
   });
-  it('новый враг останавливает на первом шаге, открывшем его', () => {
-    units().spawnUnit('swordsman', 10, 0, 'p2');
-    autoExplore({ actor: 'p1', unitId });
-    expect(units().units[unitId]).toMatchObject({
-      x: 4,
-      movePoints: 1,
-      order: { stopped: 'enemy' },
+
+  const openGrid = (width: number, height: number): Cell[][] =>
+    Array.from({ length: height }, (_, y) =>
+      Array.from({ length: width }, (_, x) => ({
+        x,
+        y,
+        type: 'grass',
+        isWalkable: true,
+      })),
+    );
+
+  it('исполнение идёт тем же обходом, что и план: транзит не через опасную клетку', () => {
+    useMapStore.setState({ grid: openGrid(25, 7) });
+    units().placeUnit(unitId, 0, 3);
+    units().spawnUnit('swordsman', 1, 0, 'p2');
+    for (const x of [0, 1, 2]) units().spawnUnit('worker', x, 4, 'p1');
+    useKnowledgeStore.getState().resetStore();
+    initVisibilitySystem();
+    const visited: string[] = [];
+    const off = useUnitsStore.subscribe(state => {
+      const scout = state.units[unitId];
+      if (scout) visited.push(`${scout.x},${scout.y}`);
     });
-    expect(executeOrders('p1')).toEqual([]);
+    const passed: string[] = [];
+    const offPassed = gameEvents.subscribe(event => {
+      if (event.type === 'UNIT_PASSED' && event.unitId === unitId)
+        passed.push(`${event.x},${event.y}`);
+    });
+    autoExplore({ actor: 'p1', unitId });
+    off();
+    offPassed();
+    expect(units().units[unitId].x).toBeGreaterThan(0);
+    // (1,3) — в трёх клетках от мечника: запрещена.
+    expect([...visited, ...passed]).not.toContain('1,3');
+  });
+
+  it('разведчик в опасной зоне выходит из неё, а не останавливается', () => {
+    useMapStore.setState({ grid: openGrid(25, 9) });
+    units().placeUnit(unitId, 5, 4);
+    units().spawnUnit('swordsman', 7, 4, 'p2');
+    useKnowledgeStore.getState().resetStore();
+    initVisibilitySystem();
+    autoExplore({ actor: 'p1', unitId });
+    const scout = units().units[unitId];
+    expect(scout.order?.stopped).toBeUndefined();
+    expect(scout.movePoints).toBeLessThan(5);
+    expect(Math.abs(scout.x - 7) + Math.abs(scout.y - 4)).toBeGreaterThan(2);
   });
   it('известная отметка осады на следующем шаге останавливает перед ней', () => {
     const siegeId = units().spawnUnit('siege', 24, 0, 'p2')!;

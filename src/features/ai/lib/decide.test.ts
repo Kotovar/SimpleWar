@@ -24,6 +24,19 @@ describe('выбор действия шага', () => {
   const economy = rule('E', 'economy', offer('economy', 50, 1));
   const attack = rule('A', 'attack', offer('attack', 60, 2));
 
+  it('рабочего в ходу двигает первое правило; оборона перехватывает', () => {
+    const worker = own('worker', 0, 0, { id: 'u1' });
+    const { ctx } = scene({ map: grass(4, 4), units: [worker] });
+    const defense = rule('D', 'defense', offer('defense', 40, 3));
+    ctx.turn.movedBy.set('u1', { ruleId: 'R-attack-2', group: 'attack' });
+
+    // Другое мирное правило не уводит рабочего обратно.
+    expect(decideStep(ctx, [economy]).chosen).toBeNull();
+    expect(decideStep(ctx, [economy, defense]).chosen?.group).toBe('defense');
+    ctx.turn.movedBy.set('u1', { ruleId: 'R-defense-3', group: 'defense' });
+    expect(decideStep(ctx, [economy, attack]).chosen).toBeNull();
+  });
+
   it('стратегия меняет выбор весом группы', () => {
     const economic = scene({ map: grass(4, 4), memory: { strategy: 'G02' } });
     const offensive = scene({ map: grass(4, 4), memory: { strategy: 'G08' } });

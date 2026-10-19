@@ -93,6 +93,56 @@ describe('W07: казармы и башня', () => {
     ]);
   });
 
+  it('все рабочие на добыче — снимает одного строить казармы', () => {
+    const mine = ownBuilding('mine', 2, 2);
+    const miner = own('worker', 2, 2, { workplaceId: mine.id });
+    const { ctx } = scene({
+      map: grass(10, 10),
+      units: [miner],
+      buildings: [ownBuilding('base', 5, 5), mine],
+      stock: { gold: 500, wood: 500 },
+    });
+
+    expect(W07.evaluate(ctx)).toMatchObject([
+      {
+        action: { type: 'unassign', workerId: miner.id },
+        task: { buildingType: 'barracks' },
+      },
+    ]);
+  });
+
+  it('кузница — только после сбора ударной группы', () => {
+    // Разведчик в ударную группу не входит: бойцов три из четырёх.
+    const units = [
+      own('worker', 5, 7),
+      own('swordsman', 1, 1),
+      own('scout', 3, 1),
+      ...[0, 1].map(i => own('spearman', i, 2)),
+    ];
+    const buildings = [
+      ownBuilding('base', 5, 5),
+      ownBuilding('barracks', 8, 8),
+    ];
+    const setup = {
+      map: grass(10, 10),
+      buildings,
+      stock: { gold: 2000, wood: 2000 },
+      turn: 40,
+      memory: { strategy: 'G12' as const },
+    };
+    const few = scene({ ...setup, units });
+    expect(W07.evaluate(few.ctx).some(c => c.basis?.building === 'forge')).toBe(
+      false,
+    );
+    const army = scene({
+      ...setup,
+      units: [...units, own('spearman', 2, 2)],
+    });
+    expect(W07.evaluate(army.ctx)).toMatchObject([
+      { basis: { building: 'forge' } },
+    ]);
+  });
+
   it('с казармами и без угрозы новых зданий не строит', () => {
     const { ctx } = scene({
       map: grass(10, 10),

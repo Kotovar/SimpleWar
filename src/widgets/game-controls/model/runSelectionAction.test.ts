@@ -66,3 +66,28 @@ describe('сон выбранного юнита', () => {
     },
   );
 });
+
+describe('пропуск хода выбранного юнита', () => {
+  it('снимает выбор и подсветку; в чужой ход выбор остаётся', () => {
+    const selected = unit('worker');
+    useUnitsStore.setState({ units: { [selected.id]: selected } });
+    useSelectionStore.getState().selectUnit(selected.id);
+    const skip = () =>
+      runSelectionAction(action('skip'), {
+        humanId: 'p1',
+        unit: selected,
+        building: null,
+        input: input({ unit: selected }),
+      });
+
+    useGameLoopStore.setState({ activePlayer: 'p2' });
+    skip();
+    expect(useSelectionStore.getState().selection).not.toBeNull();
+
+    useGameLoopStore.setState({ activePlayer: 'p1' });
+    skip();
+    expect(useSelectionStore.getState().selection).toBeNull();
+    expect(useUnitsStore.getState().units[selected.id].restMode).toBe('skip');
+    expect(useMovementStore.getState().reachableCells).toBeNull();
+  });
+});

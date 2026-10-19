@@ -103,7 +103,7 @@ export const DAMAGE_BONUS: Partial<
   Record<MilitaryType, Partial<Record<TargetCategory, number>>>
 > = {
   swordsman: { building: 28 },
-  spearman: { cavalry: 16 },
+  spearman: { cavalry: 20 },
   rider: { ranged: 10, civil: 10 },
   siege: { building: 108 },
   archer: { flying: 6, building: 10 },

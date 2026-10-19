@@ -129,7 +129,7 @@ export const W11: AiRule = {
       return [];
     }
     const site = palisadeSite(ctx, threat);
-    const worker = site && nearestIdleWorker(ctx, site);
+    const worker = site && nearestIdleWorker(ctx, site, 'W11');
     if (!site || !worker) return [];
     return buildStep(
       ctx,

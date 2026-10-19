@@ -21,6 +21,12 @@ import { turnMoves } from '../movement';
 /** Исполнитель ещё действует в этом ходу. */
 export const isFree = (ctx: AiContext, id: string) => !ctx.turn.done.has(id);
 
+/** Юнита в этом ходу уже двигало другое правило: шаги этого отброшены. */
+export const movedByOther = (ctx: AiContext, id: string, ruleId: string) => {
+  const mover = ctx.turn.movedBy.get(id);
+  return !!mover && mover.ruleId !== ruleId;
+};
+
 /** Задача юнита, если она есть. */
 export const taskOf = (ctx: AiContext, unitId: string): AiTask | undefined =>
   ctx.memory.tasks.find(task => task.unitId === unitId);

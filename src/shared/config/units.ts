@@ -153,11 +153,11 @@ export const MILITARY_UNITS_CONFIG: Record<
     cost: { gold: 140, wood: 40 },
     preparedStrike: null,
   },
-  // Быстрый рейд по рабочим и стрелкам; уязвим для копейщиков.
+  // Быстрый рейд по рабочим и стрелкам; сильнее мечника, уязвим для копейщиков.
   rider: {
-    maxHp: 90,
+    maxHp: 120,
     sightRange: 4,
-    attack: 24,
+    attack: 30,
     movePoints: 0,
     maxMovePoints: 5,
     attackPoints: 0,

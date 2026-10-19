@@ -106,7 +106,8 @@ export const runSelectionAction = (
         unitId: unit.id,
         mode,
       });
-      if (result.ok && mode === 'sleep') {
+      // Юнит отложен: снять выделение, как после сна.
+      if (result.ok && mode) {
         useSelectionStore.getState().clearSelection();
         resetModes();
         return;

@@ -11,14 +11,27 @@ import {
   TURN_UNKNOWN_COST,
 } from './createKnownMovementGrid';
 import { getRoutePreview } from './routePreview';
-import { getSeenEnemies, move } from './move';
+import { getExplorationDanger } from './explorationDanger';
+import { move } from './move';
 
-/** Ближайшая по цене достижимая неизвестная клетка на границе известных. */
+/**
+ * Ближайшая по цене достижимая неизвестная клетка на границе известных.
+ * Цель — вне опасных клеток {@link getExplorationDanger}; путь не заходит
+ * глубже текущей клетки разведчика, так что из зоны он может выйти.
+ *
+ * @returns Маршрут и `avoid` — маска клеток, запрещённых движению.
+ */
 export const getExplorationTarget = (unit: Unit, actor: ParticipantId) => {
-  const costs = createKnownMovementGrid(actor, TURN_UNKNOWN_COST);
-  const width = costs[0]?.length ?? 0;
-  const height = costs.length;
+  const grid = createKnownMovementGrid(actor, TURN_UNKNOWN_COST);
+  const width = grid[0]?.length ?? 0;
+  const height = grid.length;
   const visible = getActorVisibility(actor);
+  const danger = getExplorationDanger(actor, width, height, visible);
+  const here = danger[unit.y * width + unit.x];
+  const avoid = danger.map(depth => (depth > here ? 1 : 0));
+  const costs = grid.map((row, y) =>
+    row.map((cost, x) => (avoid[y * width + x] ? 0 : cost)),
+  );
   const terrain = getParticipantKnowledge(actor)?.terrain;
   const known = (x: number, y: number) =>
     x >= 0 &&
@@ -34,6 +47,7 @@ export const getExplorationTarget = (unit: Unit, actor: ParticipantId) => {
       const y = Math.floor(key / width);
       return (
         cost > 0 &&
+        !danger[key] &&
         !known(x, y) &&
         canLand({ x, y }) &&
         [
@@ -48,13 +62,15 @@ export const getExplorationTarget = (unit: Unit, actor: ParticipantId) => {
   let best: ReturnType<typeof getRoutePreview> = null;
   for (const [key, lowerCost] of candidates) {
     if (best && lowerCost >= best.cost) break;
-    const route = getRoutePreview(unit, actor, {
-      x: key % width,
-      y: Math.floor(key / width),
-    });
+    const route = getRoutePreview(
+      unit,
+      actor,
+      { x: key % width, y: Math.floor(key / width) },
+      avoid,
+    );
     if (route && (!best || route.cost < best.cost)) best = route;
   }
-  return best;
+  return best && { ...best, avoid };
 };
 
 const isThreatened = (actor: ParticipantId, cells: Position[]) =>
@@ -62,7 +78,10 @@ const isThreatened = (actor: ParticipantId, cells: Position[]) =>
     cells.some(cell => cell.x === strike.x && cell.y === strike.y),
   );
 
-/** Исполняет авторазведку шагами до исчерпания очков, врага или отсутствия целей. */
+/**
+ * Исполняет авторазведку шагами до исчерпания очков или отсутствия целей.
+ * Враг в обзоре не останавливает: разведчик обходит его стороной.
+ */
 export const advanceExploration = (
   actor: ParticipantId,
   unitId: string,
@@ -78,7 +97,7 @@ export const advanceExploration = (
       order.stopped
     )
       return false;
-    const stop = (stopped: 'enemy' | 'explored' | 'threat') => {
+    const stop = (stopped: 'explored' | 'threat') => {
       const result = runCommand(
         { type: 'order', actor, details: { unitId, stopped } },
         useGameLoopStore.getState().currentTurn,
@@ -89,7 +108,6 @@ export const advanceExploration = (
       );
       return result.ok;
     };
-    if (getSeenEnemies(actor).size) return stop('enemy');
     if (isThreatened(actor, [unit])) return stop('threat');
     const plan = getExplorationTarget(unit, actor);
     if (!plan) return stop('explored');
@@ -100,7 +118,13 @@ export const advanceExploration = (
     );
     const segment = plan.path.slice(1, end + 1);
     if (isThreatened(actor, segment)) return stop('threat');
-    const result = move({ actor, unitId, ...plan.path[end], partial: true });
+    const result = move({
+      actor,
+      unitId,
+      ...plan.path[end],
+      partial: true,
+      avoid: plan.avoid,
+    });
     if (!result.ok) {
       if (result.code === 'busy') return false;
       useUnitsStore

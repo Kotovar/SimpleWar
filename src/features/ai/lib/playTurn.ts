@@ -151,6 +151,15 @@ export const playTurn = async (deps: AiTurnDeps): Promise<AiTurnResult> => {
     if (result.ok) {
       commands++;
       failures = 0;
+      if (chosen.action.type === 'move' && chosen.actorId) {
+        const mover = turn.movedBy.get(chosen.actorId);
+        // Перехват обороной закрепляет юнита за ней до конца хода.
+        if (!mover || chosen.group === 'defense')
+          turn.movedBy.set(chosen.actorId, {
+            ruleId: chosen.ruleId,
+            group: chosen.group,
+          });
+      }
       if (chosen.damage) {
         const { targetId, amount } = chosen.damage;
         turn.plannedDamage.set(

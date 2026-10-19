@@ -7,7 +7,7 @@ import {
   useJournalStore,
   type JournalEntry,
 } from '@entities/journals';
-import { useDebugStore } from '@entities/settings';
+import { useDebugStore, useSettingsStore } from '@entities/settings';
 import { useGameLoopSelectors } from '@features/game-loop';
 import styles from './CommandToasts.styles.module.css';
 
@@ -22,6 +22,8 @@ type Toast = {
   message: string;
   count?: number;
   detail?: string;
+  /** Клетка события: клик по сообщению переводит туда камеру. */
+  position?: { x: number; y: number };
 };
 
 /** Текст уведомления по событию журнала; `null` — событие не уведомляет. */
@@ -41,6 +43,7 @@ const toNotice = ({ id, type, details }: JournalEntry): Toast | null => {
   }
   if (type === 'enemySpotted') {
     const count = Number(details?.count ?? 1);
+    const { x, y } = details ?? {};
     return {
       key: `n${id}`,
       id,
@@ -50,6 +53,8 @@ const toNotice = ({ id, type, details }: JournalEntry): Toast | null => {
         count > 1
           ? `Замечены враги: ${count} ${pluralRu(count, ['боец', 'бойца', 'бойцов'])}`
           : 'Замечен враг',
+      position:
+        typeof x === 'number' && typeof y === 'number' ? { x, y } : undefined,
     };
   }
   return null;
@@ -67,6 +72,7 @@ export const CommandToasts = () => {
   const errors = useJournalStore(state => state.errors);
   const entries = useJournalStore(state => state.entries);
   const debug = useDebugStore(state => state.enabled);
+  const centerOn = useSettingsStore(state => state.centerOn);
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
 
   const rejections: Toast[] = humanId
@@ -100,6 +106,8 @@ export const CommandToasts = () => {
     .sort((a, b) => a.id - b.id);
   if (!visible.length) return null;
 
+  const hide = (key: string) => setHidden(set => new Set(set).add(key));
+
   return (
     <div className={styles.Toasts}>
       {visible.map(toast => (
@@ -107,7 +115,16 @@ export const CommandToasts = () => {
           key={toast.key}
           className={styles.Toast}
           data-kind={toast.kind}
-          onAnimationEnd={() => setHidden(set => new Set(set).add(toast.key))}
+          data-link={toast.position ? '' : undefined}
+          title={toast.position ? 'Камера к месту встречи' : undefined}
+          onClick={
+            toast.position &&
+            (() => {
+              centerOn(toast.position!.x + 0.5, toast.position!.y + 0.5, true);
+              hide(toast.key);
+            })
+          }
+          onAnimationEnd={() => hide(toast.key)}
         >
           <span className={styles.Mark} aria-hidden>
             {toast.mark}

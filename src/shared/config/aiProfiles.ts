@@ -66,7 +66,7 @@ export const AI_PROFILES: Record<
       strikeGroup: { ...AI_CONFIG.strikeGroup, size: 3, gatherTimeout: 6 },
       garrisonSize: 1,
       army: { base: 3, every: 4, max: 12 },
-      expansion: { every: 25, max: 2 },
+      expansion: { start: 1, every: 12, max: 2 },
       forgeTurn: 35,
     },
   },
@@ -76,7 +76,7 @@ export const AI_PROFILES: Record<
     strategyBias: { G02: 10, G03: 15, G12: 15 },
     tune: {
       workerTarget: { min: 4, max: 8 },
-      expansion: { every: 12, max: 4 },
+      expansion: { start: 2, every: 6, max: 4 },
       army: { base: 2, every: 6, max: 10 },
       forgeTurn: 15,
     },

@@ -86,6 +86,11 @@ export type TurnState = {
   failed: Set<string>;
   /** Запланированный урон по целям: общий фокус огня. */
   plannedDamage: Map<string, number>;
+  /**
+   * Чьё правило первым сдвинуло юнита в этом ходу: другие правила его не
+   * двигают, иначе юнит ходит туда-обратно в одном ходу.
+   */
+  movedBy: Map<string, Pick<Candidate, 'ruleId' | 'group'>>;
   step: number;
 };
 

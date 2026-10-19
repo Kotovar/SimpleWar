@@ -9,15 +9,22 @@ import type { AiContext } from '../context';
 import { isNear } from '../facts';
 import { around, manhattan } from '../geometry';
 import { siteOk } from './building';
-import { isFree, taskOf } from './common';
+import { isFree, movedByOther, taskOf } from './common';
 
 /** Кто строит: свободные рабочие, Артель и снятие с добычи. */
 
-/** Рабочий свободен для новой работы: жив, без задачи и не на добыче. */
-export const idleWorkers = (ctx: AiContext): CivilUnit[] =>
+/**
+ * Рабочий свободен для новой работы: жив, без задачи и не на добыче.
+ * С `ruleId` — ещё и не сдвинут в этом ходу другим правилом: иначе его шаг
+ * отбросят, а правило не предложит работу другому рабочему.
+ */
+export const idleWorkers = (ctx: AiContext, ruleId?: string): CivilUnit[] =>
   ctx.workers.filter(
     worker =>
-      isFree(ctx, worker.id) && !taskOf(ctx, worker.id) && !worker.workplaceId,
+      isFree(ctx, worker.id) &&
+      !taskOf(ctx, worker.id) &&
+      !worker.workplaceId &&
+      !(ruleId && movedByOther(ctx, worker.id, ruleId)),
   );
 
 /**
@@ -39,9 +46,13 @@ export const artelMiners = (ctx: AiContext): CivilUnit[] =>
  * Ближайший к точке свободный рабочий; с Артелью первым — рабочий на
  * добыче рядом с площадкой: ему не нужно выходить.
  */
-export const nearestIdleWorker = (ctx: AiContext, site: Position) =>
+export const nearestIdleWorker = (
+  ctx: AiContext,
+  site: Position,
+  ruleId: string,
+) =>
   artelMiners(ctx).find(miner => isNear(miner, site)) ??
-  ([...idleWorkers(ctx)].sort(
+  ([...idleWorkers(ctx, ruleId)].sort(
     (a, b) => manhattan(a, site) - manhattan(b, site),
   )[0] as CivilUnit | undefined);
 

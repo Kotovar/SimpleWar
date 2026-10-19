@@ -10,11 +10,12 @@ import { buildStep, continueBuilds, pickBuildSite } from './building';
 import { artelSite, minerToBuild, nearestIdleWorker } from './builders';
 import { hasTask } from './construction';
 import { affordable } from '../saving';
+import { desiredWorkers } from '../facts';
 
 /**
- * Население заполнено, а свободного рабочего нет: нанять его нельзя, и ферму
- * строить некому. Снять с добычи ближайшего к базе рабочего — иначе рост
- * останавливается навсегда.
+ * Свободного рабочего нет, и нового не наймут (население заполнено или
+ * рабочих уже по норме): ферму строить некому. Снять с добычи ближайшего к
+ * базе рабочего — иначе рост останавливается навсегда.
  */
 const freeBuilder = (
   ctx: AiContext,
@@ -22,7 +23,11 @@ const freeBuilder = (
   occupied: number,
   max: number,
 ): Candidate[] => {
-  if (max - occupied >= UNITS_CONFIG.worker.requiresLimit) return [];
+  if (
+    max - occupied >= UNITS_CONFIG.worker.requiresLimit &&
+    ctx.workers.length < desiredWorkers(ctx)
+  )
+    return [];
   // Ферму не на что строить — рабочий нужнее на добыче.
   if (!affordable(ctx, BUILDINGS_CONFIG.farm.cost, 'farm')) return [];
   return minerToBuild(
@@ -48,7 +53,7 @@ export const W06: AiRule = {
     if (max - occupied >= 3 || max >= MAX_POPULATION_LIMIT) return [];
     if (hasTask(ctx, 'W06')) return [];
     const picked = pickBuildSite(ctx, 'farm', 4);
-    const idle = picked && nearestIdleWorker(ctx, picked);
+    const idle = picked && nearestIdleWorker(ctx, picked, 'W06');
     // Артель: свободных нет — строит рабочий с добычи у своего здания.
     const artel = idle ? null : artelSite(ctx, 'farm');
     const worker = idle ?? artel?.worker;

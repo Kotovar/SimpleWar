@@ -37,6 +37,9 @@ import styles from './styles.module.css';
 /** Пауза перед ходом в ускоренном режиме тестирования, мс. */
 const FAST_TURN_DELAY_MS = 30;
 
+/** Сколько карта остаётся после конца партии: доиграть последний удар, мс. */
+const GAME_OVER_DELAY_MS = 2000;
+
 export const Game = () => {
   const [savesOpen, setSavesOpen] = useState(false);
   const { activePlayer, activeController, phase, startGame } =
@@ -47,7 +50,26 @@ export const Game = () => {
   const gameId = useJournalStore(state => state.gameId);
   const loadedGameId = useSaveStore(state => state.loadedGameId);
   const review = useGameLoopStore(state => state.reviewWorld);
-  const showMap = phase === 'inProgress' || (phase === 'gameOver' && review);
+  // Партия закончилась на глазах игрока: итог — после анимации удара.
+  // Состояние меняется при рендере, чтобы карта не размонтировалась ни на кадр.
+  // Загрузка завершённой партии меняет номер партии: итог сразу.
+  const [last, setLast] = useState({ phase, gameId });
+  const [outro, setOutro] = useState(false);
+  if (last.phase !== phase || last.gameId !== gameId) {
+    setLast({ phase, gameId });
+    setOutro(
+      last.gameId === gameId &&
+        last.phase === 'inProgress' &&
+        phase === 'gameOver',
+    );
+  }
+  useEffect(() => {
+    if (!outro) return;
+    const timer = setTimeout(() => setOutro(false), GAME_OVER_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [outro]);
+  const showMap =
+    phase === 'inProgress' || outro || (phase === 'gameOver' && review);
   // ИИ не смог завершить ход: без решения игрока партия стоит. Номер
   // партии не даёт вопросу пережить сброс.
   const [stall, setStall] = useState<{
@@ -124,12 +146,14 @@ export const Game = () => {
         {showMap && (
           <Map key={`map:${gameId}`} focusOnMount={loadedGameId !== gameId} />
         )}
-        <GameControls
-          key={`controls:${gameId}`}
-          onStartGame={handleStartGame}
-          onOpenSaves={() => setSavesOpen(true)}
-          minimap={<Minimap />}
-        />
+        {!outro && (
+          <GameControls
+            key={`controls:${gameId}`}
+            onStartGame={handleStartGame}
+            onOpenSaves={() => setSavesOpen(true)}
+            minimap={<Minimap />}
+          />
+        )}
         <SaveGames
           key={`saves:${gameId}`}
           open={savesOpen}

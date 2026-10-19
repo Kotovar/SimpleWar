@@ -30,13 +30,13 @@ describe('calculateDamage', () => {
   });
 
   it('добавляет бонус против нужной категории и вычитает броню', () => {
-    // Копейщик против всадника: 22 + 16 − 1.
-    expect(calculateDamage(hit('spearman'), { type: 'rider' })).toBe(37);
-    // Всадник против лучника и рабочего: 24 + 10.
-    expect(calculateDamage(hit('rider'), { type: 'archer' })).toBe(34);
-    expect(calculateDamage(hit('rider'), { type: 'worker' })).toBe(34);
+    // Копейщик против всадника: 22 + 20 − 1.
+    expect(calculateDamage(hit('spearman'), { type: 'rider' })).toBe(41);
+    // Всадник против лучника и рабочего: 30 + 10.
+    expect(calculateDamage(hit('rider'), { type: 'archer' })).toBe(40);
+    expect(calculateDamage(hit('rider'), { type: 'worker' })).toBe(40);
     // Против копейщика бонуса нет, броня 2.
-    expect(calculateDamage(hit('rider'), { type: 'spearman' })).toBe(22);
+    expect(calculateDamage(hit('rider'), { type: 'spearman' })).toBe(28);
   });
 
   it('осада сильна по зданиям и слаба по войскам', () => {
@@ -77,7 +77,7 @@ describe('категории и особенности', () => {
   it('профиль для карточек: бонусы, защита, воздух', () => {
     expect(getCombatProfile('spearman')).toMatchObject({
       armor: 2,
-      bonuses: [{ category: 'cavalry', value: 16 }],
+      bonuses: [{ category: 'cavalry', value: 20 }],
       hitsAir: false,
     });
     expect(getCombatProfile('mage')).toMatchObject({
@@ -154,7 +154,7 @@ describe('Строй', () => {
   });
 
   it('прибавка к броне снижает только физический урон', () => {
-    expect(calculateDamage(hit('rider'), { type: 'spearman' }, 2)).toBe(20);
+    expect(calculateDamage(hit('rider'), { type: 'spearman' }, 2)).toBe(26);
     expect(
       calculateDamage({ type: 'mage', attack: 20 }, { type: 'spearman' }, 2),
     ).toBe(calculateDamage({ type: 'mage', attack: 20 }, { type: 'spearman' }));

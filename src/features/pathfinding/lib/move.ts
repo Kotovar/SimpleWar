@@ -32,6 +32,8 @@ export type MoveCommand = {
   x: number;
   y: number;
   partial?: boolean;
+  /** Маска клеток `y * width + x`, куда маршрут не заходит (авторазведка). */
+  avoid?: ArrayLike<number>;
 };
 
 /** ID видимых участнику вражеских объектов. */
@@ -59,6 +61,7 @@ const validateAndMove = ({
   x,
   y,
   partial,
+  avoid,
 }: MoveCommand): CommandResult => {
   const turnRejection = getTurnRejection(actor);
   if (turnRejection) return reject(turnRejection);
@@ -82,10 +85,10 @@ const validateAndMove = ({
   // Летающему нужна клетка, где по известным сведениям можно сесть.
   if (flying && !createLandingCheck(actor)({ x, y })) return reject('occupied');
   // Транзит через своих дороже полного запаса очков заменяется обходом.
-  const route = findUnitRoute(unit, actor, { x, y });
+  const route = findUnitRoute(unit, actor, { x, y }, avoid);
   if (route.cost === Infinity) return reject('path');
   if (!partial && route.cost > unit.movePoints) return reject('points');
-  return moveAlong(actor, unitId, route.path, flying);
+  return moveAlong(actor, unitId, route.path, flying, avoid);
 };
 
 /**
@@ -101,6 +104,7 @@ const moveAlong = (
   unitId: string,
   path: { x: number; y: number }[],
   flying: boolean,
+  avoid?: ArrayLike<number>,
 ): CommandResult => {
   const { moveUnit } = useUnitsStore.getState();
   const { getCell } = useMapStore.getState();
@@ -132,7 +136,7 @@ const moveAlong = (
     const costs = createUnitMovementGrid(current, actor, TURN_UNKNOWN_COST);
     if (path.slice(index + 1).some(({ x, y }) => !costs[y]?.[x])) {
       const moved = useUnitsStore.getState().units[unitId] ?? current;
-      path = findUnitRoute(moved, actor, target).path;
+      path = findUnitRoute(moved, actor, target, avoid).path;
       index = 0;
     }
   }

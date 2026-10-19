@@ -50,17 +50,17 @@ export const ActionCard = ({
       button.cost && (
         <span className={styles.Cost}>
           {button.cost.gold > 0 && (
-            <span>
+            <span data-shortage={button.lacking?.gold}>
               <GoldIcon size={9} /> {button.cost.gold}
             </span>
           )}
           {button.cost.wood > 0 && (
-            <span>
+            <span data-shortage={button.lacking?.wood}>
               <WoodIcon size={9} /> {button.cost.wood}
             </span>
           )}
           {!!button.cost.population && (
-            <span>
+            <span data-shortage={button.lacking?.population}>
               <PopulationIcon size={9} /> {button.cost.population}
             </span>
           )}
