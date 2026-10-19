@@ -63,10 +63,10 @@ export const AI_PROFILES: Record<
     strategyBias: { G08: 15, G09: 15, G04: 10, G12: -10 },
     tune: {
       attackRatio: 1.1,
-      strikeGroup: { ...AI_CONFIG.strikeGroup, size: 3, gatherTimeout: 6 },
+      strikeGroup: { ...AI_CONFIG.strikeGroup, size: 4, gatherTimeout: 6 },
       garrisonSize: 1,
       army: { base: 3, every: 4, max: 12 },
-      expansion: { start: 1, every: 12, max: 2 },
+      expansion: { start: 1, every: 12, max: 3 },
       forgeTurn: 35,
     },
   },

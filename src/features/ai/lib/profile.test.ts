@@ -9,7 +9,7 @@ import { chooseStrategy, evaluateStrategies } from './strategy';
 import { foe, grass, own, ownBuilding, scene } from './scene.test-utils';
 
 /** Армия у базы, вооружённый враг на подходе, свободная площадка леса. */
-const base = () =>
+const base = (extra: ReturnType<typeof own>[] = []) =>
   scene({
     map: grass(16, 16),
     units: [
@@ -18,6 +18,7 @@ const base = () =>
       own('swordsman', 3, 3),
       own('swordsman', 4, 3),
       own('archer', 3, 4),
+      ...extra,
     ],
     buildings: [ownBuilding('base', 1, 1), ownBuilding('barracks', 1, 4)],
     enemies: [foe('swordsman', 7, 7)],
@@ -55,12 +56,18 @@ describe('профили на одном наблюдении', () => {
   };
 
   it('выбор стратегии зависит от профиля', () => {
+    // Группа из четырёх: агрессивному хватает для атаки, оборонительному — нет.
+    const four = base([own('archer', 4, 4)]);
     const chosen = (profile: (typeof AI_PROFILE_TYPES)[number]) => {
-      const { ctx, scores } = run(profile);
-      return chooseStrategy(ctx, scores).chosen.id;
+      const ctx = buildContext(
+        four.obs,
+        four.memory,
+        createTurnState(),
+        profileConfig(profile),
+      );
+      return chooseStrategy(ctx, evaluateStrategies(ctx)).chosen.id;
     };
 
-    // Группа из трёх: агрессивному хватает для атаки, оборонительному — нет.
     expect(chosen('aggressive')).toBe('G08');
     expect(chosen('defensive')).toBe('G10');
   });
