@@ -1,4 +1,4 @@
-import type { BuildingType, Owner, UnitType } from '@shared/config';
+import type { BuildingType, Owner, UnitType, TeamStyle } from '@shared/config';
 import type { SiegePose } from '@shared/ui';
 import {
   drawArcher,
@@ -54,7 +54,8 @@ export const drawBuildingModel = (
   cellSize: number,
   owner: Owner,
   scale = 1,
-) => BUILDING_DRAWERS[type](ctx, x, y, cellSize, owner, scale);
+  team?: TeamStyle,
+) => BUILDING_DRAWERS[type](ctx, x, y, cellSize, owner, scale, team);
 
 const UNIT_DRAWERS = {
   worker: drawWorker,
@@ -85,7 +86,8 @@ export const drawUnitModel = (
   owner: Owner,
   scale = 1,
   pose?: SiegePose,
+  team?: TeamStyle,
 ) =>
   type === 'siege'
-    ? drawSiege(ctx, x, y, cellSize, owner, scale, pose)
-    : UNIT_DRAWERS[type](ctx, x, y, cellSize, owner, scale);
+    ? drawSiege(ctx, x, y, cellSize, owner, scale, pose, team)
+    : UNIT_DRAWERS[type](ctx, x, y, cellSize, owner, scale, team);

@@ -1,4 +1,4 @@
-import { TEAM_MARKERS, type Owner } from '@shared/config';
+import { TEAM_MARKERS, type Owner, type TeamStyle } from '@shared/config';
 
 /** Доля вырубки на удары топором; остальное — падение деревьев. */
 export const CHOP_PART = 0.6;
@@ -189,8 +189,8 @@ export const drawSpawn = (
   progress: number,
   cellSize: number,
   layer: 'under' | 'over',
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  const team = TEAM_MARKERS[owner];
   const fade = 1 - progress;
   ctx.scale(cellSize / 32, cellSize / 32);
 

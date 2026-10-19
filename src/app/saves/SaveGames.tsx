@@ -1,6 +1,11 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { DEBUG_EXCEPTIONS, AI_PROFILES, AI_DIFFICULTY } from '@shared/config';
+import {
+  DEBUG_EXCEPTIONS,
+  AI_PROFILES,
+  AI_DIFFICULTY,
+  getParticipantName,
+} from '@shared/config';
 import { Checkbox, ConfirmDialog, Select } from '@shared/ui';
 import { useGameLoopStore } from '@entities/games';
 import { useDebugStore } from '@entities/settings';
@@ -75,7 +80,7 @@ const SlotRow = ({
     snapshot?.loop.participants
       .map(
         p =>
-          `${p.id}: ${p.controller === 'human' ? 'человек' : p.controller === 'ai' ? `ИИ ${p.ai ? AI_PROFILES[p.ai.profile].name : 'Сбалансированный'}/${p.ai ? AI_DIFFICULTY[p.ai.difficulty].name : 'Обычный'}` : 'пассивный'}`,
+          `${getParticipantName(p.id, [p])}: ${p.controller === 'human' ? 'человек' : p.controller === 'ai' ? `ИИ ${p.ai ? AI_PROFILES[p.ai.profile].name : 'Сбалансированный'}/${p.ai ? AI_DIFFICULTY[p.ai.difficulty].name : 'Обычный'}` : 'пассивный'}${snapshot.loop.eliminated.includes(p.id) ? ' (выбыли)' : ''}`,
       )
       .join(' · ') ?? '';
   const party = `${snapshot?.debug.usedInGame ? 'Отладочная · ' : ''}${participants}`;

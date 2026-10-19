@@ -84,6 +84,46 @@ describe('useJournalStore', () => {
     expect(journal().entries[0].turn).toBe(5);
   });
 
+  it('не вытесняет выбывание: итогу нужен ход выбывания', () => {
+    journal().record({
+      type: 'eliminated',
+      actor: null,
+      turn: 0,
+      visibleTo: 'all',
+      details: { participant: 'p3' },
+    });
+    for (let turn = 1; turn <= JOURNAL_LIMIT + 5; turn++) {
+      runCommand({ type: 'endTurn', actor: 'p1' }, turn, () => ({ ok: true }));
+    }
+
+    expect(journal().entries).toHaveLength(JOURNAL_LIMIT);
+    expect(journal().entries[0]).toMatchObject({ type: 'eliminated', turn: 0 });
+    expect(journal().entries[1].turn).toBe(7);
+  });
+
+  it('из одних защищённых записей вытесняет самую старую, а не новую', () => {
+    const out = (turn: number) =>
+      journal().record({
+        type: 'eliminated',
+        actor: null,
+        turn,
+        visibleTo: 'all',
+        details: { participant: 'p3' },
+      });
+    for (let turn = 0; turn < JOURNAL_LIMIT; turn++) out(turn);
+    journal().record({
+      type: 'gameOver',
+      actor: null,
+      turn: JOURNAL_LIMIT,
+      visibleTo: 'all',
+      details: { winner: 'p1' },
+    });
+
+    expect(journal().entries).toHaveLength(JOURNAL_LIMIT);
+    expect(journal().entries[0].turn).toBe(1);
+    expect(journal().entries.at(-1)?.type).toBe('gameOver');
+  });
+
   it('показывает участнику только видимые ему записи', () => {
     runCommand({ type: 'move', actor: 'p1' }, 1, () => ({ ok: true }));
     runCommand(

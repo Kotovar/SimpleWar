@@ -54,4 +54,18 @@ describe('снимки помощника', () => {
       ),
     ).toMatchObject({ position: { x: 2, y: 4 } });
   });
+  it('выбывание другой стороны — в сводке с её именем, своё — нет', () => {
+    const out = (participant: string) => ({
+      ...event('eliminated', { participant }),
+      actor: null,
+    });
+    const name = (id: string) => ({ p3: 'Жёлтые' })[id] ?? id;
+
+    expect(summaryItem(out('p3'), 'p1', name)?.text).toBe('Жёлтые выбыли');
+    expect(summaryItem(out('p1'), 'p1', name)).toBeNull();
+    // Принятое сохранение может содержать запись без участника.
+    expect(
+      summaryItem({ ...event('eliminated'), actor: null }, 'p1', name),
+    ).toBeNull();
+  });
 });

@@ -33,6 +33,29 @@ describe('evaluateMap', () => {
     expect(evaluateMap(map(), starts)).toEqual({ ok: true });
   });
 
+  it('проверяет путь и к четвёртому старту, когда первые три соединены', () => {
+    const grid = map();
+    const four = [
+      ...starts,
+      { base: { x: 5, y: 1 }, worker: { x: 4, y: 1 } },
+      { base: { x: 1, y: 5 }, worker: { x: 2, y: 5 } },
+    ];
+    expect(evaluateMap(grid, four)).toEqual({ ok: true });
+    for (const [x, y] of [
+      [0, 4],
+      [1, 4],
+      [2, 4],
+      [3, 4],
+      [3, 5],
+      [3, 6],
+    ]) {
+      grid[y][x].type = 'water';
+      grid[y][x].isWalkable = false;
+    }
+    expect(evaluateMap(grid, four.slice(0, 3))).toEqual({ ok: true });
+    expect(evaluateMap(grid, four)).toEqual({ ok: false, reason: 'route' });
+  });
+
   it('rejects a route cut after bases are treated as occupied', () => {
     const grid = map();
     for (const row of grid) {

@@ -38,6 +38,8 @@ export type Observation = {
   knownTerrain: (CellType | null)[][];
   /** Видимость клеток сейчас, `visible[y][x]`. */
   visible: boolean[][];
+  /** Невыбывшие соперники: порядок ходов и выбывание публичны. */
+  opponents: ParticipantId[];
   /** Обнаруженные золото и лес. */
   resources: (Position & { type: 'gold' | 'forest' })[];
   /** Память об объектах вне обзора. */

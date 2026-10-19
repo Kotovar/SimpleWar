@@ -6,6 +6,7 @@ import {
   type ViewportSize,
 } from '@shared/lib';
 import { useSettingsStore } from '@entities/settings';
+import { useParticipantStyles } from '@entities/games';
 import { renderMinimapMarks, renderMinimapTerrain } from '@widgets/map/lib';
 import { setupCanvas, useDevicePixelRatio, useScene } from './utils';
 import styles from './styles.module.css';
@@ -23,6 +24,7 @@ export const Minimap = () => {
   const pixelRatio = useDevicePixelRatio();
 
   const { scene } = useScene();
+  const teams = useParticipantStyles();
   const columns = useSettingsStore(state => state.gridColumns);
   const rows = useSettingsStore(state => state.gridRows);
   const camera = useSettingsStore(state => state.camera);
@@ -76,8 +78,19 @@ export const Minimap = () => {
       scene,
       current,
       getMinimapFrame(current, { columns, rows }, camera, cellSize, viewport),
+      teams,
     );
-  }, [camera, cellSize, columns, pixelRatio, rows, scene, size, viewport]);
+  }, [
+    camera,
+    cellSize,
+    columns,
+    pixelRatio,
+    rows,
+    scene,
+    size,
+    viewport,
+    teams,
+  ]);
 
   const moveCamera = (event: PointerEvent<HTMLCanvasElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();

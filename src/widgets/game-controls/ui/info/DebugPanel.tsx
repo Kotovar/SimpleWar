@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   DEBUG_EXCEPTIONS,
   MAP_GENERATOR_VERSION,
-  OWNER_NAME,
+  getParticipantName,
   type ParticipantId,
 } from '@shared/config';
 import { Checkbox, Select } from '@shared/ui';
@@ -38,7 +38,7 @@ export const DebugPanel = () => {
 
   const ids = target === 'all' ? participants.map(({ id }) => id) : [target];
   const nameOf = (id: ParticipantId) =>
-    id === humanId ? 'Вы' : OWNER_NAME[id];
+    id === humanId ? 'Вы' : getParticipantName(id, participants);
   const participantOptions = participants.map(({ id, controller }) => ({
     value: id,
     label: `${nameOf(id)}${controller === 'ai' ? ' (ИИ)' : ''}`,

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useGameLoopStore } from '@entities/games';
+import { useJournalStore } from '@entities/journals';
 import { useSettingsStore } from '@entities/settings';
 import { GameControls } from './GameControls';
 
@@ -59,6 +60,36 @@ export const Victory: Story = {
       winner: 'p1',
       currentTurn: 27,
     }),
+};
+
+/** Поражение на четверых: места всех сторон, выбывшие с ходом выбывания. */
+export const FourSidesDefeat: Story = {
+  beforeEach: () => {
+    useGameLoopStore.setState({
+      phase: 'gameOver',
+      winner: null,
+      currentTurn: 41,
+      participants: [
+        { id: 'p1', controller: 'human', palette: 'blue' },
+        { id: 'p2', controller: 'ai', palette: 'red' },
+        { id: 'p3', controller: 'ai', palette: 'yellow' },
+        { id: 'p4', controller: 'ai', palette: 'green' },
+      ],
+      eliminated: ['p4', 'p1'],
+    });
+    const { record } = useJournalStore.getState();
+    for (const [participant, turn] of [
+      ['p4', 23],
+      ['p1', 41],
+    ] as const)
+      record({
+        type: 'eliminated',
+        actor: null,
+        turn,
+        visibleTo: 'all',
+        details: { participant },
+      });
+  },
 };
 
 export const Defeat: Story = {

@@ -1,4 +1,10 @@
-import { BUILDINGS_CONFIG, FOG, type BuildingType } from '@shared/config';
+import {
+  BUILDINGS_CONFIG,
+  FOG,
+  TEAM_MARKERS,
+  type BuildingType,
+  type TeamStyles,
+} from '@shared/config';
 import type { CellRange } from '@shared/lib';
 import type { Contact } from '@entities/perceptions';
 import { drawBuildingModel } from './renderEntitiesLayer';
@@ -20,6 +26,7 @@ export const renderSnapshots = (
   snapshots: Contact[],
   cellSize: number,
   range?: CellRange,
+  teams: TeamStyles = TEAM_MARKERS,
 ) => {
   for (const { type, x, y, owner, kind } of snapshots) {
     if (kind !== 'building') continue;
@@ -32,7 +39,7 @@ export const renderSnapshots = (
     // Снимки бывают только у зданий.
     if (!isBuildingType(type)) continue;
 
-    drawBuildingModel(ctx, type, x, y, cellSize, owner);
+    drawBuildingModel(ctx, type, x, y, cellSize, owner, 1, teams[owner]);
 
     const radius = cellSize * 0.17;
     const cx = (x + 1) * cellSize - radius * 1.2;

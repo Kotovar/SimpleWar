@@ -1,4 +1,4 @@
-import { TEAM_MARKERS, type Owner } from '@shared/config';
+import { TEAM_MARKERS, type Owner, type TeamStyle } from '@shared/config';
 import {
   beginEntity,
   circle,
@@ -19,9 +19,9 @@ export const drawStable = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   rect(ctx, TIMBER, 4, 13, 24, 12);
   sideShadow(ctx, 24, 13.6, 3.4, 10.8);
   shape(ctx, team.color, [2, 14, 16, 5.5, 30, 14]);
@@ -51,9 +51,9 @@ export const drawWorkshop = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   rect(ctx, '#b89a6e', 5, 14, 22, 11);
   sideShadow(ctx, 23, 14.6, 3.4, 9.8);
   shape(ctx, team.color, [3, 15, 8, 9, 24, 9, 29, 15]);
@@ -77,9 +77,9 @@ export const drawForge = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   // Труба с огоньком.
   rect(ctx, STONE_DARK, 20, 4, 4, 8);
   circle(ctx, '#f2a541', 22, 3.5, 1.4);
@@ -104,9 +104,9 @@ export const drawSanctuary = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   rect(ctx, '#e6e1d3', 6, 14, 20, 11);
   sideShadow(ctx, 22, 14.6, 3.4, 9.8);
   // Колонны.
@@ -132,9 +132,9 @@ export const drawPalisade = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   for (let x = 4; x < 28; x += 5) {
     shape(ctx, TIMBER, [x, 26, x, 11, x + 2, 7, x + 4, 11, x + 4, 26]);
     sideShadow(ctx, x + 3, 11, 1, 15);

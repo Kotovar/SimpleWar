@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { getParticipantName } from '@shared/config';
 import { isRestoringGame } from '@shared/lib';
 import { getHumanId, useGameLoopStore } from '@entities/games';
 import { getVisibleRecords, useJournalStore } from '@entities/journals';
@@ -87,7 +88,9 @@ export const initGuidanceSystem = () => {
           seen.add(hint);
           hints.push(hint);
         }
-        const item = summaryItem(entry, player);
+        const item = summaryItem(entry, player, owner =>
+          getParticipantName(owner, loop.participants),
+        );
         if (item) {
           const index = pending.findIndex(row => row.key === item.key);
           if (index === -1) pending.push(item);

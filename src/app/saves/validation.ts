@@ -4,7 +4,10 @@ import {
   BUILDINGS_CONFIG,
   CELL_SIZE_LIMITS,
   DEBUG_EXCEPTIONS,
+  DEFAULT_PALETTES,
+  PALETTE_IDS,
   MAP_SIDE_LIMIT,
+  MAX_PARTICIPANTS,
   MAX_POPULATION_LIMIT,
   MOVE_COST,
   PARTICIPANT_IDS,
@@ -212,49 +215,52 @@ const building: Check = v => {
       return false;
   }
 };
-const memory = shape({
-  seed: int(0, 0xffff_ffff),
-  strategy: one(Object.keys(STRATEGY_NAME)),
-  strategyScore: num(-1e9, 1e9),
-  strategySince: int(),
-  nextTaskId: int(1),
-  tasks: list(
-    shape(
-      {
-        id: text(),
-        kind: one(['build', 'scout']),
-        ruleId: text(),
-        unitId: text(),
-        target: position,
-        reserve: resources,
-        createdTurn: int(),
-        reviewTurn: int(),
-      },
-      { buildingType },
+const memory = shape(
+  {
+    seed: int(0, 0xffff_ffff),
+    strategy: one(Object.keys(STRATEGY_NAME)),
+    strategyScore: num(-1e9, 1e9),
+    strategySince: int(),
+    nextTaskId: int(1),
+    tasks: list(
+      shape(
+        {
+          id: text(),
+          kind: one(['build', 'scout']),
+          ruleId: text(),
+          unitId: text(),
+          target: position,
+          reserve: resources,
+          createdTurn: int(),
+          reviewTurn: int(),
+        },
+        { buildingType },
+      ),
+      1000,
     ),
-    1000,
-  ),
-  operation: shape({
-    phase: one(['gather', 'advance', 'engage', 'retreat']),
-    target: nullable(position),
-    rally: nullable(position),
-    since: int(),
-  }),
-  garrison: list(text(), 1000),
-  lastWorkplace: dictionary(
-    shape({
-      buildingId: text(),
-      type: buildingType,
-      x: int(0, MAP_SIDE_LIMIT - 1),
-      y: int(0, MAP_SIDE_LIMIT - 1),
+    operation: shape({
+      phase: one(['gather', 'advance', 'engage', 'retreat']),
+      target: nullable(position),
+      rally: nullable(position),
+      since: int(),
     }),
-  ),
-  blindStrikes: dictionary(position),
-  siegeLosses: dictionary(
-    int(),
-    v => typeof v === 'string' && /^\d+,\d+$/.test(v),
-  ),
-});
+    garrison: list(text(), 1000),
+    lastWorkplace: dictionary(
+      shape({
+        buildingId: text(),
+        type: buildingType,
+        x: int(0, MAP_SIDE_LIMIT - 1),
+        y: int(0, MAP_SIDE_LIMIT - 1),
+      }),
+    ),
+    blindStrikes: dictionary(position),
+    siegeLosses: dictionary(
+      int(),
+      v => typeof v === 'string' && /^\d+,\d+$/.test(v),
+    ),
+  },
+  { rival: nullable(shape({ owner: participant, since: int() })) },
+);
 const summary = shape(
   { key: text(1000), text: text(1000), count: int(1) },
   { position },
@@ -309,7 +315,10 @@ const snapshotShape = shape({
   loop: shape({
     currentTurn: int(1),
     participants: list(
-      shape({ id: participant, controller }, { ai: setup }),
+      shape(
+        { id: participant, controller, palette: one(PALETTE_IDS) },
+        { ai: setup },
+      ),
       4,
     ),
     eliminated: list(participant, 4),
@@ -322,7 +331,13 @@ const snapshotShape = shape({
     gridRows: int(1, 100),
     mapGenerationMode: one(['random', 'fixed']),
     customSeed: int(0, Number.MAX_SAFE_INTEGER),
-    aiSetup: setup,
+    aiSetups: v =>
+      Array.isArray(v) && v.length > 0 && list(setup, MAX_PARTICIPANTS - 1)(v),
+    paletteChoices: shape(
+      Object.fromEntries(
+        PARTICIPANT_IDS.map(id => [id, one([...PALETTE_IDS, 'random'])]),
+      ),
+    ),
   }),
   view: shape({
     cellSize: int(CELL_SIZE_LIMITS.min, CELL_SIZE_LIMITS.max),
@@ -440,7 +455,7 @@ const snapshotShape = shape({
     fast: bool,
     scenario: shape({
       emptyField: bool,
-      sides: v => list(side, 2)(v) && Array.isArray(v) && v.length === 2,
+      sides: v => list(side, 4)(v) && Array.isArray(v) && v.length >= 2,
     }),
     stats: participants(
       shape({
@@ -465,6 +480,30 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
     obj(value) && value.version === SAVE_VERSION,
     'Неизвестная версия сохранения',
   );
+  // Снимки 1.0 хранили настройку единственного противника.
+  if (
+    obj(value) &&
+    obj(value.rules) &&
+    !Object.hasOwn(value.rules, 'aiSetups') &&
+    Object.hasOwn(value.rules, 'aiSetup')
+  ) {
+    value.rules.aiSetups = [value.rules.aiSetup];
+    delete value.rules.aiSetup;
+  }
+  if (
+    obj(value) &&
+    obj(value.rules) &&
+    !Object.hasOwn(value.rules, 'paletteChoices')
+  ) {
+    value.rules.paletteChoices = { ...DEFAULT_PALETTES };
+  }
+  if (obj(value) && obj(value.loop) && Array.isArray(value.loop.participants)) {
+    for (const p of value.loop.participants) {
+      if (!obj(p) || Object.hasOwn(p, 'palette')) continue;
+      const id = PARTICIPANT_IDS.find(id => id === p.id);
+      if (id) p.palette = DEFAULT_PALETTES[id];
+    }
+  }
   requireValid(
     snapshotShape(value),
     'Сохранение повреждено: неверные поля, типы или диапазоны',
@@ -474,6 +513,15 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
   const { gridColumns: width, gridRows: height } = s.rules;
   const ids = s.loop.participants.map(p => p.id);
   const idSet = new Set(ids);
+  const colors = s.loop.participants.map(p => p.palette);
+  const choices = PARTICIPANT_IDS.slice(0, s.rules.aiSetups.length + 1)
+    .map(id => s.rules.paletteChoices[id])
+    .filter(id => id !== 'random');
+  requireValid(
+    new Set(colors).size === colors.length &&
+      new Set(choices).size === choices.length,
+    'Участники должны иметь разные палитры',
+  );
   const eliminated = new Set(s.loop.eliminated);
   const alive = ids.filter(id => !eliminated.has(id));
   const aliveSet = new Set(alive);

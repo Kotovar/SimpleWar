@@ -13,9 +13,16 @@ import {
   CELL_SIZE,
   CELL_SIZE_LIMITS,
   DEFAULT_AI_SETUP,
+  DEFAULT_PALETTES,
+  PALETTES,
+  PARTICIPANT_IDS,
   MAP_PRESETS,
+  MAX_PARTICIPANTS,
   TEMP_START_SEED,
   type AiSetup,
+  type PaletteChoice,
+  type PaletteChoices,
+  type ParticipantId,
   type Position,
 } from '@shared/config';
 
@@ -33,13 +40,20 @@ type SettingsState = {
 
   mapGenerationMode: MapGenerationMode;
   customSeed: number;
-  /** Профиль и сложность ИИ обычной партии (S17–S17a). */
-  aiSetup: AiSetup;
+  /** Профиль и сложность каждого противника обычной партии. */
+  aiSetups: AiSetup[];
+  paletteChoices: PaletteChoices;
 
   setMapGenerationMode: (mode: MapGenerationMode) => void;
   setCustomSeed: (seed: number) => void;
-  setAiSetup: (patch: Partial<AiSetup>) => void;
+  setAiCount: (count: number) => void;
+  setAiSetup: (index: number, patch: Partial<AiSetup>) => void;
+  /** Убирает противника; следующие сдвигаются вместе со своими цветами. */
+  removeAi: (index: number) => void;
+  setPaletteChoice: (owner: ParticipantId, choice: PaletteChoice) => void;
   setGridSize: (columns: number, rows: number) => void;
+  /** Для 3–4 участников меньшая карта переключается на Большую. */
+  fitMapTo: (participants: number) => void;
   /** Масштаб на `steps` шагов к точке экрана; по умолчанию к центру окна. */
   zoomBy: (steps: number, anchor?: Position) => void;
   resetZoom: () => void;
@@ -64,6 +78,19 @@ const clampSize = (size: number) =>
   );
 
 /** Камера в пределах мира; вызывается после любого изменения вида. */
+/** Для 3–4 участников — карта не меньше Большой (30 × 30). */
+const fitMap = (state: Draft, participants: number) => {
+  if (
+    participants > 2 &&
+    (state.gridColumns < MAP_PRESETS.large.cols ||
+      state.gridRows < MAP_PRESETS.large.rows)
+  ) {
+    state.gridColumns = MAP_PRESETS.large.cols;
+    state.gridRows = MAP_PRESETS.large.rows;
+    settle(state, state.camera);
+  }
+};
+
 const settle = (state: Draft, camera: Camera) => {
   state.camera = clampCamera(
     camera,
@@ -94,7 +121,8 @@ const DEFAULTS = {
   viewport: { width: 0, height: 0 },
   mapGenerationMode: 'random' as MapGenerationMode,
   customSeed: TEMP_START_SEED,
-  aiSetup: DEFAULT_AI_SETUP,
+  aiSetups: [DEFAULT_AI_SETUP],
+  paletteChoices: { ...DEFAULT_PALETTES },
 };
 
 let cameraFrame = 0;
@@ -113,9 +141,56 @@ export const useSettingsStore = create<SettingsState>()(
         state.customSeed = seed;
       }),
 
-    setAiSetup: patch =>
+    setAiCount: count =>
       set(state => {
-        state.aiSetup = { ...state.aiSetup, ...patch };
+        if (!Number.isInteger(count) || count < 1 || count >= MAX_PARTICIPANTS)
+          return;
+        state.aiSetups = Array.from(
+          { length: count },
+          (_, index) => state.aiSetups[index] ?? { ...DEFAULT_AI_SETUP },
+        );
+        const used = new Set<PaletteChoice>();
+        for (const id of PARTICIPANT_IDS.slice(0, count + 1)) {
+          const choice = state.paletteChoices[id];
+          if (choice === 'random') continue;
+          if (used.has(choice)) state.paletteChoices[id] = 'random';
+          else used.add(choice);
+        }
+        fitMap(state, count + 1);
+      }),
+
+    fitMapTo: participants => set(state => fitMap(state, participants)),
+
+    setAiSetup: (index, patch) =>
+      set(state => {
+        if (state.aiSetups[index])
+          state.aiSetups[index] = { ...state.aiSetups[index], ...patch };
+      }),
+
+    removeAi: index =>
+      set(state => {
+        const count = state.aiSetups.length;
+        if (count < 2 || !state.aiSetups[index]) return;
+        state.aiSetups.splice(index, 1);
+        // Цвет убранного уходит на освободившееся место: вернётся при добавлении.
+        const ids = PARTICIPANT_IDS.slice(index + 1, count + 1);
+        const choices = ids.map(id => state.paletteChoices[id]);
+        ids.forEach((id, i) => {
+          state.paletteChoices[id] = choices[(i + 1) % choices.length];
+        });
+      }),
+
+    setPaletteChoice: (owner, choice) =>
+      set(state => {
+        if (choice !== 'random' && !Object.hasOwn(PALETTES, choice)) return;
+        if (
+          choice !== 'random' &&
+          PARTICIPANT_IDS.slice(0, state.aiSetups.length + 1).some(
+            id => id !== owner && state.paletteChoices[id] === choice,
+          )
+        )
+          return;
+        state.paletteChoices[owner] = choice;
       }),
 
     zoomBy: (steps, anchor) =>

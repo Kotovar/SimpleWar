@@ -1,4 +1,11 @@
-import { BUILDINGS_NAME, OWNER_NAME, UNITS_NAME } from '@shared/config';
+import {
+  BUILDINGS_NAME,
+  getParticipantName,
+  getParticipantPalette,
+  PALETTES,
+  UNITS_NAME,
+} from '@shared/config';
+import { useGameLoopStore } from '@entities/games';
 import { GoldIcon, WoodIcon } from '@shared/ui';
 import {
   collectReport,
@@ -15,6 +22,8 @@ const total = (tally: TypeTally) =>
 /** Итог боя режима тестирования на экране конца партии. */
 export const SandboxReport = () => {
   const enabled = useSandboxStore(state => state.enabled);
+  const participants = useGameLoopStore(state => state.participants);
+  const eliminated = useGameLoopStore(state => state.eliminated);
   if (!enabled) return null;
   const report = collectReport();
 
@@ -33,8 +42,11 @@ export const SandboxReport = () => {
       </div>
       <p className={styles.Winner}>
         {report.winner
-          ? `Победитель — ${OWNER_NAME[report.winner]}`
-          : 'Ничья — победителя нет'}
+          ? `Победитель — ${getParticipantName(report.winner, participants)}`
+          : eliminated.length === participants.length
+            ? 'Ничья — победителя нет'
+            : // Человек выбыл, а несколько ИИ ещё в игре: партия кончается без победителя.
+              'Поражение — ваша сторона выбыла'}
       </p>
       <div className={styles.SideReports}>
         {report.sides.map(side => (
@@ -42,9 +54,13 @@ export const SandboxReport = () => {
             className={styles.SideReport}
             key={side.id}
             data-owner={side.id}
+            style={{
+              ['--owner' as string]:
+                PALETTES[getParticipantPalette(side.id, participants)].color,
+            }}
           >
             <header className={styles.SideHeading}>
-              <h3>{OWNER_NAME[side.id]}</h3>
+              <h3>{getParticipantName(side.id, participants)}</h3>
               <span>
                 {side.id === report.winner
                   ? 'Победа'

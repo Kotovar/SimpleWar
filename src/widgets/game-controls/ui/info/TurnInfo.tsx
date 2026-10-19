@@ -1,12 +1,15 @@
-import { OWNER_NAME } from '@shared/config';
+import { PALETTES } from '@shared/config';
+import { useParticipantPalette } from '@entities/games';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { useDebugStore } from '@entities/settings';
 import { useSandboxStore } from '@features/sandbox';
+import { TurnQueue } from './TurnQueue';
 import styles from './TurnInfo.styles.module.css';
 
 export const TurnInfo = () => {
   const { activePlayer, humanId, currentTurn } = useGameLoopSelectors();
   const isOwnTurn = activePlayer === humanId;
+  const palette = useParticipantPalette(activePlayer);
   const isDebug = useDebugStore(state => state.enabled);
   const isSandbox = useSandboxStore(state => state.enabled);
 
@@ -19,13 +22,11 @@ export const TurnInfo = () => {
       <span
         className={styles.Side}
         data-relation={isOwnTurn ? 'own' : 'hostile'}
+        style={{ ['--side-color' as string]: PALETTES[palette].color }}
       >
-        {isOwnTurn
-          ? 'Ваш ход'
-          : humanId
-            ? 'Ходит противник'
-            : `Ходят ${OWNER_NAME[activePlayer]}`}
+        {isOwnTurn ? 'Ваш ход' : `Ходят ${PALETTES[palette].name}`}
       </span>
+      <TurnQueue />
       {isSandbox && (
         <span className={styles.Debug} role='status'>
           Тест

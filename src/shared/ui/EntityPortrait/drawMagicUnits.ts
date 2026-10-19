@@ -1,4 +1,4 @@
-import { TEAM_MARKERS, type Owner } from '@shared/config';
+import { TEAM_MARKERS, type Owner, type TeamStyle } from '@shared/config';
 import { beginEntity, circle, rect, shape } from './drawEntity';
 import { OUTLINE, SKIN } from './drawFigure';
 
@@ -17,9 +17,9 @@ export const drawMage = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   // Посох выше силуэта со сферой — главный признак мага.
   rect(ctx, '#7a5634', 23.2, 5, 1.6, 20);
   ctx.save();
@@ -44,9 +44,9 @@ export const drawHealer = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   robe(ctx, '#f1ede1', team.color);
   // Крест на груди в цвете стороны.
   ctx.fillStyle = team.color;
@@ -73,9 +73,9 @@ export const drawGriffon = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   // Тень на земле отделена от тела: юнит летит.
   ctx.save();
   ctx.fillStyle = 'rgba(10, 16, 14, 0.35)';

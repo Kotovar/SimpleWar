@@ -2,6 +2,7 @@ import {
   BUILDINGS_NAME,
   UNITS_NAME,
   RESEARCH_CONFIG,
+  isParticipantId,
   type ParticipantId,
   type Position,
 } from '@shared/config';
@@ -115,15 +116,24 @@ export type SummaryItem = {
   position?: Position;
 };
 
-/** Только снимок журнала: никаких обращений к живым объектам или скрытой карте. */
+/**
+ * Только снимок журнала: никаких обращений к живым объектам или скрытой карте.
+ *
+ * @param nameOf - Имя стороны по ID: для выбывания.
+ */
 export const summaryItem = (
   entry: JournalEntry,
   player: ParticipantId,
+  nameOf: (owner: ParticipantId) => string = owner => owner,
 ): SummaryItem | null => {
   const { type, details = {} } = entry;
   const own = details.owner === player;
   let text: string;
-  if (type === 'unitDestroyed' && own) {
+  if (type === 'eliminated') {
+    if (!isParticipantId(details.participant) || details.participant === player)
+      return null;
+    text = `${nameOf(details.participant)} выбыли`;
+  } else if (type === 'unitDestroyed' && own) {
     text = `Потерян юнит: ${UNITS_NAME[details.unitType as keyof typeof UNITS_NAME] ?? 'юнит'}`;
   } else if (type === 'buildingDestroyed' && own && !details.demolished) {
     text = `Разрушено здание: ${BUILDINGS_NAME[details.buildingType as keyof typeof BUILDINGS_NAME] ?? 'здание'}`;

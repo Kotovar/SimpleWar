@@ -1,4 +1,4 @@
-import { TEAM_MARKERS, type Owner } from '@shared/config';
+import { TEAM_MARKERS, type Owner, type TeamStyle } from '@shared/config';
 
 /**
  * Подготавливает холст для отрисовки сущности в координатах 32×32.
@@ -8,8 +8,9 @@ import { TEAM_MARKERS, type Owner } from '@shared/config';
  * @param cellX - Столбец клетки.
  * @param cellY - Строка клетки.
  * @param cellSize - Размер клетки в пикселях.
- * @param owner - Сторона, определяющая цвет и форму маркера.
+ * @param owner - Слот стороны, определяющий форму маркера по умолчанию.
  * @param scale - Масштаб силуэта внутри клетки.
+ * @param team - Цвета палитры и маркер стороны.
  */
 export const beginEntity = (
   ctx: CanvasRenderingContext2D,
@@ -18,6 +19,7 @@ export const beginEntity = (
   cellSize: number,
   owner: Owner,
   scale: number,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
   ctx.save();
   ctx.translate((cellX + 0.5) * cellSize, (cellY + 0.5) * cellSize);
@@ -29,7 +31,6 @@ export const beginEntity = (
 
   // Постамент в цвете стороны: принадлежность читается по силуэту снизу,
   // а форма маркера дублирует цвет.
-  const team = TEAM_MARKERS[owner];
   ctx.fillStyle = 'rgba(16, 26, 22, 0.35)';
   ctx.beginPath();
   ctx.ellipse(16.5, 27.2, 13, 4.2, 0, 0, Math.PI * 2);

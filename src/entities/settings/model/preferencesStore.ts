@@ -32,9 +32,22 @@ type PreferencesState = {
   markTutorialStarted: () => void;
   aiPlayback: AiPlayback;
   setAiPlayback: (playback: AiPlayback) => void;
+  /**
+   * Ускорение текущей очереди врагов: до возврата хода человеку ИИ ходит
+   * без анимаций. Не сохраняется и не меняет `aiPlayback`.
+   */
+  aiRush: boolean;
+  setAiRush: (rush: boolean) => void;
   fogQuality: FogQuality;
   setFogQuality: (quality: FogQuality) => void;
 };
+
+/** Действующая скорость показа ИИ: ускорение очереди — без анимаций. */
+export const getAiPlayback = ({
+  aiPlayback,
+  aiRush,
+}: Pick<PreferencesState, 'aiPlayback' | 'aiRush'>): AiPlayback =>
+  aiRush ? 'instant' : aiPlayback;
 
 /**
  * Предпочтения игрока в интерфейсе. В браузере сохраняются положение
@@ -59,6 +72,8 @@ export const usePreferencesStore = create<PreferencesState>()(
       markTutorialStarted: () => set({ tutorialStarted: true }),
       aiPlayback: 'normal',
       setAiPlayback: aiPlayback => set({ aiPlayback }),
+      aiRush: false,
+      setAiRush: aiRush => set({ aiRush }),
       fogQuality: 'high',
       setFogQuality: fogQuality => set({ fogQuality }),
     }),

@@ -1,4 +1,4 @@
-import { TEAM_MARKERS, type Owner } from '@shared/config';
+import { TEAM_MARKERS, type Owner, type TeamStyle } from '@shared/config';
 import {
   banner,
   beginEntity,
@@ -18,9 +18,9 @@ export const drawBase = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   banner(ctx, 16, 3, team.color, 11);
   // Стена с зубцами между двумя башнями.
   rect(ctx, STONE, 8, 14, 16, 11);
@@ -49,9 +49,9 @@ export const drawBarracks = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   // Длинное казарменное здание с крышей стороны.
   rect(ctx, '#c4bea9', 4, 14, 24, 11);
   sideShadow(ctx, 24, 14.6, 3.4, 9.8);
@@ -81,9 +81,9 @@ export const drawTower = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   banner(ctx, 16, 0.5, team.color, 6);
   // Высокая сужающаяся башня с зубцами.
   shape(ctx, STONE, [9, 25, 10.5, 11, 21.5, 11, 23, 25]);

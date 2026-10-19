@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vite-plus/test';
 import type { Participant } from '@shared/config';
-import { useGameLoopStore } from './gameLoopStore';
+import { isChainedAiTurn, useGameLoopStore } from './gameLoopStore';
 
 const THREE: Participant[] = [
   { id: 'p1', controller: 'human' },
@@ -196,5 +196,40 @@ describe('useGameLoopStore', () => {
       activePlayer: 'p1',
       startError: null,
     });
+  });
+});
+
+describe('очередь врагов (M5)', () => {
+  const four: Participant[] = [
+    { id: 'p1', controller: 'human' },
+    { id: 'p2', controller: 'ai' },
+    { id: 'p3', controller: 'ai' },
+    { id: 'p4', controller: 'ai' },
+  ];
+  const chained = (
+    activePlayer: Participant['id'],
+    eliminated: Participant['id'][] = [],
+    participants = four,
+  ) => isChainedAiTurn({ participants, eliminated, activePlayer });
+
+  it('короткая пауза — только у ИИ после ИИ, по составу, а не по истории', () => {
+    expect(['p2', 'p3', 'p4'].map(id => chained(id as 'p2'))).toEqual([
+      false,
+      true,
+      true,
+    ]);
+    expect(chained('p1')).toBe(false);
+    // Выбывший пропускается: после человека снова длинная пауза.
+    expect(chained('p3', ['p2'])).toBe(false);
+  });
+
+  it('без человека — обычные паузы между ИИ', () => {
+    expect(
+      chained(
+        'p3',
+        [],
+        four.map(p => ({ ...p, controller: 'ai' })),
+      ),
+    ).toBe(false);
   });
 });

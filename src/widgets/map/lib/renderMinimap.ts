@@ -4,6 +4,8 @@ import {
   TEAM_MARKERS,
   type Cell,
   type Owner,
+  type TeamStyle,
+  type TeamStyles,
 } from '@shared/config';
 import type { MinimapLayout } from '@shared/lib';
 import type { ParticipantKnowledge } from '@entities/perceptions';
@@ -50,9 +52,10 @@ const mark = (
   owner: Owner,
   size: number,
   hollow = false,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
   const inset = (1 - size) / 2;
-  const { color } = TEAM_MARKERS[owner];
+  const { color } = team;
   if (hollow) {
     ctx.strokeStyle = color;
     ctx.lineWidth = 0.25;
@@ -77,6 +80,7 @@ export const renderMinimapMarks = (
   scene: Scene,
   layout: MinimapLayout,
   frame: { x: number; y: number; width: number; height: number },
+  teams: TeamStyles = TEAM_MARKERS,
 ) => {
   const { fog } = scene;
   ctx.save();
@@ -116,13 +120,30 @@ export const renderMinimapMarks = (
       snapshot.owner,
       Math.max(0.9, minimum),
       true,
+      teams[snapshot.owner],
     );
   }
   for (const building of Object.values(scene.buildings)) {
-    mark(ctx, building.x, building.y, building.owner, Math.max(1, minimum));
+    mark(
+      ctx,
+      building.x,
+      building.y,
+      building.owner,
+      Math.max(1, minimum),
+      false,
+      teams[building.owner],
+    );
   }
   for (const unit of Object.values(scene.units)) {
-    mark(ctx, unit.x, unit.y, unit.owner, Math.max(0.7, minimum));
+    mark(
+      ctx,
+      unit.x,
+      unit.y,
+      unit.owner,
+      Math.max(0.7, minimum),
+      false,
+      teams[unit.owner],
+    );
   }
   ctx.restore();
 

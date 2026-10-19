@@ -3,6 +3,7 @@ import {
   BUILDINGS_CONFIG,
   SANDBOX_LIMITS,
   UNITS_CONFIG,
+  MAX_PARTICIPANTS,
   type SandboxScenario,
 } from '@shared/config';
 
@@ -16,6 +17,8 @@ const isCount = (value: unknown, max: number) =>
  * @returns Текст первой ошибки или `null`, если сценарий корректен.
  */
 export const validateScenario = (scenario: SandboxScenario): string | null => {
+  if (scenario.sides.length < 2 || scenario.sides.length > MAX_PARTICIPANTS)
+    return `Сторон должно быть от 2 до ${MAX_PARTICIPANTS}.`;
   const humans = scenario.sides.filter(
     ({ controller }) => controller === 'human',
   );

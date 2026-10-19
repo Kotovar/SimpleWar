@@ -23,7 +23,7 @@ import { useKnowledgeStore } from '@entities/perceptions';
 import { useResearchStore } from '@entities/researches';
 import { useDebugStore, useSettingsStore } from '@entities/settings';
 import { useUnitsStore } from '@entities/units';
-import { initGameLoopEvents, resetGame } from '@features/game-loop';
+import { initGameLoopEvents, nextTurn, resetGame } from '@features/game-loop';
 import { useSandboxStore } from '@features/sandbox';
 import { initVisibilitySystem } from '@features/visibility';
 import { initializeGame } from '@widgets/start-game';
@@ -53,7 +53,7 @@ const reportPath = `${output}.json`;
 const progressPath = `${output}.jsonl`;
 
 type Match = {
-  group: 'main' | 'mirror' | 'difficulty' | 'three';
+  group: 'main' | 'mirror' | 'difficulty' | 'three' | 'four' | 'stub';
   seed: number;
   profiles: AiProfile[];
   difficulties: AiDifficulty[];
@@ -99,6 +99,13 @@ if (!process.env.ACCEPTANCE_SEEDS) {
         );
     }
     cases.push(match('three', seed, ['balanced', 'aggressive', 'defensive']));
+    // P01: четыре ИИ разных профилей и бездействующий человек против трёх.
+    cases.push(
+      match('four', seed, ['balanced', 'aggressive', 'defensive', 'economic']),
+    );
+    cases.push(
+      match('stub', seed, ['balanced', 'balanced', 'aggressive', 'defensive']),
+    );
   }
 }
 // Независимые процессы могут делить длительный набор, сохраняя все сценарии.
@@ -181,11 +188,16 @@ it.each(selected)(
       mapGenerationMode: 'fixed',
       customSeed: spec.seed,
     });
-    const participants: Participant[] = spec.profiles.map((profile, i) => ({
-      id: `p${i + 1}` as ParticipantId,
-      controller: 'ai',
-      ai: { profile, difficulty: spec.difficulties[i] },
-    }));
+    // В `stub` p1 — человек-заглушка: только завершает свои ходы.
+    const participants: Participant[] = spec.profiles.map((profile, i) =>
+      spec.group === 'stub' && i === 0
+        ? { id: 'p1', controller: 'human' }
+        : {
+            id: `p${i + 1}` as ParticipantId,
+            controller: 'ai',
+            ai: { profile, difficulty: spec.difficulties[i] },
+          },
+    );
     expect(initializeGame(participants)).toBe(true);
     useGameLoopStore.getState().startGame(participants);
     expect(useDebugStore.getState().usedInGame).toBe(false);
@@ -259,15 +271,21 @@ it.each(selected)(
         side.losses[type] = (side.losses[type] ?? 0) + 1;
       }
     });
+    // Вчетвером партия вдвое длиннее: 200 кругов — середина, а не тупик.
+    const limit = spec.group === 'four' ? rounds * 2 : rounds;
     let failure: unknown;
     let turns = 0;
     const started = performance.now();
     try {
       while (
         useGameLoopStore.getState().phase === 'inProgress' &&
-        useGameLoopStore.getState().currentTurn <= rounds
+        useGameLoopStore.getState().currentTurn <= limit
       ) {
         const before = useGameLoopStore.getState();
+        if (before.activePlayer === 'p1' && spec.group === 'stub') {
+          expect(nextTurn('p1').ok).toBe(true);
+          continue;
+        }
         const start = performance.now();
         // Общие хранилища и строгая очередь: одновременные ходы запрещены.
         const result = await runAITurn(before.activePlayer, {
@@ -309,7 +327,7 @@ it.each(selected)(
       if (useGameLoopStore.getState().phase !== 'gameOver')
         expect(
           useGameLoopStore.getState().currentTurn - lastLossRound,
-          `${rounds} ходов без победителя и без потерь за последние ${stallRounds} — застой`,
+          `${limit} ходов без победителя и без потерь за последние ${stallRounds} — застой`,
         ).toBeLessThanOrEqual(stallRounds);
     } catch (error) {
       failure = error;
@@ -351,6 +369,7 @@ it.each(selected)(
             : null,
       winner: useGameLoopStore.getState().winner,
       rounds: useGameLoopStore.getState().currentTurn,
+      maxRounds: limit,
       lastLossRound,
       turns,
       durationMs: performance.now() - started,

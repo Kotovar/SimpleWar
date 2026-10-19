@@ -1,6 +1,6 @@
 import { useUnitsStore } from '@entities/units';
-import { useGameLoopStore } from '@entities/games';
-import { usePreferencesStore } from '@entities/settings';
+import { useGameLoopStore, useParticipantStyles } from '@entities/games';
+import { getAiPlayback, usePreferencesStore } from '@entities/settings';
 import { useSandboxStore } from '@features/sandbox';
 import { useEffect, useMemo, useRef, type RefObject } from 'react';
 import {
@@ -94,6 +94,7 @@ export const useEntitiesLayer = ({
   strikeMarks,
 }: Props) => {
   const worldUnits = useUnitsStore(state => state.units);
+  const teams = useParticipantStyles();
   const aiTurn = useGameLoopStore(state =>
     state.participants.some(
       participant =>
@@ -103,7 +104,7 @@ export const useEntitiesLayer = ({
   );
   // Последний кадр мгновенного хода может прийти уже после возврата человеку.
   const previousAiTurn = useRef(aiTurn);
-  const playback = usePreferencesStore(state => state.aiPlayback);
+  const playback = usePreferencesStore(getAiPlayback);
   const sandboxFast = useSandboxStore(state => state.enabled && state.fast);
   // Очки есть, а шагнуть некуда (вокруг дорогой рельеф): считаем один раз
   // на смену юнитов, а не в каждом кадре анимации.
@@ -425,6 +426,9 @@ export const useEntitiesLayer = ({
       const still = prefersReducedMotion();
       const rate = sandboxFast ? 0 : AI_PLAYBACK_RATE[playback];
       const skip = (ai?: boolean) => still || (ai && rate === 0);
+      // Пропущенные треки ИИ завершаются насовсем: иначе после снятия
+      // ускорения они доиграют с прежним HP и повторным попаданием.
+      if (rate === 0) tracks.current = tracks.current.filter(({ ai }) => !ai);
       advanceTracks(tracks.current, time, track => (track.ai ? rate || 1 : 1));
       const animation = getAnimationFrame(
         tracks.current,
@@ -465,12 +469,13 @@ export const useEntitiesLayer = ({
             still ? STILL_PROGRESS : progress,
             cellSize,
             layer,
+            teams,
           ),
         );
 
       withClear(ctx, () => {
         drawEffects('under');
-        renderSnapshots(ctx, snapshots, cellSize, range);
+        renderSnapshots(ctx, snapshots, cellSize, range, teams);
         renderEntitiesLayer(
           ctx,
           shownBuildings,
@@ -483,6 +488,7 @@ export const useEntitiesLayer = ({
           glasses,
           Object.values(worldUnits),
           cocked,
+          teams,
         );
         drawEffects('over');
         animation.projectiles.forEach(({ shot, progress }) =>
@@ -525,5 +531,6 @@ export const useEntitiesLayer = ({
     worldUnits,
     playback,
     sandboxFast,
+    teams,
   ]);
 };

@@ -61,6 +61,22 @@ describe('W02/W03: занять место добычи', () => {
     ]);
   });
 
+  it('строитель, дошедший по W05, встаёт в достроенный рудник в тот же ход', () => {
+    const mine = ownBuilding('mine', 3, 3);
+    const builder = own('worker', 4, 4);
+    const far = own('worker', 7, 0);
+    const { ctx } = scene({ map, units: [builder, far], buildings: [mine] });
+    for (const worker of [builder, far])
+      ctx.turn.movedBy.set(worker.id, { ruleId: 'W05', group: 'build' });
+
+    // Назначение — не шаг: рядом стоящего можно; далёкого не двигаем.
+    expect(W02.evaluate(ctx)).toMatchObject([
+      {
+        action: { type: 'assign', workerId: builder.id, buildingId: mine.id },
+      },
+    ]);
+  });
+
   it('W02 не назначает на рудник под угрозой', () => {
     const { ctx } = scene({
       map,

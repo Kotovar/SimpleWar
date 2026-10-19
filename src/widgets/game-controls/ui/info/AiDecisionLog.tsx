@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { OWNER_NAME, type ParticipantId } from '@shared/config';
+import { getParticipantName, type ParticipantId } from '@shared/config';
 import { Select, TextField } from '@shared/ui';
 import { useJournalStore } from '@entities/journals';
 import { useGameLoopSelectors } from '@features/game-loop';
@@ -45,7 +45,10 @@ export const AiDecisionLog = () => {
           value={actor}
           options={[
             { value: 'all', label: 'Все ИИ' },
-            ...ais.map(({ id }) => ({ value: id, label: OWNER_NAME[id] })),
+            ...ais.map(({ id }) => ({
+              value: id,
+              label: getParticipantName(id, participants),
+            })),
           ]}
           onChange={setActor}
         />
@@ -82,7 +85,8 @@ export const AiDecisionLog = () => {
           >
             <div>
               <strong>
-                {OWNER_NAME[d.actor]} · ход {d.turn} · шаг {d.step} · {d.ruleId}
+                {getParticipantName(d.actor, participants)} · ход {d.turn} · шаг{' '}
+                {d.step} · {d.ruleId}
               </strong>{' '}
               {d.action} → {d.result}
             </div>

@@ -1,6 +1,7 @@
 import {
   DETAIL_LEVEL,
   TEAM_MARKERS,
+  type TeamStyle,
   type Owner,
   type Unit,
 } from '@shared/config';
@@ -103,8 +104,8 @@ export const drawRoleIcon = (
   y: number,
   cellSize: number,
   owner: Owner,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  const team = TEAM_MARKERS[owner];
   const cx = (x + 0.5) * cellSize;
   const cy = (y + 0.5) * cellSize;
   ctx.save();

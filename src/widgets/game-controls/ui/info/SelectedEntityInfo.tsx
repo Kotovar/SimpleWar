@@ -1,6 +1,6 @@
 import {
   BUILDINGS_NAME,
-  OWNER_NAME,
+  PALETTES,
   TERRAIN_NAME,
   UNITS_NAME,
   HEALING,
@@ -14,6 +14,7 @@ import { getCombatProfile, getMoveCost } from '@shared/lib';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { getOrderStopMessage } from '@features/pathfinding';
 import { useUnitsStore } from '@entities/units';
+import { useParticipantPalette } from '@entities/games';
 import { getResearchArmor, useResearchStore } from '@entities/researches';
 import { DamageBadges, DefenseBadges, FlightBadge } from './CombatBadges';
 import styles from './SelectedEntityInfo.styles.module.css';
@@ -33,10 +34,16 @@ type AttackStats = Pick<
 const EntityHeader = ({ cell, unit, building }: Props) => {
   const { humanId } = useGameLoopSelectors();
   const entity = unit ?? building;
+  const palette = useParticipantPalette(entity?.owner ?? 'p1');
   return (
     <div className={styles.EntityHeader}>
       {entity ? (
-        <EntityPortrait type={entity.type} owner={entity.owner} size={64} />
+        <EntityPortrait
+          type={entity.type}
+          owner={entity.owner}
+          palette={palette}
+          size={64}
+        />
       ) : (
         cell && <TerrainPortrait cell={cell} size={64} />
       )}
@@ -50,8 +57,7 @@ const EntityHeader = ({ cell, unit, building }: Props) => {
         </h3>
         {entity && (
           <span className={styles.Owner} data-owner={entity.owner}>
-            Владелец:{' '}
-            {entity.owner === humanId ? 'Вы' : OWNER_NAME[entity.owner]}
+            Владелец: {entity.owner === humanId ? 'Вы' : PALETTES[palette].name}
           </span>
         )}
         {cell && entity && (
@@ -286,10 +292,17 @@ const BuildingDetails = ({
 export const SelectedEntityInfo = ({ cell, unit, building }: Props) => {
   const { humanId, phase } = useGameLoopSelectors();
   const entity = unit ?? building;
+  const palette = useParticipantPalette(entity?.owner ?? 'p1');
   if (!cell && !entity) return null;
 
   return (
-    <section className={styles.EntityInfo} data-owner={entity?.owner}>
+    <section
+      className={styles.EntityInfo}
+      data-owner={entity?.owner}
+      style={
+        entity ? { ['--owner' as string]: PALETTES[palette].color } : undefined
+      }
+    >
       <EntityHeader cell={cell} unit={unit} building={building} />
       {entity && <EntityHealth entity={entity} />}
       <dl className={styles.EntityDetails}>

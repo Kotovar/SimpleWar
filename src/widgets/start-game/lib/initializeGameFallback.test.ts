@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vite-plus/test';
-import type { Cell } from '@shared/config';
+import { PARTICIPANT_IDS, type Cell, type Participant } from '@shared/config';
 import { generateMap, useMapStore } from '@entities/maps';
 import { useSettingsStore } from '@entities/settings';
 import { useBuildingsStore } from '@entities/buildings';
@@ -24,23 +24,37 @@ vi.mock('@entities/maps', async importOriginal => {
   };
 });
 
-it('uses the validated fallback after ten rejected candidates', () => {
-  resetGame();
-  useSettingsStore.setState({
-    mapGenerationMode: 'fixed',
-    customSeed: 12,
-    gridColumns: 15,
-    gridRows: 15,
-  });
-  expect(initializeGame()).toBe(true);
-  expect(generateMap).toHaveBeenCalledTimes(10);
-  expect(useMapStore.getState()).toMatchObject({
-    seed: 12,
-    usedFallback: true,
-  });
-  expect(Object.values(useBuildingsStore.getState().buildings)).toHaveLength(2);
-  expect(Object.values(useUnitsStore.getState().units)).toHaveLength(2);
-});
+it.each([2, 3, 4])(
+  'uses a symmetric validated fallback for %s participants after ten rejected candidates',
+  count => {
+    resetGame();
+    vi.mocked(generateMap).mockClear();
+    useSettingsStore.setState({
+      mapGenerationMode: 'fixed',
+      customSeed: 12,
+      gridColumns: count === 2 ? 15 : 30,
+      gridRows: count === 2 ? 15 : 30,
+    });
+    const participants = PARTICIPANT_IDS.slice(0, count).map(
+      (id): Participant => ({ id, controller: 'ai' }),
+    );
+    expect(initializeGame(participants)).toBe(true);
+    expect(generateMap).toHaveBeenCalledTimes(10);
+    expect(useMapStore.getState()).toMatchObject({
+      seed: 12,
+      usedFallback: true,
+    });
+    expect(Object.values(useBuildingsStore.getState().buildings)).toHaveLength(
+      count,
+    );
+    expect(Object.values(useUnitsStore.getState().units)).toHaveLength(count);
+    const types = useMapStore.getState().grid.map(row => row.map(c => c.type));
+    if (count > 2) {
+      expect(types).toEqual(types.map(row => [...row].reverse()));
+      expect(types).toEqual([...types].reverse());
+    }
+  },
+);
 
 it('rejects an oversized map before generating it', () => {
   resetGame();

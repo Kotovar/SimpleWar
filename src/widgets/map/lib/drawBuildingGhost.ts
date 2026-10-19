@@ -1,4 +1,4 @@
-import type { BuildingType, Owner } from '@shared/config';
+import type { BuildingType, Owner, TeamStyle } from '@shared/config';
 import { drawBuildingModel } from './drawModels';
 
 /**
@@ -17,6 +17,7 @@ export const drawBuildingGhost = (
   cellSize: number,
   owner: Owner,
   valid?: boolean,
+  team?: TeamStyle,
 ) => {
   ctx.save();
   if (valid !== undefined) {
@@ -26,6 +27,6 @@ export const drawBuildingGhost = (
     ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
   }
   ctx.globalAlpha *= valid === false ? 0.45 : 0.6;
-  drawBuildingModel(ctx, type, x, y, cellSize, owner);
+  drawBuildingModel(ctx, type, x, y, cellSize, owner, 1, team);
   ctx.restore();
 };

@@ -16,6 +16,7 @@ export const createAiMemory = (seed: number): AiMemory => ({
   tasks: [],
   nextTaskId: 1,
   operation: { phase: 'gather', target: null, rally: null, since: 0 },
+  rival: null,
   garrison: [],
   lastWorkplace: {},
   blindStrikes: {},

@@ -25,7 +25,7 @@
   --population: #8fd8a4;
   --research: #b9a4f2;
 
-  /* Цвета сторон совпадают с картой: TEAM_MARKERS в shared/config/draws. */
+  /* Цвета слотов по умолчанию в настройке тестирования баланса. */
   --team-p1: #78ccff;
   --team-p2: #ff9474;
   --team-p3: #f5d05e;

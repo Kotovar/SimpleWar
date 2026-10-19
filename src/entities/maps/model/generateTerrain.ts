@@ -182,24 +182,30 @@ const getTerrainType = (value: number, swampLevel: number): CellType => {
 };
 
 /**
- * Генерирует рельеф карты, симметричный относительно её центра.
+ * Генерирует рельеф с центральной симметрией или отражением по обеим осям.
  *
  * @param width - Ширина карты в клетках.
  * @param height - Высота карты в клетках.
  * @param random - Генератор случайных чисел.
+ * @param fourCorners - Отразить один угол во все четыре перед расчётом типов и лимита болот.
  * @returns Клетки карты без золота, индексируемые как `grid[y][x]`.
  */
 export const generateTerrain = (
   width: number,
   height: number,
   random: () => number,
+  fourCorners = false,
 ): Cell[][] => {
   const scale = (width + height) * FEATURE_SCALE;
-  const field = flattenStartCorners(
+  const centered = flattenStartCorners(
     mirrorAroundCenter(createWarpedHeight(random, scale), width, height),
     width,
     height,
   );
+  const field: HeightField = fourCorners
+    ? (x, y) =>
+        centered(Math.min(x, width - 1 - x), Math.min(y, height - 1 - y))
+    : centered;
 
   const heights = Array.from({ length: height }, (_, y) =>
     Array.from({ length: width }, (_, x) => field(x, y) * CONTRAST),

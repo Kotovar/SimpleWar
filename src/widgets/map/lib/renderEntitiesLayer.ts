@@ -1,5 +1,7 @@
 import {
   DAMAGED_BUILDING_RATIO,
+  TEAM_MARKERS,
+  type TeamStyles,
   type Building,
   type Owner,
   type Unit,
@@ -146,6 +148,7 @@ export const renderEntitiesLayer = (
   hourglasses: ReadonlyMap<string, HourglassState> = new Map(),
   orderUnits: Iterable<Unit> = Object.values(units),
   cocked: ReadonlySet<string> = new Set(),
+  teams: TeamStyles = TEAM_MARKERS,
 ) => {
   // Издалека — значки роли и владельца, вблизи — рисунок и мелкие значки.
   const detail = getDetailLevel(cellSize);
@@ -161,6 +164,8 @@ export const renderEntitiesLayer = (
       order.y,
       cellSize,
       owner,
+      undefined,
+      teams[owner],
     );
   });
 
@@ -178,11 +183,28 @@ export const renderEntitiesLayer = (
     const hourglass = hourglasses.get(id);
 
     if (detail === 'icon') {
-      drawRoleIcon(ctx, 'building', x + dx, y + dy, cellSize, owner);
+      drawRoleIcon(
+        ctx,
+        'building',
+        x + dx,
+        y + dy,
+        cellSize,
+        owner,
+        teams[owner],
+      );
       if (hourglass) drawHourglass(ctx, x + dx, y + dy, cellSize, hourglass);
       return;
     }
-    drawBuildingModel(ctx, type, x + dx, y + dy, cellSize, owner, scale);
+    drawBuildingModel(
+      ctx,
+      type,
+      x + dx,
+      y + dy,
+      cellSize,
+      owner,
+      scale,
+      teams[owner],
+    );
     if (hpRatio <= DAMAGED_BUILDING_RATIO) {
       drawDamagedBuilding(ctx, x + dx, y + dy, cellSize);
     }
@@ -215,7 +237,15 @@ export const renderEntitiesLayer = (
     const shifted = !!(unit.restMode || unit.order);
 
     if (detail === 'icon') {
-      drawRoleIcon(ctx, unit.role, x + dx, y + dy, cellSize, owner);
+      drawRoleIcon(
+        ctx,
+        unit.role,
+        x + dx,
+        y + dy,
+        cellSize,
+        owner,
+        teams[owner],
+      );
       // Издалека сдвинутые часы уходят в соседнюю клетку: хватит значка.
       if (hourglass && !shifted) {
         drawHourglass(ctx, x + dx, y + dy, cellSize, hourglass);
@@ -227,10 +257,20 @@ export const renderEntitiesLayer = (
       return;
     }
     const motion = offsets?.get(id);
-    drawUnitModel(ctx, type, x + dx, y + dy, cellSize, owner, scale, {
-      arm: motion?.arm ?? (cocked.has(id) ? 1 : 0),
-      loaded: motion?.loaded ?? true,
-    });
+    drawUnitModel(
+      ctx,
+      type,
+      x + dx,
+      y + dy,
+      cellSize,
+      owner,
+      scale,
+      {
+        arm: motion?.arm ?? (cocked.has(id) ? 1 : 0),
+        loaded: motion?.loaded ?? true,
+      },
+      teams[owner],
+    );
     drawHpBar(ctx, x + dx, y + dy, cellSize, hpRatio);
     if (hourglass) {
       drawHourglass(ctx, x + dx, y + dy, cellSize, hourglass, shifted);

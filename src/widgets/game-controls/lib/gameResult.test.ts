@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import { START_RESOURCES } from '@shared/config';
 import { createUnit } from '@entities/units';
 import { createBuilding } from '@entities/buildings';
-import { getPlayerResult } from './gameResult';
+import { getPlayerResult, getStandings } from './gameResult';
 
 const world = (): Parameters<typeof getPlayerResult>[1] => {
   const worker = createUnit('worker', 1, 1, 'p1', false)!;
@@ -59,5 +59,30 @@ describe('итоги игрока', () => {
     data.completed.p1 = ['engineering', 'artel'];
     data.resources.p1.gold = 0;
     expect(result).toMatchObject({ gold: 99, research: ['engineering'] });
+  });
+});
+
+describe('места сторон', () => {
+  const four = [
+    { id: 'p1' },
+    { id: 'p2' },
+    { id: 'p3' },
+    { id: 'p4' },
+  ] as const;
+
+  it('победитель первый, выбывшие — от последнего к первому', () => {
+    expect(getStandings(four, ['p3', 'p1', 'p4'], 'p2', () => 0)).toEqual([
+      { id: 'p2', place: 1, out: false },
+      { id: 'p4', place: 2, out: true },
+      { id: 'p1', place: 3, out: true },
+      { id: 'p3', place: 4, out: true },
+    ]);
+  });
+
+  it('после поражения человека оставшиеся в игре — по числу объектов', () => {
+    const size = { p1: 0, p2: 3, p3: 9, p4: 5 } as const;
+    expect(
+      getStandings(four, ['p1'], null, id => size[id]).map(({ id }) => id),
+    ).toEqual(['p3', 'p4', 'p2', 'p1']);
   });
 });

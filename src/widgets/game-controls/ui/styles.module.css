@@ -141,14 +141,228 @@
   }
 }
 
-.AiGroup {
+/* Стороны обычной партии: четыре места, как в лобби. */
+.Roster {
   display: grid;
-  grid-auto-columns: minmax(0, 1fr);
-  grid-auto-flow: column;
-  width: 100%;
+  /* Места одной высоты (по самому высокому): число ИИ не меняет блок. */
+  grid-template-rows: auto;
+  grid-auto-rows: 1fr;
+  gap: 6px;
+}
 
-  & .ToggleButton {
-    gap: 4px;
+.RosterHead,
+.SideRow {
+  display: grid;
+  grid-template-columns:
+    5rem minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 0.85fr)
+    6rem 28px;
+  align-items: center;
+  gap: 8px;
+}
+
+.RosterHead {
+  padding-inline: 9px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.SideRow,
+.AddSide,
+.EmptySide {
+  box-sizing: border-box;
+  min-height: 50px;
+  border-radius: var(--radius);
+}
+
+.SideRow {
+  padding: 6px 8px;
+  background-color: var(--surface-sunken);
+  border: 1px solid var(--border);
+  animation: side-in 0.25s ease-out;
+
+  & select {
+    width: 100%;
+    min-width: 0;
+    font-size: 0.85rem;
+  }
+
+  &[data-human] {
+    border-color: rgb(201 164 98 / 0.35);
+  }
+}
+
+@keyframes side-in {
+  from {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+}
+
+.SideBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.RandomPortrait {
+  display: grid;
+  place-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background:
+    radial-gradient(circle, rgb(20 25 31 / 0.85) 45%, transparent 72%),
+    conic-gradient(#78ccff, #ff9474, #f5d05e, #9cdd83, #78ccff);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+.SideNote {
+  grid-column: span 2;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.SideStock {
+  display: flex;
+  gap: 10px;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.AddSide {
+  border: 1px dashed var(--border-strong);
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background-color 0.15s;
+
+  &:hover {
+    border-color: var(--frame-strong);
+    background-color: rgb(201 164 98 / 0.08);
+    color: var(--text);
+  }
+}
+
+.EmptySide {
+  border: 1px dashed rgb(255 255 255 / 0.06);
+}
+
+.RemoveSide {
+  display: grid;
+  place-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: rgb(255 138 114 / 0.4);
+    background-color: rgb(212 97 76 / 0.12);
+    color: #ffc2b4;
+  }
+
+  &:disabled {
+    visibility: hidden;
+  }
+}
+
+/* Две строки на сторону: «сторона, характер, ×» и «цвет, сложность, запасы». */
+@media (max-width: 760px) {
+  .RosterHead,
+  .SideNote {
+    display: none;
+  }
+
+  .SideRow {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr) 3.5rem 28px;
+    gap: 6px;
+
+    & select {
+      padding-inline: 8px;
+      font-size: 0.8rem;
+    }
+
+    & select:nth-of-type(1) {
+      grid-area: 2 / 1;
+    }
+
+    & select:nth-of-type(2) {
+      grid-area: 1 / 2 / 2 / 4;
+    }
+
+    & select:nth-of-type(3) {
+      grid-area: 2 / 2;
+    }
+
+    &[data-human] select {
+      grid-area: 1 / 2;
+    }
+  }
+
+  .SideStock {
+    grid-area: 2 / 3 / 3 / 5;
+    justify-self: end;
+    gap: 8px;
+  }
+
+  .SideRow[data-human] .SideStock {
+    grid-area: 1 / 3 / 2 / 5;
+  }
+
+  .RemoveSide {
+    grid-area: 1 / 4;
+  }
+}
+
+/* Совсем узко: «сторона, запасы, ×», «цвет, сложность», «характер». */
+@media (max-width: 400px) {
+  .SideRow {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr) 28px;
+
+    & select:nth-of-type(1) {
+      grid-area: 2 / 1;
+    }
+
+    & select:nth-of-type(2) {
+      grid-area: 3 / 1 / 4 / -1;
+    }
+
+    & select:nth-of-type(3) {
+      grid-area: 2 / 2 / 3 / -1;
+    }
+
+    &[data-human] select {
+      grid-area: 2 / 1 / 3 / -1;
+    }
+  }
+
+  .SideStock,
+  .SideRow[data-human] .SideStock {
+    grid-area: 1 / 2;
+  }
+
+  .RemoveSide {
+    grid-area: 1 / 3;
   }
 }
 
@@ -167,7 +381,12 @@
     color 0.15s,
     border-color 0.15s;
 
-  &:hover {
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
     background-color: var(--surface-hover);
     border-color: var(--border-strong);
   }
@@ -504,22 +723,28 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 
   & .ToggleButton {
-    align-items: flex-start;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
     text-align: left;
-    gap: 4px;
     padding: 10px 14px;
+  }
+
+  & .ToggleButton > span {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 }
 
 @media (max-width: 520px) {
-  .SizeGroup,
-  .ModeGroup {
+  .SizeGroup {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .AiGroup {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-auto-flow: row;
+  /* Иконка и текст в ряд не помещаются в две колонки. */
+  .ModeGroup {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .ToggleButton {
@@ -527,14 +752,15 @@
   }
 }
 
-@media (min-width: 1000px) {
-  .SetupMenu[data-sandbox='true'] {
+/* Две колонки — только когда строке стороны хватает ширины на списки. */
+@media (min-width: 1100px) {
+  .SetupMenu {
     display: grid;
     grid-template-columns: 300px minmax(0, 1fr);
     gap: 16px 28px;
     align-items: start;
 
-    /* Порядок шагов: режим, карта, составы сторон, старт. */
+    /* Порядок шагов: режим, карта, стороны, старт. */
     & > .Section:first-of-type,
     & > .Section:last-of-type {
       grid-column: 1 / -1;
@@ -549,6 +775,150 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
+}
+
+/*
+ * Списки меню — настраиваемый select (Chromium 135+): игровая панель
+ * вариантов, образцы цветов, отметка выбранного. Где он не поддерживается,
+ * остаётся системный список из Form.
+ * Вложенность (&) не выражает псевдоэлементы, поэтому селекторы плоские.
+ */
+@supports (appearance: base-select) {
+  .SetupMenu select,
+  .SetupMenu select::picker(select) {
+    appearance: base-select;
+  }
+
+  /* Длинное значение обрезается, а не налезает на соседнее поле. */
+  .SetupMenu select {
+    align-items: center;
+    overflow: hidden;
+    padding-right: 10px;
+    background-image: none;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    transition:
+      border-color 0.15s,
+      background-color 0.15s;
+  }
+
+  .SetupMenu select:hover:not(:disabled),
+  .SetupMenu select:open {
+    border-color: var(--frame-strong);
+  }
+
+  .SetupMenu select:open {
+    background-color: var(--surface-hover);
+  }
+
+  /* Та же стрелка, что у системного списка, но цветом текста. */
+  .SetupMenu select::picker-icon {
+    content: '';
+    flex-shrink: 0;
+    width: 12px;
+    height: 8px;
+    background-color: var(--text-muted);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+    transition:
+      rotate 0.2s,
+      background-color 0.15s;
+  }
+
+  .SetupMenu select:open::picker-icon {
+    rotate: 180deg;
+    background-color: var(--frame-strong);
+  }
+
+  .SetupMenu select::picker(select) {
+    min-width: anchor-size(width);
+    /* Вниз, если помещается; вверх — только при нехватке места. */
+    position-try-order: normal;
+    max-height: min(320px, 50dvh);
+    margin-block: 4px;
+    padding: 4px;
+    border: 1px solid var(--frame);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, rgb(36 43 52), rgb(24 29 36));
+    box-shadow:
+      0 1px 0 rgb(255 236 200 / 0.08) inset,
+      0 12px 32px rgb(0 0 0 / 0.55);
+    color: var(--text);
+    opacity: 0;
+    translate: 0 -4px;
+    transition:
+      opacity 0.14s,
+      translate 0.14s,
+      overlay 0.14s allow-discrete,
+      display 0.14s allow-discrete;
+  }
+
+  .SetupMenu select:open::picker(select) {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  @starting-style {
+    .SetupMenu select:open::picker(select) {
+      opacity: 0;
+      translate: 0 -4px;
+    }
+  }
+
+  .SetupMenu select option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .SetupMenu select option:hover:not(:disabled),
+  .SetupMenu select option:focus-visible {
+    background-color: var(--surface-hover);
+    outline: none;
+  }
+
+  .SetupMenu select option:checked {
+    background-color: rgb(201 164 98 / 0.16);
+    font-weight: 600;
+  }
+
+  .SetupMenu select option:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .SetupMenu select option::checkmark {
+    order: 1;
+    margin-left: auto;
+    color: var(--frame-strong);
+  }
+
+  .SetupMenu select option[style]::before {
+    content: '';
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--swatch);
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.4);
+  }
+}
+
+/* Старт всегда на виду: прилипает к низу окна, пока меню не помещается. */
+.StartBar {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin: 0 calc(-1 * var(--setup-pad, 0px)) calc(-1 * var(--setup-pad, 0px));
+  padding: 12px var(--setup-pad, 0px) var(--setup-pad, 0px);
+  border-radius: 0 0 16px 16px;
+  background-color: rgb(22 27 33);
 }
 
 /* Номер шага главного меню. */

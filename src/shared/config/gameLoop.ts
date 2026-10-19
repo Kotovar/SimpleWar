@@ -1,6 +1,7 @@
 import { DEFAULT_AI_SETUP, type AiSetup } from './aiProfiles';
+import type { PaletteId } from './palettes';
 
-/** ID слотов участников. Слот задаёт цвет и маркер стороны, а не способ управления. */
+/** ID слотов участников. Слот задаёт маркер; палитра и управление задаются отдельно. */
 export const PARTICIPANT_IDS = ['p1', 'p2', 'p3', 'p4'] as const;
 
 /** ID участника партии. */
@@ -18,9 +19,11 @@ export type Participant = {
   controller: Controller;
   /** Профиль и сложность ИИ; у человека нет. */
   ai?: AiSetup;
+  /** Закреплённая на партию палитра; отсутствие означает прежний цвет слота. */
+  palette?: PaletteId;
 };
 
-/** Состав обычной партии: человек против одного ИИ. */
+/** Состав партии по умолчанию: человек против одного ИИ. */
 export const DEFAULT_PARTICIPANTS: Participant[] = [
   { id: 'p1', controller: 'human' },
   { id: 'p2', controller: 'ai', ai: DEFAULT_AI_SETUP },
@@ -34,6 +37,9 @@ export type Phase = 'setup' | 'deployment' | 'inProgress' | 'gameOver';
  * поэтому двойной клик не завершает следующий ход человека.
  */
 export const AI_TURN_DELAY_MS = 600;
+
+/** Пауза между ходами ИИ подряд, мс: человек ждёт всю очередь врагов. */
+export const AI_CHAIN_DELAY_MS = 150;
 
 /**
  * Перерыв между порциями хода ИИ, мс: браузер успевает отрисовать кадр.

@@ -1,4 +1,4 @@
-import { TEAM_MARKERS, type Owner } from '@shared/config';
+import { TEAM_MARKERS, type Owner, type TeamStyle } from '@shared/config';
 import {
   beginEntity,
   circle,
@@ -16,9 +16,9 @@ export const drawGoldMine = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   // Скала со входом в штольню.
   shape(ctx, '#8b918c', [2.5, 25, 5, 15, 11, 8.5, 20, 9, 27, 15, 29.5, 25]);
   shape(ctx, '#b6bcae', [5, 15, 11, 8.5, 20, 9, 15, 13.5]);
@@ -42,9 +42,9 @@ export const drawSawmill = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   // Дощатый сарай под крышей стороны.
   rect(ctx, '#b88b58', 4.5, 14, 16, 11);
   ctx.strokeStyle = 'rgba(60, 40, 24, 0.45)';
@@ -87,9 +87,9 @@ export const drawFarm = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   // Поле пшеницы перед амбаром.
   shape(ctx, '#d9b24e', [2.5, 25, 4.5, 18.5, 14, 18.5, 13, 25]);
   ctx.strokeStyle = '#a57f2a';

@@ -1,16 +1,71 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { getParticipantGenitive } from '@shared/config';
 import { useGameLoopStore } from '@entities/games';
+import { getAiPlayback, usePreferencesStore } from '@entities/settings';
+import { useGameLoopSelectors } from '@features/game-loop';
+import { isEnemyTurn } from '../../lib/enemyTurn';
+import { SideMark } from './SideMark';
 import styles from './AiTurnBanner.styles.module.css';
 
 const MESSAGE = { ai: 'Ход противника', human: 'Ваш ход' };
 
 /**
- * Сообщает о смене хода: ходит противник или снова игрок. Начало своего хода
- * дублирует звуковой сигнал, поэтому видно и без звука.
+ * Один индикатор на всю очередь врагов: маркер и «Ход Жёлтых». От ИИ к ИИ
+ * меняется только сторона, общее время не сбрасывается; скрывается при
+ * возврате хода человеку или конце партии.
+ */
+const EnemyTurn = () => {
+  const { activePlayer, participants } = useGameLoopSelectors();
+  const active = useGameLoopStore(isEnemyTurn);
+  const instant = usePreferencesStore(
+    state => getAiPlayback(state) === 'instant',
+  );
+  const rush = usePreferencesStore(state => state.setAiRush);
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    if (!active) return;
+    const start = Date.now();
+    const timer = setInterval(
+      () => setElapsed(Math.floor((Date.now() - start) / 1000)),
+      1000,
+    );
+    return () => {
+      clearInterval(timer);
+      setElapsed(0);
+    };
+  }, [active]);
+
+  if (!active) return null;
+  return (
+    <div className={styles.Enemy}>
+      <span className={styles.Spinner} />
+      <SideMark owner={activePlayer} participants={participants} />
+      <span role='status'>
+        Ход {getParticipantGenitive(activePlayer, participants)}
+      </span>
+      <span className={styles.Elapsed}>{elapsed} с</span>
+      {!instant && (
+        <button
+          type='button'
+          className={styles.Rush}
+          title='Остаток хода врагов — без анимаций'
+          onClick={() => rush(true)}
+        >
+          Ускорить »
+        </button>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Сообщает о смене хода: постоянный индикатор, пока ходят враги, и лента
+ * «Ваш ход» с номером хода. Начало своего хода дублирует звуковой сигнал,
+ * поэтому видно и без звука.
  *
- * Ход ИИ отрабатывает в текущей стадии мгновенно, поэтому баннер живёт на своей CSS-анимации:
- * подписка на стор перезапускает её при каждом переходе хода к ИИ, и смена
- * стороны не проходит незамеченной.
+ * Лента живёт на своей CSS-анимации: подписка на стор перезапускает её при
+ * каждом возврате хода человеку.
  */
 export const AiTurnBanner = () => {
   const banner = useRef<HTMLDivElement>(null);
@@ -24,7 +79,15 @@ export const AiTurnBanner = () => {
         p => p.id === state.activePlayer,
       )?.controller;
       const element = banner.current;
+      // Ход ИИ при человеке за экраном показывает EnemyTurn.
+      const human = state.participants.some(p => p.controller === 'human');
       if (controller !== 'ai' && controller !== 'human') return;
+      if (controller === 'ai' && human) {
+        // Быстро завершённый свой ход: лента «Ваш ход» не висит поверх врагов.
+        element?.classList.remove(styles.Visible);
+        if (live.current) live.current.textContent = '';
+        return;
+      }
       if (!element || state.phase !== 'inProgress') return;
       const kind = controller === 'ai' ? 'ai' : 'human';
       element.dataset.kind = kind;
@@ -52,6 +115,7 @@ export const AiTurnBanner = () => {
 
   return (
     <div className={styles.Overlay}>
+      <EnemyTurn />
       <div
         ref={banner}
         className={styles.Banner}

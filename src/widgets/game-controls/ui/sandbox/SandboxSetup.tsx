@@ -1,6 +1,9 @@
 import { useState } from 'react';
+import clsx from 'clsx';
 import {
   BUILDINGS_NAME,
+  MAX_PARTICIPANTS,
+  SANDBOX_NEW_SIDE,
   OWNER_NAME,
   PARTICIPANT_IDS,
   SANDBOX_LIMITS,
@@ -11,7 +14,9 @@ import {
   type UnitType,
 } from '@shared/config';
 import { Checkbox, NumberField } from '@shared/ui';
+import { useSettingsStore } from '@entities/settings';
 import { useSandboxStore } from '@features/sandbox';
+import controls from '../styles.module.css';
 import { SideControls } from './SideControls';
 import styles from './Sandbox.styles.module.css';
 
@@ -73,15 +78,43 @@ export const SandboxSetup = () => {
   const [category, setCategory] = useState('Юниты');
   const scenario = useSandboxStore(state => state.scenario);
   const setScenario = useSandboxStore(state => state.setScenario);
+  const fitMapTo = useSettingsStore(state => state.fitMapTo);
 
   const updateSide = (index: number, side: SandboxSide) => {
-    const sides = [...scenario.sides] as SandboxScenario['sides'];
+    const sides = [...scenario.sides];
     sides[index] = side;
     setScenario({ ...scenario, sides });
+  };
+  // Убранные стороны не запоминаются: новая — заготовка ИИ.
+  const setCount = (count: number) => {
+    const sides: SandboxScenario['sides'] = Array.from(
+      { length: count },
+      (_, index) => scenario.sides[index] ?? structuredClone(SANDBOX_NEW_SIDE),
+    );
+    setScenario({ ...scenario, sides });
+    fitMapTo(count);
   };
 
   return (
     <div className={styles.Setup}>
+      <div className={styles.Count} role='group' aria-label='Число сторон'>
+        <span className={controls.Label}>Сторон</span>
+        {Array.from({ length: MAX_PARTICIPANTS - 1 }, (_, i) => i + 2).map(
+          count => (
+            <button
+              key={count}
+              type='button'
+              className={clsx(controls.ToggleButton, {
+                [controls.Active]: scenario.sides.length === count,
+              })}
+              aria-pressed={scenario.sides.length === count}
+              onClick={() => setCount(count)}
+            >
+              {count}
+            </button>
+          ),
+        )}
+      </div>
       <Checkbox
         className={styles.Check}
         checked={scenario.emptyField}

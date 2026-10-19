@@ -31,7 +31,7 @@ export const BUILDINGS_NAME = {
   palisade: 'Частокол',
 } satisfies Record<BuildingType, string>;
 
-/** Игровые названия сторон по цвету слота. */
+/** Названия сторон по умолчанию для настройки режима тестирования. */
 export const OWNER_NAME = {
   p1: 'Синие',
   p2: 'Красные',

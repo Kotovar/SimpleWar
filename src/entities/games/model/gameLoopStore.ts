@@ -47,6 +47,27 @@ export const getAliveParticipants = ({
   return participants.filter(({ id }) => !out.has(id));
 };
 
+/**
+ * Ход ИИ продолжает очередь врагов: в партии с человеком перед ним по
+ * порядку ходит не человек. Считается по составу, а не по истории
+ * переходов — пауза, загрузка и повторный рендер дают тот же ответ.
+ */
+export const isChainedAiTurn = ({
+  participants,
+  eliminated,
+  activePlayer,
+}: Pick<
+  GameLoopStoreState,
+  'participants' | 'eliminated' | 'activePlayer'
+>) => {
+  if (!participants.some(({ controller }) => controller === 'human'))
+    return false;
+  const alive = getAliveParticipants({ participants, eliminated });
+  const index = alive.findIndex(({ id }) => id === activePlayer);
+  if (index === -1 || alive[index].controller !== 'ai') return false;
+  return alive.at(index - 1)?.controller === 'ai';
+};
+
 export const useGameLoopStore = create<GameLoopStoreState>()(
   withDevtools('gameLoop', set => {
     /** Передаёт ход следующему невыбывшему; обход начала списка завершает круг. */

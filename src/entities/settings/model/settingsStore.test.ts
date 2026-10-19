@@ -9,6 +9,7 @@ import {
 import {
   CELL_SIZE,
   CELL_SIZE_LIMITS,
+  DEFAULT_AI_SETUP,
   MAP_PRESETS,
   TEMP_START_SEED,
 } from '@shared/config';
@@ -23,6 +24,131 @@ const zoomTo = (edge: 'min' | 'max') => {
 
   return useSettingsStore.getState().cellSize;
 };
+
+describe('противники обычной партии', () => {
+  const store = () => useSettingsStore.getState();
+  beforeEach(() => store().resetStore());
+
+  it('сохраняет отдельный ручной или случайный цвет каждой стороны', () => {
+    store().setAiCount(3);
+    store().setPaletteChoice('p1', 'pink');
+    store().setPaletteChoice('p2', 'green');
+    store().setPaletteChoice('p3', 'random');
+    expect(store().paletteChoices).toEqual({
+      p1: 'pink',
+      p2: 'green',
+      p3: 'random',
+      p4: 'purple',
+    });
+    store().setPaletteChoice('p4', 'green');
+    expect(store().paletteChoices.p4).toBe('purple');
+    store().resetStore();
+    expect(store().paletteChoices).toEqual({
+      p1: 'blue',
+      p2: 'red',
+      p3: 'yellow',
+      p4: 'purple',
+    });
+  });
+
+  it('новому ИИ назначает случайный выбор, если его цвет уже занят человеком', () => {
+    store().setPaletteChoice('p1', 'yellow');
+    store().setAiCount(2);
+    expect(store().paletteChoices).toMatchObject({
+      p1: 'yellow',
+      p2: 'red',
+      p3: 'random',
+    });
+  });
+
+  it('при повторном добавлении сохраняет цвет ИИ, если он ещё свободен', () => {
+    store().setAiCount(3);
+    store().setPaletteChoice('p3', 'green');
+    store().setAiSetup(1, { difficulty: 'hard' });
+    store().setAiCount(1);
+    store().setAiCount(2);
+    expect(store().paletteChoices.p3).toBe('green');
+    expect(store().aiSetups[1]).toEqual(DEFAULT_AI_SETUP);
+    store().setAiCount(1);
+    store().setPaletteChoice('p1', 'green');
+    store().setAiCount(2);
+    expect(store().paletteChoices.p1).toBe('green');
+    expect(store().paletteChoices.p3).toBe('random');
+  });
+
+  it('убирает противника из середины, следующие сдвигаются со своими цветами', () => {
+    store().setAiCount(3);
+    store().setAiSetup(1, { difficulty: 'hard' });
+    store().setAiSetup(2, { profile: 'defensive' });
+    store().setPaletteChoice('p4', 'green');
+    store().removeAi(1);
+    expect(store().aiSetups).toEqual([
+      DEFAULT_AI_SETUP,
+      { profile: 'defensive', difficulty: 'normal' },
+    ]);
+    expect(store().paletteChoices).toEqual({
+      p1: 'blue',
+      p2: 'red',
+      p3: 'green',
+      p4: 'yellow',
+    });
+    store().removeAi(0);
+    store().removeAi(0);
+    expect(store().aiSetups).toEqual([
+      { profile: 'defensive', difficulty: 'normal' },
+    ]);
+    expect(store().paletteChoices.p2).toBe('green');
+  });
+
+  it('по умолчанию один сбалансированный противник обычной сложности', () => {
+    expect(store().aiSetups).toEqual([DEFAULT_AI_SETUP]);
+  });
+
+  it('добавляет противников с настройками по умолчанию и меняет их независимо', () => {
+    store().setAiSetup(0, { profile: 'economic', difficulty: 'hard' });
+    store().setAiCount(3);
+    store().setAiSetup(1, { difficulty: 'easy' });
+    store().setAiSetup(2, { profile: 'defensive' });
+    expect(store().aiSetups).toEqual([
+      { profile: 'economic', difficulty: 'hard' },
+      { profile: 'balanced', difficulty: 'easy' },
+      { profile: 'defensive', difficulty: 'normal' },
+    ]);
+    store().setAiCount(1);
+    expect(store().aiSetups).toEqual([
+      { profile: 'economic', difficulty: 'hard' },
+    ]);
+    store().resetStore();
+    expect(store().aiSetups).toEqual([DEFAULT_AI_SETUP]);
+  });
+
+  it.each([0, 4, -1, 1.5, NaN, Infinity])(
+    'отклоняет число противников %s',
+    count => {
+      store().setAiCount(count);
+      expect(store().aiSetups).toEqual([DEFAULT_AI_SETUP]);
+    },
+  );
+
+  it.each([2, 3])('переключает малую карту на Большую для %s ИИ', count => {
+    store().setGridSize(24, 24);
+    store().setAiCount(count);
+    expect(store()).toMatchObject({ gridColumns: 30, gridRows: 30 });
+  });
+
+  it('сохраняет большую карту и не уменьшает её после удаления противников', () => {
+    store().setGridSize(100, 60);
+    store().setAiCount(3);
+    store().setAiCount(1);
+    expect(store()).toMatchObject({ gridColumns: 100, gridRows: 60 });
+  });
+
+  it('одному противнику оставляет малую карту', () => {
+    store().setGridSize(15, 15);
+    store().setAiCount(1);
+    expect(store()).toMatchObject({ gridColumns: 15, gridRows: 15 });
+  });
+});
 
 describe('масштаб карты', () => {
   beforeEach(() => {

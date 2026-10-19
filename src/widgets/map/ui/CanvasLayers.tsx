@@ -4,7 +4,7 @@ import type { Owner, Position, UnitOrder } from '@shared/config';
 import { audio, collectStrikeMarks } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
-import { useGameLoopStore } from '@entities/games';
+import { useGameLoopStore, useParticipantStyles } from '@entities/games';
 import { usePreferencesStore } from '@entities/settings';
 import { useSelectionStore } from '@features/selection';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
@@ -42,6 +42,7 @@ type Props = {
 };
 
 export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
+  const teams = useParticipantStyles();
   const terrainRef = useRef<HTMLCanvasElement>(null);
   const unitsRef = useRef<HTMLCanvasElement>(null);
   const fogRef = useRef<HTMLCanvasElement>(null);
@@ -280,6 +281,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     return animatePulse(!!selection, pulse =>
       withClear(ctx, () =>
         renderSelectionLayer(ctx, buildings, units, selection, cellSize, {
+          teams,
           hover,
           path: hoverPath,
           attackableTargets,
@@ -296,6 +298,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     );
   }, [
     attackableTargets,
+    teams,
     buildings,
     ghost,
     healTargets,

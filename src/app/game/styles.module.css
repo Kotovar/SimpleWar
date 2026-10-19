@@ -29,8 +29,9 @@
   position: relative;
   box-sizing: border-box;
   width: min(860px, calc(100% - 24px));
-  margin: clamp(16px, 6vh, 64px) auto 16px;
-  padding: clamp(16px, 3vw, 24px);
+  margin: clamp(16px, 5vh, 56px) auto 16px;
+  --setup-pad: clamp(16px, 3vw, 24px);
+  padding: var(--setup-pad);
   background: linear-gradient(
     180deg,
     rgb(33 39 47 / 0.9),
@@ -52,7 +53,7 @@
   }
 }
 
-/* Фон меню: живая карта под затемнением, медленно плывёт. */
+/* Фон меню: карта шире окна медленно проплывает от края до края. */
 .Backdrop {
   position: fixed;
   inset: 0;
@@ -60,13 +61,15 @@
   overflow: hidden;
   pointer-events: none;
 
+  /* Размах — весь запас канваса за окном: 100vw − 100% ≤ 0. */
   & > canvas {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    translate: -50% -50%;
+    top: 0;
+    left: 0;
     filter: saturate(0.85) brightness(0.62);
-    animation: drift 70s ease-in-out infinite alternate;
+    animation:
+      pan-x 90s ease-in-out infinite alternate,
+      pan-y 57s ease-in-out infinite alternate;
   }
 
   &::after {
@@ -83,17 +86,20 @@
   }
 }
 
-@keyframes drift {
-  from {
-    transform: scale(1.04) translate(-2%, -1%);
-  }
+@keyframes pan-x {
   to {
-    transform: scale(1.1) translate(2%, 1.5%);
+    translate: calc(100vw - 100%) 0;
   }
 }
 
-@media (min-width: 1000px) {
-  .Setup:has([data-sandbox='true']) {
+@keyframes pan-y {
+  to {
+    transform: translateY(calc(100vh - 100%));
+  }
+}
+
+@media (min-width: 1100px) {
+  .Setup:has([data-sandbox]) {
     width: min(1080px, calc(100% - 48px));
   }
 }

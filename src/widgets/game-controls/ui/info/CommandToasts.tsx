@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
-import { RESEARCH_CONFIG, type ResearchType } from '@shared/config';
+import {
+  getParticipantName,
+  isParticipantId,
+  RESEARCH_CONFIG,
+  type Participant,
+  type ResearchType,
+} from '@shared/config';
 import { audio, pluralRu } from '@shared/lib';
 import {
   getPlayerErrors,
@@ -27,7 +33,21 @@ type Toast = {
 };
 
 /** Текст уведомления по событию журнала; `null` — событие не уведомляет. */
-const toNotice = ({ id, type, details }: JournalEntry): Toast | null => {
+const toNotice = (
+  { id, type, details }: JournalEntry,
+  participants: readonly Participant[],
+): Toast | null => {
+  if (type === 'eliminated') {
+    const owner = details?.participant;
+    if (!isParticipantId(owner)) return null;
+    return {
+      key: `n${id}`,
+      id,
+      kind: 'eliminated',
+      mark: '✕',
+      message: `${getParticipantName(owner, participants)} выбыли`,
+    };
+  }
   if (type === 'researchDone') {
     const research = details?.research as ResearchType | undefined;
     const name = research ? RESEARCH_CONFIG[research]?.name : undefined;
@@ -68,7 +88,7 @@ const toNotice = ({ id, type, details }: JournalEntry): Toast | null => {
  * журнал, а с ним и сообщения.
  */
 export const CommandToasts = () => {
-  const { humanId } = useGameLoopSelectors();
+  const { humanId, participants } = useGameLoopSelectors();
   const errors = useJournalStore(state => state.errors);
   const entries = useJournalStore(state => state.entries);
   const debug = useDebugStore(state => state.enabled);
@@ -89,7 +109,13 @@ export const CommandToasts = () => {
     : [];
   const notices = humanId
     ? getVisibleRecords(entries, humanId)
-        .flatMap(entry => toNotice(entry) ?? [])
+        // Своё выбывание завершает партию: его показывает итог.
+        .filter(
+          entry =>
+            entry.type !== 'eliminated' ||
+            entry.details?.participant !== humanId,
+        )
+        .flatMap(entry => toNotice(entry, participants) ?? [])
         .slice(-NOTICE_LIMIT)
     : [];
 

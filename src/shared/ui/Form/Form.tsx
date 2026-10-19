@@ -45,13 +45,20 @@ type SelectProps<T extends string> = Omit<
   'value' | 'onChange'
 > & {
   value: T;
-  options: readonly { value: T; label: string }[];
+  options: readonly {
+    value: T;
+    label: string;
+    disabled?: boolean;
+    /** Цвет образца в списке; виден, где список настраивается стилями. */
+    swatch?: string;
+  }[];
   onChange: (value: T) => void;
 };
 
 /**
- * Выпадающий список в стиле игры. Список вариантов — системный: так он
- * остаётся доступным с клавиатуры и на сенсорных экранах.
+ * Выпадающий список в стиле игры. Это обычный `<select>`: клавиатура и
+ * сенсорные экраны работают как у системного. Вид списка вариантов можно
+ * настроить стилями (`appearance: base-select`), как в главном меню.
  */
 export const Select = <T extends string>({
   value,
@@ -67,7 +74,14 @@ export const Select = <T extends string>({
     onChange={event => onChange(event.target.value as T)}
   >
     {options.map(option => (
-      <option key={option.value} value={option.value}>
+      <option
+        key={option.value}
+        value={option.value}
+        disabled={option.disabled}
+        style={
+          option.swatch ? { ['--swatch' as string]: option.swatch } : undefined
+        }
+      >
         {option.label}
       </option>
     ))}

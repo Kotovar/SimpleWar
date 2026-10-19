@@ -1,4 +1,4 @@
-import { TEAM_MARKERS, type Owner } from '@shared/config';
+import { TEAM_MARKERS, type Owner, type TeamStyle } from '@shared/config';
 import { beginEntity, circle, rect, shape } from './drawEntity';
 import { legs, OUTLINE, SKIN, STEEL, tunic } from './drawFigure';
 
@@ -9,10 +9,11 @@ export const drawSwordsman = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   legs(ctx, '#3f4850');
-  tunic(ctx, owner, '#6b4f33');
+  tunic(ctx, owner, '#6b4f33', team);
   // Наплечник и шлем из стали: мечник узнаётся по металлу.
   shape(ctx, STEEL, [17.5, 13, 21, 13, 22, 16.5, 18.5, 16]);
   circle(ctx, SKIN, 15.8, 9.8, 3.5);
@@ -23,11 +24,7 @@ export const drawSwordsman = (
   shape(ctx, '#eef2ea', [24, 3.5, 25.6, 5.5, 25.6, 18, 22.4, 18, 22.4, 5.5]);
   rect(ctx, '#d6b265', 20.5, 17.5, 7, 2);
   rect(ctx, '#7a5634', 23.2, 19.5, 1.6, 3.5);
-  shape(
-    ctx,
-    TEAM_MARKERS[owner].shade,
-    [4, 13, 12.5, 13, 12.5, 19.5, 8.25, 24.5, 4, 19.5],
-  );
+  shape(ctx, team.shade, [4, 13, 12.5, 13, 12.5, 19.5, 8.25, 24.5, 4, 19.5]);
   // Светлый умбон по центру щита.
   circle(ctx, '#f3eedd', 8.25, 17.5, 1.6);
   ctx.restore();
@@ -40,8 +37,9 @@ export const drawArcher = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   // Колчан за спиной выглядывает над плечом.
   shape(ctx, '#8a5a36', [6.5, 8.5, 9.5, 7.5, 11.5, 17, 8.5, 18]);
   ctx.strokeStyle = '#f3eedd';
@@ -55,12 +53,12 @@ export const drawArcher = (
   ctx.strokeStyle = OUTLINE;
   ctx.lineWidth = 1.2;
   legs(ctx, '#5a4a3a');
-  tunic(ctx, owner, '#5b4430');
+  tunic(ctx, owner, '#5b4430', team);
   circle(ctx, SKIN, 15.5, 9.9, 3.4);
   // Капюшон обрамляет лицо: силуэт лучника отличается от шлема мечника.
   shape(
     ctx,
-    TEAM_MARKERS[owner].shade,
+    team.shade,
     [11.3, 12, 11.6, 7, 15.5, 4.2, 19.4, 7, 19.7, 12, 18.4, 8.6, 12.6, 8.6],
   );
   // Лук занимает всю высоту фигуры, тетива не сливается с корпусом.
@@ -102,13 +100,14 @@ export const drawWorker = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   // Кирка на плече — главный признак рабочего.
   rect(ctx, '#a0703f', 22.2, 7, 2, 16);
   shape(ctx, STEEL, [17.5, 9, 23, 5.4, 28.8, 9, 23.2, 7.6]);
   legs(ctx, '#5b4a3c');
-  tunic(ctx, owner, '#6b4f33');
+  tunic(ctx, owner, '#6b4f33', team);
   shape(ctx, '#caa36c', [13.6, 16.5, 17.9, 16.5, 18.4, 22, 13.1, 22]);
   circle(ctx, SKIN, 15.5, 10, 3.5);
   // Соломенная шляпа с широкими полями.
