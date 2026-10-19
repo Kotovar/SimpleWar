@@ -1,6 +1,7 @@
 export {
   useGameLoopStore,
   getAliveParticipants,
+  isChainedAiTurn,
   getHumanId,
   getTurnRejection,
 } from './model/gameLoopStore';

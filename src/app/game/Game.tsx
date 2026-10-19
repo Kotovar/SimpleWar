@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react';
 import {
+  AI_CHAIN_DELAY_MS,
   AI_TURN_DELAY_MS,
   AI_PLAYBACK_RATE,
   type ParticipantId,
 } from '@shared/config';
 import { ConfirmDialog } from '@shared/ui';
 import { useJournalStore } from '@entities/journals';
-import { useGameLoopStore } from '@entities/games';
-import { useDebugStore, usePreferencesStore } from '@entities/settings';
+import { isChainedAiTurn, useGameLoopStore } from '@entities/games';
+import {
+  getAiPlayback,
+  useDebugStore,
+  usePreferencesStore,
+} from '@entities/settings';
 import {
   initGameLoopEvents,
   nextTurn,
@@ -114,7 +119,16 @@ export const Game = () => {
     };
   }, []);
 
+  // Новая или загруженная партия начинается без ускорения прежней.
+  // Эффект объявлен раньше планирования хода и выполняется до него.
   useEffect(() => {
+    usePreferencesStore.getState().setAiRush(false);
+  }, [gameId]);
+
+  useEffect(() => {
+    // Ускорение действует до возврата хода человеку или конца партии.
+    if (phase !== 'inProgress' || activeController === 'human')
+      usePreferencesStore.getState().setAiRush(false);
     if (phase !== 'inProgress' || !activeController) return;
     if (activeController === 'human' || (sandbox && paused)) return;
 
@@ -123,10 +137,14 @@ export const Game = () => {
       activeController === 'passive'
         ? () => nextTurn(activePlayer)
         : () => playAi(activePlayer);
-    const rate = AI_PLAYBACK_RATE[usePreferencesStore.getState().aiPlayback];
+    const rate =
+      AI_PLAYBACK_RATE[getAiPlayback(usePreferencesStore.getState())];
+    const delay = isChainedAiTurn(useGameLoopStore.getState())
+      ? AI_CHAIN_DELAY_MS
+      : AI_TURN_DELAY_MS;
     const timer = setTimeout(
       play,
-      sandbox && fast ? FAST_TURN_DELAY_MS : rate ? AI_TURN_DELAY_MS / rate : 0,
+      sandbox && fast ? FAST_TURN_DELAY_MS : rate ? delay / rate : 0,
     );
     return () => clearTimeout(timer);
   }, [activePlayer, activeController, phase, sandbox, paused, fast, gameId]);

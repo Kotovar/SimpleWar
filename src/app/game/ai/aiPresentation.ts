@@ -4,7 +4,11 @@ import { getHumanId, useGameLoopStore } from '@entities/games';
 import { useJournalStore } from '@entities/journals';
 import { useMapStore } from '@entities/maps';
 import { getParticipantKnowledge } from '@entities/perceptions';
-import { useDebugStore, usePreferencesStore } from '@entities/settings';
+import {
+  getAiPlayback,
+  useDebugStore,
+  usePreferencesStore,
+} from '@entities/settings';
 import { useUnitsStore } from '@entities/units';
 import { useSandboxStore } from '@features/sandbox';
 import { buildScene } from '@widgets/map';
@@ -45,7 +49,7 @@ export const getAiPresentationSnapshot = () => {
 /** Визуальное ожидание отменяется сбросом, сменой хода или настройкой скорости. */
 export const waitForAiPresentation = (isCancelled: () => boolean) => {
   const sandbox = useSandboxStore.getState();
-  const playback = usePreferencesStore.getState().aiPlayback;
+  const playback = getAiPlayback(usePreferencesStore.getState());
   const rate = sandbox.enabled && sandbox.fast ? 0 : AI_PLAYBACK_RATE[playback];
   if (!rate || isCancelled()) return null;
   return new Promise<void>(resolve => {
@@ -58,7 +62,7 @@ export const waitForAiPresentation = (isCancelled: () => boolean) => {
       const currentSandbox = useSandboxStore.getState();
       if (
         isCancelled() ||
-        usePreferencesStore.getState().aiPlayback !== playback ||
+        getAiPlayback(usePreferencesStore.getState()) !== playback ||
         (currentSandbox.enabled && currentSandbox.fast)
       )
         finish();

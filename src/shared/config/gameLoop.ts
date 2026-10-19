@@ -38,6 +38,9 @@ export type Phase = 'setup' | 'deployment' | 'inProgress' | 'gameOver';
  */
 export const AI_TURN_DELAY_MS = 600;
 
+/** Пауза между ходами ИИ подряд, мс: человек ждёт всю очередь врагов. */
+export const AI_CHAIN_DELAY_MS = 150;
+
 /**
  * Перерыв между порциями хода ИИ, мс: браузер успевает отрисовать кадр.
  * В ускоренном режиме тестирования — без задержки.
