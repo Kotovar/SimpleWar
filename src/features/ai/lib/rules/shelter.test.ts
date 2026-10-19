@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { foe, grass, own, ownBuilding, scene } from '../scene.test-utils';
+import { continueBuilds } from './building';
 import { W12 } from './shelter';
 
 describe('W12: укрытие рабочего в ратуше', () => {
@@ -20,6 +21,64 @@ describe('W12: укрытие рабочего в ратуше', () => {
         action: { type: 'assign', workerId: worker.id, buildingId: hall.id },
       },
     ]);
+  });
+
+  it('прячет и строителя с задачей; лекарь защитником не считается', () => {
+    const hall = base();
+    const worker = own('worker', 5, 6, { movePoints: 0 });
+    const { ctx } = scene({
+      map: grass(12, 12),
+      units: [worker, own('healer', 6, 6)],
+      buildings: [hall],
+      enemies: [foe('rider', 5, 7)],
+      memory: {
+        tasks: [
+          {
+            id: 't1',
+            kind: 'build',
+            ruleId: 'W05',
+            unitId: worker.id,
+            target: { x: 1, y: 1 },
+            buildingType: 'mine',
+            reserve: { gold: 120, wood: 0 },
+            createdTurn: 1,
+            reviewTurn: 9,
+          },
+        ],
+      },
+    });
+
+    expect(W12.evaluate(ctx)).toMatchObject([
+      { action: { type: 'assign', workerId: worker.id } },
+    ]);
+  });
+
+  it('укрытый строитель не продолжает стройку, пока его не выпустят', () => {
+    const hall = base();
+    const hider = own('worker', 5, 5, { workplaceId: hall.id });
+    const { ctx } = scene({
+      map: grass(12, 12),
+      units: [hider],
+      buildings: [hall],
+      enemies: [foe('rider', 5, 8)],
+      memory: {
+        tasks: [
+          {
+            id: 't1',
+            kind: 'build',
+            ruleId: 'W05',
+            unitId: hider.id,
+            target: { x: 1, y: 1 },
+            buildingType: 'farm',
+            reserve: { gold: 60, wood: 160 },
+            createdTurn: 1,
+            reviewTurn: 9,
+          },
+        ],
+      },
+    });
+
+    expect(continueBuilds(ctx, 'W05', 'build', 60)).toEqual([]);
   });
 
   it('свой боец у ратуши — не прячет; дальний рабочий — тоже нет', () => {

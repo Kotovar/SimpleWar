@@ -159,8 +159,22 @@ describe('формат и восстановление партии', () => {
     )!;
     useUnitsStore.getState().setWorkplace(hider.id, base.id);
     useUnitsStore.getState().placeUnit(hider.id, base.x, base.y);
+    // Дальний приказ укрыться тоже сохраняется.
+    const walker = useUnitsStore
+      .getState()
+      .spawnUnit('worker', base.x + 4, base.y + 4, 'p1', true)!;
+    useUnitsStore.getState().setOrder(walker, {
+      type: 'work',
+      buildingId: base.id,
+      x: base.x,
+      y: base.y,
+    });
     const saved = captureSnapshot();
     applySnapshot(saved);
+    expect(useUnitsStore.getState().units[walker].order).toMatchObject({
+      type: 'work',
+      buildingId: base.id,
+    });
     expect(useUnitsStore.getState().units[hider.id]).toMatchObject({
       x: base.x,
       y: base.y,

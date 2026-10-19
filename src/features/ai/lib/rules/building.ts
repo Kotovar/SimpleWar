@@ -163,6 +163,8 @@ export const continueBuilds = (
     .flatMap(task => {
       const worker = ctx.workers.find(({ id }) => id === task.unitId);
       if (!worker || !isFree(ctx, worker.id) || !task.buildingType) return [];
+      // Укрытый в ратуше строитель ждёт, пока W12 его выпустит.
+      if (worker.workplaceId && worker.workplaceId === ctx.base?.id) return [];
       return buildStep(
         ctx,
         ruleId,

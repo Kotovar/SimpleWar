@@ -80,9 +80,7 @@ describe('найм под угрозой при срочной обороне', 
     expect(N01.evaluate(setup('G04'))).toEqual([]);
   });
 
-  it('при G01 нанимает в наименее опасную клетку', () => {
-    expect(N01.evaluate(setup('G01'))).toMatchObject([
-      { action: { type: 'spawn', unitType: 'worker' } },
-    ]);
+  it('при G01 без защитников рабочего не нанимает: он погибнет у выхода', () => {
+    expect(N01.evaluate(setup('G01'))).toEqual([]);
   });
 });

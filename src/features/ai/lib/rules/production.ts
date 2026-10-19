@@ -9,7 +9,14 @@ import {
 import { isBuildableTerrain } from '@shared/lib';
 import type { AiRule, Candidate } from '../../model/types';
 import type { AiContext } from '../context';
-import { desiredArmy, desiredWorkers, nearest, nextRecruit } from '../facts';
+import {
+  baseAlarm,
+  desiredArmy,
+  desiredWorkers,
+  hasDefenders,
+  nearest,
+  nextRecruit,
+} from '../facts';
 import { affordable } from '../saving';
 import { roleWishes } from '../composition';
 import { around, manhattan, tieBreak } from '../geometry';
@@ -116,6 +123,8 @@ export const N01: AiRule = {
   evaluate: ctx => {
     const want = desiredWorkers(ctx);
     if (ctx.workers.length >= want) return [];
+    // Враг у ратуши, защитников нет: новый рабочий погибнет у выхода.
+    if (baseAlarm(ctx).length && !hasDefenders(ctx)) return [];
     const base = producers(ctx).find(b => canHire(ctx, b, 'worker'));
     if (!base) return [];
     const score = ctx.workers.length < 2 ? 65 : 45;

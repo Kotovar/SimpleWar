@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
+  foe,
   grass,
   own,
   ownBuilding,
@@ -24,6 +25,23 @@ describe('N01/N02: найм', () => {
         action: { type: 'spawn', buildingId: base.id, unitType: 'worker' },
       },
     ]);
+  });
+
+  it('N01 не нанимает у осаждённой ратуши без защитников', () => {
+    const setup = {
+      map: grass(10, 10),
+      buildings: [ownBuilding('base', 3, 3)],
+      // В радиусе тревоги, но клетки найма мечнику не достать.
+      enemies: [foe('swordsman', 3, 9)],
+    };
+    const siege = scene({ ...setup, units: [own('worker', 0, 0)] });
+    expect(N01.evaluate(siege.ctx)).toEqual([]);
+
+    const guarded = scene({
+      ...setup,
+      units: [own('worker', 0, 0), own('swordsman', 4, 4)],
+    });
+    expect(N01.evaluate(guarded.ctx)).toMatchObject([{ ruleId: 'N01' }]);
   });
 
   it('N01 не нанимает без населения', () => {

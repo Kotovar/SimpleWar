@@ -1,9 +1,9 @@
 import { isAdjacent } from '@shared/lib';
 import type { AiRule } from '../../model/types';
 import type { AiContext } from '../context';
-import { baseAlarm } from '../facts';
-import { around, manhattan } from '../geometry';
-import { isFree, taskOf } from './common';
+import { baseAlarm, hasDefenders } from '../facts';
+import { around } from '../geometry';
+import { isFree } from './common';
 
 /** Рабочий, укрытый в своей ратуше. */
 export const shelteredWorker = (ctx: AiContext) =>
@@ -40,18 +40,14 @@ export const W12: AiRule = {
         },
       ];
     }
-    const guarded = ctx.military.some(
-      unit =>
-        unit.type !== 'scout' &&
-        manhattan(unit, base) <= ctx.config.alertRadius,
-    );
-    if (guarded) return [];
+    // Защищает только боец с атакой: не разведчик и не лекарь.
+    if (hasDefenders(ctx)) return [];
     const worker = ctx.workers
       .filter(
         w =>
+          // Строитель тоже прячется: стройка продолжится после выхода.
           isFree(ctx, w.id) &&
           !w.workplaceId &&
-          !taskOf(ctx, w.id) &&
           isAdjacent(w, base) &&
           ctx.threatAt(w) > 0,
       )

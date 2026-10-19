@@ -78,6 +78,20 @@ export const desiredWorkers = (ctx: AiContext) => {
   return Math.min(max, Math.max(min, places + 1));
 };
 
+/** У ратуши есть защитник: боец с атакой (не разведчик) в радиусе тревоги. */
+export const hasDefenders = (ctx: AiContext) => {
+  const { base } = ctx;
+  return (
+    !!base &&
+    ctx.military.some(
+      unit =>
+        unit.type !== 'scout' &&
+        unit.attack > 0 &&
+        manhattan(unit, base) <= ctx.config.alertRadius,
+    )
+  );
+};
+
 /** Рабочий на добыче — в руднике или лесопилке, а не укрыт в ратуше. */
 export const isMining = (ctx: AiContext, worker: CivilUnit) =>
   !!worker.workplaceId && worker.workplaceId !== ctx.base?.id;

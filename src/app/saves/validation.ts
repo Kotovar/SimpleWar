@@ -545,7 +545,7 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
       if (u.order.type === 'work' && s.buildings[u.order.buildingId])
         requireValid(
           s.buildings[u.order.buildingId].owner === u.owner &&
-            s.buildings[u.order.buildingId].role === 'resource',
+            canHouseWorker(s.buildings[u.order.buildingId]),
           'Неверная цель рабочего',
         );
     }

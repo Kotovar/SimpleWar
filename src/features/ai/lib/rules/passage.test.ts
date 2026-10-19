@@ -28,6 +28,25 @@ describe('W10: освободить проход', () => {
     expect(Math.max(Math.abs(cell.x - 2), Math.abs(cell.y - 2))).toBe(2);
   });
 
+  it('укрытого в ратуше рабочего не выводит: выход он не занимает', () => {
+    const base = ownBuilding('base', 5, 5);
+    const farms = [-1, 0, 1].flatMap(dy =>
+      [-1, 0, 1].flatMap(dx =>
+        (dx || dy) && !(dx === 1 && dy === 0)
+          ? [ownBuilding('farm', 5 + dx, 5 + dy)]
+          : [],
+      ),
+    );
+    const hider = own('worker', 5, 5, { workplaceId: base.id });
+    const { ctx } = scene({
+      map: grass(10, 10),
+      units: [hider, own('worker', 6, 5, { movePoints: 0 })],
+      buildings: [base, ...farms],
+    });
+
+    expect(W10.evaluate(ctx).some(c => c.actorId === hider.id)).toBe(false);
+  });
+
   it('сносит своё здание, если ратуша замурована', () => {
     const farms = [
       ownBuilding('farm', 1, 0),

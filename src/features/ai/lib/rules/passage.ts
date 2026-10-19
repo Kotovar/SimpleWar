@@ -24,8 +24,11 @@ const exits = (ctx: AiContext, building: Building) =>
   );
 
 /** Свой юнит, способный уступить клетку: есть очки и он не в обороне. */
+// Юнит внутри своего здания (рудник, укрытие в ратуше) выход не занимает.
 const canYield = (ctx: AiContext, unit: Unit) =>
-  isFree(ctx, unit.id) && unit.movePoints > 0;
+  isFree(ctx, unit.id) &&
+  unit.movePoints > 0 &&
+  !ctx.obs.ownBuildings.some(({ x, y }) => x === unit.x && y === unit.y);
 
 /** Отойти с клетки: ближайшая достижимая клетка вне запрета. */
 const stepAside = (
