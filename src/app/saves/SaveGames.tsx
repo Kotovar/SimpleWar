@@ -80,7 +80,7 @@ const SlotRow = ({
     snapshot?.loop.participants
       .map(
         p =>
-          `${getParticipantName(p.id, [p])}: ${p.controller === 'human' ? 'человек' : p.controller === 'ai' ? `ИИ ${p.ai ? AI_PROFILES[p.ai.profile].name : 'Сбалансированный'}/${p.ai ? AI_DIFFICULTY[p.ai.difficulty].name : 'Обычный'}` : 'пассивный'}`,
+          `${getParticipantName(p.id, [p])}: ${p.controller === 'human' ? 'человек' : p.controller === 'ai' ? `ИИ ${p.ai ? AI_PROFILES[p.ai.profile].name : 'Сбалансированный'}/${p.ai ? AI_DIFFICULTY[p.ai.difficulty].name : 'Обычный'}` : 'пассивный'}${snapshot.loop.eliminated.includes(p.id) ? ' (выбыли)' : ''}`,
       )
       .join(' · ') ?? '';
   const party = `${snapshot?.debug.usedInGame ? 'Отладочная · ' : ''}${participants}`;
