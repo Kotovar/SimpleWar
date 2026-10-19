@@ -97,12 +97,12 @@ export const useJournalStore = create<JournalState>()(
           gameId: state.gameId,
         });
         // Выбывание и конец партии (не больше четырёх) нужны итогу —
-        // вытесняется самая старая из остальных записей.
-        if (state.entries.length > JOURNAL_LIMIT)
-          state.entries.splice(
-            state.entries.findIndex(({ type }) => !KEPT.has(type)),
-            1,
-          );
+        // вытесняется самая старая из остальных записей; если остались
+        // только защищённые (импорт), — самая старая из всех.
+        if (state.entries.length > JOURNAL_LIMIT) {
+          const index = state.entries.findIndex(({ type }) => !KEPT.has(type));
+          state.entries.splice(Math.max(0, index), 1);
+        }
       }),
 
     reportError: (meta, turn, rejection) =>

@@ -369,6 +369,7 @@ it.each(selected)(
             : null,
       winner: useGameLoopStore.getState().winner,
       rounds: useGameLoopStore.getState().currentTurn,
+      maxRounds: limit,
       lastLossRound,
       turns,
       durationMs: performance.now() - started,

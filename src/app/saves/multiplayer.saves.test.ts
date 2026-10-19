@@ -7,11 +7,13 @@ import {
   vi,
 } from 'vite-plus/test';
 import type { ParticipantId } from '@shared/config';
+import { gameEvents } from '@shared/lib';
 import { useGameLoopStore } from '@entities/games';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useSettingsStore } from '@entities/settings';
 import { useAiMemoryStore } from '@entities/ai-memories';
+import { useJournalStore } from '@entities/journals';
 import { useSandboxStore } from '@features/sandbox';
 import { initVisibilitySystem } from '@features/visibility';
 import {
@@ -99,10 +101,19 @@ afterEach(() => {
 
 describe('сохранения на четверых (M6)', () => {
   it('после выбывания ИИ снимок восстанавливает очередь, память и мир', async () => {
+    // Жёлтые успевают сходить: в снимке остаётся память выбывшего ИИ.
+    expect(nextTurn('p1').ok).toBe(true);
+    for (const id of ['p2', 'p3', 'p4'] as const) await play(id);
     expect(nextTurn('p1').ok).toBe(true);
     await play('p2');
-    expect(surrender('p3').ok).toBe(true);
+    const base = Object.values(useBuildingsStore.getState().buildings).find(
+      building => building.owner === 'p3' && building.type === 'base',
+    )!;
+    // Потеря ратуши, а не сдача: как в бою — разрушение и BASE_DESTROYED.
+    useBuildingsStore.getState().damageBuilding(base.id, base.hp);
+    gameEvents.emit({ type: 'BASE_DESTROYED', owner: 'p3' });
     const saved = captureSnapshot();
+    expect(saved.ai.p3).toBeDefined();
     expect(saved.loop).toMatchObject({
       activePlayer: 'p4',
       eliminated: ['p3'],
@@ -110,18 +121,23 @@ describe('сохранения на четверых (M6)', () => {
     });
 
     await play('p4');
+    const gameId = useJournalStore.getState().gameId;
     applySnapshot(saved);
     expect(withoutGame(captureSnapshot())).toEqual(withoutGame(saved));
     expect(owned('p3')).toBe(0);
-    expect(Object.keys(useAiMemoryStore.getState().byParticipant)).toEqual(
-      Object.keys(saved.ai),
-    );
+    expect(useAiMemoryStore.getState().byParticipant).toEqual(saved.ai);
+    // Сравнение выше без gameId: загрузка — новая партия, все записи в ней.
+    const journal = useJournalStore.getState();
+    expect(journal.gameId).toBe(gameId + 1);
+    expect(
+      journal.entries.every(entry => entry.gameId === journal.gameId),
+    ).toBe(true);
 
     // Очередь после загрузки пропускает выбывшего: p4 → p1 → p2 → p4.
     await play('p4');
     expect(useGameLoopStore.getState()).toMatchObject({
       activePlayer: 'p1',
-      currentTurn: 2,
+      currentTurn: 3,
     });
     expect(nextTurn('p1').ok).toBe(true);
     await play('p2');
