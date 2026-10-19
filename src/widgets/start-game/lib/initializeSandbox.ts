@@ -15,7 +15,7 @@ import {
   useSandboxStore,
   validateScenario,
 } from '@features/sandbox';
-import { getStartPositions, initializeGame } from './initializeGame';
+import { initializeGame } from './initializeGame';
 
 /**
  * Старт партии режима тестирования (S15a): обычная подготовка карты и
@@ -53,8 +53,11 @@ export const initializeSandbox = (
     return null;
   }
 
-  const { gridColumns, gridRows } = useSettingsStore.getState();
-  const starts = getStartPositions(gridColumns, gridRows, participants.length);
+  // На 3–4 стороны ИИ рассаживаются по углам случайно: силы ставятся у
+  // настоящей ратуши стороны, а не у угла её слота.
+  const bases = Object.values(useBuildingsStore.getState().buildings).filter(
+    ({ type }) => type === 'base',
+  );
   const grid = useMapStore.getState().grid;
   const taken = new Set(
     [
@@ -65,7 +68,8 @@ export const initializeSandbox = (
   const skipped: string[] = [];
   for (const [index, side] of scenario.sides.entries()) {
     const owner = participants[index].id;
-    const placed = placeForces(grid, taken, starts[index].base, side);
+    const base = bases.find(building => building.owner === owner)!;
+    const placed = placeForces(grid, taken, base, side);
     for (const { type, x, y } of placed.buildings) {
       useBuildingsStore.getState().spawnBuilding(type, x, y, owner);
     }

@@ -5,6 +5,7 @@ import {
   type SandboxScenario,
 } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
+import { useBuildingsStore } from '@entities/buildings';
 import { useGameLoopStore } from '@entities/games';
 import { useSettingsStore } from '@entities/settings';
 import { resetGame } from '@features/game-loop';
@@ -57,6 +58,23 @@ it('бой на четверых: каждая сторона у своего у
   expect([army('p1'), army('p2'), army('p3'), army('p4')]).toEqual([
     6, 5, 3, 3,
   ]);
+  // ИИ рассажены по углам случайно: силы — у своей ратуши, а не у угла слота.
+  const all = [
+    ...Object.values(useUnitsStore.getState().units),
+    ...Object.values(useBuildingsStore.getState().buildings),
+  ];
+  const bases = all.filter(({ type }) => type === 'base');
+  const nearestBase = ({ x, y }: { x: number; y: number }) =>
+    [...bases].sort(
+      (a, b) =>
+        Math.abs(a.x - x) +
+        Math.abs(a.y - y) -
+        Math.abs(b.x - x) -
+        Math.abs(b.y - y),
+    )[0].owner;
+  expect(all.filter(entity => nearestBase(entity) !== entity.owner)).toEqual(
+    [],
+  );
 });
 
 it('три стороны на малой карте — отказ с понятной причиной', () => {
