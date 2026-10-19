@@ -10,7 +10,9 @@
 - `pnpm test:integration` — взаимодействие настоящих хранилищ и событий.
 - `pnpm test:unit -- src/features/pathfinding/lib/getPath.test.ts` — один файл.
 - `pnpm type-check` — отдельная проверка типов, включая тесты.
-- `pnpm acceptance:matches` — 196 полных партий с отчётом; тайм-аут — провал.
+- `pnpm acceptance:matches` — 202 полные партии с отчётом, включая три
+  на троих, три на четверых (лимит кругов удвоен) и три «человек-заглушка
+  против трёх ИИ»; тайм-аут — провал.
 - `pnpm acceptance:performance` — технические бюджеты на 100×100.
 - `pnpm acceptance:browser` — production, циклы сохранения/загрузки, память.
 

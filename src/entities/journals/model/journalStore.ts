@@ -14,6 +14,9 @@ import { DECISION_LIMIT } from './decisions';
 /** Лимит хранимых записей каждого вида; старые вытесняются. */
 export const JOURNAL_LIMIT = 200;
 
+/** Записи, которые лимит журнала не вытесняет. */
+const KEPT = new Set(['eliminated', 'gameOver']);
+
 /**
  * Событие партии: выполненная команда или её последствие. `details` —
  * снимок сведений на момент события, а не ссылка на живые объекты.
@@ -93,7 +96,13 @@ export const useJournalStore = create<JournalState>()(
           id: state.nextId++,
           gameId: state.gameId,
         });
-        if (state.entries.length > JOURNAL_LIMIT) state.entries.shift();
+        // Выбывание и конец партии (не больше четырёх) нужны итогу —
+        // вытесняется самая старая из остальных записей.
+        if (state.entries.length > JOURNAL_LIMIT)
+          state.entries.splice(
+            state.entries.findIndex(({ type }) => !KEPT.has(type)),
+            1,
+          );
       }),
 
     reportError: (meta, turn, rejection) =>
