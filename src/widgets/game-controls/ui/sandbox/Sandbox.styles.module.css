@@ -229,19 +229,6 @@
   border-radius: var(--radius);
   background: var(--surface-sunken);
   min-width: 0;
-
-  &[data-owner='p1'] {
-    --owner: var(--team-p1);
-  }
-  &[data-owner='p2'] {
-    --owner: var(--team-p2);
-  }
-  &[data-owner='p3'] {
-    --owner: var(--team-p3);
-  }
-  &[data-owner='p4'] {
-    --owner: var(--team-p4);
-  }
 }
 
 .SideHeading {

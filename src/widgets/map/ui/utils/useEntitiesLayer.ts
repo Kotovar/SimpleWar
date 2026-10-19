@@ -1,5 +1,5 @@
 import { useUnitsStore } from '@entities/units';
-import { useGameLoopStore } from '@entities/games';
+import { useGameLoopStore, useParticipantStyles } from '@entities/games';
 import { usePreferencesStore } from '@entities/settings';
 import { useSandboxStore } from '@features/sandbox';
 import { useEffect, useMemo, useRef, type RefObject } from 'react';
@@ -94,6 +94,7 @@ export const useEntitiesLayer = ({
   strikeMarks,
 }: Props) => {
   const worldUnits = useUnitsStore(state => state.units);
+  const teams = useParticipantStyles();
   const aiTurn = useGameLoopStore(state =>
     state.participants.some(
       participant =>
@@ -465,12 +466,13 @@ export const useEntitiesLayer = ({
             still ? STILL_PROGRESS : progress,
             cellSize,
             layer,
+            teams,
           ),
         );
 
       withClear(ctx, () => {
         drawEffects('under');
-        renderSnapshots(ctx, snapshots, cellSize, range);
+        renderSnapshots(ctx, snapshots, cellSize, range, teams);
         renderEntitiesLayer(
           ctx,
           shownBuildings,
@@ -483,6 +485,7 @@ export const useEntitiesLayer = ({
           glasses,
           Object.values(worldUnits),
           cocked,
+          teams,
         );
         drawEffects('over');
         animation.projectiles.forEach(({ shot, progress }) =>
@@ -525,5 +528,6 @@ export const useEntitiesLayer = ({
     worldUnits,
     playback,
     sandboxFast,
+    teams,
   ]);
 };

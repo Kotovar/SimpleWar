@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { PARTICIPANT_IDS, type Cell } from '@shared/config';
+import {
+  PARTICIPANT_IDS,
+  DEFAULT_PALETTES,
+  getParticipantPalette,
+  getTeamStyle,
+  type Cell,
+} from '@shared/config';
 import {
   drawArcher,
   drawBarracks,
@@ -11,6 +17,7 @@ import {
 } from '@shared/ui';
 import { generateMap, randomSeed } from '@entities/maps';
 import { useSettingsStore } from '@entities/settings';
+import { useGameLoopStore } from '@entities/games';
 import { useSandboxStore } from '@features/sandbox';
 import { renderTerrainLayer } from '@widgets/map';
 import styles from './styles.module.css';
@@ -55,10 +62,14 @@ export const MenuBackdrop = () => {
   const ref = useRef<HTMLCanvasElement>(null);
   const [seed] = useState(randomSeed);
   const aiCount = useSettingsStore(state => state.aiSetups.length);
+  const choices = useSettingsStore(state => state.paletteChoices);
+  const phase = useGameLoopStore(state => state.phase);
+  const participants = useGameLoopStore(state => state.participants);
   const sandboxCount = useSandboxStore(state =>
     state.enabled ? state.scenario.sides.length : null,
   );
-  const count = sandboxCount ?? aiCount + 1;
+  const count =
+    phase === 'setup' ? (sandboxCount ?? aiCount + 1) : participants.length;
 
   useEffect(() => {
     const canvas = ref.current;
@@ -78,6 +89,22 @@ export const MenuBackdrop = () => {
     for (const [index, owner] of PARTICIPANT_IDS.slice(0, count).entries()) {
       const at = CAMP_POSITIONS[index];
       const entities = GUARDS[index === 0 ? 0 : 1];
+      const choice = choices[owner];
+      const palette =
+        phase === 'setup'
+          ? sandboxCount !== null || choice === 'random'
+            ? DEFAULT_PALETTES[owner]
+            : choice
+          : getParticipantPalette(owner, participants);
+      const team = getTeamStyle(owner, palette);
+      // Случайный цвет определяется при старте; в меню лагерь пока нейтральный.
+      if (phase === 'setup' && sandboxCount === null && choice === 'random') {
+        Object.assign(team, {
+          color: '#b8c3c9',
+          shade: '#74838e',
+          background: '#2c3942',
+        });
+      }
       const cells = grassAround(
         grid,
         Math.round(columns * at.x),
@@ -85,10 +112,10 @@ export const MenuBackdrop = () => {
         entities.length,
       );
       cells.forEach((cell, index) =>
-        entities[index](ctx, cell.x, cell.y, CELL, owner),
+        entities[index](ctx, cell.x, cell.y, CELL, owner, 1, team),
       );
     }
-  }, [count, seed]);
+  }, [count, seed, choices, participants, phase, sandboxCount]);
 
   return (
     <div className={styles.Backdrop} aria-hidden>

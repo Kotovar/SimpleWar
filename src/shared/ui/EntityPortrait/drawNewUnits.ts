@@ -1,4 +1,4 @@
-import { TEAM_MARKERS, type Owner } from '@shared/config';
+import { TEAM_MARKERS, type Owner, type TeamStyle } from '@shared/config';
 import { beginEntity, circle, rect, shape } from './drawEntity';
 import { legs, OUTLINE, SKIN, STEEL, tunic } from './drawFigure';
 
@@ -10,11 +10,11 @@ export const drawScout = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   legs(ctx, '#6b5a44');
-  tunic(ctx, owner, '#7a5a38');
+  tunic(ctx, owner, '#7a5a38', team);
   // Короткий плащ стороны за спиной.
   shape(ctx, team.shade, [9.5, 13, 12, 13, 11, 21, 7.5, 20]);
   circle(ctx, SKIN, 15.6, 9.8, 3.4);
@@ -45,14 +45,14 @@ export const drawSpearman = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   // Древко с наконечником: главный признак копейщика.
   rect(ctx, '#8a6238', 23.4, 1.5, 1.6, 23);
   shape(ctx, STEEL, [24.2, -1.5, 26.2, 3.5, 24.2, 5, 22.2, 3.5]);
   legs(ctx, '#4a4a42');
-  tunic(ctx, owner, '#5b4430');
+  tunic(ctx, owner, '#5b4430', team);
   shape(ctx, team.color, [19, 13, 22, 13, 23.5, 16, 21, 17]);
   shape(ctx, SKIN, [21.5, 14.5, 25.5, 14.5, 25.5, 17, 22, 17]);
   circle(ctx, SKIN, 15.8, 9.8, 3.4);
@@ -72,9 +72,9 @@ export const drawRider = (
   cellSize: number,
   owner: Owner,
   scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   const horse = '#8b6340';
   // Дальние ноги и хвост позади округлого корпуса.
   shape(ctx, '#61432e', [10, 18, 13, 18, 12, 22, 10, 25, 8, 25, 10, 21]);
@@ -144,9 +144,9 @@ export const drawSiege = (
   owner: Owner,
   scale: number = 1,
   { arm = 0, loaded = true }: SiegePose = {},
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  beginEntity(ctx, cellX, cellY, cellSize, owner, scale);
-  const team = TEAM_MARKERS[owner];
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
   // Открытая треугольная рама с осью метательного рычага.
   rect(ctx, '#8a6238', 4, 17, 24, 3.4);
   shape(ctx, '#9c7446', [9, 17, 14, 9, 16, 10, 12, 17]);

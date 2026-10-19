@@ -1,5 +1,11 @@
 import { useEffect, useRef } from 'react';
-import type { BuildingType, Owner, UnitType } from '@shared/config';
+import {
+  getTeamStyle,
+  type BuildingType,
+  type Owner,
+  type UnitType,
+  type PaletteId,
+} from '@shared/config';
 import { renderHiDpiCanvas } from '@shared/lib';
 import { drawBarracks, drawBase, drawTower } from './drawBuildings';
 import { drawFarm, drawGoldMine, drawSawmill } from './drawEconomyBuildings';
@@ -43,19 +49,23 @@ type Props = {
   type: BuildingType | UnitType;
   owner: Owner;
   size?: number;
+  palette?: PaletteId;
 };
 
 /** Показывает сущность тем же рисунком, что и на карте. */
-export const EntityPortrait = ({ type, owner, size = 48 }: Props) => {
+export const EntityPortrait = ({ type, owner, size = 48, palette }: Props) => {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return;
+    const team = getTeamStyle(owner, palette);
     return renderHiDpiCanvas(canvas, size, ctx =>
-      DRAW_ENTITY[type](ctx, 0, 0, size, owner),
+      type === 'siege'
+        ? drawSiege(ctx, 0, 0, size, owner, 1, undefined, team)
+        : DRAW_ENTITY[type](ctx, 0, 0, size, owner, 1, team),
     );
-  }, [type, owner, size]);
+  }, [type, owner, size, palette]);
 
   return (
     <canvas

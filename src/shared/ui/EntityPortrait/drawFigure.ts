@@ -1,4 +1,4 @@
-import { TEAM_MARKERS, type Owner } from '@shared/config';
+import { TEAM_MARKERS, type Owner, type TeamStyle } from '@shared/config';
 import { rect, shape } from './drawEntity';
 
 export const SKIN = '#ecc59a';
@@ -16,8 +16,9 @@ export const tunic = (
   ctx: CanvasRenderingContext2D,
   owner: Owner,
   belt: string,
+  team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
-  shape(ctx, TEAM_MARKERS[owner].color, [10.5, 13, 21, 13, 22.5, 22, 9, 22]);
+  shape(ctx, team.color, [10.5, 13, 21, 13, 22.5, 22, 9, 22]);
   ctx.fillStyle = belt;
   ctx.fillRect(9.9, 18.4, 11.8, 1.8);
 };

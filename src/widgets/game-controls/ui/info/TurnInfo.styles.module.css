@@ -61,8 +61,8 @@
   border-radius: 999px;
   font-size: 0.9rem;
   font-weight: 600;
-  background-color: rgb(120 204 255 / 0.12);
-  color: var(--team-p1);
+  background-color: color-mix(in srgb, var(--side-color) 12%, transparent);
+  color: var(--side-color);
 }
 
 .Side::before {
@@ -71,11 +71,6 @@
   height: 8px;
   border-radius: 50%;
   background-color: currentColor;
-}
-
-.Side[data-relation='hostile'] {
-  background-color: rgb(255 148 116 / 0.12);
-  color: var(--team-p2);
 }
 
 .Side[data-relation='hostile']::before {

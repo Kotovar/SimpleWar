@@ -45,7 +45,7 @@ type SelectProps<T extends string> = Omit<
   'value' | 'onChange'
 > & {
   value: T;
-  options: readonly { value: T; label: string }[];
+  options: readonly { value: T; label: string; disabled?: boolean }[];
   onChange: (value: T) => void;
 };
 
@@ -67,7 +67,11 @@ export const Select = <T extends string>({
     onChange={event => onChange(event.target.value as T)}
   >
     {options.map(option => (
-      <option key={option.value} value={option.value}>
+      <option
+        key={option.value}
+        value={option.value}
+        disabled={option.disabled}
+      >
         {option.label}
       </option>
     ))}

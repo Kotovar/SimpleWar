@@ -131,6 +131,98 @@ afterEach(() => {
 });
 
 describe('формат и восстановление партии', () => {
+  it('сохраняет ручной выбор и уже определившиеся случайные палитры', () => {
+    resetGame();
+    useSettingsStore.getState().setAiCount(3);
+    useSettingsStore.getState().setPaletteChoice('p1', 'pink');
+    for (const id of ['p2', 'p3', 'p4'] as const)
+      useSettingsStore.getState().setPaletteChoice(id, 'random');
+    const participants = initializeStandardGame()!;
+    useGameLoopStore.getState().startGame(participants);
+    const saved = captureSnapshot();
+    expect(new Set(saved.loop.participants.map(p => p.palette)).size).toBe(4);
+    resetGame();
+    vi.spyOn(Math, 'random').mockReturnValue(0.999);
+    applySnapshot(saved);
+    expect(useGameLoopStore.getState().participants).toEqual(
+      saved.loop.participants,
+    );
+    expect(useSettingsStore.getState().paletteChoices).toEqual({
+      p1: 'pink',
+      p2: 'random',
+      p3: 'random',
+      p4: 'random',
+    });
+  });
+
+  it('старым сохранениям назначает прежние цвета слотов', () => {
+    const saved = captureSnapshot();
+    const { paletteChoices: _choices, ...rules } = saved.rules;
+    const legacy = {
+      ...saved,
+      rules,
+      loop: {
+        ...saved.loop,
+        participants: saved.loop.participants.map(
+          ({ palette: _palette, ...p }) => p,
+        ),
+      },
+    };
+    const migrated = parseSnapshot(JSON.stringify(legacy));
+    expect(migrated.loop.participants.map(p => p.palette)).toEqual([
+      'blue',
+      'red',
+    ]);
+    applySnapshot(migrated);
+    expect(useSettingsStore.getState().paletteChoices).toEqual({
+      p1: 'blue',
+      p2: 'red',
+      p3: 'yellow',
+      p4: 'purple',
+    });
+  });
+
+  it.each([
+    (s: GameSnapshot) => ({
+      ...s,
+      loop: {
+        ...s.loop,
+        participants: s.loop.participants.map(p => ({
+          ...p,
+          palette: 'green',
+        })),
+      },
+    }),
+    (s: GameSnapshot) => ({
+      ...s,
+      loop: {
+        ...s.loop,
+        participants: s.loop.participants.map(p => ({
+          ...p,
+          palette: 'unknown',
+        })),
+      },
+    }),
+    (s: GameSnapshot) => ({
+      ...s,
+      rules: {
+        ...s.rules,
+        paletteChoices: { ...s.rules.paletteChoices, p1: 'red' },
+      },
+    }),
+    (s: GameSnapshot) => ({
+      ...s,
+      rules: {
+        ...s.rules,
+        paletteChoices: { ...s.rules.paletteChoices, p1: 'unknown' },
+      },
+    }),
+  ])('отклоняет неизвестные или совпадающие палитры', mutate => {
+    expect(() =>
+      parseSnapshot(JSON.stringify(mutate(captureSnapshot()))),
+    ).toThrow();
+  });
+
   it('сохраняет и восстанавливает настройки всех противников меню', () => {
     resetGame();
     useSettingsStore.getState().setAiCount(3);

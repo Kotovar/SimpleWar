@@ -1,5 +1,5 @@
 import type { Owner } from '@shared/config';
-import { DETAIL_LEVEL } from '@shared/config';
+import { DETAIL_LEVEL, TEAM_MARKERS, type TeamStyles } from '@shared/config';
 import {
   drawAim,
   drawClearing,
@@ -62,6 +62,7 @@ export const drawEffect = (
   progress: number,
   cellSize: number,
   layer: EffectLayer = 'over',
+  teams: TeamStyles = TEAM_MARKERS,
 ) => {
   const { x, y, damage, healing, lethal, spawn, building, clearing, signal } =
     effect;
@@ -93,7 +94,8 @@ export const drawEffect = (
     ctx.translate(x * cellSize, y * cellSize);
     if (signal) drawSignal(ctx, signal, progress, cellSize);
     else if (building) drawConstruction(ctx, progress, cellSize, layer);
-    else if (spawn) drawSpawn(ctx, spawn, progress, cellSize, layer);
+    else if (spawn)
+      drawSpawn(ctx, spawn, progress, cellSize, layer, teams[spawn]);
     ctx.restore();
     return;
   }

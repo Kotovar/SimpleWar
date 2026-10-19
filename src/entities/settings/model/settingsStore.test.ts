@@ -29,6 +29,53 @@ describe('противники обычной партии', () => {
   const store = () => useSettingsStore.getState();
   beforeEach(() => store().resetStore());
 
+  it('сохраняет отдельный ручной или случайный цвет каждой стороны', () => {
+    store().setAiCount(3);
+    store().setPaletteChoice('p1', 'pink');
+    store().setPaletteChoice('p2', 'green');
+    store().setPaletteChoice('p3', 'random');
+    expect(store().paletteChoices).toEqual({
+      p1: 'pink',
+      p2: 'green',
+      p3: 'random',
+      p4: 'purple',
+    });
+    store().setPaletteChoice('p4', 'green');
+    expect(store().paletteChoices.p4).toBe('purple');
+    store().resetStore();
+    expect(store().paletteChoices).toEqual({
+      p1: 'blue',
+      p2: 'red',
+      p3: 'yellow',
+      p4: 'purple',
+    });
+  });
+
+  it('новому ИИ назначает случайный выбор, если его цвет уже занят человеком', () => {
+    store().setPaletteChoice('p1', 'yellow');
+    store().setAiCount(2);
+    expect(store().paletteChoices).toMatchObject({
+      p1: 'yellow',
+      p2: 'red',
+      p3: 'random',
+    });
+  });
+
+  it('при повторном добавлении сохраняет цвет ИИ, если он ещё свободен', () => {
+    store().setAiCount(3);
+    store().setPaletteChoice('p3', 'green');
+    store().setAiSetup(1, { difficulty: 'hard' });
+    store().setAiCount(1);
+    store().setAiCount(2);
+    expect(store().paletteChoices.p3).toBe('green');
+    expect(store().aiSetups[1]).toEqual(DEFAULT_AI_SETUP);
+    store().setAiCount(1);
+    store().setPaletteChoice('p1', 'green');
+    store().setAiCount(2);
+    expect(store().paletteChoices.p1).toBe('green');
+    expect(store().paletteChoices.p3).toBe('random');
+  });
+
   it('по умолчанию один сбалансированный противник обычной сложности', () => {
     expect(store().aiSetups).toEqual([DEFAULT_AI_SETUP]);
   });

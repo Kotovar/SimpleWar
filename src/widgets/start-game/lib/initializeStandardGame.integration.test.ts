@@ -79,4 +79,16 @@ describe('запуск обычной партии из настроек мен�
     useSettingsStore.getState().setGridSize(15, 15);
     expect(initializeStandardGame()).toHaveLength(2);
   });
+
+  it('закрепляет разные цвета участников, сохраняя ручной выбор', () => {
+    useSettingsStore.getState().setAiCount(3);
+    useSettingsStore.getState().setPaletteChoice('p1', 'green');
+    useSettingsStore.getState().setPaletteChoice('p2', 'random');
+    useSettingsStore.getState().setPaletteChoice('p3', 'random');
+    useSettingsStore.getState().setPaletteChoice('p4', 'pink');
+    const participants = initializeStandardGame()!;
+    expect(participants[0].palette).toBe('green');
+    expect(participants[3].palette).toBe('pink');
+    expect(new Set(participants.map(p => p.palette)).size).toBe(4);
+  });
 });

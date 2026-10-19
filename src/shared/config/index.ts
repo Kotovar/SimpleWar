@@ -18,3 +18,4 @@ export * from './research';
 export * from './audio';
 export * from './actions';
 export * from './saves';
+export * from './palettes';

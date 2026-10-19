@@ -1,6 +1,7 @@
 import { DEFAULT_AI_SETUP, type AiSetup } from './aiProfiles';
+import type { PaletteId } from './palettes';
 
-/** ID слотов участников. Слот задаёт цвет и маркер стороны, а не способ управления. */
+/** ID слотов участников. Слот задаёт маркер; палитра и управление задаются отдельно. */
 export const PARTICIPANT_IDS = ['p1', 'p2', 'p3', 'p4'] as const;
 
 /** ID участника партии. */
@@ -18,6 +19,8 @@ export type Participant = {
   controller: Controller;
   /** Профиль и сложность ИИ; у человека нет. */
   ai?: AiSetup;
+  /** Закреплённая на партию палитра; отсутствие означает прежний цвет слота. */
+  palette?: PaletteId;
 };
 
 /** Состав партии по умолчанию: человек против одного ИИ. */

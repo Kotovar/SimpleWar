@@ -4,6 +4,8 @@ import {
   BUILDINGS_CONFIG,
   CELL_SIZE_LIMITS,
   DEBUG_EXCEPTIONS,
+  DEFAULT_PALETTES,
+  PALETTE_IDS,
   MAP_SIDE_LIMIT,
   MAX_PARTICIPANTS,
   MAX_POPULATION_LIMIT,
@@ -310,7 +312,10 @@ const snapshotShape = shape({
   loop: shape({
     currentTurn: int(1),
     participants: list(
-      shape({ id: participant, controller }, { ai: setup }),
+      shape(
+        { id: participant, controller, palette: one(PALETTE_IDS) },
+        { ai: setup },
+      ),
       4,
     ),
     eliminated: list(participant, 4),
@@ -325,6 +330,11 @@ const snapshotShape = shape({
     customSeed: int(0, Number.MAX_SAFE_INTEGER),
     aiSetups: v =>
       Array.isArray(v) && v.length > 0 && list(setup, MAX_PARTICIPANTS - 1)(v),
+    paletteChoices: shape(
+      Object.fromEntries(
+        PARTICIPANT_IDS.map(id => [id, one([...PALETTE_IDS, 'random'])]),
+      ),
+    ),
   }),
   view: shape({
     cellSize: int(CELL_SIZE_LIMITS.min, CELL_SIZE_LIMITS.max),
@@ -477,6 +487,20 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
     value.rules.aiSetups = [value.rules.aiSetup];
     delete value.rules.aiSetup;
   }
+  if (
+    obj(value) &&
+    obj(value.rules) &&
+    !Object.hasOwn(value.rules, 'paletteChoices')
+  ) {
+    value.rules.paletteChoices = { ...DEFAULT_PALETTES };
+  }
+  if (obj(value) && obj(value.loop) && Array.isArray(value.loop.participants)) {
+    for (const p of value.loop.participants) {
+      if (!obj(p) || Object.hasOwn(p, 'palette')) continue;
+      const id = PARTICIPANT_IDS.find(id => id === p.id);
+      if (id) p.palette = DEFAULT_PALETTES[id];
+    }
+  }
   requireValid(
     snapshotShape(value),
     'Сохранение повреждено: неверные поля, типы или диапазоны',
@@ -486,6 +510,15 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
   const { gridColumns: width, gridRows: height } = s.rules;
   const ids = s.loop.participants.map(p => p.id);
   const idSet = new Set(ids);
+  const colors = s.loop.participants.map(p => p.palette);
+  const choices = PARTICIPANT_IDS.slice(0, s.rules.aiSetups.length + 1)
+    .map(id => s.rules.paletteChoices[id])
+    .filter(id => id !== 'random');
+  requireValid(
+    new Set(colors).size === colors.length &&
+      new Set(choices).size === choices.length,
+    'Участники должны иметь разные палитры',
+  );
   const eliminated = new Set(s.loop.eliminated);
   const alive = ids.filter(id => !eliminated.has(id));
   const aliveSet = new Set(alive);

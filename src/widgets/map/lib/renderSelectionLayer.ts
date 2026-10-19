@@ -4,7 +4,9 @@ import type {
   Owner,
   Position,
   Unit,
+  TeamStyles,
 } from '@shared/config';
+import { TEAM_MARKERS } from '@shared/config';
 import { getHealAmount } from '@features/combat';
 import { calculateDamage } from '@shared/lib';
 import { getResearchArmor } from '@entities/researches';
@@ -24,6 +26,7 @@ import { drawDamagePreview } from './drawDamagePreview';
 import { drawBuildingGhost } from './drawBuildingGhost';
 
 type Options = {
+  teams?: TeamStyles;
   /** Клетка под курсором. */
   hover?: Position | null;
   /** Маршрут до клетки под курсором. */
@@ -59,12 +62,13 @@ export const renderSelectionLayer = (
     pulse = 0,
     ghost,
     arc,
+    teams = TEAM_MARKERS,
   }: Options = {},
 ) => {
   if (hover) drawHoverHighlight(ctx, hover.x, hover.y, cellSize);
   if (ghost) {
     const { type, x, y, owner, valid } = ghost;
-    drawBuildingGhost(ctx, type, x, y, cellSize, owner, valid);
+    drawBuildingGhost(ctx, type, x, y, cellSize, owner, valid, teams[owner]);
   }
 
   if (!selection) return;
