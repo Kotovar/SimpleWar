@@ -54,8 +54,9 @@ export const MOVE_COST: Partial<Record<CellType, number>> = {
 /**
  * Версия генератора карт. Повышается при любом изменении, из-за которого
  * тот же сид даёт другую карту: сид воспроизводим только вместе с версией.
+ * В v6 добавлена симметрия на 3–4 стороны; режим на двоих сохранён из v5.
  */
-export const MAP_GENERATOR_VERSION = 5;
+export const MAP_GENERATOR_VERSION = 6;
 
 /** Максимум воспроизводимых попыток (сид, сид + 2³², ...) до резервной раскладки. */
 export const MAP_ATTEMPTS = 10;

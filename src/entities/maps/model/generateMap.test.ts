@@ -76,3 +76,35 @@ it('keeps grass next to every gold cell so a mine can be built', () => {
     }
   }
 });
+
+it.each([
+  [30, 30],
+  [31, 35],
+  [100, 60],
+  [100, 100],
+])('групповая карта %s × %s отражается по обеим осям', (width, height) => {
+  for (let seed = 0; seed < 20; seed++) {
+    const grid = generateMap(width, height, seed, 4);
+    expect(generateMap(width, height, seed, 3)).toEqual(grid);
+    const cells = grid.flat();
+    expect(cells.filter(c => c.type === 'swamp').length).toBeLessThanOrEqual(
+      Math.floor(cells.length * 0.1),
+    );
+    const terrain = grid.map(row => row.map(c => [c.type, c.isWalkable]));
+    expect(terrain).toEqual(terrain.map(row => [...row].reverse()));
+    expect(terrain).toEqual([...terrain].reverse());
+    for (const { x, y, type } of cells) {
+      if (type === 'gold') {
+        expect(
+          [-1, 0, 1].flatMap(dy =>
+            [-1, 0, 1].map(dx => grid[y + dy]?.[x + dx]?.type),
+          ),
+        ).toContain('grass');
+      }
+    }
+  }
+});
+
+it.each([0, 1, 5, 2.5, NaN])('отклоняет число участников %s', count => {
+  expect(() => generateMap(30, 30, 43, count)).toThrow(RangeError);
+});

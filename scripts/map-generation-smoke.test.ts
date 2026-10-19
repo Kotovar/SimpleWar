@@ -56,7 +56,7 @@ const range = (values: number[]) => {
   };
 };
 
-it('accepts 100 fixed seeds for each preset and both supported party sizes', () => {
+it('accepts 100 fixed seeds for each preset with 2–4 participants', () => {
   const rows: Array<{
     preset: string;
     participants: number;
@@ -68,25 +68,38 @@ it('accepts 100 fixed seeds for each preset and both supported party sizes', () 
     forest: number;
     hill: number;
     swamp: number;
+    attempts: number;
+    rejections: Record<string, number>;
     [key: string]: unknown;
   }> = [];
   for (const [preset, { cols, rows: height }] of Object.entries(MAP_PRESETS)) {
-    for (const count of [2, 4]) {
+    for (const count of [2, 3, 4]) {
       for (let seed = 0; seed < 100; seed++) {
         const starts = getStartPositions(cols, height, count);
+        const preparedStarts = getStartPositions(
+          cols,
+          height,
+          count > 2 ? 4 : 2,
+        );
         let candidateReason: string | null = null;
         let sourceSeed: number | null = null;
+        let attempts = 0;
+        const rejections: Record<string, number> = {};
         let expectedGrid: ReturnType<typeof generateMap> | null = null;
         for (let attempt = 0; attempt < MAP_ATTEMPTS; attempt++) {
+          attempts++;
           const attemptSeed = seed + attempt * 0x100000000;
-          const candidate = generateMap(cols, height, attemptSeed);
-          for (const { base } of starts) {
+          const candidate = generateMap(cols, height, attemptSeed, count);
+          for (const { base } of preparedStarts) {
             prepareStartArea(candidate, base.x, base.y);
           }
-          placeStartResources(candidate, starts);
+          placeStartResources(candidate, preparedStarts);
           const result = evaluateMap(candidate, starts);
           if (attempt === 0) candidateReason = result.ok ? null : result.reason;
-          if (!result.ok) continue;
+          if (!result.ok) {
+            rejections[result.reason] = (rejections[result.reason] ?? 0) + 1;
+            continue;
+          }
           sourceSeed = attemptSeed;
           expectedGrid = candidate;
           break;
@@ -120,6 +133,8 @@ it('accepts 100 fixed seeds for each preset and both supported party sizes', () 
           sourceSeed,
           usedFallback,
           candidateReason,
+          attempts,
+          rejections,
           reason: assessment && !assessment.ok ? assessment.reason : null,
           walkable: cells.filter(cell => cell.isWalkable).length,
           components: components.count,
@@ -134,19 +149,37 @@ it('accepts 100 fixed seeds for each preset and both supported party sizes', () 
         expect(acceptedSeed).toBe(seed);
         expect(usedFallback).toBe(sourceSeed === null);
         if (expectedGrid) expect(grid).toEqual(expectedGrid);
+        if (count > 2) {
+          const types = grid.map(row => row.map(c => c.type));
+          expect(types).toEqual(types.map(row => [...row].reverse()));
+          expect(types).toEqual([...types].reverse());
+        }
       }
     }
   }
   const summary = Object.entries(MAP_PRESETS).flatMap(([preset]) =>
-    [2, 4].map(count => {
+    [2, 3, 4].map(count => {
       const group = rows.filter(
         row => row.preset === preset && row.participants === count,
+      );
+      const attempted = group.reduce((sum, row) => sum + row.attempts, 0);
+      const rejected = group.reduce(
+        (sum, row) =>
+          sum + Object.values(row.rejections).reduce((a, b) => a + b, 0),
+        0,
       );
       return {
         preset,
         participants: count,
         accepted: group.length,
         fallback: group.filter(row => row.usedFallback).length,
+        firstCandidateRejected: group.filter(
+          row => row.candidateReason !== null,
+        ).length,
+        attempts: range(group.map(row => row.attempts)),
+        candidateAttempts: attempted,
+        rejectedCandidates: rejected,
+        rejectionShare: rejected / attempted,
         walkable: range(group.map(row => row.walkable)),
         components: range(group.map(row => row.components)),
         largestComponentShare: range(
@@ -158,7 +191,7 @@ it('accepts 100 fixed seeds for each preset and both supported party sizes', () 
     }),
   );
   writeFileSync(
-    '/tmp/simplewar-s04-map-smoke.json',
+    '/tmp/simplewar-m2-map-smoke.json',
     JSON.stringify(
       {
         generatorVersion: MAP_GENERATOR_VERSION,
@@ -171,6 +204,6 @@ it('accepts 100 fixed seeds for each preset and both supported party sizes', () 
       2,
     ),
   );
-  expect(rows).toHaveLength(Object.keys(MAP_PRESETS).length * 2 * 100);
+  expect(rows).toHaveLength(Object.keys(MAP_PRESETS).length * 3 * 100);
   // Карты 100 × 100 и 100 × 60 генерируются заметно дольше малых.
 }, 60_000);

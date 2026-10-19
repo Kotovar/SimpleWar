@@ -10,6 +10,7 @@ import {
 import { useBuildingsStore } from '@entities/buildings';
 import {
   generateMap,
+  createRandom,
   isValidSeed,
   prepareStartArea,
   randomSeed,
@@ -139,6 +140,21 @@ export const initializeGame = (
 
   const starts = getStartPositions(gridColumns, gridRows, participants.length);
   const initialSeed = mapGenerationMode === 'fixed' ? customSeed : randomSeed();
+  const preparedStarts =
+    participants.length > 2
+      ? getStartPositions(gridColumns, gridRows, MAX_PARTICIPANTS)
+      : starts;
+  if (participants.length > 2) {
+    const random = createRandom(initialSeed);
+    const aiSlots = participants.flatMap((p, index) =>
+      p.controller === 'ai' ? [index] : [],
+    );
+    for (let index = aiSlots.length - 1; index > 0; index--) {
+      const a = aiSlots[index];
+      const b = aiSlots[Math.floor(random() * (index + 1))];
+      [starts[a], starts[b]] = [starts[b], starts[a]];
+    }
+  }
   const spawnStarts = () => {
     for (const [index, { base, worker }] of starts.entries()) {
       spawnBuilding('base', base.x, base.y, participants[index].id);
@@ -166,16 +182,22 @@ export const initializeGame = (
         initialSeed > Number.MAX_SAFE_INTEGER - step
           ? step - (Number.MAX_SAFE_INTEGER - initialSeed) - 1
           : initialSeed + step;
-      const grid = generateMap(gridColumns, gridRows, seed);
-      for (const { base } of starts) prepareStartArea(grid, base.x, base.y);
-      placeStartResources(grid, starts);
+      const grid = generateMap(
+        gridColumns,
+        gridRows,
+        seed,
+        participants.length,
+      );
+      for (const { base } of preparedStarts)
+        prepareStartArea(grid, base.x, base.y);
+      placeStartResources(grid, preparedStarts);
       if (!evaluateMap(grid, starts).ok) continue;
       useMapStore.getState().setGrid(grid, initialSeed);
       spawnStarts();
       return true;
     }
 
-    const grid = fallbackMap(gridColumns, gridRows, starts);
+    const grid = fallbackMap(gridColumns, gridRows, preparedStarts);
     if (evaluateMap(grid, starts).ok) {
       // Пустое поле выбрано явно — это не резервная карта.
       useMapStore.getState().setGrid(grid, initialSeed, !emptyField);

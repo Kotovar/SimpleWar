@@ -9,8 +9,8 @@ const MIN_GOLD = 8;
 /** Максимальное количество золота. */
 const MAX_GOLD = 20;
 
-/** Число попыток найти место на каждую пару клеток золота. */
-const GOLD_ATTEMPTS_PER_PAIR = 50;
+/** Число попыток найти место на каждую симметричную группу клеток золота. */
+const GOLD_ATTEMPTS_PER_GROUP = 50;
 
 /**
  * Центры кластеров золота в долях ширины и высоты карты.
@@ -46,55 +46,64 @@ const isMineable = (grid: Cell[][], cell: Cell): boolean =>
   getSurroundings(grid, cell).some(({ type }) => type === 'grass');
 
 /**
- * Пробует превратить траву и зеркальную ей клетку в золото.
+ * Пробует превратить симметричную группу проходимых клеток в золото.
  *
- * Пара откатывается, если после неё у какой-то клетки золота рядом
+ * Группа откатывается, если после неё у какой-то клетки золота рядом
  * не останется травы: шахту строит рабочий с соседней клетки.
  *
  * @param grid - Клетки карты; изменяются на месте.
- * @param cell - Клетка пары.
- * @param mirror - Клетка, зеркальная `cell` относительно центра карты.
- * @returns `true`, если пара поставлена.
+ * @param cells - Две или четыре зеркальные клетки.
+ * @returns `true`, если группа поставлена.
  */
-const tryPlacePair = (grid: Cell[][], cell: Cell, mirror: Cell): boolean => {
-  if (cell === mirror || !cell.isWalkable || !mirror.isWalkable) return false;
+const tryPlaceGroup = (grid: Cell[][], cells: Cell[]): boolean => {
+  if (
+    new Set(cells).size !== cells.length ||
+    cells.some(cell => !cell.isWalkable)
+  )
+    return false;
 
-  const oldType = cell.type;
-  const oldMirrorType = mirror.type;
-  cell.type = mirror.type = 'gold';
-  const affected = [cell, mirror].flatMap(c => getSurroundings(grid, c));
+  const oldTypes = cells.map(cell => cell.type);
+  for (const cell of cells) cell.type = 'gold';
+  const affected = cells.flatMap(c => getSurroundings(grid, c));
   if (!affected.every(c => isMineable(grid, c))) {
-    cell.type = oldType;
-    mirror.type = oldMirrorType;
+    cells.forEach((cell, index) => {
+      cell.type = oldTypes[index];
+    });
     return false;
   }
 
-  cell.isWalkable = mirror.isWalkable = false;
+  for (const cell of cells) cell.isWalkable = false;
   return true;
 };
 
 /**
- * Расставляет золото парами клеток, симметричными относительно центра карты.
+ * Расставляет золото симметричными парами или четвёрками клеток.
  *
- * Пары распределяются по кластерам {@link GOLD_CENTERS} и ставятся только
- * на траву. Если места не хватает, золота будет меньше целевого количества.
+ * Группы распределяются по кластерам {@link GOLD_CENTERS} и ставятся только
+ * на проходимые клетки. Если места не хватает, золота будет меньше целевого количества.
  *
  * @param grid - Клетки карты; изменяются на месте.
  * @param random - Генератор случайных чисел.
+ * @param fourCorners - Отражать золото по обеим осям вместо центральной симметрии.
  */
-export const placeGold = (grid: Cell[][], random: () => number) => {
+export const placeGold = (
+  grid: Cell[][],
+  random: () => number,
+  fourCorners = false,
+) => {
   const height = grid.length;
   const width = grid[0].length;
-  const goldPairs = Math.floor(
-    Math.max(MIN_GOLD, Math.min(MAX_GOLD, (width * height) / GOLD_DENSITY)) / 2,
+  const goldGroups = Math.floor(
+    Math.max(MIN_GOLD, Math.min(MAX_GOLD, (width * height) / GOLD_DENSITY)) /
+      (fourCorners ? 4 : 2),
   );
   const radius = Math.floor(Math.min(width, height) / 5);
   const offset = () => Math.floor(random() * (radius * 2 + 1)) - radius;
-  let placedPairs = 0;
+  let placedGroups = 0;
 
   for (
     let attempt = 0;
-    placedPairs < goldPairs && attempt < goldPairs * GOLD_ATTEMPTS_PER_PAIR;
+    placedGroups < goldGroups && attempt < goldGroups * GOLD_ATTEMPTS_PER_GROUP;
     attempt++
   ) {
     const center = GOLD_CENTERS[attempt % GOLD_CENTERS.length];
@@ -103,6 +112,10 @@ export const placeGold = (grid: Cell[][], random: () => number) => {
     const cell = grid[y]?.[x];
     const mirror = grid[height - 1 - y]?.[width - 1 - x];
 
-    if (cell && mirror && tryPlacePair(grid, cell, mirror)) placedPairs++;
+    if (!cell || !mirror) continue;
+    const cells = [cell, mirror];
+    if (fourCorners)
+      cells.push(grid[y][width - 1 - x], grid[height - 1 - y][x]);
+    if (tryPlaceGroup(grid, cells)) placedGroups++;
   }
 };
