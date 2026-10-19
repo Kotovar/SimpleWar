@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PARTICIPANT_IDS, type Cell } from '@shared/config';
 import {
   drawArcher,
@@ -9,7 +9,7 @@ import {
   drawTower,
   drawWorker,
 } from '@shared/ui';
-import { generateMap } from '@entities/maps';
+import { generateMap, randomSeed } from '@entities/maps';
 import { useSettingsStore } from '@entities/settings';
 import { useSandboxStore } from '@features/sandbox';
 import { renderTerrainLayer } from '@widgets/map';
@@ -49,10 +49,11 @@ const grassAround = (grid: Cell[][], cx: number, cy: number, count: number) => {
 
 /**
  * Фон главного меню: случайная карта с лагерями выбранных сторон.
- * Рисуется тем же кодом, что и карта; обновляется при смене числа сторон.
+ * При смене числа сторон меняются лагеря, а сид рельефа сохраняется.
  */
 export const MenuBackdrop = () => {
   const ref = useRef<HTMLCanvasElement>(null);
+  const [seed] = useState(randomSeed);
   const aiCount = useSettingsStore(state => state.aiSetups.length);
   const sandboxCount = useSandboxStore(state =>
     state.enabled ? state.scenario.sides.length : null,
@@ -66,7 +67,7 @@ export const MenuBackdrop = () => {
     // Запас по краям — под дрейф и масштаб анимации.
     const columns = Math.min(100, Math.ceil((innerWidth * 1.2) / CELL) + 2);
     const rows = Math.min(100, Math.ceil((innerHeight * 1.2) / CELL) + 2);
-    const grid = generateMap(columns, rows);
+    const grid = generateMap(columns, rows, seed);
     const ratio = Math.min(2, devicePixelRatio || 1);
     canvas.width = columns * CELL * ratio;
     canvas.height = rows * CELL * ratio;
@@ -80,14 +81,14 @@ export const MenuBackdrop = () => {
       const cells = grassAround(
         grid,
         Math.round(columns * at.x),
-        Math.round(rows * (count === 2 ? 0.5 : at.y)),
+        Math.round(rows * at.y),
         entities.length,
       );
       cells.forEach((cell, index) =>
         entities[index](ctx, cell.x, cell.y, CELL, owner),
       );
     }
-  }, [count]);
+  }, [count, seed]);
 
   return (
     <div className={styles.Backdrop} aria-hidden>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import clsx from 'clsx';
 import {
   AI_DIFFICULTY,
@@ -8,13 +9,10 @@ import {
   PARTICIPANT_IDS,
   START_RESOURCES,
 } from '@shared/config';
+import { Select } from '@shared/ui';
 import { useSettingsStore } from '@entities/settings';
 import { StepLabel } from './StepLabel';
 import styles from './styles.module.css';
-
-/** Подпись прибавки: «+150» / «−80» / «как у вас». */
-const signed = (value: number) =>
-  value > 0 ? `+${value}` : value < 0 ? `−${-value}` : '±0';
 
 /**
  * Настройка противников обычной партии: профиль стратегии и сложность каждого.
@@ -25,6 +23,12 @@ export const AiSetupSection = () => {
   const aiSetups = useSettingsStore(state => state.aiSetups);
   const setAiCount = useSettingsStore(state => state.setAiCount);
   const setAiSetup = useSettingsStore(state => state.setAiSetup);
+  const [active, setActive] = useState(0);
+  const selected = Math.min(active, aiSetups.length - 1);
+  const aiSetup = aiSetups[selected];
+  const owner = PARTICIPANT_IDS[selected + 1];
+  const { stockBonus } = AI_DIFFICULTY[aiSetup.difficulty];
+  const start = START_RESOURCES[owner];
 
   return (
     <section className={styles.Section}>
@@ -41,76 +45,76 @@ export const AiSetupSection = () => {
               [styles.Active]: aiSetups.length === index + 1,
             })}
             aria-pressed={aiSetups.length === index + 1}
-            onClick={() => setAiCount(index + 1)}
+            onClick={() => {
+              setAiCount(index + 1);
+              setActive(Math.min(selected, index));
+            }}
           >
             {index + 1}
           </button>
         ))}
       </div>
-      {aiSetups.map((aiSetup, index) => {
-        const owner = PARTICIPANT_IDS[index + 1];
-        const { stockBonus } = AI_DIFFICULTY[aiSetup.difficulty];
-        const start = START_RESOURCES[owner];
-        return (
-          <fieldset className={styles.AiOpponent} key={owner}>
-            <legend className={styles.Label}>
-              Противник {index + 1} — {OWNER_NAME[owner]}
-            </legend>
-            <div className={styles.Label}>Профиль</div>
-            <div
-              className={clsx(styles.ButtonGroup, styles.AiGroup)}
-              role='group'
-              aria-label='Профиль'
-            >
-              {AI_PROFILE_TYPES.map(profile => (
-                <button
-                  key={profile}
-                  className={clsx(styles.ToggleButton, {
-                    [styles.Active]: aiSetup.profile === profile,
-                  })}
-                  aria-pressed={aiSetup.profile === profile}
-                  onClick={() => setAiSetup(index, { profile })}
-                >
-                  {AI_PROFILES[profile].name}
-                </button>
-              ))}
-            </div>
-            <div className={styles.Label}>Сложность</div>
-            <div
-              className={clsx(styles.ButtonGroup, styles.AiGroup)}
-              role='group'
-              aria-label='Сложность'
-            >
-              {AI_DIFFICULTY_TYPES.map(difficulty => {
-                const { gold, wood } = AI_DIFFICULTY[difficulty].stockBonus;
-                return (
-                  <button
-                    key={difficulty}
-                    className={clsx(styles.ToggleButton, {
-                      [styles.Active]: aiSetup.difficulty === difficulty,
-                    })}
-                    aria-pressed={aiSetup.difficulty === difficulty}
-                    onClick={() => setAiSetup(index, { difficulty })}
-                  >
-                    <span className={styles.ToggleTitle}>
-                      {AI_DIFFICULTY[difficulty].name}
-                    </span>
-                    <span className={styles.ToggleMeta}>
-                      золото {signed(gold)}, дерево {signed(wood)}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            <p className={styles.SeedWarning}>
-              ИИ начнёт с {Math.max(0, start.gold + stockBonus.gold)} золота и{' '}
-              {Math.max(0, start.wood + stockBonus.wood)} дерева, вы — с{' '}
-              {START_RESOURCES.p1.gold} и {START_RESOURCES.p1.wood}. Туман, цены
-              и правила боя одинаковы на всех уровнях.
-            </p>
-          </fieldset>
-        );
-      })}
+      <div
+        className={clsx(styles.ButtonGroup, styles.AiTabs)}
+        role='group'
+        aria-label='Настраиваемый противник'
+      >
+        {aiSetups.map((_, index) => (
+          <button
+            key={PARTICIPANT_IDS[index + 1]}
+            className={clsx(styles.ToggleButton, {
+              [styles.Active]: selected === index,
+            })}
+            aria-pressed={selected === index}
+            onClick={() => setActive(index)}
+          >
+            {OWNER_NAME[PARTICIPANT_IDS[index + 1]]}
+          </button>
+        ))}
+      </div>
+      <fieldset className={styles.AiOpponent}>
+        <legend className={styles.Label}>{OWNER_NAME[owner]}</legend>
+        <div className={styles.AiFields}>
+          <label className={styles.AiField}>
+            <span className={styles.Label}>Профиль</span>
+            <Select
+              name={`ai-profile-${owner}`}
+              value={aiSetup.profile}
+              options={AI_PROFILE_TYPES.map(value => ({
+                value,
+                label: AI_PROFILES[value].name,
+              }))}
+              onChange={profile => setAiSetup(selected, { profile })}
+            />
+          </label>
+          <label className={styles.AiField}>
+            <span className={styles.Label}>Сложность</span>
+            <Select
+              name={`ai-difficulty-${owner}`}
+              value={aiSetup.difficulty}
+              options={AI_DIFFICULTY_TYPES.map(value => ({
+                value,
+                label: AI_DIFFICULTY[value].name,
+              }))}
+              onChange={difficulty => setAiSetup(selected, { difficulty })}
+            />
+          </label>
+        </div>
+        <p className={clsx(styles.SeedWarning, styles.AiStock)}>
+          <span>
+            ИИ: {Math.max(0, start.gold + stockBonus.gold)} золота,{' '}
+            {Math.max(0, start.wood + stockBonus.wood)} дерева
+          </span>
+          <span>
+            Вы: {START_RESOURCES.p1.gold} золота, {START_RESOURCES.p1.wood}{' '}
+            дерева
+          </span>
+        </p>
+      </fieldset>
+      <p className={styles.SeedWarning}>
+        Сложность меняет только стартовые запасы ИИ. Туман, цены и правила боя
+        одинаковы.
+      </p>
     </section>
   );
 };

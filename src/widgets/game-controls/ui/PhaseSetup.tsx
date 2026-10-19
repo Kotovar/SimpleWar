@@ -128,8 +128,11 @@ export const PhaseSetup = ({ onStartGame, onOpenSaves }: Props) => {
           ))}
         </div>
 
-        {groupGame && (
-          <p className={styles.SeedWarning}>
+        {!sandbox && (
+          <p
+            className={styles.SeedWarning}
+            style={{ visibility: groupGame ? 'visible' : 'hidden' }}
+          >
             Для 3–4 участников доступны карты от 30 × 30 клеток.
           </p>
         )}
