@@ -10,7 +10,7 @@ import {
 import { expansionWanted } from '../saving';
 import { manhattan } from '../geometry';
 import { standCells, stepToward } from '../movement';
-import { bestMove, isFree, moveTo, taskOf } from './common';
+import { bestMove, isFree, movedByOther, moveTo, taskOf } from './common';
 import { buildStep, continueBuilds, preferUnstruckSites } from './building';
 import { idleWorkers } from './builders';
 
@@ -59,10 +59,15 @@ const takeWorkplace =
     if (!places.length) return [];
     const score = scarceResource(ctx) === resource ? 70 : 50;
     const claimed = new Set<string>();
-    return idleWorkers(ctx, ruleId).flatMap((worker): Candidate[] => {
+    return idleWorkers(ctx).flatMap((worker): Candidate[] => {
+      const free = places.filter(({ id }) => !claimed.has(id));
+      // Строитель, дошедший по W05, сегодня не двигается другим правилом,
+      // но встать в достроенное рядом здание может сразу — как человек.
       const place = nearest(
         worker,
-        places.filter(({ id }) => !claimed.has(id)),
+        movedByOther(ctx, worker.id, ruleId)
+          ? free.filter(building => isNear(worker, building))
+          : free,
       );
       if (!place) return [];
       claimed.add(place.id);
