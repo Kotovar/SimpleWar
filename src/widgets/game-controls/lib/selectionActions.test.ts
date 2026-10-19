@@ -186,3 +186,60 @@ describe('getSelectionActions', () => {
     expect(unitStats('siege')).toContain('дальность 2–5');
   });
 });
+
+describe('укрытие рабочего в ратуше', () => {
+  it('«Укрыться» у соседней ратуши; занята — причина; внутри — «Выйти»', () => {
+    const hall = building('base');
+    const worker = unit('worker');
+    const free = byId(
+      getSelectionActions(input({ unit: worker, nearby: [hall] })),
+    );
+    expect(free.shelter).toMatchObject({
+      id: `shelter:${hall.id}`,
+      code: 'KeyZ',
+      reason: undefined,
+    });
+    expect(
+      byId(
+        getSelectionActions(
+          input({
+            unit: worker,
+            nearby: [hall],
+            takenWorkplaces: new Set([hall.id]),
+          }),
+        ),
+      ).shelter.reason,
+    ).toBe('В ратуше уже укрыт рабочий');
+    expect(
+      byId(getSelectionActions(input({ unit: worker }))).shelter.reason,
+    ).toBe('Рядом нет своей ратуши');
+    const inside = byId(
+      getSelectionActions(
+        input({
+          unit: unit('worker', { workplaceId: hall.id, x: 6 }),
+          nearby: [hall],
+        }),
+      ),
+    );
+    expect(inside.unassign).toMatchObject({
+      label: 'Выйти из ратуши',
+      reason: undefined,
+    });
+  });
+
+  it('у ратуши с укрытым рабочим — выбрать и выпустить', () => {
+    const hall = building('base');
+    const plain = getSelectionActions(input({ building: hall }));
+    expect(plain.some(({ id }) => id === 'unassign')).toBe(false);
+    const buttons = byId(
+      getSelectionActions(
+        input({
+          building: hall,
+          workerInside: unit('worker', { workplaceId: hall.id }),
+        }),
+      ),
+    );
+    expect(buttons.pickWorker.reason).toBeUndefined();
+    expect(buttons.unassign.label).toBe('Выпустить рабочего');
+  });
+});

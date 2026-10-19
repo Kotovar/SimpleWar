@@ -2,6 +2,7 @@ import type { AiRule } from '../../model/types';
 import { W01, W02, W03, W04, W05 } from './workers';
 import { W07, W08, W09 } from './construction';
 import { W06 } from './farms';
+import { W12 } from './shelter';
 import { W10 } from './passage';
 import { X01 } from './clearing';
 import { M01, M02, M05, M06 } from './soldiers';
@@ -29,6 +30,7 @@ import { F01, F02, F03, F04 } from './griffons';
 export * from './workers';
 export * from './construction';
 export * from './farms';
+export * from './shelter';
 export * from './passage';
 export * from './clearing';
 export * from './soldiers';
@@ -69,6 +71,7 @@ export const AI_RULES: AiRule[] = [
   W09,
   W10,
   W11,
+  W12,
   X01,
   X02,
   M01,

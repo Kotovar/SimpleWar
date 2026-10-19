@@ -143,6 +143,12 @@ const buildingActions = (
       action('unassign', { reason }),
     );
   }
+  // Укрытый в ратуше рабочий: выбрать или выпустить.
+  if (building.type === 'base' && input.workerInside)
+    buttons.push(action('pickWorker'), {
+      ...action('unassign'),
+      label: 'Выпустить рабочего',
+    });
   if (building.role === 'production')
     buttons.push(action('rallyPoint', { pressed: input.mode.rally }), {
       ...action('cancelOrder', {

@@ -95,7 +95,7 @@ export const REJECTION_MESSAGE: Record<RejectionCode, string> = {
   resources: 'Недостаточно ресурсов',
   population: 'Не хватает лимита населения',
   target: 'Недопустимая цель',
-  workplace: 'Здание уже обслуживает другой рабочий',
+  workplace: 'Здание занято другим рабочим',
   blocked: 'Постройка перекроет последний проход',
   map: 'Не удалось подготовить карту',
   forge: 'Нужна кузница',

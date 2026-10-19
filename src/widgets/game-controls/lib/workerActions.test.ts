@@ -4,13 +4,14 @@ import type { SelectionActionInput } from './actionButton';
 import { getSelectionActions } from './selectionActions';
 
 describe('кнопки рабочего', () => {
-  it('рабочий: постоянный набор B G X C R Space F, недоступное — с причиной', () => {
+  it('рабочий: постоянный набор B G Z X C R Space F, недоступное — с причиной', () => {
     const worker = unit('worker', { buildPoints: 1 });
     const buttons = getSelectionActions(input({ unit: worker }));
 
     expect(buttons.map(({ code }) => code)).toEqual([
       'KeyB',
       'KeyG',
+      'KeyZ',
       'KeyX',
       'KeyC',
       'KeyR',

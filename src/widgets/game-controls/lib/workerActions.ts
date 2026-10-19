@@ -69,9 +69,26 @@ export const workerActions = (
           : 'Рядом нет свободного рудника или лесопилки',
       });
 
-  const unassign = action('unassign', {
-    reason: current ? undefined : 'Рабочий не работает в здании',
+  // Укрытие в своей ратуше рядом: внутри рабочий недосягаем.
+  const base = nearby.find(({ type }) => type === 'base');
+  const sheltered = !!base && current === base.id;
+  const shelter = action('shelter', {
+    ...(base && { id: `shelter:${base.id}` }),
+    reason: !base
+      ? 'Рядом нет своей ратуши'
+      : sheltered
+        ? 'Рабочий уже в ратуше'
+        : takenWorkplaces.has(base.id)
+          ? 'В ратуше уже укрыт рабочий'
+          : undefined,
   });
+
+  const unassign = {
+    ...action('unassign', {
+      reason: current ? undefined : 'Рабочий не работает в здании',
+    }),
+    ...(sheltered && { label: 'Выйти из ратуши' }),
+  };
 
   const clear = action('clearForest', {
     pressed: mode.clearing,
@@ -98,5 +115,5 @@ export const workerActions = (
       })
     : action('repair', { reason: 'Рядом нет повреждённых своих зданий' });
 
-  return [build, work, unassign, clear, repair];
+  return [build, work, shelter, unassign, clear, repair];
 };

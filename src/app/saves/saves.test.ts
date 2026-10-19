@@ -150,6 +150,24 @@ describe('формат и восстановление партии', () => {
       saved.units[fighter.id].hp,
     );
   });
+  it('сохраняет рабочего, укрытого в ратуше', () => {
+    const base = Object.values(useBuildingsStore.getState().buildings).find(
+      b => b.owner === 'p1' && b.type === 'base',
+    )!;
+    const hider = Object.values(useUnitsStore.getState().units).find(
+      u => u.owner === 'p1' && u.role === 'civil',
+    )!;
+    useUnitsStore.getState().setWorkplace(hider.id, base.id);
+    useUnitsStore.getState().placeUnit(hider.id, base.x, base.y);
+    const saved = captureSnapshot();
+    applySnapshot(saved);
+    expect(useUnitsStore.getState().units[hider.id]).toMatchObject({
+      x: base.x,
+      y: base.y,
+      workplaceId: base.id,
+    });
+  });
+
   it('восстанавливает завершённую партию с историческим населением выбывшего', () => {
     expect(surrender('p1').ok).toBe(true);
     const saved = captureSnapshot();

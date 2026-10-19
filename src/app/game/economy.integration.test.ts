@@ -388,3 +388,42 @@ describe('рабочий внутри здания', () => {
     expect(x !== 4 || y !== 3).toBe(true);
   });
 });
+
+describe('укрытие в ратуше', () => {
+  const base = () =>
+    Object.values(buildings().buildings).find(
+      b => b.owner === 'p1' && b.type === 'base',
+    )!.id;
+
+  it('прячет одного рабочего: недосягаем, дохода нет, выход — снятием', () => {
+    const hider = readyWorker(1, 1);
+    const second = readyWorker(1, 0);
+    expect(
+      assignWorker({ actor: 'p1', workerId: hider, buildingId: base() }).ok,
+    ).toBe(true);
+    expect(worker(hider)).toMatchObject({ x: 0, y: 0, workplaceId: base() });
+    expect(
+      assignWorker({ actor: 'p1', workerId: second, buildingId: base() }),
+    ).toMatchObject({ code: 'workplace' });
+
+    const raider = units().spawnUnit('swordsman', 0, 1, 'p2', true)!;
+    useUnitsStore.setState(state => ({
+      units: {
+        ...state.units,
+        [raider]: { ...state.units[raider], attackPoints: 1 },
+      },
+    }));
+    useGameLoopStore.setState({ activePlayer: 'p2' });
+    expect(
+      attack({ actor: 'p2', attackerId: raider, targetId: hider }),
+    ).toMatchObject({ ok: false, code: 'notFound' });
+    useGameLoopStore.setState({ activePlayer: 'p1' });
+
+    // Только доход самой ратуши: укрытый рабочий не добывает.
+    round();
+    expect(gold()).toBe(200 + 3);
+
+    expect(unassignWorker({ actor: 'p1', workerId: hider }).ok).toBe(true);
+    expect(worker(hider).workplaceId).toBeNull();
+  });
+});

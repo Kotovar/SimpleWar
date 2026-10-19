@@ -11,6 +11,7 @@ const PATHS: Record<ActionId | `research:${ResearchType}`, string> = {
   build: 'M3 21l9.5-9.5M10.5 6.5 15 2l7 7-4.5 4.5zM13 9l2 2',
   work: 'M14 10 4 20M5 7.5C9 4 15 4 20 8.5 15.5 7.5 11.5 8 8.5 10.5z',
   unassign: 'M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10',
+  shelter: 'M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-5h4v5',
   clearForest:
     'M4 21 14.5 10.5M12 8c2-3 6-4 9-2-1 3-3 5-6 6.5zM8 3l2 4-4 2-2-4z',
   repair:

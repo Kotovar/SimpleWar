@@ -297,6 +297,35 @@ describe('контекстное назначение на работу', () => 
     });
     expect(units().units[holder]).toMatchObject({ workplaceId: buildingId });
   });
+  it('ПКМ по своей ратуше: пустая — укрытие, занятая — отказ «здание занято»', () => {
+    const baseId = useBuildingsStore
+      .getState()
+      .spawnBuilding('base', 10, 1, 'p1')!;
+    units().placeUnit(workerId, 9, 1);
+    expect(
+      getContextWorkplace(units().units[workerId], 'p1', target, true)?.id,
+    ).toBe(baseId);
+    expect(
+      giveWorkOrder({ actor: 'p1', workerId, buildingId: baseId }),
+    ).toEqual(ok);
+    expect(execute()).toEqual([]);
+    expect(units().units[workerId]).toMatchObject({
+      x: 10,
+      y: 1,
+      workplaceId: baseId,
+    });
+
+    const second = units().spawnUnit('worker', 9, 0, 'p1')!;
+    const unit = units().units[second];
+    // Без `taken` занятую ратушу не предлагает (подсказка курсора).
+    expect(getContextWorkplace(unit, 'p1', target)).toBeNull();
+    expect(getContextWorkplace(unit, 'p1', target, true)?.id).toBe(baseId);
+    expect(
+      giveWorkOrder({ actor: 'p1', workerId: second, buildingId: baseId }),
+    ).toMatchObject({ ok: false, code: 'workplace' });
+    expect(useJournalStore.getState().errors.at(-1)?.code).toBe('workplace');
+  });
+
   it('чужое или исчезнувшее здание не допускает назначения', () => {
     const buildingId = useBuildingsStore
       .getState()

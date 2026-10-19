@@ -153,6 +153,11 @@ export const runSelectionAction = (
       // Рабочий вошёл в здание: подсветка хода больше не нужна.
       resetModes();
       return;
+    case 'shelter':
+      if (!unit || !target) return;
+      assignWorker({ actor, workerId: unit.id, buildingId: target });
+      resetModes();
+      return;
     case 'unassign': {
       const workerId = unit?.id ?? input.workerInside?.id;
       if (!workerId) return;

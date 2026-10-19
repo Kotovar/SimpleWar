@@ -5,7 +5,7 @@ import {
 } from '@shared/config';
 import type { StrategyScore } from '../model/types';
 import type { AiContext } from './context';
-import { hasStrikeArmy, nearest } from './facts';
+import { hasStrikeArmy, isMining, nearest } from './facts';
 import { manhattan } from './geometry';
 
 /**
@@ -44,7 +44,7 @@ export const researchValue = (ctx: AiContext, type: ResearchType): number => {
       return siege ? 15 + siege * 8 : 0;
     }
     case 'artel': {
-      const assigned = ctx.workers.filter(w => w.workplaceId).length;
+      const assigned = ctx.workers.filter(w => isMining(ctx, w)).length;
       return assigned >= 2 ? 8 + assigned * 4 : 0;
     }
   }

@@ -6,7 +6,7 @@ import {
 } from '@shared/config';
 import type { Candidate } from '../../model/types';
 import type { AiContext } from '../context';
-import { isNear } from '../facts';
+import { isMining, isNear } from '../facts';
 import { around, manhattan } from '../geometry';
 import { siteOk } from './building';
 import { isFree, movedByOther, taskOf } from './common';
@@ -35,7 +35,7 @@ export const artelMiners = (ctx: AiContext): CivilUnit[] =>
   ctx.obs.researched.includes('artel')
     ? ctx.workers.filter(
         w =>
-          w.workplaceId &&
+          isMining(ctx, w) &&
           w.buildPoints > 0 &&
           isFree(ctx, w.id) &&
           !taskOf(ctx, w.id),
@@ -84,7 +84,7 @@ export const minerToBuild = (
   const { base } = ctx;
   if (!base) return [];
   const miner = ctx.workers
-    .filter(w => w.workplaceId && isFree(ctx, w.id) && !taskOf(ctx, w.id))
+    .filter(w => isMining(ctx, w) && isFree(ctx, w.id) && !taskOf(ctx, w.id))
     .sort((a, b) => manhattan(a, base) - manhattan(b, base))[0];
   return miner
     ? [

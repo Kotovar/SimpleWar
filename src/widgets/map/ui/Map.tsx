@@ -126,8 +126,9 @@ export const Map = ({ focusOnMount = true }: { focusOnMount?: boolean }) => {
         setBuildMenu({ workerId: unit.id, x, y });
         return;
       }
-      // Свой пустой рудник или лесопилка: сразу «Работать», путь виден.
-      const workplace = getContextWorkplace(unit, humanId, { x, y });
+      // Свой пустой рудник или лесопилка: сразу «Работать», путь виден;
+      // ратуша — укрыться, занятая — отказ «здание занято».
+      const workplace = getContextWorkplace(unit, humanId, { x, y }, true);
       if (workplace) {
         const result = orderWork({
           actor: humanId,

@@ -189,14 +189,12 @@ export const renderEntitiesLayer = (
 
     drawHpBar(ctx, x + dx, y + dy, cellSize, hpRatio);
     if (hourglass) drawHourglass(ctx, x + dx, y + dy, cellSize, hourglass);
-    // Свой рудник или лесопилка: рабочий внутри или простой без него.
-    if (
-      detail === 'detail' &&
-      owner === humanId &&
-      building.role === 'resource'
-    ) {
+    // Свой рудник или лесопилка: рабочий внутри или простой без него;
+    // ратуша — значок только с укрытым рабочим.
+    if (detail === 'detail' && owner === humanId) {
       if (staffed.has(id)) drawWorkBadge(ctx, x + dx, y + dy, cellSize);
-      else drawIdleBadge(ctx, x + dx, y + dy, cellSize);
+      else if (building.role === 'resource')
+        drawIdleBadge(ctx, x + dx, y + dy, cellSize);
     }
   });
 

@@ -13,6 +13,7 @@ import {
   STRATEGY_NAME,
   UNITS_CONFIG,
 } from '@shared/config';
+import { canHouseWorker } from '@shared/lib';
 import { TERRAIN_CODES } from '@entities/perceptions';
 import { HINTS, TUTORIAL } from '@widgets/game-controls';
 import {
@@ -557,7 +558,7 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
         const b = s.buildings[u.workplaceId];
         requireValid(
           !!b &&
-            b.role === 'resource' &&
+            canHouseWorker(b) &&
             b.owner === u.owner &&
             same(u, b) &&
             !workers.has(b.id),

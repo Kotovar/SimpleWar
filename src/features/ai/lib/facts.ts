@@ -2,6 +2,7 @@ import {
   BUILDINGS_CONFIG,
   UNITS_CONFIG,
   type Building,
+  type CivilUnit,
   type Cost,
   type Position,
 } from '@shared/config';
@@ -76,6 +77,10 @@ export const desiredWorkers = (ctx: AiContext) => {
   const { min, max } = ctx.config.workerTarget;
   return Math.min(max, Math.max(min, places + 1));
 };
+
+/** Рабочий на добыче — в руднике или лесопилке, а не укрыт в ратуше. */
+export const isMining = (ctx: AiContext, worker: CivilUnit) =>
+  !!worker.workplaceId && worker.workplaceId !== ctx.base?.id;
 
 /**
  * Боевых юнитов (без разведчиков) на ударную группу: войска важнее кузницы

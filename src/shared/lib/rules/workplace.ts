@@ -13,6 +13,13 @@ import type {
 export const isAdjacent = (a: Position, b: Position) =>
   Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) === 1;
 
+/**
+ * Куда может войти рабочий: рудник и лесопилка (добыча) или своя ратуша —
+ * укрытие на одного, без дохода.
+ */
+export const canHouseWorker = (building: Building) =>
+  building.role === 'resource' || building.type === 'base';
+
 /** Рабочий, способный добывать: гражданский строитель. */
 export const isWorker = (unit: Unit | undefined): unit is CivilUnit =>
   unit?.role === 'civil' && unit.canBuild;

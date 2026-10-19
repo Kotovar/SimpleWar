@@ -78,8 +78,9 @@ export const refreshMemory = (ctx: AiContext) => {
     Object.entries(ctx.memory.lastWorkplace).filter(([id]) => alive.has(id)),
   );
   for (const worker of ctx.workers) {
+    // Укрытие в ратуше — не место работы: W09 его не отстраивает.
     const place = ctx.obs.ownBuildings.find(
-      ({ id }) => id === worker.workplaceId,
+      ({ id, role }) => id === worker.workplaceId && role === 'resource',
     );
     if (place) {
       lastWorkplace[worker.id] = {

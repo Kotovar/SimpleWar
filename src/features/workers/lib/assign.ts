@@ -1,5 +1,11 @@
 import type { CommandResult, ParticipantId, Position } from '@shared/config';
-import { findServingWorker, isAdjacent, ok, reject } from '@shared/lib';
+import {
+  canHouseWorker,
+  findServingWorker,
+  isAdjacent,
+  ok,
+  reject,
+} from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { getOwnWorker, isRejection, runWorkerCommand } from './common';
@@ -47,11 +53,11 @@ const validateAndAssign = ({
   const building = useBuildingsStore.getState().buildings[buildingId];
   if (!building) return reject('notFound');
   if (building.owner !== actor) return reject('owner');
-  if (building.role !== 'resource') return reject('target');
+  if (!canHouseWorker(building)) return reject('target');
   if (!isAdjacent(worker, building) && !isInside(worker, building)) {
     return reject('distance');
   }
-  // Одно рабочее место: второй рабочий не встанет на занятое здание.
+  // Одно место: второй рабочий не войдёт в занятое здание.
   if (getWorkplaceHolder(buildingId, workerId)) return reject('workplace');
 
   // Рабочий входит в здание: удар по клетке теперь приходится в здание.
@@ -61,8 +67,8 @@ const validateAndAssign = ({
 };
 
 /**
- * Назначает своего рабочего на соседний рудник или лесопилку: рабочий
- * входит в здание. Прежнее назначение рабочего заменяется. Действие тратится позже — при добыче
+ * Назначает своего рабочего на соседний рудник или лесопилку либо прячет в
+ * своей ратуше (одно место, дохода нет): рабочий входит в здание. Прежнее назначение рабочего заменяется. Действие тратится позже — при добыче
  * в конце своего хода.
  *
  * @param command - Участник, рабочий и здание.
