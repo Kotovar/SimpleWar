@@ -23,6 +23,7 @@ const total = (tally: TypeTally) =>
 export const SandboxReport = () => {
   const enabled = useSandboxStore(state => state.enabled);
   const participants = useGameLoopStore(state => state.participants);
+  const eliminated = useGameLoopStore(state => state.eliminated);
   if (!enabled) return null;
   const report = collectReport();
 
@@ -42,7 +43,10 @@ export const SandboxReport = () => {
       <p className={styles.Winner}>
         {report.winner
           ? `Победитель — ${getParticipantName(report.winner, participants)}`
-          : 'Ничья — победителя нет'}
+          : eliminated.length === participants.length
+            ? 'Ничья — победителя нет'
+            : // Человек выбыл, а несколько ИИ ещё в игре: партия кончается без победителя.
+              'Поражение — ваша сторона выбыла'}
       </p>
       <div className={styles.SideReports}>
         {report.sides.map(side => (
