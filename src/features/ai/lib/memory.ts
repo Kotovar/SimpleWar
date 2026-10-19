@@ -5,6 +5,7 @@ import type { Candidate, TurnState } from '../model/types';
 import type { AiContext } from './context';
 import { chebyshev } from './geometry';
 import { planOperation } from './operation';
+import { chooseRival } from './rival';
 import { chooseStrategy, evaluateStrategies } from './strategy';
 import { resourceSites } from './facts';
 import { pickBuildSite } from './rules/building';
@@ -98,6 +99,7 @@ export const refreshMemory = (ctx: AiContext) => {
       ...ctx.memory,
       tasks,
       lastWorkplace,
+      rival: chooseRival(ctx),
       blindStrikes: Object.fromEntries(
         Object.entries(ctx.memory.blindStrikes).filter(
           ([, { x, y }]) => !ctx.obs.visible[y]?.[x],

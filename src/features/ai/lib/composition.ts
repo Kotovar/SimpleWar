@@ -8,7 +8,7 @@ import {
 } from '@shared/config';
 import { hasFormationNeighbor, isFlyingType } from '@shared/lib';
 import type { AiContext } from './context';
-import { enemyTarget } from './facts';
+import { basesKnown, enemyTarget, ofRival } from './facts';
 import { manhattan } from './geometry';
 import { effectiveness, powerOf } from './stats';
 
@@ -17,9 +17,12 @@ import { effectiveness, powerOf } from './stats';
  * ролей. Только видимое и запомненное — скрытых юнитов здесь нет.
  */
 
-/** Известные вооружённые юниты врага: против них считается своя сила. */
+/**
+ * Известные вооружённые юниты выбранного противника: против них считается
+ * своя сила. Чужие армии наступление на него не обесценивают.
+ */
 const enemyArmy = (ctx: AiContext) =>
-  [...ctx.enemies, ...ctx.remembered]
+  ofRival(ctx, [...ctx.enemies, ...ctx.remembered])
     .filter(({ armed, kind }) => armed && kind === 'unit')
     .map(({ type, armorBonus }) => ({ type, armorBonus }));
 
@@ -48,13 +51,14 @@ export const ownPower = (ctx: AiContext) => {
 };
 
 /**
- * Сила врага по видимым и запомненным объектам с весом достоверности и
- * той же поправкой против своей армии; пока армия врага не видна,
- * закладывается половина своей силы.
+ * Сила выбранного противника по видимым и запомненным объектам с весом
+ * достоверности и той же поправкой против своей армии; пока его армия не
+ * видна, закладывается половина своей силы.
  */
 export const enemyPower = (ctx: AiContext) => {
   const army = asTargets(ctx, ctx.military);
-  const known = [...ctx.enemies, ...ctx.remembered].reduce(
+  const foes = ofRival(ctx, [...ctx.enemies, ...ctx.remembered]);
+  const known = foes.reduce(
     (sum, enemy) =>
       sum +
       powerOf(enemy.type, enemy.hp) *
@@ -62,9 +66,7 @@ export const enemyPower = (ctx: AiContext) => {
         enemy.certainty,
     0,
   );
-  const seenArmed = [...ctx.enemies, ...ctx.remembered].some(
-    ({ armed, kind }) => armed && kind === 'unit',
-  );
+  const seenArmed = foes.some(({ armed, kind }) => armed && kind === 'unit');
   return seenArmed ? known : Math.max(known, ownPower(ctx) * 0.5);
 };
 
@@ -100,12 +102,7 @@ export const roleWishes = (ctx: AiContext): RoleWish[] => {
       'у врага конница',
     ],
     [flyers > own('mage'), 'mage', 'sanctuary', 'у врага летающие'],
-    [
-      own('scout') === 0 && enemyTarget(ctx)?.type !== 'base',
-      'scout',
-      'base',
-      'нужна разведка',
-    ],
+    [own('scout') === 0 && !basesKnown(ctx), 'scout', 'base', 'нужна разведка'],
     [
       !!enemyTarget(ctx) && army >= 4 && own('siege') < Math.floor(army / 4),
       'siege',

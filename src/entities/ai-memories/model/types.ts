@@ -1,4 +1,10 @@
-import type { BuildingType, Cost, Position, StrategyId } from '@shared/config';
+import type {
+  BuildingType,
+  Cost,
+  ParticipantId,
+  Position,
+  StrategyId,
+} from '@shared/config';
 
 /** Вид задачи: стройка, разведка или ремонт. */
 export type AiTaskKind = 'build' | 'scout';
@@ -47,6 +53,11 @@ export type AiMemory = {
   tasks: AiTask[];
   nextTaskId: number;
   operation: AiOperation;
+  /**
+   * Выбранный противник и круг выбора: цель наступления и сила для G08.
+   * Нет в сохранениях 1.0 — тогда выбирается заново.
+   */
+  rival?: { owner: ParticipantId; since: number } | null;
   /** Юниты гарнизона: не входят в ударную группу. */
   garrison: string[];
   /** Где работал рабочий: для восстановления после потери здания (W09). */

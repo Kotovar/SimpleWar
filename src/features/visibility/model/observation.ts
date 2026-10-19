@@ -1,6 +1,6 @@
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
-import { useGameLoopStore } from '@entities/games';
+import { getAliveParticipants, useGameLoopStore } from '@entities/games';
 import { useEconomyStore } from '@entities/economies';
 import { useResearchStore } from '@entities/researches';
 import {
@@ -74,6 +74,9 @@ export const getObservation = (participant: ParticipantId): Observation => {
     visibleEnemies,
     knownTerrain,
     visible,
+    opponents: getAliveParticipants(useGameLoopStore.getState())
+      .map(({ id }) => id)
+      .filter(id => id !== participant),
     resources,
     contacts: contacts
       .filter(contact => !isVisibleNow(contact))

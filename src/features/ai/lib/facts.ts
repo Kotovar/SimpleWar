@@ -52,12 +52,30 @@ export const baseAlarm = (ctx: AiContext): EnemyView[] => {
   );
 };
 
+/** Объекты выбранного противника; без выбора — все известные враги. */
+export const ofRival = <T extends { owner: string }>(
+  ctx: AiContext,
+  list: T[],
+) => {
+  const owner = ctx.memory.rival?.owner;
+  return owner ? list.filter(enemy => enemy.owner === owner) : list;
+};
+
+/** Известны ратуши всех соперников: базы искать больше не нужно. */
+export const basesKnown = (ctx: AiContext) =>
+  ctx.obs.opponents.every(owner =>
+    [...ctx.enemies, ...ctx.remembered].some(
+      enemy => enemy.type === 'base' && enemy.owner === owner,
+    ),
+  );
+
 /**
- * Известная цель наступления: вражеская ратуша, иначе ближайшее к своей
- * базе известное вражеское здание. Места из генератора не используются.
+ * Известная цель наступления: ратуша выбранного противника, иначе ближайшее
+ * к своей базе его известное здание. Его зданий не знаем — цели нет, идёт
+ * разведка. Места из генератора не используются.
  */
 export const enemyTarget = (ctx: AiContext): EnemyView | null => {
-  const buildings = [...ctx.enemies, ...ctx.remembered].filter(
+  const buildings = ofRival(ctx, [...ctx.enemies, ...ctx.remembered]).filter(
     ({ kind }) => kind === 'building',
   );
   const base = buildings.find(({ type }) => type === 'base');

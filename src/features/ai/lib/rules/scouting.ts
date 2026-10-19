@@ -1,7 +1,7 @@
 import type { MilitaryUnit, Position } from '@shared/config';
 import type { AiRule, Candidate } from '../../model/types';
 import type { AiContext } from '../context';
-import { enemyTarget, nearest } from '../facts';
+import { basesKnown, nearest } from '../facts';
 import { manhattan, tieBreak } from '../geometry';
 import { standCells, stepToward } from '../movement';
 import { garrisonUnits } from '../operation';
@@ -79,12 +79,7 @@ export const G05: AiRule = {
         : [];
     });
     if (continued.length || tasks.length) return continued;
-    if (
-      enemyTarget(ctx)?.type === 'base' ||
-      ctx.military.length < 2 ||
-      !ctx.base
-    )
-      return [];
+    if (basesKnown(ctx) || ctx.military.length < 2 || !ctx.base) return [];
     const base = ctx.base;
     const target = [...ctx.frontier].sort(
       (a, b) =>

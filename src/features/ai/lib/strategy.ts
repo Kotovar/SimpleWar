@@ -7,7 +7,7 @@ import {
   baseAlarm,
   desiredArmy,
   desiredWorkers,
-  enemyTarget,
+  basesKnown,
   idleWorkplaces,
   resourceSites,
   scarceResource,
@@ -57,8 +57,8 @@ export const STRATEGIES: Record<StrategyId, Evaluator> = {
     };
   },
   G05: ctx =>
-    enemyTarget(ctx)?.type === 'base'
-      ? { score: 0, reason: 'вражеская база найдена' }
+    basesKnown(ctx)
+      ? { score: 0, reason: 'вражеские базы найдены' }
       : {
           score: Math.min(60, 15 + ctx.obs.turn * 2),
           reason: 'вражеская база не найдена',

@@ -4,6 +4,7 @@ import {
   type Building,
   type BuildingType,
   type CellType,
+  type ParticipantId,
   type Position,
   type ResearchType,
   type Resources,
@@ -75,7 +76,7 @@ export const foe = (
   type: UnitType | BuildingType,
   x: number,
   y: number,
-  patch: { hp?: number; id?: string } = {},
+  patch: { hp?: number; id?: string; owner?: ParticipantId } = {},
 ): Observation['visibleEnemies'][number] => {
   const kind = type in UNITS_CONFIG ? 'unit' : 'building';
   const maxHp =
@@ -86,7 +87,7 @@ export const foe = (
     id: patch.id ?? `${type}-foe-${++counter}`,
     kind,
     type,
-    owner: 'p1',
+    owner: patch.owner ?? 'p1',
     x,
     y,
     hp: patch.hp ?? maxHp,
@@ -119,6 +120,8 @@ type SceneSpec = {
   strikes?: Position[];
   researched?: ResearchType[];
   researching?: ResearchType | null;
+  /** Невыбывшие соперники; по умолчанию один — `p1`. */
+  opponents?: ParticipantId[];
   /** Профиль ИИ: настройки через `profileConfig`. */
   profile?: AiProfile;
 };
@@ -157,6 +160,7 @@ export const scene = (
     visibleEnemies: spec.enemies ?? [],
     knownTerrain,
     visible,
+    opponents: spec.opponents ?? ['p1'],
     resources,
     contacts: spec.contacts ?? [],
     strikes: spec.strikes ?? [],

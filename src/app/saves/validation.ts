@@ -215,49 +215,52 @@ const building: Check = v => {
       return false;
   }
 };
-const memory = shape({
-  seed: int(0, 0xffff_ffff),
-  strategy: one(Object.keys(STRATEGY_NAME)),
-  strategyScore: num(-1e9, 1e9),
-  strategySince: int(),
-  nextTaskId: int(1),
-  tasks: list(
-    shape(
-      {
-        id: text(),
-        kind: one(['build', 'scout']),
-        ruleId: text(),
-        unitId: text(),
-        target: position,
-        reserve: resources,
-        createdTurn: int(),
-        reviewTurn: int(),
-      },
-      { buildingType },
+const memory = shape(
+  {
+    seed: int(0, 0xffff_ffff),
+    strategy: one(Object.keys(STRATEGY_NAME)),
+    strategyScore: num(-1e9, 1e9),
+    strategySince: int(),
+    nextTaskId: int(1),
+    tasks: list(
+      shape(
+        {
+          id: text(),
+          kind: one(['build', 'scout']),
+          ruleId: text(),
+          unitId: text(),
+          target: position,
+          reserve: resources,
+          createdTurn: int(),
+          reviewTurn: int(),
+        },
+        { buildingType },
+      ),
+      1000,
     ),
-    1000,
-  ),
-  operation: shape({
-    phase: one(['gather', 'advance', 'engage', 'retreat']),
-    target: nullable(position),
-    rally: nullable(position),
-    since: int(),
-  }),
-  garrison: list(text(), 1000),
-  lastWorkplace: dictionary(
-    shape({
-      buildingId: text(),
-      type: buildingType,
-      x: int(0, MAP_SIDE_LIMIT - 1),
-      y: int(0, MAP_SIDE_LIMIT - 1),
+    operation: shape({
+      phase: one(['gather', 'advance', 'engage', 'retreat']),
+      target: nullable(position),
+      rally: nullable(position),
+      since: int(),
     }),
-  ),
-  blindStrikes: dictionary(position),
-  siegeLosses: dictionary(
-    int(),
-    v => typeof v === 'string' && /^\d+,\d+$/.test(v),
-  ),
-});
+    garrison: list(text(), 1000),
+    lastWorkplace: dictionary(
+      shape({
+        buildingId: text(),
+        type: buildingType,
+        x: int(0, MAP_SIDE_LIMIT - 1),
+        y: int(0, MAP_SIDE_LIMIT - 1),
+      }),
+    ),
+    blindStrikes: dictionary(position),
+    siegeLosses: dictionary(
+      int(),
+      v => typeof v === 'string' && /^\d+,\d+$/.test(v),
+    ),
+  },
+  { rival: nullable(shape({ owner: participant, since: int() })) },
+);
 const summary = shape(
   { key: text(1000), text: text(1000), count: int(1) },
   { position },
