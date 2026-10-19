@@ -185,10 +185,6 @@ export const AiSetupSection = () => {
           );
         })}
       </div>
-      <p className={styles.SeedWarning}>
-        Сложность меняет только стартовые запасы ИИ. Туман, цены и правила боя
-        одинаковы.
-      </p>
     </section>
   );
 };
