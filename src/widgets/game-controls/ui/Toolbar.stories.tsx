@@ -3,7 +3,7 @@ import { fn } from 'storybook/test';
 import { createBuilding, useBuildingsStore } from '@entities/buildings';
 import { useEconomyStore } from '@entities/economies';
 import { useGameLoopStore } from '@entities/games';
-import type { Building } from '@shared/config';
+import type { Building, Participant } from '@shared/config';
 import { AiTurnBanner, ResourcesInfo, TurnControls, TurnInfo } from './info';
 import styles from './styles.module.css';
 
@@ -17,6 +17,14 @@ const Toolbar = ({ onNextTurn, onReset }: Props) => (
     <TurnControls onNextTurn={onNextTurn} onReset={onReset} />
   </header>
 );
+
+/** Четыре стороны: человек и три ИИ с разными палитрами. */
+const FOUR: Participant[] = [
+  { id: 'p1', controller: 'human', palette: 'blue' },
+  { id: 'p2', controller: 'ai', palette: 'red' },
+  { id: 'p3', controller: 'ai', palette: 'yellow' },
+  { id: 'p4', controller: 'ai', palette: 'green' },
+];
 
 const setEconomy = (gold: number, wood: number, occupied: number, max = 10) =>
   useEconomyStore.setState(state => ({
@@ -72,15 +80,29 @@ export const PopulationFull: Story = {
   beforeEach: () => setEconomy(340, 85, 10),
 };
 
+/** Партия на четверых: очередь ходов в шапке, Красные выбыли. */
+export const FourSides: Story = {
+  beforeEach: () =>
+    useGameLoopStore.setState({
+      participants: FOUR,
+      eliminated: ['p2'],
+      activePlayer: 'p3',
+    }),
+};
+
 /**
- * Баннер запускается при переходе хода к ИИ, поэтому история
- * передаёт ход сама. Кнопка повторяет показ.
+ * Индикатор хода врагов держится всю их очередь: кнопка передаёт ход
+ * следующей стороне — от ИИ к ИИ меняется только сторона, время общее;
+ * на своём ходу индикатор гаснет и проходит лента «Ваш ход».
  */
 export const OpponentTurnBanner: Story = {
   render: args => {
     const passTurn = () => {
-      useGameLoopStore.setState({ activePlayer: 'p1' });
-      useGameLoopStore.setState({ activePlayer: 'p2' });
+      const { activePlayer } = useGameLoopStore.getState();
+      const index = FOUR.findIndex(({ id }) => id === activePlayer);
+      useGameLoopStore.setState({
+        activePlayer: FOUR[(index + 1) % FOUR.length].id,
+      });
     };
 
     return (
@@ -88,12 +110,15 @@ export const OpponentTurnBanner: Story = {
         <Toolbar {...args} />
         <AiTurnBanner />
         <button style={{ marginTop: 16 }} onClick={passTurn}>
-          Передать ход противнику
+          Передать ход следующей стороне
         </button>
       </div>
     );
   },
-  play: () => {
-    useGameLoopStore.setState({ activePlayer: 'p2' });
-  },
+  beforeEach: () =>
+    useGameLoopStore.setState({
+      participants: FOUR,
+      eliminated: [],
+      activePlayer: 'p2',
+    }),
 };

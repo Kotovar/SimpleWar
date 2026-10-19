@@ -89,3 +89,41 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+
+/* Очередь ходов: маркеры сторон по порядку, текущая — в рамке. */
+.Queue {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.QueueItem {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+
+.QueueItem[data-active] {
+  border-color: var(--frame-strong);
+  background-color: var(--surface-sunken);
+}
+
+.QueueItem[data-out] {
+  opacity: 0.4;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 50% 2px auto;
+    height: 2px;
+    background-color: var(--text);
+    transform: rotate(-35deg);
+  }
+}

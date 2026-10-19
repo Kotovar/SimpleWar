@@ -5,6 +5,7 @@ import { useMovementStore, useHighlightStore } from '@features/pathfinding';
 import { useGameLoopSelectors, resetGame } from '@features/game-loop';
 import { SandboxReport } from './sandbox';
 import { PlayerResult } from './PlayerResult';
+import { Standings } from './Standings';
 import { SelectionCard } from './SelectionCard';
 import { MinimapOverlay } from './MinimapOverlay';
 import resultStyles from './PhaseGameOver.styles.module.css';
@@ -86,6 +87,7 @@ export const PhaseGameOver = ({
         Игра завершена на ходу {currentTurn}
       </div>
 
+      {participants.length > 2 && <Standings />}
       {humanId && <PlayerResult player={humanId} />}
       <SandboxReport />
       <div className={styles.ButtonGroup}>

@@ -57,6 +57,10 @@ export const getTeamStyle = (
   marker: TEAM_MARKERS[owner].marker,
 });
 
+/** Значение — ID участника: записи журнала из сохранения могут быть неполными. */
+export const isParticipantId = (value: unknown): value is Owner =>
+  typeof value === 'string' && Object.hasOwn(TEAM_MARKERS, value);
+
 export const getParticipantPalette = (
   owner: Owner,
   participants: readonly Participant[],
@@ -66,6 +70,15 @@ export const getParticipantName = (
   owner: Owner,
   participants: readonly Participant[],
 ) => PALETTES[getParticipantPalette(owner, participants)].name;
+
+/** Имя стороны в родительном падеже: «Ход Жёлтых», «Ход Синих». */
+export const getParticipantGenitive = (
+  owner: Owner,
+  participants: readonly Participant[],
+) =>
+  getParticipantName(owner, participants)
+    .replace(/ые$/, 'ых')
+    .replace(/ие$/, 'их');
 
 export const getParticipantStyles = (
   participants: readonly Participant[],
