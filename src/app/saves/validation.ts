@@ -455,7 +455,7 @@ const snapshotShape = shape({
     fast: bool,
     scenario: shape({
       emptyField: bool,
-      sides: v => list(side, 2)(v) && Array.isArray(v) && v.length === 2,
+      sides: v => list(side, 4)(v) && Array.isArray(v) && v.length >= 2,
     }),
     stats: participants(
       shape({

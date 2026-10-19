@@ -165,7 +165,8 @@
     background: rgb(111 181 255 / 0.1);
   }
 
-  & select {
+  & select,
+  & thead select {
     width: 100%;
     min-width: 100px;
   }
@@ -182,6 +183,14 @@
 
 .Roster thead th[data-owner='p2'] {
   color: var(--team-p2);
+}
+
+.Roster thead th[data-owner='p3'] {
+  color: var(--team-p3);
+}
+
+.Roster thead th[data-owner='p4'] {
+  color: var(--team-p4);
 }
 
 .Report {
@@ -325,5 +334,16 @@
 @media (max-width: 600px) {
   .SideReports {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Число сторон теста: 2–4, каждая сама за себя. */
+.Count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  & > button {
+    min-width: 40px;
   }
 }

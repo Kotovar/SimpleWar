@@ -29,6 +29,18 @@ describe('validateScenario', () => {
     expect(validateScenario(DEFAULT_SANDBOX)).toBeNull();
   });
 
+  it('сторон от двух до четырёх', () => {
+    const sides = (count: number): SandboxScenario => ({
+      ...DEFAULT_SANDBOX,
+      sides: Array.from({ length: count }, () => DEFAULT_SANDBOX.sides[0]),
+    });
+
+    expect(validateScenario(sides(3))).toBeNull();
+    expect(validateScenario(sides(4))).toBeNull();
+    expect(validateScenario(sides(1))).toMatch(/от 2 до 4/);
+    expect(validateScenario(sides(5))).toMatch(/от 2 до 4/);
+  });
+
   it('два человека — отказ', () => {
     const scenario: SandboxScenario = {
       ...DEFAULT_SANDBOX,

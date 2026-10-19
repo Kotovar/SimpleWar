@@ -50,6 +50,8 @@ type SettingsState = {
   setAiSetup: (index: number, patch: Partial<AiSetup>) => void;
   setPaletteChoice: (owner: ParticipantId, choice: PaletteChoice) => void;
   setGridSize: (columns: number, rows: number) => void;
+  /** Для 3–4 участников меньшая карта переключается на Большую. */
+  fitMapTo: (participants: number) => void;
   /** Масштаб на `steps` шагов к точке экрана; по умолчанию к центру окна. */
   zoomBy: (steps: number, anchor?: Position) => void;
   resetZoom: () => void;
@@ -74,6 +76,19 @@ const clampSize = (size: number) =>
   );
 
 /** Камера в пределах мира; вызывается после любого изменения вида. */
+/** Для 3–4 участников — карта не меньше Большой (30 × 30). */
+const fitMap = (state: Draft, participants: number) => {
+  if (
+    participants > 2 &&
+    (state.gridColumns < MAP_PRESETS.large.cols ||
+      state.gridRows < MAP_PRESETS.large.rows)
+  ) {
+    state.gridColumns = MAP_PRESETS.large.cols;
+    state.gridRows = MAP_PRESETS.large.rows;
+    settle(state, state.camera);
+  }
+};
+
 const settle = (state: Draft, camera: Camera) => {
   state.camera = clampCamera(
     camera,
@@ -139,16 +154,10 @@ export const useSettingsStore = create<SettingsState>()(
           if (used.has(choice)) state.paletteChoices[id] = 'random';
           else used.add(choice);
         }
-        if (
-          count > 1 &&
-          (state.gridColumns < MAP_PRESETS.large.cols ||
-            state.gridRows < MAP_PRESETS.large.rows)
-        ) {
-          state.gridColumns = MAP_PRESETS.large.cols;
-          state.gridRows = MAP_PRESETS.large.rows;
-          settle(state, state.camera);
-        }
+        fitMap(state, count + 1);
       }),
+
+    fitMapTo: participants => set(state => fitMap(state, participants)),
 
     setAiSetup: (index, patch) =>
       set(state => {

@@ -42,7 +42,9 @@ export const PhaseSetup = ({ onStartGame, onOpenSaves }: Props) => {
   const setSandbox = useSandboxStore(state => state.setEnabled);
   const aiCount = useSettingsStore(state => state.aiSetups.length);
   const setAiCount = useSettingsStore(state => state.setAiCount);
-  const groupGame = !sandbox && aiCount > 1;
+  const sandboxSides = useSandboxStore(state => state.scenario.sides.length);
+  const fitMapTo = useSettingsStore(state => state.fitMapTo);
+  const groupGame = sandbox ? sandboxSides > 2 : aiCount > 1;
 
   // Текст поля хранится отдельно от стора: неверный ввод остаётся в поле
   // как есть и подсвечивается. После неудачного старта с пустым вводом
@@ -91,7 +93,10 @@ export const PhaseSetup = ({ onStartGame, onOpenSaves }: Props) => {
               [styles.Active]: sandbox,
             })}
             aria-pressed={sandbox}
-            onClick={() => setSandbox(true)}
+            onClick={() => {
+              setSandbox(true);
+              fitMapTo(sandboxSides);
+            }}
           >
             <span className={styles.ToggleTitle}>Тестирование баланса</span>
             <span className={styles.ToggleMeta}>
@@ -128,14 +133,12 @@ export const PhaseSetup = ({ onStartGame, onOpenSaves }: Props) => {
           ))}
         </div>
 
-        {!sandbox && (
-          <p
-            className={styles.SeedWarning}
-            style={{ visibility: groupGame ? 'visible' : 'hidden' }}
-          >
-            Для 3–4 участников доступны карты от 30 × 30 клеток.
-          </p>
-        )}
+        <p
+          className={styles.SeedWarning}
+          style={{ visibility: groupGame ? 'visible' : 'hidden' }}
+        >
+          Для 3–4 участников доступны карты от 30 × 30 клеток.
+        </p>
 
         <details className={styles.More} open={moreOpen}>
           <summary>Дополнительно</summary>

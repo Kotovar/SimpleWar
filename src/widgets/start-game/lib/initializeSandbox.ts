@@ -1,4 +1,5 @@
 import {
+  MAP_PRESETS,
   PARTICIPANT_IDS,
   type Participant,
   type SandboxScenario,
@@ -27,7 +28,13 @@ import { getStartPositions, initializeGame } from './initializeGame';
 export const initializeSandbox = (
   scenario: SandboxScenario,
 ): { participants: Participant[]; skipped: string[] } | null => {
-  const error = validateScenario(scenario);
+  const { gridColumns: columns, gridRows: rows } = useSettingsStore.getState();
+  const error =
+    validateScenario(scenario) ??
+    (scenario.sides.length > 2 &&
+    (columns < MAP_PRESETS.large.cols || rows < MAP_PRESETS.large.rows)
+      ? 'Для 3–4 участников выберите карту не меньше 30 × 30 клеток.'
+      : null);
   if (error) {
     useGameLoopStore.setState({ startError: error });
     return null;

@@ -27,7 +27,8 @@ export type SandboxSide = {
 export type SandboxScenario = {
   /** Пустое поле вместо сгенерированной карты: бой без рельефа. */
   emptyField: boolean;
-  sides: [SandboxSide, SandboxSide];
+  /** От двух до четырёх сторон, каждая сама за себя. */
+  sides: SandboxSide[];
 };
 
 /** Пределы состава: юнитов и зданий каждого типа, запасов. */
@@ -35,6 +36,14 @@ export const SANDBOX_LIMITS = {
   unitsPerType: 20,
   buildingsPerType: 5,
   stock: 99_999,
+};
+
+/** Новая сторона теста: ИИ с небольшой армией у казарм. */
+export const SANDBOX_NEW_SIDE: SandboxSide = {
+  controller: 'ai',
+  units: { swordsman: 2, archer: 1 },
+  buildings: { barracks: 1, farm: 1 },
+  stock: { gold: 500, wood: 500 },
 };
 
 /** Заготовка: ИИ против ИИ со смешанной армией. */
