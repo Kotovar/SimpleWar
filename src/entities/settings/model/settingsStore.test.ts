@@ -76,6 +76,30 @@ describe('противники обычной партии', () => {
     expect(store().paletteChoices.p3).toBe('random');
   });
 
+  it('убирает противника из середины, следующие сдвигаются со своими цветами', () => {
+    store().setAiCount(3);
+    store().setAiSetup(1, { difficulty: 'hard' });
+    store().setAiSetup(2, { profile: 'defensive' });
+    store().setPaletteChoice('p4', 'green');
+    store().removeAi(1);
+    expect(store().aiSetups).toEqual([
+      DEFAULT_AI_SETUP,
+      { profile: 'defensive', difficulty: 'normal' },
+    ]);
+    expect(store().paletteChoices).toEqual({
+      p1: 'blue',
+      p2: 'red',
+      p3: 'green',
+      p4: 'yellow',
+    });
+    store().removeAi(0);
+    store().removeAi(0);
+    expect(store().aiSetups).toEqual([
+      { profile: 'defensive', difficulty: 'normal' },
+    ]);
+    expect(store().paletteChoices.p2).toBe('green');
+  });
+
   it('по умолчанию один сбалансированный противник обычной сложности', () => {
     expect(store().aiSetups).toEqual([DEFAULT_AI_SETUP]);
   });

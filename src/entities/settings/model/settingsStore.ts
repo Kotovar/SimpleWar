@@ -48,6 +48,8 @@ type SettingsState = {
   setCustomSeed: (seed: number) => void;
   setAiCount: (count: number) => void;
   setAiSetup: (index: number, patch: Partial<AiSetup>) => void;
+  /** Убирает противника; следующие сдвигаются вместе со своими цветами. */
+  removeAi: (index: number) => void;
   setPaletteChoice: (owner: ParticipantId, choice: PaletteChoice) => void;
   setGridSize: (columns: number, rows: number) => void;
   /** Для 3–4 участников меньшая карта переключается на Большую. */
@@ -163,6 +165,19 @@ export const useSettingsStore = create<SettingsState>()(
       set(state => {
         if (state.aiSetups[index])
           state.aiSetups[index] = { ...state.aiSetups[index], ...patch };
+      }),
+
+    removeAi: index =>
+      set(state => {
+        const count = state.aiSetups.length;
+        if (count < 2 || !state.aiSetups[index]) return;
+        state.aiSetups.splice(index, 1);
+        // Цвет убранного уходит на освободившееся место: вернётся при добавлении.
+        const ids = PARTICIPANT_IDS.slice(index + 1, count + 1);
+        const choices = ids.map(id => state.paletteChoices[id]);
+        ids.forEach((id, i) => {
+          state.paletteChoices[id] = choices[(i + 1) % choices.length];
+        });
       }),
 
     setPaletteChoice: (owner, choice) =>

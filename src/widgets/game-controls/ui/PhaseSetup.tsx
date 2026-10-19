@@ -1,7 +1,7 @@
 import { useState, type ChangeEvent } from 'react';
 import clsx from 'clsx';
 import { GUIDEBOOK_URL, MAP_PRESET_LABELS, MAP_PRESETS } from '@shared/config';
-import { TextField } from '@shared/ui';
+import { EntityPortrait, TextField } from '@shared/ui';
 import { isValidSeed } from '@entities/maps';
 import { useSettingsSelectors, useSettingsStore } from '@entities/settings';
 import { useGameLoopSelectors } from '@features/game-loop';
@@ -24,7 +24,7 @@ const parseSeed = (text: string) => {
 };
 
 /**
- * Главное меню: шаги «режим → карта → противники» (в тестировании баланса —
+ * Главное меню: шаги «режим → карта → стороны» (в тестировании баланса —
  * составы сторон), сид — в свёрнутом блоке «Дополнительно», звук — в углу.
  */
 export const PhaseSetup = ({ onStartGame, onOpenSaves }: Props) => {
@@ -85,8 +85,11 @@ export const PhaseSetup = ({ onStartGame, onOpenSaves }: Props) => {
               setAiCount(aiCount);
             }}
           >
-            <span className={styles.ToggleTitle}>Обычная партия</span>
-            <span className={styles.ToggleMeta}>Развитие и сражения</span>
+            <EntityPortrait type='swordsman' owner='p1' size={40} />
+            <span>
+              <span className={styles.ToggleTitle}>Обычная партия</span>
+              <span className={styles.ToggleMeta}>Развитие и сражения</span>
+            </span>
           </button>
           <button
             className={clsx(styles.ToggleButton, {
@@ -98,9 +101,12 @@ export const PhaseSetup = ({ onStartGame, onOpenSaves }: Props) => {
               fitMapTo(sandboxSides);
             }}
           >
-            <span className={styles.ToggleTitle}>Тестирование баланса</span>
-            <span className={styles.ToggleMeta}>
-              Свой состав каждой стороны
+            <EntityPortrait type='siege' owner='p2' size={40} />
+            <span>
+              <span className={styles.ToggleTitle}>Тестирование баланса</span>
+              <span className={styles.ToggleMeta}>
+                Свой состав каждой стороны
+              </span>
             </span>
           </button>
         </div>
@@ -197,7 +203,7 @@ export const PhaseSetup = ({ onStartGame, onOpenSaves }: Props) => {
         </section>
       )}
 
-      <section className={styles.Section}>
+      <section className={clsx(styles.Section, styles.StartBar)}>
         {startError && (
           <p role='alert' className={styles.Error}>
             {startError}
