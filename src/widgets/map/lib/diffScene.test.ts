@@ -175,6 +175,16 @@ describe('diffScene', () => {
     expect(events).toEqual([]);
   });
 
+  it('свой погиб и клетка ушла в туман — гибель видна', () => {
+    const own = unit('archer', 1, 'p1');
+    const { events } = diffScene(
+      before(own),
+      [],
+      context({ isVisible: () => false }),
+    );
+    expect(kinds(events)).toEqual(['death']);
+  });
+
   it('новый ход восстанавливает очки — это не удар', () => {
     const archer = unit('archer', 0, 'p1', { attackPoints: 0 });
     const { events } = diffScene(
@@ -244,6 +254,7 @@ describe('getEventSfx по типу', () => {
     } as const;
     expect(getEventSfx({ ...death, type: 'griffon' })).toBe('griffonDeath');
     expect(getEventSfx({ ...death, type: 'rider' })).toBe('death');
+    expect(getEventSfx({ ...death, type: 'siege' })).toBe('siegeDeath');
   });
 });
 

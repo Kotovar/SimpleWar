@@ -4,7 +4,7 @@ import type { SelectionActionInput } from './actionButton';
 import { getSelectionActions } from './selectionActions';
 
 describe('кнопки рабочего', () => {
-  it('рабочий: постоянный набор B G Z X C R Space F, недоступное — с причиной', () => {
+  it('рабочий: постоянный набор B G Z X C L R Space F, недоступное — с причиной', () => {
     const worker = unit('worker', { buildPoints: 1 });
     const buttons = getSelectionActions(input({ unit: worker }));
 
@@ -14,6 +14,7 @@ describe('кнопки рабочего', () => {
       'KeyZ',
       'KeyX',
       'KeyC',
+      'KeyL',
       'KeyR',
       'Space',
       'KeyF',
@@ -38,13 +39,41 @@ describe('кнопки рабочего', () => {
     ).toBe(true);
   });
 
-  it('без очка стройки: стройка и расчистка недоступны, но видны', () => {
+  it('без очка стройки: стройка и расчистка недоступны, дорога — для приказа', () => {
     const worker = unit('worker', { buildPoints: 0 });
-    const { build, clearForest } = byId(
+    const { build, clearForest, buildRoad } = byId(
       getSelectionActions(input({ unit: worker })),
     );
     expect(build.reason).toBe('Нет очка стройки');
     expect(clearForest.reason).toBe('Нет очка стройки');
+    expect(buildRoad.reason).toBeUndefined();
+  });
+
+  it('дорога: цена на поле, нехватка дерева и нажатый режим', () => {
+    const worker = unit('worker', { buildPoints: 1 });
+    const poor = byId(
+      getSelectionActions(
+        input({ unit: worker, payableBuild: { gold: 0, wood: 5 } }),
+      ),
+    ).buildRoad;
+    expect(poor.cost).toEqual({ gold: 0, wood: 10 });
+    expect(poor.lacking).toMatchObject({ gold: false, wood: true });
+
+    const on = byId(
+      getSelectionActions(
+        input({
+          unit: worker,
+          mode: {
+            building: null,
+            unit: null,
+            clearing: false,
+            road: true,
+            striking: false,
+          },
+        }),
+      ),
+    ).buildRoad;
+    expect(on.pressed).toBe(true);
   });
 
   it('работа: свободное место — цель в id, занятое — причина', () => {

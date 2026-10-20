@@ -23,6 +23,7 @@ import {
   setupCanvas,
   useEntitiesLayer,
   useBuiltCells,
+  useDeathReveal,
   useHoverCell,
   useHoverPath,
   useMapView,
@@ -77,6 +78,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   );
 
   const { fog, grid, units, buildings, snapshots } = scene;
+  const fogShown = useDeathReveal(fog, humanId);
   // Отметки ударов — из знаний смотрящего (Скрытая наводка прячет чужие),
   // в полном обзоре отладки — все.
   const strikeMarks = useMemo(
@@ -145,10 +147,12 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     if (!ctx) return;
 
     withClear(ctx, () => {
-      if (fog) renderFogLayer(ctx, fog, cellSize, range, fogQuality);
+      if (fogShown) {
+        renderFogLayer(ctx, fogShown, cellSize, range, fogQuality);
+      }
       drawWorldEdge(ctx, mapSize.columns, mapSize.rows, cellSize);
     });
-  }, [fog, fogQuality, mapSize, view]);
+  }, [fogShown, fogQuality, mapSize, view]);
 
   useEffect(() => {
     const { cellSize, viewport, offset } = view;
@@ -217,10 +221,11 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   ]);
 
   const clearableCells = useHighlightStore(state => state.clearableCells);
+  const roadCells = useHighlightStore(state => state.roadCells);
   // Какой приказ даст клик под курсором: путь к нему виден до клика.
-  // Прицел и расчистка не ведут юнит: пути нет.
+  // Прицел, расчистка и дорога не ведут юнит: пути нет.
   const hoverOrder = useMemo((): UnitOrder | false | null => {
-    if (strikeCells || clearableCells) return false;
+    if (strikeCells || clearableCells || roadCells) return false;
     if (ghost) {
       return ghost.valid
         ? { type: 'build', buildingType: ghost.type, x: ghost.x, y: ghost.y }
@@ -240,6 +245,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     clearableCells,
     ghost,
     hover,
+    roadCells,
     humanId,
     selection,
     strikeCells,

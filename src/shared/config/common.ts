@@ -19,8 +19,12 @@ export type Position = {
   y: number;
 };
 
-/** Клетка карты с координатами, типом местности и проходимостью. */
+/**
+ * Клетка карты с координатами, типом местности и проходимостью.
+ * `road` — дорога: ничья, удешевляет наземный ход.
+ */
 export type Cell = Position & {
   type: CellType;
   isWalkable: boolean;
+  road?: true;
 };

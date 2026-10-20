@@ -17,7 +17,7 @@ import {
   UNITS_CONFIG,
 } from '@shared/config';
 import { canHouseWorker } from '@shared/lib';
-import { TERRAIN_CODES } from '@entities/perceptions';
+import { ROAD_BIT, TERRAIN_CODES } from '@entities/perceptions';
 import { HINTS, TUTORIAL } from '@widgets/game-controls';
 import {
   MAX_SAVE_BYTES,
@@ -37,6 +37,11 @@ const int =
   (min = 0, max = 1_000_000_000): Check =>
   v =>
     num(min, max)(v) && Number.isInteger(v);
+/** Число, кратное половине: очки движения после шага по дороге. */
+const half =
+  (min = 0, max = 1_000_000_000): Check =>
+  v =>
+    num(min, max)(v) && Number.isInteger((v as number) * 2);
 const text =
   (max = 200): Check =>
   v =>
@@ -83,6 +88,11 @@ const shape =
 const requireValid = (ok: boolean, message: string) => {
   if (!ok) throw new Error(message);
 };
+/** Код памяти о клетке: местность и, возможно, бит дороги на ней. */
+const terrainCode: Check = v =>
+  int(0, TERRAIN_CODES.length | ROAD_BIT)(v) &&
+  ((v as number) & ~ROAD_BIT) <= TERRAIN_CODES.length &&
+  (v === 0 || ((v as number) & ~ROAD_BIT) > 0);
 const participant = one(PARTICIPANT_IDS);
 const participants = (check: Check) => dictionary(check, participant, 4);
 const unitType = one(Object.keys(UNITS_CONFIG));
@@ -108,7 +118,7 @@ const order: Check = v => {
         : {};
   return shape(
     {
-      type: one(['goto', 'explore', 'build', 'work']),
+      type: one(['goto', 'explore', 'build', 'work', 'road']),
       x: int(0, MAP_SIDE_LIMIT - 1),
       y: int(0, MAP_SIDE_LIMIT - 1),
       ...extra,
@@ -159,7 +169,7 @@ const unit: Check = v => {
       ...base,
       type: unitType,
       ...role,
-      movePoints: int(0, 100),
+      movePoints: half(0, 100),
       maxMovePoints: int(0, 100),
       requiresLimit: int(0, 30),
     },
@@ -259,7 +269,17 @@ const memory = shape(
       v => typeof v === 'string' && /^\d+,\d+$/.test(v),
     ),
   },
-  { rival: nullable(shape({ owner: participant, since: int() })) },
+  {
+    rival: nullable(shape({ owner: participant, since: int() })),
+    roadPlan: nullable(
+      shape({
+        ruleId: one(['D01', 'D02']),
+        target: position,
+        cells: list(position, MAP_SIDE_LIMIT * MAP_SIDE_LIMIT),
+        since: int(),
+      }),
+    ),
+  },
 );
 const summary = shape(
   { key: text(1000), text: text(1000), count: int(1) },
@@ -288,6 +308,7 @@ const eventTypes = [
   'unassign',
   'repair',
   'clearForest',
+  'buildRoad',
   'demolish',
   'prepareStrike',
   'heal',
@@ -348,12 +369,15 @@ const snapshotShape = shape({
     usedFallback: bool,
     grid: list(
       list(
-        shape({
-          x: int(0, MAP_SIDE_LIMIT - 1),
-          y: int(0, MAP_SIDE_LIMIT - 1),
-          type: one(TERRAIN_CODES),
-          isWalkable: bool,
-        }),
+        shape(
+          {
+            x: int(0, MAP_SIDE_LIMIT - 1),
+            y: int(0, MAP_SIDE_LIMIT - 1),
+            type: one(TERRAIN_CODES),
+            isWalkable: bool,
+          },
+          { road: one([true]) },
+        ),
         100,
       ),
       100,
@@ -393,7 +417,7 @@ const snapshotShape = shape({
       width: int(1, 100),
       height: int(1, 100),
       visible: list(one([0, 1])),
-      terrain: list(int(0, TERRAIN_CODES.length)),
+      terrain: list(terrainCode),
       contacts: dictionary(
         shape(
           {

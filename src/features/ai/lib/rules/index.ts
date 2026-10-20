@@ -5,6 +5,7 @@ import { W06 } from './farms';
 import { W12 } from './shelter';
 import { W10 } from './passage';
 import { X01 } from './clearing';
+import { D01, D02 } from './roads';
 import { M01, M02, M05, M06 } from './soldiers';
 import { M03, M04 } from './assault';
 import { A02, A03, A05, A07 } from './archers';
@@ -33,6 +34,7 @@ export * from './farms';
 export * from './shelter';
 export * from './passage';
 export * from './clearing';
+export * from './roads';
 export * from './soldiers';
 export * from './assault';
 export * from './archers';
@@ -74,6 +76,8 @@ export const AI_RULES: AiRule[] = [
   W12,
   X01,
   X02,
+  D01,
+  D02,
   M01,
   M02,
   M03,

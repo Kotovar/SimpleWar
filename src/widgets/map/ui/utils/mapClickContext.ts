@@ -7,7 +7,11 @@ import type {
   Unit,
   UnitType,
 } from '@shared/config';
-import type { GoToCommand, MoveCommand } from '@features/pathfinding';
+import type {
+  GoToCommand,
+  MoveCommand,
+  RoadOrderCommand,
+} from '@features/pathfinding';
 import type {
   AttackCommand,
   HealCommand,
@@ -15,7 +19,7 @@ import type {
 } from '@features/combat';
 import type { BuildCommand } from '@features/build';
 import type { RallyPointCommand, SpawnCommand } from '@features/spawn';
-import type { ClearForestCommand } from '@features/workers';
+import type { BuildRoadCommand, ClearForestCommand } from '@features/workers';
 
 /** Всё, что нужно клику: где кликнули, что выбрано, что подсвечено и чем ответить. */
 export type MapClickContext = {
@@ -42,6 +46,8 @@ export type MapClickContext = {
     spawnable: Position[] | null;
     /** Клетки леса в режиме расчистки. */
     clearable?: Position[] | null;
+    /** Клетки в режиме дороги. */
+    road?: Position[] | null;
     /** Клетки прицела осадной машины. */
     strike?: Position[] | null;
     /** Свои раненые, которых может вылечить выбранный лекарь. */
@@ -59,6 +65,9 @@ export type MapClickContext = {
     spawn: (command: SpawnCommand) => CommandResult;
     setRallyPoint?: (command: RallyPointCommand) => CommandResult;
     clearForest?: (command: ClearForestCommand) => CommandResult;
+    buildRoad?: (command: BuildRoadCommand) => CommandResult;
+    /** Приказ «Проложить дорогу до…» дальней клетки. */
+    orderRoad?: (command: RoadOrderCommand) => CommandResult;
     prepareStrike?: (command: PrepareStrikeCommand) => CommandResult;
     heal?: (command: HealCommand) => CommandResult;
     /** Приказ «Идти в точку» с исполнением на оставшиеся очки. */

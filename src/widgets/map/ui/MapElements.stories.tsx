@@ -505,3 +505,97 @@ export const FogOfWar: Story = {
     <Scene columns={8} rows={5} cellSize={cellSize} draw={drawFog} />
   ),
 };
+
+/**
+ * Схема развязок для одной местности: `#` — дорога. Есть прямая, углы,
+ * развилки, перекрёсток, тупики и одиночная площадка.
+ */
+const JUNCTIONS = ['##.#', '####', '.#.#', '.##.', '...#'];
+
+/** Схема дорог на местности; вокруг дорог та же местность. */
+const roadGrid = (map: string[], type: CellType): Cell[][] =>
+  map.map((row, y) =>
+    row.split('').map(
+      (char, x): Cell => ({
+        x,
+        y,
+        type,
+        isWalkable: true,
+        ...(char === '#' && { road: true as const }),
+      }),
+    ),
+  );
+
+/**
+ * Переходы покрытий: дорога идёт с поля на холм и в болото, поворачивает
+ * на холме и в болоте. `=` — поле, `H` — холм, `S` — болото с дорогой;
+ * `h`, `~` — холм и болото без дороги.
+ */
+const MIXED_MAP = ['..hh~~..', '==HHSS==', '..hH~S..', '..hHSS==', '..hh~~..'];
+const MIXED_TYPES: Record<string, CellType> = {
+  h: 'hill',
+  H: 'hill',
+  '~': 'swamp',
+  S: 'swamp',
+};
+const MIXED_GRID: Cell[][] = MIXED_MAP.map((row, y) =>
+  row.split('').map(
+    (char, x): Cell => ({
+      x,
+      y,
+      type: MIXED_TYPES[char] ?? 'grass',
+      isWalkable: true,
+      ...('=HS'.includes(char) && { road: true as const }),
+    }),
+  ),
+);
+
+const roadScene =
+  (grid: Cell[][]) => (ctx: CanvasRenderingContext2D, size: number) =>
+    renderTerrainLayer(ctx, grid, size, grid[0].length);
+
+const RoadExample = ({
+  title,
+  grid,
+  cellSize,
+}: {
+  title: string;
+  grid: Cell[][];
+  cellSize: number;
+}) => (
+  <figure style={{ margin: 0 }}>
+    <figcaption style={{ marginBottom: 8, color: '#ccc' }}>{title}</figcaption>
+    <Scene
+      columns={grid[0].length}
+      rows={grid.length}
+      cellSize={cellSize}
+      draw={roadScene(grid)}
+    />
+  </figure>
+);
+
+const ROAD_EXAMPLES = (['grass', 'hill', 'swamp'] as const).map(type => ({
+  title: TERRAIN_NAME[type],
+  grid: roadGrid(JUNCTIONS, type),
+}));
+
+export const Roads: Story = {
+  name: 'Дороги',
+  render: ({ cellSize }) => (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+      {ROAD_EXAMPLES.map(({ title, grid }) => (
+        <RoadExample
+          key={title}
+          title={title}
+          grid={grid}
+          cellSize={cellSize}
+        />
+      ))}
+      <RoadExample
+        title='Переходы покрытий'
+        grid={MIXED_GRID}
+        cellSize={cellSize}
+      />
+    </div>
+  ),
+};

@@ -5,6 +5,7 @@ import {
   type Position,
 } from '@shared/config';
 import {
+  ROAD_BIT,
   TERRAIN_CODES,
   type CellKnowledge,
   type Contact,
@@ -49,8 +50,8 @@ const sameContact = (a: Contact | undefined, b: Contact) =>
 /**
  * Обновляет знания участника по текущему наблюдению.
  *
- * Видимые клетки запоминают настоящую местность, остальные сохраняют
- * прежний снимок: скрытая расчистка его не меняет. Контакт обновляется,
+ * Видимые клетки запоминают настоящую местность и дорогу, остальные
+ * сохраняют прежний снимок: скрытая расчистка или дорога его не меняет. Контакт обновляется,
  * пока объект виден; видимая клетка без него опровергает контакт;
  * юнит вне обзора забывается по сроку, здание — только после проверки места.
  *
@@ -83,7 +84,8 @@ export const observe = (
   for (let index = 0; index < visible.length; index++) {
     if (!visible[index]) continue;
     const cell = grid[Math.floor(index / width)][index % width];
-    const code = TERRAIN_CODES.indexOf(cell.type) + 1;
+    const code =
+      (TERRAIN_CODES.indexOf(cell.type) + 1) | (cell.road ? ROAD_BIT : 0);
     if (terrain[index] === code) continue;
     if (!terrainCopied) {
       terrain = terrain.slice();
@@ -170,9 +172,23 @@ export const getKnownCellType = (
   y: number,
 ) => {
   if (!knowledge || x < 0 || y < 0 || x >= knowledge.width) return null;
-  const code = knowledge.terrain[y * knowledge.width + x];
+  const code = knowledge.terrain[y * knowledge.width + x] & ~ROAD_BIT;
   return code ? TERRAIN_CODES[code - 1] : null;
 };
+
+/**
+ * Видел ли участник дорогу на клетке при последнем обзоре.
+ */
+export const isKnownRoad = (
+  knowledge: Pick<ParticipantKnowledge, 'width' | 'terrain'> | undefined,
+  x: number,
+  y: number,
+) =>
+  !!knowledge &&
+  x >= 0 &&
+  y >= 0 &&
+  x < knowledge.width &&
+  (knowledge.terrain[y * knowledge.width + x] & ROAD_BIT) !== 0;
 
 /**
  * Достоверность контакта по его возрасту.

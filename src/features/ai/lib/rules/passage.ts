@@ -1,9 +1,4 @@
-import {
-  MOVE_COST,
-  type Building,
-  type Position,
-  type Unit,
-} from '@shared/config';
+import type { Building, Position, Unit } from '@shared/config';
 import { findCheapestPaths, isBuildableTerrain } from '@shared/lib';
 import type { AiRule } from '../../model/types';
 import type { AiContext } from '../context';
@@ -55,8 +50,8 @@ const passableOwnGrid = (ctx: AiContext) => {
   const grid = ctx.grid(2).map((row, y) =>
     row.map((cost, x) => {
       if (!own.has(cellKey(x, y, ctx.width))) return cost;
-      const type = ctx.known(x, y);
-      return type ? (MOVE_COST[type] ?? 0) + 2 : 3;
+      const known = ctx.knownCost(x, y);
+      return known === null ? 3 : known + 2;
     }),
   );
   const result = { own, grid };

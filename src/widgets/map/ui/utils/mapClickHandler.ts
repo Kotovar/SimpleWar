@@ -102,6 +102,16 @@ const clickWithOwnUnit = (
     return;
   }
 
+  // Режим дороги: своя или соседняя подсвеченная клетка — дорога сразу,
+  // дальняя — приказ проложить дорогу до неё; отказ оставляет режим.
+  if (unit.role === 'civil' && highlights.road) {
+    const result = isHighlighted(highlights.road, x, y)
+      ? commands.buildRoad?.({ actor, workerId: unit.id, x, y })
+      : commands.orderRoad?.({ actor, workerId: unit.id, x, y });
+    if (result?.ok) resetInteraction(ctx);
+    if (result) return;
+  }
+
   if (isPlacing(unit, ctx)) {
     placeBuilding(unit, x, y, ctx);
     return;
@@ -159,7 +169,11 @@ export const handleMapCellClick = (
 ) => {
   const { unit, building } = ctx.selection;
 
-  if (ctx.selection.isCurrent(x, y)) {
+  // Своя клетка в режиме дороги — дорога под рабочим, а не сброс режима.
+  if (
+    ctx.selection.isCurrent(x, y) &&
+    !isHighlighted(ctx.highlights.road ?? null, x, y)
+  ) {
     resetInteraction(ctx);
     return;
   }

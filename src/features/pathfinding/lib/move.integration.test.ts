@@ -5,7 +5,7 @@ import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
 import { useGameLoopStore } from '@entities/games';
 import { useJournalStore } from '@entities/journals';
-import { useKnowledgeStore } from '@entities/perceptions';
+import { observe, useKnowledgeStore } from '@entities/perceptions';
 import { move } from './move';
 import { canUnitStep, getUnitReachableCells } from './air';
 import {
@@ -292,5 +292,53 @@ describe('canUnitStep', () => {
     expect(canUnitStep(units().units[id])).toBe(false);
     patch(2);
     expect(canUnitStep(units().units[id])).toBe(true);
+  });
+});
+
+describe('движение по дороге', () => {
+  it('шаг по дороге стоит 0.5, остаток в половинах очка', () => {
+    for (const x of [1, 2, 3]) {
+      useMapStore.getState().setCell(x, 0, { road: true });
+    }
+    const id = readyWorker(0);
+
+    expect(move({ actor: 'p1', unitId: id, x: 3, y: 0 })).toEqual({
+      ok: true,
+    });
+    expect(units().units[id]).toMatchObject({ x: 3, movePoints: 2.5 });
+
+    expect(move({ actor: 'p1', unitId: id, x: 5, y: 0 })).toEqual({
+      ok: true,
+    });
+    expect(units().units[id]).toMatchObject({ x: 5, movePoints: 0.5 });
+    // Половины очка на поле не хватает.
+    expect(canUnitStep(units().units[id])).toBe(false);
+  });
+});
+
+describe('дорога в известной карте', () => {
+  it('разведанная дорога удешевляет маршрут, скрытая — нет', () => {
+    const id = readyWorker(0);
+    useMapStore.getState().setCell(2, 0, { road: true });
+    const grid = useMapStore.getState().grid;
+    useKnowledgeStore.setState({
+      byParticipant: {
+        p1: observe(undefined, {
+          visible: Uint8Array.from({ length: 12 }, (_, x) => (x < 4 ? 1 : 0)),
+          grid,
+          enemies: [],
+          turn: 1,
+          eliminated: [],
+        }),
+      },
+    });
+    // Рабочий ушёл: клетки 0–3 разведаны, но не видны; дорогу на 3
+    // построили уже вне обзора.
+    useUnitsStore.getState().placeUnit(id, 11, 0);
+    useMapStore.getState().setCell(3, 0, { road: true });
+
+    const costs = createKnownMovementGrid('p1');
+    expect(costs[0][2]).toBe(0.5);
+    expect(costs[0][3]).toBe(1);
   });
 });

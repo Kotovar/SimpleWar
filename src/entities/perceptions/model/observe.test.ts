@@ -4,6 +4,7 @@ import {
   getCellKnowledge,
   getContactConfidence,
   getKnownCellType,
+  isKnownRoad,
   observe,
   type ObservationInput,
 } from './observe';
@@ -53,6 +54,21 @@ describe('знания участника', () => {
     expect(getCellKnowledge(second, 3, 0)).toBe('unknown');
     expect(getKnownCellType(second, 1, 0)).toBe('grass');
     expect(getKnownCellType(second, 3, 0)).toBeNull();
+  });
+
+  it('дорогу вне обзора не знают, увиденную помнят вне обзора', () => {
+    const roads = makeGrid(8);
+    roads[0][1].road = true;
+    roads[0][5].road = true;
+    const first = observe(undefined, input({ grid: roads }));
+
+    expect(isKnownRoad(first, 1, 0)).toBe(true);
+    expect(getKnownCellType(first, 1, 0)).toBe('grass');
+    expect(isKnownRoad(first, 5, 0)).toBe(false);
+
+    const away = observe(first, input({ grid: roads, visible: mask(8, 6, 7) }));
+    expect(isKnownRoad(away, 1, 0)).toBe(true);
+    expect(isKnownRoad(away, 5, 0)).toBe(false);
   });
 
   it('скрытая расчистка не меняет запомненный рельеф до нового обзора', () => {

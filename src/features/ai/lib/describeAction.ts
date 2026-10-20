@@ -27,6 +27,8 @@ export const describe = (action: AiAction) => {
       return `ремонт ${short(action.buildingId)}`;
     case 'clearForest':
       return `расчистка (${action.x}, ${action.y})`;
+    case 'buildRoad':
+      return `дорога (${action.x}, ${action.y})`;
     case 'demolish':
       return `снос ${short(action.buildingId)}`;
     case 'startResearch':

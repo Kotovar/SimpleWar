@@ -13,16 +13,25 @@ import { isHostile } from '@shared/lib';
 import type { SceneEvent } from './diffScene';
 import { CLEARING_DURATION, type Effect } from './drawEffects';
 
-/** Расчистка озвучивается только после успеха и в видимой клетке. */
+/**
+ * Расчистка и дорога показываются только после успеха и в видимой
+ * клетке; дорога — пылью и молотками стройки.
+ */
 export const getCommandEffect = (
   command: CommandMeta,
   isVisible: (x: number, y: number) => boolean,
   start: number,
 ): Effect | null => {
-  if (command.type !== 'clearForest') return null;
+  if (command.type !== 'clearForest' && command.type !== 'buildRoad')
+    return null;
   const { x, y } = command.details ?? {};
   if (typeof x !== 'number' || typeof y !== 'number' || !isVisible(x, y))
     return null;
+  if (command.type === 'buildRoad') {
+    return command.actor
+      ? { x, y, spawn: command.actor, building: true, start }
+      : null;
+  }
   return { x, y, clearing: true, start, duration: CLEARING_DURATION };
 };
 

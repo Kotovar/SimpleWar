@@ -62,7 +62,8 @@ export const useUnitsStore = create<UnitsState>()(
         const unit = state.units[id];
         if (!unit) return;
 
-        if (!Number.isInteger(cost) || cost <= 0 || cost > unit.movePoints)
+        // Цена кратна половине очка: дорога стоит 0.5.
+        if (!Number.isInteger(cost * 2) || cost <= 0 || cost > unit.movePoints)
           return;
 
         unit.x = x;
@@ -211,7 +212,7 @@ export const useUnitsStore = create<UnitsState>()(
 // Разрушение или снос здания разрывает назначение его рабочего.
 gameEvents.subscribe(event => {
   // Успешный прямой приказ будит юнита и заменяет приказ «Идти в точку»;
-  // шаги самого приказа (`move` с `partial`) его не снимают.
+  // шаги самого приказа (`move` с `partial`, дорога с `byOrder`) его не снимают.
   if (event.type === 'COMMAND_SUCCEEDED') {
     const { command } = event;
     const id =
@@ -226,6 +227,7 @@ gameEvents.subscribe(event => {
     if (command.type !== 'rest' && unit.restMode) setRestMode(id, null);
     const byOrder =
       command.type === 'order' ||
+      !!command.details?.byOrder ||
       (command.type === 'move' && !!command.details?.partial);
     if (!byOrder && unit.order) setOrder(id, null);
     return;

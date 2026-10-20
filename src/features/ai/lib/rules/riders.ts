@@ -1,10 +1,10 @@
 import { getTargetCategory } from '@shared/lib';
 import type { AiRule, Candidate } from '../../model/types';
 import type { AiContext, EnemyView } from '../context';
-import { nearest } from '../facts';
-import { manhattan } from '../geometry';
-import { isDoomed, meleeThreat } from './common';
-import { approachEnemy, strikeBest, unitsOf } from './roleKit';
+import { cellKey, manhattan } from '../geometry';
+import { turnMoves } from '../movement';
+import { isDoomed, meleeThreat, moveTo } from './common';
+import { cellsNear, strikeBest, unitsOf } from './roleKit';
 
 export const riders = (ctx: AiContext) => unitsOf(ctx, 'rider');
 
@@ -18,7 +18,11 @@ const unguarded = (ctx: AiContext, target: EnemyView) =>
       e.type !== 'healer',
   );
 
-/** Рейд вплотную: ударить, если цель рядом, иначе подойти за один ход. */
+/**
+ * Рейд вплотную: ударить, если цель рядом, иначе встать у ближайшей цели,
+ * к которой есть клетка удара в пределах этого хода (с дорогами, по ценам
+ * команды движения).
+ */
 const raid = (
   ctx: AiContext,
   ruleId: string,
@@ -38,19 +42,28 @@ const raid = (
     e => ids.has(e.id),
   );
   if (hit.length) return hit;
-  const prey = nearest(
-    unit,
-    targets.filter(e => !isDoomed(ctx, e)),
+  const reach = new Map(
+    turnMoves(ctx, unit).map(cell => [
+      cellKey(cell.x, cell.y, ctx.width),
+      cell,
+    ]),
   );
-  if (!prey || manhattan(unit, prey) > unit.movePoints + 1) return [];
-  return approachEnemy(
-    ctx,
-    ruleId,
-    unit,
-    prey,
-    score - 10,
-    `${reason}: подхожу`,
-  );
+  const prey = targets
+    .filter(e => !isDoomed(ctx, e))
+    .sort((a, b) => manhattan(unit, a) - manhattan(unit, b));
+  for (const enemy of prey) {
+    const cell = cellsNear(ctx, enemy, unit.attackRange)
+      .flatMap(c => reach.get(cellKey(c.x, c.y, ctx.width)) ?? [])
+      .sort((a, b) => a.cost - b.cost)[0];
+    if (cell) {
+      return [
+        moveTo(ruleId, unit, cell, score - 10, `${reason}: подхожу`, {
+          basis: { x: enemy.x, y: enemy.y },
+        }),
+      ];
+    }
+  }
+  return [];
 };
 
 /** C01: рабочие врага без защиты — ограниченный рейд. */
@@ -105,7 +118,7 @@ export const C03: AiRule = {
         e.armed &&
         e.move >= 5 &&
         e.type !== 'griffon' &&
-        economy.some(p => manhattan(p, e) <= e.move + 1),
+        economy.some(p => ctx.reaches(e, p, 1)),
     );
     if (!raiders.length) return [];
     return riders(ctx).flatMap(unit =>

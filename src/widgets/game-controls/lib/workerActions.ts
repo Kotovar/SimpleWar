@@ -3,6 +3,7 @@ import {
   BUILDINGS_NAME,
   REJECTION_MESSAGE,
   REPAIR,
+  ROAD,
   type Unit,
 } from '@shared/config';
 import {
@@ -21,7 +22,7 @@ import {
 
 /**
  * Кнопки своего рабочего: «Построить» с подменю зданий, работа, снятие с
- * работы, расчистка и ремонт. Набор постоянный, недоступное — с причиной.
+ * работы, расчистка, дорога и ремонт. Набор постоянный, недоступное — с причиной.
  */
 export const workerActions = (
   unit: Unit,
@@ -95,6 +96,15 @@ export const workerActions = (
     reason: hasPoint || mode.clearing ? undefined : NO_BUILD_POINT,
   });
 
+  // Цена на поле; холм и болото дороже — об этом подсказка и отказ команды.
+  // Без очка стройки режим доступен: приказ до дальней клетки начнётся
+  // со следующего хода.
+  const road = action('buildRoad', {
+    pressed: mode.road,
+    cost: ROAD.cost,
+    lacking: lackingOf(ROAD.cost, payableBuild),
+  });
+
   // Чиним самое повреждённое из соседних своих зданий.
   const damaged = nearby
     .filter(({ hp, maxHp }) => hp < maxHp)
@@ -115,5 +125,5 @@ export const workerActions = (
       })
     : action('repair', { reason: 'Рядом нет повреждённых своих зданий' });
 
-  return [build, work, shelter, unassign, clear, repair];
+  return [build, work, shelter, unassign, clear, road, repair];
 };

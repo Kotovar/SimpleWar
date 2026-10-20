@@ -8,6 +8,7 @@ import {
 import { findServingWorker, getShelteredIds } from '@shared/lib';
 import {
   getKnownCellType,
+  isKnownRoad,
   type Contact,
   type ParticipantKnowledge,
 } from '@entities/perceptions';
@@ -38,7 +39,7 @@ export type Scene = {
 };
 
 /**
- * Местность глазами участника: запомненные клетки как их видели, неизвестные —
+ * Местность глазами участника: запомненные клетки с дорогами как их видели, неизвестные —
  * нейтральным полем, чтобы по рисунку нельзя было узнать скрытый рельеф.
  *
  * @param grid - Настоящие клетки: берутся только размеры и координаты.
@@ -51,7 +52,14 @@ export const getKnownGrid = (
   grid.map((row, y) =>
     row.map((_, x) => {
       const type = getKnownCellType(knowledge, x, y) ?? 'grass';
-      return { x, y, type, isWalkable: MOVE_COST[type] !== undefined };
+      const cell: Cell = {
+        x,
+        y,
+        type,
+        isWalkable: MOVE_COST[type] !== undefined,
+      };
+      if (isKnownRoad(knowledge, x, y)) cell.road = true;
+      return cell;
     }),
   );
 

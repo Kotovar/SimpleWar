@@ -10,7 +10,11 @@ import {
   type Unit,
   type UnitType,
 } from '@shared/config';
-import { calculateTurnIncome, type MovementGrid } from '@shared/lib';
+import {
+  calculateTurnIncome,
+  getMoveCost,
+  type MovementGrid,
+} from '@shared/lib';
 import type { AiMemory } from '@entities/ai-memories';
 import type { Observation, RememberedContact } from '@entities/perceptions';
 import type { TurnState } from '../model/types';
@@ -53,6 +57,8 @@ export type AiContext = {
   /** Прогноз дохода на конец хода. */
   income: Cost;
   known: (x: number, y: number) => CellType | null;
+  /** Цена входа по известной местности и дорогам; `null` — не разведано. */
+  knownCost: (x: number, y: number) => number | null;
   inside: (p: Position) => boolean;
   /** Клетка занята своим объектом, видимым врагом или известным зданием. */
   occupied: (x: number, y: number) => boolean;
@@ -64,6 +70,8 @@ export type AiContext = {
    * способные поразить этот тип (воздух бьют не все).
    */
   threatAt: (p: Position, target?: UnitType) => number;
+  /** Дотянется ли враг до клетки в свой ход, с учётом известных дорог. */
+  reaches: (enemy: EnemyView, p: Position, range?: number) => boolean;
   /** На клетке публичная отметка подготовленного удара любой стороны. */
   struck: (p: Position) => boolean;
   /** Граница разведки: известные проходимые клетки у неизвестных. */
@@ -95,6 +103,15 @@ export const buildContext = (
 ): AiContext => {
   const { width, height } = obs;
   const known = (x: number, y: number) => obs.knownTerrain[y]?.[x] ?? null;
+  const knownCost = (x: number, y: number) => {
+    const type = known(x, y);
+    if (!type) return null;
+    return getMoveCost({
+      type,
+      isWalkable: MOVE_COST[type] !== undefined,
+      road: obs.knownRoads?.[y]?.[x] || undefined,
+    });
+  };
   const inside = ({ x, y }: Position) =>
     x >= 0 && y >= 0 && x < width && y < height;
 
@@ -128,15 +145,34 @@ export const buildContext = (
           (!throughOwn && ownCells.has(cellKey(x, y, width)))
         )
           return 0;
-        const type = known(x, y);
-        return type ? (MOVE_COST[type] ?? 0) : unknownCost;
+        return knownCost(x, y) ?? unknownCost;
       }),
     );
     grids.set(cacheKey, next);
     return next;
   };
 
-  const { threatAt, struck } = createThreat(obs, [...enemies, ...remembered]);
+  // Для досягаемости врага: юниты (свои ему и чужие) не преграждают.
+  let pass: MovementGrid | undefined;
+  const buildingCells = new Set(
+    [
+      ...obs.ownBuildings,
+      ...obs.visibleEnemies.filter(({ kind }) => kind === 'building'),
+      ...remembered.filter(({ kind }) => kind === 'building'),
+    ].map(({ x, y }) => cellKey(x, y, width)),
+  );
+  const passGrid = () =>
+    (pass ??= Array.from({ length: height }, (_, y) =>
+      Array.from({ length: width }, (_, x) =>
+        buildingCells.has(cellKey(x, y, width)) ? 0 : (knownCost(x, y) ?? 1),
+      ),
+    ));
+
+  const { threatAt, struck, reaches } = createThreat(
+    obs,
+    [...enemies, ...remembered],
+    () => passGrid(),
+  );
 
   const frontier: Position[] = [];
   for (let y = 0; y < height; y++) {
@@ -184,10 +220,12 @@ export const buildContext = (
       obs.researched.includes('artel'),
     ).income,
     known,
+    knownCost,
     inside,
     occupied,
     grid,
     threatAt,
+    reaches,
     struck,
     frontier,
     cache: new Map(),

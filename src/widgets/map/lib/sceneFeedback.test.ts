@@ -31,3 +31,22 @@ describe('эффект расчистки', () => {
     ).toBeNull();
   });
 });
+
+describe('эффект дороги', () => {
+  const command = {
+    type: 'buildRoad' as const,
+    actor: 'p2' as const,
+    details: { x: 3, y: 1 },
+  };
+
+  it('видимая дорога — пыль и молотки стройки цвета стороны', () => {
+    expect(getCommandEffect(command, () => true, 50)).toEqual({
+      x: 3,
+      y: 1,
+      spawn: 'p2',
+      building: true,
+      start: 50,
+    });
+    expect(getCommandEffect(command, () => false, 50)).toBeNull();
+  });
+});

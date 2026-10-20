@@ -196,8 +196,10 @@ export const diffScene = (
     if (tracked.has(id)) continue;
     // Ушёл в туман — не гибель; гибель показываем только в обзоре и
     // по клетке, где объект погиб, а не где его видели последний раз.
+    // Свой — всегда: с ним пропадает и обзор вокруг клетки.
     const cell = deathCell?.(id) ?? before;
-    if (worldIds.has(id) || !isVisible(cell.x, cell.y)) continue;
+    if (worldIds.has(id)) continue;
+    if (before.owner !== humanId && !isVisible(cell.x, cell.y)) continue;
     events.push({
       kind: 'death',
       id,

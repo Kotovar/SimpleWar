@@ -1,8 +1,13 @@
 import { reject } from '@shared/lib';
 import { build, giveBuildOrder, type BuildCommand } from '@features/build';
-import { advanceOrder } from '@features/pathfinding';
+import {
+  advanceOrder,
+  giveRoadOrder,
+  type RoadOrderCommand,
+} from '@features/pathfinding';
 import {
   assignWorker,
+  buildRoad,
   giveWorkOrder,
   type AssignCommand,
 } from '@features/workers';
@@ -42,6 +47,29 @@ export const orderWork = (command: AssignCommand) => {
             actor: command.actor,
             workerId: unit.id,
             buildingId: unit.order.buildingId,
+          })
+        : reject('target'),
+    );
+  }
+  return result;
+};
+
+/**
+ * Приказ «Проложить дорогу до…» и сразу его исполнение: рабочий идёт по
+ * своей дороге и кладёт по клетке за ход, пока не дойдёт до цели.
+ *
+ * @returns Итог постановки приказа.
+ */
+export const orderRoad = (command: RoadOrderCommand) => {
+  const result = giveRoadOrder(command);
+  if (result.ok) {
+    advanceOrder(command.actor, command.workerId, (unit, cell) =>
+      unit.order.type === 'road' && cell
+        ? buildRoad({
+            actor: command.actor,
+            workerId: unit.id,
+            ...cell,
+            byOrder: true,
           })
         : reject('target'),
     );

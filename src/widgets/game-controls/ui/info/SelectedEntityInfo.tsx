@@ -104,7 +104,7 @@ const CellDetails = ({ cell }: { cell: Cell }) => (
         className={cell.isWalkable ? styles.IsWalkable : styles.IsNotWalkable}
       >
         {cell.isWalkable
-          ? `Проходима, ход ${getMoveCost(cell)} ${getMoveCost(cell) === 1 ? 'очко' : 'очка'}`
+          ? `${cell.road ? 'Дорога' : 'Проходима'}, ход ${getMoveCost(cell)} ${getMoveCost(cell) === 1 ? 'очко' : 'очка'}`
           : 'Непроходима'}
       </dd>
     </div>
@@ -220,7 +220,9 @@ const UnitDetails = ({ unit }: { unit: Unit }) => (
                 ? 'Работать'
                 : unit.order.type === 'build'
                   ? `Построить: ${BUILDINGS_NAME[unit.order.buildingType]}`
-                  : 'Идти в точку'}
+                  : unit.order.type === 'road'
+                    ? 'Проложить дорогу'
+                    : 'Идти в точку'}
         </dd>
       </div>
     )}

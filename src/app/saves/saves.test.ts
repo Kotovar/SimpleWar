@@ -18,7 +18,11 @@ import {
   usePreferencesStore,
 } from '@entities/settings';
 import { createAiMemory, useAiMemoryStore } from '@entities/ai-memories';
-import { useKnowledgeStore } from '@entities/perceptions';
+import {
+  getParticipantKnowledge,
+  isKnownRoad,
+  useKnowledgeStore,
+} from '@entities/perceptions';
 import { useJournalStore } from '@entities/journals';
 import { initBattleStats, useSandboxStore } from '@features/sandbox';
 import { initVisibilitySystem } from '@features/visibility';
@@ -336,6 +340,57 @@ describe('формат и восстановление партии', () => {
       y: base.y,
       workplaceId: base.id,
     });
+  });
+
+  it('сохраняет дорогу и половину очка движения после шага по ней', () => {
+    const worker = Object.values(useUnitsStore.getState().units).find(
+      u => u.owner === 'p1' && u.role === 'civil',
+    )!;
+    // Клетка рядом с рабочим: дорога сразу попадает в знания p1.
+    const road = useMapStore
+      .getState()
+      .grid.flat()
+      .find(
+        cell =>
+          cell.type === 'grass' &&
+          Math.abs(cell.x - worker.x) + Math.abs(cell.y - worker.y) === 1,
+      )!;
+    useMapStore.getState().setCell(road.x, road.y, { road: true });
+    useUnitsStore.setState(state => ({
+      units: {
+        ...state.units,
+        [worker.id]: { ...state.units[worker.id], movePoints: 1.5 },
+      },
+    }));
+
+    applySnapshot(parseSnapshot(JSON.stringify(captureSnapshot())));
+
+    expect(useMapStore.getState().grid[road.y][road.x].road).toBe(true);
+    expect(isKnownRoad(getParticipantKnowledge('p1'), road.x, road.y)).toBe(
+      true,
+    );
+    expect(useUnitsStore.getState().units[worker.id].movePoints).toBe(1.5);
+  });
+
+  it('сохраняет план дороги ИИ с закреплённой трассой', () => {
+    const roadPlan = {
+      ruleId: 'D01' as const,
+      target: { x: 5, y: 5 },
+      cells: [
+        { x: 3, y: 4 },
+        { x: 4, y: 4 },
+      ],
+      since: 2,
+    };
+    useAiMemoryStore
+      .getState()
+      .setMemory('p2', { ...createAiMemory(3), roadPlan });
+
+    applySnapshot(parseSnapshot(JSON.stringify(captureSnapshot())));
+
+    expect(useAiMemoryStore.getState().byParticipant.p2?.roadPlan).toEqual(
+      roadPlan,
+    );
   });
 
   it('восстанавливает завершённую партию с историческим населением выбывшего', () => {

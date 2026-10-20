@@ -16,6 +16,7 @@ import { build, demolish } from '@features/build';
 import { spawn } from '@features/spawn';
 import {
   assignWorker,
+  buildRoad,
   clearForest,
   repair,
   unassignWorker,
@@ -72,6 +73,8 @@ export const executeAiAction = (
       return repair({ actor, ...action });
     case 'clearForest':
       return clearForest({ actor, ...action });
+    case 'buildRoad':
+      return buildRoad({ actor, ...action });
     case 'demolish':
       return demolish({ actor, ...action });
     case 'startResearch':

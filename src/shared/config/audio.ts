@@ -14,6 +14,8 @@ export type Sfx =
   | 'griffonFlight'
   /** Катапульта едет: скрип колёс и дерева. */
   | 'siegeMove'
+  /** Катапульта разбита: треск брёвен и лопнувшие канаты. */
+  | 'siegeDeath'
   /** Всадник едет: стук копыт. */
   | 'riderMove'
   | 'magic'
@@ -209,6 +211,10 @@ export const SFX_TONES: Record<Sfx, SfxTone[]> = {
       delay: 0.3,
     },
   ],
+  siegeDeath: [
+    { wave: 'noise', from: 900, to: 900, duration: 0.35, gain: 0.35 },
+    { wave: 'square', from: 220, to: 60, duration: 0.4, gain: 0.08 },
+  ],
   death: [
     { wave: 'sawtooth', from: 260, to: 70, duration: 0.35, gain: 0.16 },
     { wave: 'noise', from: 600, to: 600, duration: 0.2, gain: 0.25 },
@@ -281,6 +287,7 @@ export const SFX_VARIANTS: Partial<Record<Sfx, number>> = {
   griffonFlight: 1,
   siegeMove: 2,
   riderMove: 2,
+  siegeDeath: 3,
   death: 3,
 };
 
@@ -330,6 +337,7 @@ export const MOVE_SFX: Partial<Record<UnitType | BuildingType, Sfx>> = {
 /** Звук гибели по типу юнита; остальные — `death`. */
 export const DEATH_SFX: Partial<Record<UnitType | BuildingType, Sfx>> = {
   griffon: 'griffonDeath',
+  siege: 'siegeDeath',
 };
 
 /**

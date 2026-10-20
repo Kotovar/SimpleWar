@@ -22,7 +22,7 @@ type MapState = {
   setCell: (
     x: number,
     y: number,
-    newCell: Partial<Pick<Cell, 'type' | 'isWalkable'>>,
+    newCell: Partial<Pick<Cell, 'type' | 'isWalkable' | 'road'>>,
   ) => void;
   resetStore: () => void;
 };

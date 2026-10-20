@@ -8,7 +8,7 @@ import { attack, heal, prepareStrike } from '@features/combat';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { build } from '@features/build';
 import { setRallyPoint, spawn } from '@features/spawn';
-import { clearForest } from '@features/workers';
+import { buildRoad, clearForest } from '@features/workers';
 import {
   getRoutePreview,
   goTo,
@@ -20,7 +20,7 @@ import {
 import type { CommandResult } from '@shared/config';
 import { handleMapCellClick, handleMapCellOrder } from './mapClickHandler';
 import { pushMapEffect } from './mapSignals';
-import { orderBuild } from './workerOrders';
+import { orderBuild, orderRoad } from './workerOrders';
 
 /**
  * Отказ приказа по клетке: «×» над клеткой. Причину и звук отказа даёт
@@ -44,6 +44,8 @@ const getCommands = (x: number, y: number) => ({
   spawn: withRejectSignal(spawn, x, y),
   setRallyPoint: withRejectSignal(setRallyPoint, x, y),
   clearForest: withRejectSignal(clearForest, x, y),
+  buildRoad: withRejectSignal(buildRoad, x, y),
+  orderRoad: withRejectSignal(orderRoad, x, y),
   prepareStrike: withRejectSignal(prepareStrike, x, y),
   heal: withRejectSignal(heal, x, y),
   goTo: withRejectSignal(goTo, x, y),
@@ -84,6 +86,7 @@ export const useMapCellClick = (scene: Scene) => {
     spawnableCells,
     buildableCells,
     clearableCells,
+    roadCells,
     strikeCells,
     resetStore: clearHighlight,
   } = useHighlightSelectors();
@@ -132,6 +135,7 @@ export const useMapCellClick = (scene: Scene) => {
         buildable: buildableCells,
         spawnable: spawnableCells,
         clearable: clearableCells,
+        road: roadCells,
         strike: strikeCells,
         heal: healTargets,
         planned: useMovementStore.getState().plannedTarget,

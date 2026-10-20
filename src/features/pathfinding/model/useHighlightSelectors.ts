@@ -8,6 +8,7 @@ export const useHighlightSelectors = () => {
   const buildableCells = useHighlightStore(state => state.buildableCells);
   const clearableCells = useHighlightStore(state => state.clearableCells);
   const setClearableCells = useHighlightStore(state => state.setClearableCells);
+  const roadCells = useHighlightStore(state => state.roadCells);
   const strikeCells = useHighlightStore(state => state.strikeCells);
   const resetStore = useHighlightStore(state => state.resetStore);
   const setBuildableCells = useHighlightStore(state => state.setBuildableCells);
@@ -17,6 +18,7 @@ export const useHighlightSelectors = () => {
     buildableCells,
     clearableCells,
     setClearableCells,
+    roadCells,
     strikeCells,
     calculateSpawnableCells,
     setBuildableCells,

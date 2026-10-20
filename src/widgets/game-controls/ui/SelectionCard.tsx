@@ -4,6 +4,7 @@ import { useGameLoopStore } from '@entities/games';
 import {
   getCellKnowledge,
   getKnownCellType,
+  isKnownRoad,
   useParticipantKnowledge,
 } from '@entities/perceptions';
 import { useGameLoopSelectors } from '@features/game-loop';
@@ -39,12 +40,18 @@ const useKnownSelection = () => {
     realCell && viewer !== 'world'
       ? getKnownCellType(knowledge, realCell.x, realCell.y)
       : realCell?.type;
+  const knownRoad =
+    realCell && viewer !== 'world'
+      ? isKnownRoad(knowledge, realCell.x, realCell.y)
+      : !!realCell?.road;
   const cell: Cell | null =
     realCell && knownType
       ? {
-          ...realCell,
+          x: realCell.x,
+          y: realCell.y,
           type: knownType,
           isWalkable: MOVE_COST[knownType] !== undefined,
+          ...(knownRoad && { road: true as const }),
         }
       : null;
   const isUnknownCell = !!realCell && !knownType;

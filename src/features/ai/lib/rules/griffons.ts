@@ -20,10 +20,7 @@ const griffons = (ctx: AiContext) => unitsOf(ctx, 'griffon');
 /** Известная противовоздушная сила, достающая клетку в свой ход. */
 const antiAir = (ctx: AiContext, cell: { x: number; y: number }) =>
   [...ctx.enemies, ...ctx.remembered].filter(
-    e =>
-      e.armed &&
-      HITS_AIR.includes(e.type) &&
-      manhattan(e, cell) <= e.move + e.range,
+    e => e.armed && HITS_AIR.includes(e.type) && ctx.reaches(e, cell),
   );
 
 /**

@@ -72,7 +72,7 @@ export const P02: AiRule = {
   evaluate: ctx => {
     const riders = cavalry(ctx);
     const exposed = wards(ctx).filter(ward =>
-      riders.some(r => manhattan(r, ward) <= r.move + 1),
+      riders.some(r => ctx.reaches(r, ward, 1)),
     );
     if (!exposed.length) return [];
     return spearmen(ctx).flatMap((unit): Candidate[] => {

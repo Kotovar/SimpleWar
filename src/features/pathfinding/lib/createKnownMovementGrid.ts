@@ -15,6 +15,7 @@ import { useMapStore } from '@entities/maps';
 import {
   getKnownCellType,
   getParticipantKnowledge,
+  isKnownRoad,
 } from '@entities/perceptions';
 import { blocksGroundTransit } from './isCellOccupied';
 
@@ -56,8 +57,8 @@ export const isVisibleTo = (actor: ParticipantId, x: number, y: number) => {
 
 /**
  * Цены входа по известной участнику карте. Видимые клетки — настоящая
- * местность и занятость; разведанные — запомненная местность и снимки
- * зданий; неизвестные — предположение о проходе. Скрытые юниты
+ * местность и занятость; разведанные — запомненная местность, дороги и
+ * снимки зданий; неизвестные — предположение о проходе. Скрытые юниты
  * и изменения мира на маршрут не влияют. Свои юниты не мешают транзиту;
  * остановка на занятой клетке проверяется отдельно.
  *
@@ -89,7 +90,12 @@ export const createKnownMovementGrid = (
       }
       const known = getKnownCellType(knowledge, x, y);
       if (!known) return unknownCost;
-      return remembered.has(index) ? 0 : (MOVE_COST[known] ?? 0);
+      if (remembered.has(index)) return 0;
+      return getMoveCost({
+        type: known,
+        isWalkable: MOVE_COST[known] !== undefined,
+        road: isKnownRoad(knowledge, x, y) || undefined,
+      });
     }),
   );
 };

@@ -55,7 +55,7 @@ export const T01 = towerRule(
   (ctx, _t, targets) => {
     const base = ctx.base;
     return base
-      ? targets.find(e => e.armed && manhattan(e, base) <= e.range + e.move)
+      ? targets.find(e => e.armed && ctx.reaches(e, base))
       : undefined;
   },
 );
