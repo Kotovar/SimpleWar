@@ -17,7 +17,7 @@ import {
   UNITS_CONFIG,
 } from '@shared/config';
 import { canHouseWorker } from '@shared/lib';
-import { TERRAIN_CODES } from '@entities/perceptions';
+import { ROAD_BIT, TERRAIN_CODES } from '@entities/perceptions';
 import { HINTS, TUTORIAL } from '@widgets/game-controls';
 import {
   MAX_SAVE_BYTES,
@@ -88,6 +88,11 @@ const shape =
 const requireValid = (ok: boolean, message: string) => {
   if (!ok) throw new Error(message);
 };
+/** Код памяти о клетке: местность и, возможно, бит дороги на ней. */
+const terrainCode: Check = v =>
+  int(0, TERRAIN_CODES.length | ROAD_BIT)(v) &&
+  ((v as number) & ~ROAD_BIT) <= TERRAIN_CODES.length &&
+  (v === 0 || ((v as number) & ~ROAD_BIT) > 0);
 const participant = one(PARTICIPANT_IDS);
 const participants = (check: Check) => dictionary(check, participant, 4);
 const unitType = one(Object.keys(UNITS_CONFIG));
@@ -401,7 +406,7 @@ const snapshotShape = shape({
       width: int(1, 100),
       height: int(1, 100),
       visible: list(one([0, 1])),
-      terrain: list(int(0, TERRAIN_CODES.length)),
+      terrain: list(terrainCode),
       contacts: dictionary(
         shape(
           {

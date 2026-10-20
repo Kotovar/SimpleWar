@@ -18,7 +18,11 @@ import {
   usePreferencesStore,
 } from '@entities/settings';
 import { createAiMemory, useAiMemoryStore } from '@entities/ai-memories';
-import { useKnowledgeStore } from '@entities/perceptions';
+import {
+  getParticipantKnowledge,
+  isKnownRoad,
+  useKnowledgeStore,
+} from '@entities/perceptions';
 import { useJournalStore } from '@entities/journals';
 import { initBattleStats, useSandboxStore } from '@features/sandbox';
 import { initVisibilitySystem } from '@features/visibility';
@@ -342,10 +346,15 @@ describe('формат и восстановление партии', () => {
     const worker = Object.values(useUnitsStore.getState().units).find(
       u => u.owner === 'p1' && u.role === 'civil',
     )!;
+    // Клетка рядом с рабочим: дорога сразу попадает в знания p1.
     const road = useMapStore
       .getState()
       .grid.flat()
-      .find(cell => cell.type === 'grass')!;
+      .find(
+        cell =>
+          cell.type === 'grass' &&
+          Math.abs(cell.x - worker.x) + Math.abs(cell.y - worker.y) === 1,
+      )!;
     useMapStore.getState().setCell(road.x, road.y, { road: true });
     useUnitsStore.setState(state => ({
       units: {
@@ -357,6 +366,9 @@ describe('формат и восстановление партии', () => {
     applySnapshot(parseSnapshot(JSON.stringify(captureSnapshot())));
 
     expect(useMapStore.getState().grid[road.y][road.x].road).toBe(true);
+    expect(isKnownRoad(getParticipantKnowledge('p1'), road.x, road.y)).toBe(
+      true,
+    );
     expect(useUnitsStore.getState().units[worker.id].movePoints).toBe(1.5);
   });
 

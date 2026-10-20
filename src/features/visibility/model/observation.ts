@@ -7,6 +7,7 @@ import {
   getContactConfidence,
   getKnownCellType,
   getParticipantKnowledge,
+  isKnownRoad,
   type Contact,
   type Observation,
 } from '@entities/perceptions';
@@ -30,6 +31,9 @@ export const getObservation = (participant: ParticipantId): Observation => {
 
   const knownTerrain = Array.from({ length: height }, (_, y) =>
     Array.from({ length: width }, (_, x) => getKnownCellType(knowledge, x, y)),
+  );
+  const knownRoads = Array.from({ length: height }, (_, y) =>
+    Array.from({ length: width }, (_, x) => isKnownRoad(knowledge, x, y)),
   );
   const visible = Array.from({ length: height }, (_, y) =>
     Array.from(
@@ -73,6 +77,7 @@ export const getObservation = (participant: ParticipantId): Observation => {
     ),
     visibleEnemies,
     knownTerrain,
+    knownRoads,
     visible,
     opponents: getAliveParticipants(useGameLoopStore.getState())
       .map(({ id }) => id)

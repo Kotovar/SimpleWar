@@ -36,6 +36,8 @@ export type Observation = {
   visibleEnemies: (Omit<Contact, 'seenTurn'> & { armorBonus?: number })[];
   /** Известная местность, `knownTerrain[y][x]`; `null` — не разведано. */
   knownTerrain: (CellType | null)[][];
+  /** Известные дороги, `knownRoads[y][x]`; без поля дорог не знают. */
+  knownRoads?: boolean[][];
   /** Видимость клеток сейчас, `visible[y][x]`. */
   visible: boolean[][];
   /** Невыбывшие соперники: порядок ходов и выбывание публичны. */

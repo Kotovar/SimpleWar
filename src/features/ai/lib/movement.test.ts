@@ -46,3 +46,14 @@ it('ИИ выбирает свободную цель, даже если зан�
     total: 3,
   });
 });
+
+it('ИИ проходит по известной дороге дальше, чем по полю', () => {
+  const worker = own('worker', 0, 0, { movePoints: 3 });
+  const { ctx } = scene({ map: ['=======', '.......'], units: [worker] });
+
+  expect(ctx.knownCost(3, 0)).toBe(0.5);
+  expect(ctx.knownCost(3, 1)).toBe(1);
+  expect(turnMoves(ctx, worker)).toContainEqual({ x: 6, y: 0, cost: 3 });
+  // Шаг по дороге и вниз дешевле, чем два шага по полю.
+  expect(turnMoves(ctx, worker)).toContainEqual({ x: 1, y: 1, cost: 1.5 });
+});

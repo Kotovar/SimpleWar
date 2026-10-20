@@ -28,6 +28,8 @@ const TERRAIN: Record<string, CellType> = {
   w: 'water',
   f: 'forest',
   g: 'gold',
+  // Поле с дорогой.
+  '=': 'grass',
 };
 
 let counter = 0;
@@ -138,6 +140,9 @@ export const scene = (
   const knownTerrain = spec.map.map(row =>
     row.split('').map(char => (char === '?' ? null : TERRAIN[char])),
   );
+  const knownRoads = spec.map.map(row =>
+    row.split('').map(char => char === '='),
+  );
   const hidden = new Set(spec.hidden ?? []);
   const visible = knownTerrain.map((row, y) =>
     row.map((type, x) => type !== null && !hidden.has(`${x},${y}`)),
@@ -159,6 +164,7 @@ export const scene = (
     population: spec.population ?? { max: 20, occupied: 2 },
     visibleEnemies: spec.enemies ?? [],
     knownTerrain,
+    knownRoads,
     visible,
     opponents: spec.opponents ?? ['p1'],
     resources,
