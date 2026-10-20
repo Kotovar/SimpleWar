@@ -122,7 +122,7 @@ export const AI_CONFIG = {
     frontGap: 6,
     frontReach: 12,
     hold: 20,
-    woodSpare: 150,
+    woodSpare: 40,
   },
   /** Профиль стратегии (S17); `null` — нейтральные веса. */
   profile: null as AiProfile | null,
