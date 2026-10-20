@@ -23,6 +23,7 @@ import {
   setupCanvas,
   useEntitiesLayer,
   useBuiltCells,
+  useDeathReveal,
   useHoverCell,
   useHoverPath,
   useMapView,
@@ -77,6 +78,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   );
 
   const { fog, grid, units, buildings, snapshots } = scene;
+  const fogShown = useDeathReveal(fog, humanId);
   // Отметки ударов — из знаний смотрящего (Скрытая наводка прячет чужие),
   // в полном обзоре отладки — все.
   const strikeMarks = useMemo(
@@ -145,10 +147,12 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     if (!ctx) return;
 
     withClear(ctx, () => {
-      if (fog) renderFogLayer(ctx, fog, cellSize, range, fogQuality);
+      if (fogShown) {
+        renderFogLayer(ctx, fogShown, cellSize, range, fogQuality);
+      }
       drawWorldEdge(ctx, mapSize.columns, mapSize.rows, cellSize);
     });
-  }, [fog, fogQuality, mapSize, view]);
+  }, [fogShown, fogQuality, mapSize, view]);
 
   useEffect(() => {
     const { cellSize, viewport, offset } = view;

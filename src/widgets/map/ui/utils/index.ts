@@ -13,3 +13,4 @@ export * from './terrainCache';
 export * from './useProduceCells';
 export * from './mapSignals';
 export * from './useGameHotkeys';
+export { useDeathReveal } from './useDeathReveal';
