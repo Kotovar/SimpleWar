@@ -65,6 +65,34 @@ const GOLD_VARIANTS = [
     shape(ctx, TERRAIN.colorOreLight, [6, 20, 11, 20, 9, 23]);
     sparkle(ctx, 22, 16.5);
   },
+  // Низкий уступ с широкой жилой и небольшим боковым выходом.
+  (ctx: CanvasRenderingContext2D) => {
+    shape(
+      ctx,
+      TERRAIN.colorMountainDark,
+      [3, 25, 5, 17, 12, 11, 22, 12, 29, 25],
+    );
+    shape(ctx, TERRAIN.colorMountainLight, [3, 25, 5, 17, 12, 11, 16, 25]);
+    shape(ctx, TERRAIN.colorOreDark, [8, 24, 9, 16, 15, 12, 21, 16, 19, 24]);
+    shape(ctx, TERRAIN.colorOreLight, [9, 16, 15, 12, 21, 16, 14, 19]);
+    shape(ctx, TERRAIN.colorOreDark, [22, 25, 23, 20, 26, 19, 28, 25]);
+    shape(ctx, TERRAIN.colorOreLight, [23, 20, 26, 19, 27, 22, 24, 23]);
+    sparkle(ctx, 14, 14);
+  },
+  // Две сближенные жилы, правая немного выше.
+  (ctx: CanvasRenderingContext2D) => {
+    shape(
+      ctx,
+      TERRAIN.colorMountainDark,
+      [3, 25, 7, 14, 15, 12, 22, 8, 29, 25],
+    );
+    shape(ctx, TERRAIN.colorMountainLight, [15, 25, 15, 12, 22, 8, 23, 25]);
+    shape(ctx, TERRAIN.colorOreDark, [5, 24, 8, 16, 13, 13, 17, 18, 14, 25]);
+    shape(ctx, TERRAIN.colorOreLight, [8, 16, 13, 13, 17, 18, 11, 19]);
+    shape(ctx, TERRAIN.colorOreDark, [17, 24, 19, 13, 22, 10, 26, 17, 25, 24]);
+    shape(ctx, TERRAIN.colorOreLight, [19, 13, 22, 10, 26, 17, 21, 18]);
+    sparkle(ctx, 21, 13);
+  },
 ];
 
 /** Сдвиг и растяжение по высоте: одинаковые варианты не выстраиваются в узор. */
@@ -149,6 +177,32 @@ const MOUNTAIN_VARIANTS = [
       [16.5, 11, 20, 5, 24, 12, 21.5, 10.5, 19.5, 12],
     );
     shape(ctx, TERRAIN.colorMountainDark, [23, 25, 24.5, 21, 28, 21.5, 29, 25]);
+  },
+  // Главный пик слева и невысокое плечо справа.
+  (ctx: CanvasRenderingContext2D) => {
+    shape(ctx, TERRAIN.colorMountainDark, [15, 25, 23, 12, 30, 25]);
+    shape(ctx, TERRAIN.colorMountainLight, [2, 25, 12, 5, 25, 25]);
+    shape(ctx, TERRAIN.colorMountainDark, [12, 5, 25, 25, 14, 25]);
+    shape(
+      ctx,
+      TERRAIN.colorMountainSnow,
+      [8, 13, 12, 5, 17, 13, 13, 11, 11, 13],
+    );
+  },
+  // Узкая вершина над широким скальным основанием.
+  (ctx: CanvasRenderingContext2D) => {
+    shape(
+      ctx,
+      TERRAIN.colorMountainDark,
+      [2, 25, 7, 15, 13, 18, 25, 13, 30, 25],
+    );
+    shape(ctx, TERRAIN.colorMountainLight, [7, 25, 18, 4, 28, 25]);
+    shape(ctx, TERRAIN.colorMountainDark, [18, 4, 28, 25, 19, 25]);
+    shape(
+      ctx,
+      TERRAIN.colorMountainSnow,
+      [14, 12, 18, 4, 22, 12.5, 19, 11, 17, 13],
+    );
   },
 ];
 
