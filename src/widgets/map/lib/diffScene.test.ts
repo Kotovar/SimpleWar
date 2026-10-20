@@ -254,6 +254,7 @@ describe('getEventSfx по типу', () => {
     } as const;
     expect(getEventSfx({ ...death, type: 'griffon' })).toBe('griffonDeath');
     expect(getEventSfx({ ...death, type: 'rider' })).toBe('death');
+    expect(getEventSfx({ ...death, type: 'siege' })).toBe('siegeDeath');
   });
 });
 
