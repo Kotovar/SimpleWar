@@ -372,6 +372,27 @@ describe('формат и восстановление партии', () => {
     expect(useUnitsStore.getState().units[worker.id].movePoints).toBe(1.5);
   });
 
+  it('сохраняет план дороги ИИ с закреплённой трассой', () => {
+    const roadPlan = {
+      ruleId: 'D01' as const,
+      target: { x: 5, y: 5 },
+      cells: [
+        { x: 3, y: 4 },
+        { x: 4, y: 4 },
+      ],
+      since: 2,
+    };
+    useAiMemoryStore
+      .getState()
+      .setMemory('p2', { ...createAiMemory(3), roadPlan });
+
+    applySnapshot(parseSnapshot(JSON.stringify(captureSnapshot())));
+
+    expect(useAiMemoryStore.getState().byParticipant.p2?.roadPlan).toEqual(
+      roadPlan,
+    );
+  });
+
   it('восстанавливает завершённую партию с историческим населением выбывшего', () => {
     expect(surrender('p1').ok).toBe(true);
     const saved = captureSnapshot();

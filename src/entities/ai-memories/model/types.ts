@@ -69,4 +69,15 @@ export type AiMemory = {
   blindStrikes: Record<string, Position>;
   /** Потери своих зданий от осады: клетка → последний круг избегания стройки. */
   siegeLosses: Record<string, number>;
+  /**
+   * Прокладываемая дорога: правило (D01 — к добыче, D02 — к фронту), цель,
+   * трасса от ратуши, закреплённая при выборе (иначе равноценные пути дают
+   * зигзаг), и круг выбора. Нет в сохранениях до дорог — выбирается заново.
+   */
+  roadPlan?: {
+    ruleId: 'D01' | 'D02';
+    target: Position;
+    cells: Position[];
+    since: number;
+  } | null;
 };

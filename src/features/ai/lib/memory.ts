@@ -9,6 +9,7 @@ import { chooseRival } from './rival';
 import { chooseStrategy, evaluateStrategies } from './strategy';
 import { resourceSites } from './facts';
 import { pickBuildSite } from './rules/building';
+import { planRoad } from './rules/roads';
 
 /** Пустое состояние нового хода. */
 export const createTurnState = (): TurnState => ({
@@ -113,8 +114,12 @@ export const refreshMemory = (ctx: AiContext) => {
     ...cleaned,
     memory: withStrategy,
   });
+  const roadPlan = planRoad({
+    ...cleaned,
+    memory: { ...withStrategy, operation },
+  });
   return {
-    memory: { ...withStrategy, operation, garrison },
+    memory: { ...withStrategy, operation, garrison, roadPlan },
     scores,
     chosen,
   };

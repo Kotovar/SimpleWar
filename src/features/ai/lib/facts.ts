@@ -87,13 +87,18 @@ export const enemyTarget = (ctx: AiContext): EnemyView | null => {
   )[0];
 };
 
-/** Сколько рабочих держать: по месту на каждое здание добычи и строитель. */
+/**
+ * Сколько рабочих держать: по месту на каждое здание добычи и строитель;
+ * пока прокладывается дорога — ещё один сверх предела, иначе при полной
+ * добыче дорогу строить некому.
+ */
 export const desiredWorkers = (ctx: AiContext) => {
   const places = ctx.obs.ownBuildings.filter(
     ({ role }) => role === 'resource',
   ).length;
   const { min, max } = ctx.config.workerTarget;
-  return Math.min(max, Math.max(min, places + 1));
+  const roadWorker = ctx.memory.roadPlan ? 1 : 0;
+  return Math.min(max, Math.max(min, places + 1)) + roadWorker;
 };
 
 /** У ратуши есть защитник: боец с атакой (не разведчик) в радиусе тревоги. */

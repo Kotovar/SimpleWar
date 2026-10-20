@@ -1,5 +1,6 @@
 import {
   MOVE_COST,
+  ROAD,
   ROAD_MOVE_COST,
   type Cell,
   type CellType,
@@ -33,6 +34,18 @@ export const getMoveCost = ({
   const cost = isWalkable ? (MOVE_COST[type] ?? 0) : 0;
   return cost && road ? ROAD_MOVE_COST : cost;
 };
+
+/** Местность, где можно проложить дорогу: поле, холм, болото. */
+export const canHaveRoad = (type: CellType) =>
+  type === 'grass' || type === 'hill' || type === 'swamp';
+
+/**
+ * Цена дороги на местности: холм и болото дороже поля.
+ *
+ * @param type - Местность клетки.
+ */
+export const getRoadCost = (type: CellType) =>
+  type === 'grass' ? ROAD.cost : ROAD.roughCost;
 
 /**
  * Можно ли поставить здание или нанять юнита на местность. Холм подходит

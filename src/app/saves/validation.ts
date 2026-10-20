@@ -269,7 +269,17 @@ const memory = shape(
       v => typeof v === 'string' && /^\d+,\d+$/.test(v),
     ),
   },
-  { rival: nullable(shape({ owner: participant, since: int() })) },
+  {
+    rival: nullable(shape({ owner: participant, since: int() })),
+    roadPlan: nullable(
+      shape({
+        ruleId: one(['D01', 'D02']),
+        target: position,
+        cells: list(position, MAP_SIDE_LIMIT * MAP_SIDE_LIMIT),
+        since: int(),
+      }),
+    ),
+  },
 );
 const summary = shape(
   { key: text(1000), text: text(1000), count: int(1) },

@@ -1,11 +1,16 @@
 import {
-  ROAD,
-  type CellType,
   type CommandResult,
   type ParticipantId,
   type Position,
 } from '@shared/config';
-import { getAvailableResources, isAdjacent, ok, reject } from '@shared/lib';
+import {
+  canHaveRoad,
+  getAvailableResources,
+  getRoadCost,
+  isAdjacent,
+  ok,
+  reject,
+} from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useEconomyStore } from '@entities/economies';
@@ -25,17 +30,6 @@ export type BuildRoadCommand = {
   x: number;
   y: number;
 };
-
-/** Местность, где можно проложить дорогу. */
-const ROAD_TERRAIN = new Set<CellType>(['grass', 'hill', 'swamp']);
-
-/**
- * Цена дороги на местности: холм и болото дороже поля.
- *
- * @param type - Местность клетки.
- */
-export const getRoadCost = (type: CellType) =>
-  type === 'grass' ? ROAD.cost : ROAD.roughCost;
 
 /**
  * Клетки, где рабочий может проложить дорогу сейчас: соседние, видимые
@@ -59,7 +53,7 @@ export const getRoadCells = (
       const y = worker.y + dy;
       if (!dx && !dy) continue;
       const cell = getCell(x, y);
-      if (!cell || cell.road || !ROAD_TERRAIN.has(cell.type)) continue;
+      if (!cell || cell.road || !canHaveRoad(cell.type)) continue;
       if (getUnitAt(x, y) || getBuildingAt(x, y)) continue;
       if (isVisibleTo(actor, x, y)) cells.push({ x, y });
     }
@@ -82,7 +76,7 @@ const validateAndBuild = ({
   // Скрытая клетка отклоняется до проверки местности: рельеф не раскрывается.
   if (!isVisibleTo(actor, x, y)) return reject('hidden');
   if (!isAdjacent(worker, { x, y })) return reject('distance');
-  if (!ROAD_TERRAIN.has(cell.type)) return reject('terrain');
+  if (!canHaveRoad(cell.type)) return reject('terrain');
   if (cell.road) return reject('target');
   if (
     useUnitsStore.getState().getUnitAt(x, y) ||
