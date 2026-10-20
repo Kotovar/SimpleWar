@@ -39,6 +39,15 @@ export const REPAIR = {
   cost: { gold: 10, wood: 20 },
 };
 
+/**
+ * Дорога рабочим на соседней клетке за одно рабочее действие: цена
+ * на поле и на трудной местности (холм, болото). Старт.
+ */
+export const ROAD = {
+  cost: { gold: 0, wood: 10 },
+  roughCost: { gold: 0, wood: 20 },
+};
+
 /** Стоимость постройки здания или юнита. */
 export type Cost = {
   gold: number;

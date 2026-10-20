@@ -37,6 +37,7 @@ export type AiAction =
   | { type: 'unassign'; workerId: string }
   | { type: 'repair'; workerId: string; buildingId: string }
   | { type: 'clearForest'; workerId: string; x: number; y: number }
+  | { type: 'buildRoad'; workerId: string; x: number; y: number }
   | { type: 'demolish'; buildingId: string }
   | { type: 'startResearch'; research: ResearchType }
   | { type: 'wait'; actorId: string };

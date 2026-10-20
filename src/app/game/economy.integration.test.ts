@@ -12,7 +12,9 @@ import { attack } from '@features/combat';
 import { initGameLoopEvents, nextTurn } from '@features/game-loop';
 import {
   assignWorker,
+  buildRoad,
   clearForest,
+  getRoadCells,
   repair,
   unassignWorker,
 } from '@features/workers';
@@ -268,6 +270,89 @@ describe('расчистка леса', () => {
     clearForest({ actor: 'p1', workerId: cutter, x: 8, y: 0 });
     units().resetUnitsForNewTurn('p1');
     expect(move({ actor: 'p1', unitId: cutter, x: 8, y: 0 }).ok).toBe(true);
+  });
+});
+
+describe('дорога', () => {
+  it('кладёт дорогу на поле за 10 дерева и очко стройки; повтор — отказ', () => {
+    const roader = readyWorker(2, 2);
+
+    expect(buildRoad({ actor: 'p1', workerId: roader, x: 3, y: 2 })).toEqual({
+      ok: true,
+    });
+    expect(useMapStore.getState().grid[2][3]).toMatchObject({
+      type: 'grass',
+      road: true,
+    });
+    expect(wood()).toBe(110);
+    expect(worker(roader)).toMatchObject({ buildPoints: 0, movePoints: 0 });
+
+    const other = readyWorker(3, 1);
+    expect(
+      buildRoad({ actor: 'p1', workerId: other, x: 3, y: 2 }),
+    ).toMatchObject({ ok: false, code: 'target' });
+  });
+
+  it('на холме и болоте стоит 20 дерева', () => {
+    useMapStore.getState().setCell(3, 2, { type: 'hill' });
+    const roader = readyWorker(2, 2);
+
+    expect(buildRoad({ actor: 'p1', workerId: roader, x: 3, y: 2 }).ok).toBe(
+      true,
+    );
+    expect(wood()).toBe(100);
+  });
+
+  it.each([
+    { name: 'лес', x: 8, y: 0, from: { x: 7, y: 0 }, code: 'terrain' },
+    { name: 'рудник', x: 4, y: 3, from: { x: 3, y: 3 }, code: 'terrain' },
+    { name: 'далеко', x: 5, y: 2, from: { x: 2, y: 2 }, code: 'distance' },
+  ])('отказ: $name', ({ x, y, from, code }) => {
+    const roader = readyWorker(from.x, from.y);
+    expect(buildRoad({ actor: 'p1', workerId: roader, x, y })).toMatchObject({
+      ok: false,
+      code,
+    });
+    expect(wood()).toBe(120);
+  });
+
+  it('не кладёт дорогу под юнитом, без очка стройки, без дерева и вне обзора', () => {
+    const roader = readyWorker(2, 2);
+    readyWorker(3, 2);
+    expect(
+      buildRoad({ actor: 'p1', workerId: roader, x: 3, y: 2 }),
+    ).toMatchObject({ code: 'occupied' });
+
+    buildRoad({ actor: 'p1', workerId: roader, x: 2, y: 3 });
+    expect(
+      buildRoad({ actor: 'p1', workerId: roader, x: 1, y: 2 }),
+    ).toMatchObject({ code: 'points' });
+
+    economy().removeResources('p1', { wood: wood() - 5 });
+    const poor = readyWorker(5, 5);
+    expect(
+      buildRoad({ actor: 'p1', workerId: poor, x: 5, y: 4 }),
+    ).toMatchObject({ code: 'resources' });
+    expect(useMapStore.getState().grid[4][5].road).toBeUndefined();
+
+    useUnitsStore.setState({ units: {} });
+    const lone = readyWorker(1, 1);
+    expect(
+      buildRoad({ actor: 'p1', workerId: lone, x: 8, y: 5 }),
+    ).toMatchObject({ code: 'hidden' });
+  });
+
+  it('предлагает только подходящие соседние клетки', () => {
+    const roader = readyWorker(3, 2);
+    readyWorker(2, 2);
+    useMapStore.getState().setCell(3, 1, { road: true });
+
+    const cells = getRoadCells('p1', worker(roader));
+    // Вокруг 8 клеток: рудник (4, 3), юнит (2, 2) и дорога (3, 1) — нет.
+    expect(cells).toHaveLength(5);
+    expect(cells).not.toContainEqual({ x: 4, y: 3 });
+    expect(cells).not.toContainEqual({ x: 2, y: 2 });
+    expect(cells).not.toContainEqual({ x: 3, y: 1 });
   });
 });
 

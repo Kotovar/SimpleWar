@@ -298,6 +298,7 @@ const eventTypes = [
   'unassign',
   'repair',
   'clearForest',
+  'buildRoad',
   'demolish',
   'prepareStrike',
   'heal',

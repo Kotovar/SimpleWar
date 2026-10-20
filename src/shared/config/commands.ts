@@ -20,6 +20,7 @@ export type CommandType =
   | 'unassign'
   | 'repair'
   | 'clearForest'
+  | 'buildRoad'
   | 'demolish'
   | 'prepareStrike'
   | 'heal'
