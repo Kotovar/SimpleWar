@@ -9,7 +9,6 @@ import {
 import { hasFormationNeighbor, isFlyingType } from '@shared/lib';
 import type { AiContext } from './context';
 import { basesKnown, enemyTarget, ofRival } from './facts';
-import { manhattan } from './geometry';
 import { effectiveness, powerOf } from './stats';
 
 /**
@@ -140,9 +139,7 @@ export const roleWishes = (ctx: AiContext): RoleWish[] => {
  */
 export const battleRatio = (ctx: AiContext, group: MilitaryUnit[]) => {
   const armed = ctx.enemies.filter(
-    enemy =>
-      enemy.armed &&
-      group.some(unit => manhattan(unit, enemy) <= enemy.move + enemy.range),
+    enemy => enemy.armed && group.some(unit => ctx.reaches(enemy, unit)),
   );
   const foeTypes = armed.map(({ type, armorBonus }) => ({ type, armorBonus }));
   const ownTypes = asTargets(ctx, group);

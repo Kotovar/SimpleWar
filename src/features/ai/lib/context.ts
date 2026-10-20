@@ -70,6 +70,8 @@ export type AiContext = {
    * способные поразить этот тип (воздух бьют не все).
    */
   threatAt: (p: Position, target?: UnitType) => number;
+  /** Дотянется ли враг до клетки в свой ход, с учётом известных дорог. */
+  reaches: (enemy: EnemyView, p: Position, range?: number) => boolean;
   /** На клетке публичная отметка подготовленного удара любой стороны. */
   struck: (p: Position) => boolean;
   /** Граница разведки: известные проходимые клетки у неизвестных. */
@@ -150,7 +152,27 @@ export const buildContext = (
     return next;
   };
 
-  const { threatAt, struck } = createThreat(obs, [...enemies, ...remembered]);
+  // Для досягаемости врага: юниты (свои ему и чужие) не преграждают.
+  let pass: MovementGrid | undefined;
+  const buildingCells = new Set(
+    [
+      ...obs.ownBuildings,
+      ...obs.visibleEnemies.filter(({ kind }) => kind === 'building'),
+      ...remembered.filter(({ kind }) => kind === 'building'),
+    ].map(({ x, y }) => cellKey(x, y, width)),
+  );
+  const passGrid = () =>
+    (pass ??= Array.from({ length: height }, (_, y) =>
+      Array.from({ length: width }, (_, x) =>
+        buildingCells.has(cellKey(x, y, width)) ? 0 : (knownCost(x, y) ?? 1),
+      ),
+    ));
+
+  const { threatAt, struck, reaches } = createThreat(
+    obs,
+    [...enemies, ...remembered],
+    () => passGrid(),
+  );
 
   const frontier: Position[] = [];
   for (let y = 0; y < height; y++) {
@@ -203,6 +225,7 @@ export const buildContext = (
     occupied,
     grid,
     threatAt,
+    reaches,
     struck,
     frontier,
     cache: new Map(),

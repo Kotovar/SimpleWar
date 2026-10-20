@@ -158,10 +158,7 @@ export const wouldBlock = (ctx: AiContext, site: Position) =>
 /** Угроза ближнего боя: враги, способные дойти и ударить вплотную. */
 export const meleeThreat = (ctx: AiContext, cell: Position) =>
   ctx.enemies.filter(
-    enemy =>
-      enemy.armed &&
-      enemy.range <= 1 &&
-      manhattan(enemy, cell) <= enemy.move + 1,
+    enemy => enemy.armed && enemy.range <= 1 && ctx.reaches(enemy, cell, 1),
   ).length;
 
 /** Видимые цели в дальности, ещё не обречённые общим фокусом. */

@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vite-plus/test';
 import type { AiMemory } from '@entities/ai-memories';
 import { foe, own, ownBuilding, remembered, scene } from '../scene.test-utils';
 import { desiredWorkers } from '../facts';
+import { meleeThreat } from './common';
+import { C01 } from './riders';
 import { D01, D02, planRoad } from './roads';
 
 /** Ратуша слева, рудник на золоте справа: путь 9 клеток по полю. */
@@ -174,5 +176,63 @@ describe('рабочий под дорогу', () => {
     const plain = supply();
     const withRoad = supply({ map: field, memory: { roadPlan: toMine } });
     expect(desiredWorkers(withRoad.ctx)).toBe(desiredWorkers(plain.ctx) + 1);
+  });
+});
+
+describe('дороги в оценке досягаемости', () => {
+  it('враг по дороге дотягивается дальше, чем по прямой', () => {
+    const worker = own('worker', 6, 0);
+    const spec = { units: [worker], enemies: [foe('swordsman', 0, 0)] };
+    const road = scene({ map: ['======....'], ...spec });
+    expect(road.ctx.threatAt(worker)).toBeGreaterThan(0);
+    expect(meleeThreat(road.ctx, worker)).toBe(1);
+
+    const plain = scene({ map: ['..........'], ...spec });
+    expect(plain.ctx.threatAt(worker)).toBe(0);
+    expect(meleeThreat(plain.ctx, worker)).toBe(0);
+  });
+
+  it('враг идёт по дороге сквозь своих юнитов', () => {
+    const worker = own('worker', 6, 0);
+    const { ctx } = scene({
+      map: ['==========', 'wwwwwwwwww'],
+      units: [worker],
+      enemies: [foe('swordsman', 0, 0), foe('worker', 3, 0)],
+    });
+    expect(ctx.threatAt(worker)).toBeGreaterThan(0);
+  });
+
+  it('всадник идёт в рейд к рабочему, достижимому по дороге', () => {
+    const rider = own('rider', 0, 0);
+    const spec = { units: [rider], enemies: [foe('worker', 8, 0)] };
+    expect(
+      C01.evaluate(scene({ map: ['========..'], ...spec }).ctx),
+    ).toMatchObject([{ action: { type: 'move', unitId: rider.id } }]);
+    expect(C01.evaluate(scene({ map: ['..........'], ...spec }).ctx)).toEqual(
+      [],
+    );
+  });
+
+  it('рейд: неизвестная клетка по цене хода, недостижимая цель не мешает', () => {
+    const rider = own('rider', 0, 0);
+    const fog = scene({
+      map: ['.....?....'],
+      units: [rider],
+      enemies: [foe('worker', 6, 0)],
+    });
+    expect(C01.evaluate(fog.ctx)).toMatchObject([
+      { action: { type: 'move', unitId: rider.id, x: 5, y: 0 } },
+    ]);
+
+    // Ближний рабочий за холмами, дальний — по дороге за 3 очка.
+    const map = ['.hhh.', '=hhhh', ...Array(5).fill('=....'), '.....'];
+    const two = scene({
+      map,
+      units: [rider],
+      enemies: [foe('worker', 4, 0), foe('worker', 0, 7)],
+    });
+    expect(C01.evaluate(two.ctx)).toMatchObject([
+      { action: { type: 'move', unitId: rider.id, x: 0, y: 6 } },
+    ]);
   });
 });

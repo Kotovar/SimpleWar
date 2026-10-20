@@ -46,7 +46,7 @@ export const C06: AiRule = {
   evaluate: ctx =>
     riders(ctx).flatMap(unit => {
       const spears = ctx.enemies.some(
-        e => e.type === 'spearman' && manhattan(e, unit) <= e.move + 1,
+        e => e.type === 'spearman' && ctx.reaches(e, unit, 1),
       );
       const tower = ctx.enemies.some(
         e => e.type === 'tower' && manhattan(e, unit) <= e.range,
@@ -58,9 +58,8 @@ export const C06: AiRule = {
         unit,
         c =>
           -ctx.threatAt(c, 'rider') * 10 -
-          ctx.enemies.filter(
-            e => e.type === 'spearman' && manhattan(e, c) <= e.move + 1,
-          ).length *
+          ctx.enemies.filter(e => e.type === 'spearman' && ctx.reaches(e, c, 1))
+            .length *
             100,
       );
       return cell

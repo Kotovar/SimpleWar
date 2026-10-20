@@ -50,9 +50,11 @@ export const giveRoadOrder = ({ actor, workerId, x, y }: RoadOrderCommand) =>
 /**
  * Ход приказа дороги: рабочий идёт по маршруту к цели до первой клетки,
  * где дороги по его знаниям нет, и кладёт её командой `onArrival`.
- * Клетка, где он стоял при приказе, остаётся без дороги. Нет очка стройки
- * или клетку занял юнит — ждёт следующего хода; отказ команды, новый враг
- * или пропавший путь останавливают приказ. Дорога на цели снимает приказ.
+ * После шага выбор повторяется: дорога, открытая по пути, продолжает
+ * приказ. Клетка, где он стоял при приказе, остаётся без дороги. Нет очка
+ * стройки или клетку (в том числе цель) занял юнит — ждёт следующего хода;
+ * отказ команды, новый враг или пропавший путь останавливают приказ.
+ * Дорога на цели снимает приказ.
  *
  * @param stop - Остановить приказ с причиной.
  * @returns `true`, если приказ остановился сейчас.
@@ -62,7 +64,7 @@ export const advanceRoadOrder = (
   unitId: string,
   onArrival: OrderArrival,
   stop: (reason: NonNullable<UnitOrder['stopped']>) => boolean,
-) => {
+): boolean => {
   const { units, setOrder } = useUnitsStore.getState();
   const unit = units[unitId];
   const order = unit?.order;
@@ -78,7 +80,9 @@ export const advanceRoadOrder = (
       setOrder(unitId, null);
       return false;
     }
-    return stop('path');
+    // Цель занял свой юнит — путь появится, когда он уйдёт.
+    const occupant = useUnitsStore.getState().getUnitAt(target.x, target.y);
+    return occupant?.owner === actor ? false : stop('path');
   }
   const index = plan.path.findIndex(
     ({ x, y }, i) => i > 0 && !isKnownRoad(knowledge, x, y),
@@ -91,9 +95,18 @@ export const advanceRoadOrder = (
     if (plan.firstStop > unit.movePoints) return false;
     const seen = getSeenEnemies(actor);
     const result = move({ actor, unitId, ...walkTo, partial: true });
-    if (!result.ok) return result.code === 'busy' ? false : stop(result.code);
+    if (!result.ok) {
+      return result.code === 'busy' || result.code === 'occupied'
+        ? false
+        : stop(result.code);
+    }
     if ([...getSeenEnemies(actor)].some(id => !seen.has(id)))
       return stop('enemy');
+    const moved = useUnitsStore.getState().units[unitId];
+    // Шаг открыл карту: выбрать клетку заново по свежим знаниям.
+    if (moved && (moved.x !== unit.x || moved.y !== unit.y)) {
+      return advanceRoadOrder(actor, unitId, onArrival, stop);
+    }
   }
   const worker = useUnitsStore.getState().units[unitId];
   if (!worker) return false;
