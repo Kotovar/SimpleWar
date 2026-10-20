@@ -106,6 +106,8 @@ export const roleWishes = (ctx: AiContext): RoleWish[] => {
   const share = (per: number) => Math.floor(army / per);
   const armored = foes.filter(({ type }) => (ARMOR[type] ?? 0) > 0).length;
   const slowFoot = seen('swordsman') + seen('spearman');
+  // Армия врага разведана: без этого «нет зенитчиков» — просто незнание.
+  const scouted = foes.filter(({ armed }) => armed).length >= 2;
   const soft = foes.filter(({ type }) =>
     ['ranged', 'siege'].includes(getTargetCategory(type)),
   ).length;
@@ -120,6 +122,7 @@ export const roleWishes = (ctx: AiContext): RoleWish[] => {
     // Воздух без зенитчиков врага — в приоритете: грифон бьёт безнаказанно.
     [
       antiAir <= 1 &&
+        scouted &&
         army >= 4 &&
         own('griffon') < (antiAir === 0 ? 1 + share(5) : 1),
       'griffon',

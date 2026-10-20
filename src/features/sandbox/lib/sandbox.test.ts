@@ -138,6 +138,23 @@ describe('placeForces', () => {
     expect(placed.skipped).toEqual(['swordsman']);
   });
 
+  it('наземный не встаёт в клетку, запертую зданиями', () => {
+    // Угол (0,0) закрыт ратушей соседями (1,0) и (0,1).
+    const placed = placeForces(
+      field(5, 5),
+      new Set(['1,1', '1,0', '0,1']),
+      base,
+      {
+        units: { swordsman: 3, griffon: 1 },
+        buildings: {},
+      },
+    );
+    const cells = placed.units.map(({ type, x, y }) => `${type}:${x},${y}`);
+
+    expect(cells).not.toContain('swordsman:0,0');
+    expect(placed.units).toHaveLength(4);
+  });
+
   it('рудник без золота на карте не ставится', () => {
     const placed = placeForces(field(6, 6), new Set(), base, {
       units: {},

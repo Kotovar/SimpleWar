@@ -42,4 +42,23 @@ describe('X01: полезная расчистка', () => {
 
     expect(X01.evaluate(ctx)).toEqual([]);
   });
+
+  it('рабочий далеко от базы лес не рубит', () => {
+    const map = [
+      '.........f...',
+      '.........f...',
+      '.........f...',
+      '.........f..?',
+      '.........f...',
+      '.........f...',
+      '.............',
+    ];
+    const { ctx } = scene({
+      map,
+      units: [own('worker', 8, 3)],
+      buildings: [ownBuilding('base', 1, 3)],
+    });
+
+    expect(X01.evaluate(ctx)).toEqual([]);
+  });
 });

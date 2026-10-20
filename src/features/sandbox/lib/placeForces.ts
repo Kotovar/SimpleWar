@@ -19,11 +19,43 @@ const distance = (a: Position, b: Position) =>
   Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 
 /**
+ * Самая большая связная область проходимых свободных клеток: наземный юнит
+ * вне её заперт зданиями или водой и в бою не участвует.
+ */
+const mainland = (grid: Cell[][], taken: Set<string>) => {
+  let best = new Set<Cell>();
+  const seen = new Set<Cell>();
+  const passable = (cell?: Cell) =>
+    !!cell && cell.isWalkable && !taken.has(`${cell.x},${cell.y}`);
+  for (const start of grid.flat()) {
+    if (seen.has(start) || !passable(start)) continue;
+    const area = new Set([start]);
+    seen.add(start);
+    for (const { x, y } of area) {
+      for (const next of [
+        grid[y - 1]?.[x],
+        grid[y + 1]?.[x],
+        grid[y]?.[x - 1],
+        grid[y]?.[x + 1],
+      ]) {
+        if (passable(next) && !seen.has(next!)) {
+          seen.add(next!);
+          area.add(next!);
+        }
+      }
+    }
+    if (area.size > best.size) best = area;
+  }
+  return best;
+};
+
+/**
  * Воспроизводимая расстановка стороны у её ратуши: одинаковые карта и
  * сценарий дают одинаковый результат. Здания — через клетку (шахматный
  * порядок оставляет проходы), на подходящей местности; рудник и лесопилка —
  * на любой ближайшей клетке своего ресурса; юниты — на ближайших
- * свободных клетках: наземные на проходимых, летающие на любых.
+ * свободных клетках: наземные — в общей проходимой области (не запертые
+ * зданиями), летающие — на любых.
  *
  * @param grid - Карта.
  * @param taken - Занятые клетки `x,y`; дополняется поставленным.
@@ -70,13 +102,14 @@ export const placeForces = (
     }
   }
 
+  const open = mainland(grid, taken);
   for (const [type, count = 0] of Object.entries(side.units) as [
     UnitType,
     number,
   ][]) {
     for (let i = 0; i < count; i++) {
       const cell = cells.find(
-        c => free(c) && (isFlyingType(type) || c.isWalkable),
+        c => free(c) && (isFlyingType(type) || open.has(c)),
       );
       if (!cell) {
         result.skipped.push(type);

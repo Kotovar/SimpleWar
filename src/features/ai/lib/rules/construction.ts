@@ -3,7 +3,12 @@ import type { AiRule, Candidate } from '../../model/types';
 import type { AiContext } from '../context';
 import { roleWishes } from '../composition';
 import { hasStrikeArmy, isNear, nearest } from '../facts';
-import { affordable, earlyProducer, openingPending } from '../saving';
+import {
+  affordable,
+  earlyProducer,
+  openingPending,
+  towerWanted,
+} from '../saving';
 import { manhattan } from '../geometry';
 import { standCells, stepToward } from '../movement';
 import { isFree, moveTo, taskOf } from './common';
@@ -21,7 +26,7 @@ export const hasTask = (ctx: AiContext, ruleId: string) =>
 
 /**
  * W07: стратегии нужно производство или защита — казармы, при угрозе
- * с известного направления — башня.
+ * с известного направления — башня (`towerWanted`).
  */
 export const W07: AiRule = {
   id: 'W07',
@@ -37,9 +42,7 @@ export const W07: AiRule = {
       ctx.base,
       [...ctx.enemies, ...ctx.remembered].filter(({ armed }) => armed),
     );
-    const wantsTower =
-      (ctx.memory.strategy === 'G10' || ctx.memory.strategy === 'G01') &&
-      !has('tower');
+    const wantsTower = towerWanted(ctx);
     const barracks = ctx.obs.ownBuildings.filter(
       b => b.type === 'barracks',
     ).length;

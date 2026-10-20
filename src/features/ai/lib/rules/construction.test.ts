@@ -93,6 +93,43 @@ describe('W07: казармы и башня', () => {
     ]);
   });
 
+  describe('враг подходил к ратуше', () => {
+    const setup = (buildings = [ownBuilding('barracks', 8, 8)], turn = 10) =>
+      scene({
+        map: grass(20, 20),
+        units: [
+          own('worker', 5, 7),
+          own('worker', 4, 7),
+          own('swordsman', 1, 1),
+          own('swordsman', 1, 2),
+          own('swordsman', 1, 3),
+        ],
+        buildings: [ownBuilding('base', 5, 5), ...buildings],
+        // Сразу за радиусом тревоги: подход к базе.
+        enemies: [foe('swordsman', 13, 5)],
+        stock: { gold: 400, wood: 500 },
+        turn,
+      }).ctx;
+
+    it('строит башню и без стратегии обороны', () => {
+      expect(W07.evaluate(setup())).toMatchObject([
+        { ruleId: 'W07', basis: { building: 'tower' } },
+      ]);
+    });
+
+    it('вторую башню — только после 40-го хода', () => {
+      const towers = [
+        ownBuilding('barracks', 8, 8),
+        ownBuilding('tower', 9, 5),
+      ];
+      const kinds = (turn: number) =>
+        W07.evaluate(setup(towers, turn)).map(c => c.basis?.building);
+
+      expect(kinds(10)).not.toContain('tower');
+      expect(kinds(40)).toContain('tower');
+    });
+  });
+
   it('все рабочие на добыче — снимает одного строить казармы', () => {
     const mine = ownBuilding('mine', 2, 2);
     const miner = own('worker', 2, 2, { workplaceId: mine.id });

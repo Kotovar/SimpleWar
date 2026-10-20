@@ -22,8 +22,9 @@ export const pathCost = (
 
 /**
  * X01 (приёмка S12): расчистить соседний видимый лес, если он заметно
- * сокращает путь от базы к цели по известной карте, угрозы нет, и это не
- * последняя известная площадка под лесопилку.
+ * сокращает путь от базы к цели по известной карте, угрозы нет, рабочий
+ * в радиусе тревоги у базы и это не последняя известная площадка под
+ * лесопилку.
  */
 export const X01: AiRule = {
   id: 'X01',
@@ -42,6 +43,8 @@ export const X01: AiRule = {
     );
     for (const worker of [...idleWorkers(ctx), ...artelMiners(ctx)]) {
       if (worker.buildPoints <= 0 || ctx.threatAt(worker) > 0) continue;
+      // Вдали от базы расчистка бесцельна: путь от базы там ещё не нужен.
+      if (manhattan(worker, base) > ctx.config.alertRadius) continue;
       for (const cell of around(worker)) {
         if (ctx.known(cell.x, cell.y) !== 'forest') continue;
         if (!ctx.obs.visible[cell.y]?.[cell.x] || ctx.occupied(cell.x, cell.y))

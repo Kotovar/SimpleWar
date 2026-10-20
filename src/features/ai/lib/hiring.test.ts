@@ -46,6 +46,21 @@ describe('savingGoals: здание найма для роли', () => {
   });
 });
 
+describe('savingGoals при срочной обороне', () => {
+  it('не копит на здание найма: резерв не держит найм защитников', () => {
+    const { ctx } = scene({
+      map,
+      units: [own('worker', 1, 1), own('worker', 2, 1), ...army(4)],
+      buildings: [ownBuilding('base', 5, 5), ownBuilding('barracks', 8, 8)],
+      // База врага известна: нужна осада, мастерской нет.
+      enemies: [foe('base', 11, 0), foe('archer', 11, 3), foe('archer', 11, 4)],
+      memory: { strategy: 'G01' },
+    });
+
+    expect(savingGoals(ctx).map(({ key }) => key)).not.toContain('workshop');
+  });
+});
+
 describe('N02 ждёт нужную роль', () => {
   it('осада накопится за пару ходов — мечника не покупает', () => {
     const { ctx } = scene({

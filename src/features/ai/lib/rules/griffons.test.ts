@@ -124,6 +124,23 @@ describe('F04: уход от ПВО', () => {
     );
   });
 
+  it('грифонов рядом больше, чем стрелков, — бьёт стрелка, не отступает', () => {
+    const archer = foe('archer', 6, 5);
+    const { ctx } = scene({
+      map,
+      units: [own('griffon', 5, 5), own('griffon', 5, 4), own('griffon', 4, 5)],
+      enemies: [archer, foe('archer', 7, 6)],
+    });
+
+    const candidates = F04.evaluate(ctx);
+
+    expect(candidates.length).toBeGreaterThan(0);
+    expect(candidates[0].action).toMatchObject({
+      type: 'attack',
+      targetId: archer.id,
+    });
+  });
+
   it('мечники воздух не бьют — не угроза', () => {
     const { ctx } = scene({
       map,

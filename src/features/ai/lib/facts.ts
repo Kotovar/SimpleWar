@@ -140,7 +140,7 @@ export const desiredArmy = (ctx: AiContext) => {
  * слаб — в обычном найме он редок; против конницы его добавляет N03, как
  * и разведчика, осаду и прочие контрмеры по составу врага.
  */
-const RECRUIT_SHARE: Partial<Record<UnitType, number>> = {
+const RECRUIT_SHARE = {
   swordsman: 4,
   archer: 2,
   spearman: 0.25,
@@ -148,17 +148,20 @@ const RECRUIT_SHARE: Partial<Record<UnitType, number>> = {
   knight: 1,
   horseArcher: 1,
   mage: 1,
-  healer: 1,
+  healer: 0.5,
   griffon: 1,
-};
+} satisfies Partial<Record<UnitType, number>>;
+
+type Recruit = keyof typeof RECRUIT_SHARE;
 
 /**
  * Кого нанять следующим: тип, сильнее всех отстающий от своей доли, из
  * тех, кого свои здания могут нанять уже в этом ходу (очко найма и
  * население; деньги — нет: на них ИИ копит); без таких — мечник или
- * лучник. При равенстве — мечник: он первый в списке долей.
+ * лучник. Отставание считается с учётом найма: иначе при нуле юнитов
+ * редкий копейщик шёл бы третьим. При равенстве — мечник: он первый.
  */
-export const nextRecruit = (ctx: AiContext): UnitType => {
+export const nextRecruit = (ctx: AiContext): Recruit => {
   const { occupied, max } = ctx.obs.population;
   const hired = new Set(
     ctx.obs.ownBuildings.flatMap(b =>
@@ -167,19 +170,16 @@ export const nextRecruit = (ctx: AiContext): UnitType => {
   );
   const fits = (type: UnitType) =>
     occupied + UNITS_CONFIG[type].requiresLimit <= max;
-  const ready = (Object.keys(RECRUIT_SHARE) as UnitType[]).filter(
+  const ready = (Object.keys(RECRUIT_SHARE) as Recruit[]).filter(
     type => hired.has(type) && fits(type),
   );
-  const options = ready.length
-    ? ready
-    : (['swordsman', 'archer'] as UnitType[]);
-  const lag = (type: UnitType) =>
-    ctx.military.filter(unit => unit.type === type).length /
-    RECRUIT_SHARE[type]!;
-  return options.reduce(
-    (best, type) => (lag(type) < lag(best) ? type : best),
-    options[0] ?? 'swordsman',
-  );
+  const options: Recruit[] = ready.length ? ready : ['swordsman', 'archer'];
+  // Сдвиг на половину найма (как в методе Сент-Лагю): при нуле всех
+  // типов редкая роль не идёт вперёд.
+  const lag = (type: Recruit) =>
+    (ctx.military.filter(unit => unit.type === type).length + 0.5) /
+    RECRUIT_SHARE[type];
+  return options.reduce((best, type) => (lag(type) < lag(best) ? type : best));
 };
 
 /** Ближайшие траты стратегии: что ИИ хочет купить в первую очередь. */

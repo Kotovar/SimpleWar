@@ -227,6 +227,30 @@ describe('nextRecruit: новые роли не считаются лучник�
 
     expect(nextRecruit(ctx)).toBe('swordsman');
   });
+
+  it('с нуля в казармах копейщик не идёт третьим', () => {
+    const units = [];
+    const order = [];
+    for (let i = 0; i < 6; i++) {
+      const { ctx } = scene({
+        map,
+        units,
+        buildings: [ownBuilding('barracks', 5, 5)],
+      });
+      const type = nextRecruit(ctx);
+      order.push(type);
+      units.push(own(type, i, 0));
+    }
+
+    expect(order).toEqual([
+      'swordsman',
+      'archer',
+      'swordsman',
+      'swordsman',
+      'archer',
+      'swordsman',
+    ]);
+  });
 });
 
 describe('O05: защитный удар', () => {

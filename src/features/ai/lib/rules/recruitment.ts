@@ -15,9 +15,7 @@ export const N03: AiRule = {
   evaluate: ctx => {
     const lack = desiredArmy(ctx) - ctx.military.length;
     for (const wish of roleWishes(ctx)) {
-      const counter = ['spearman', 'mage', 'horseArcher', 'griffon'].includes(
-        wish.type,
-      );
+      const counter = ['spearman', 'mage', 'griffon'].includes(wish.type);
       if (lack <= 0 && !counter) continue;
       for (const building of producers(ctx)) {
         if (!canHire(ctx, building, wish.type)) continue;

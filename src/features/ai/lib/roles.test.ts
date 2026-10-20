@@ -93,13 +93,23 @@ describe('roleWishes: состав по известному врагу', () => 
     const { ctx } = scene({
       map,
       units: [0, 1, 2, 3].map(i => own('swordsman', i, 1)),
-      enemies: [foe('swordsman', 9, 9)],
+      enemies: [foe('swordsman', 9, 9), foe('swordsman', 10, 9)],
     });
 
     expect(roleWishes(ctx)[0]).toMatchObject({
       type: 'griffon',
       producer: 'sanctuary',
     });
+  });
+
+  it('армия врага не разведана — грифона не просит', () => {
+    const { ctx } = scene({
+      map,
+      units: [0, 1, 2, 3].map(i => own('swordsman', i, 1)),
+      enemies: [foe('swordsman', 9, 9)],
+    });
+
+    expect(roleWishes(ctx).map(({ type }) => type)).not.toContain('griffon');
   });
 
   it('у врага два стрелка — грифон не нужен', () => {
@@ -315,6 +325,35 @@ describe('найм по долям: отказ и срочная оборона'
     ]);
   });
 
+  it('грифону не хватает населения — не ждёт его, а нанимает другого', () => {
+    const { ctx } = scene({
+      map,
+      units: [
+        own('worker', 1, 8),
+        own('worker', 1, 9),
+        ...[0, 1, 2].map(i => own('swordsman', i, 1)),
+        own('archer', 0, 2),
+        own('healer', 2, 3),
+      ],
+      buildings: [
+        ownBuilding('base', 2, 8),
+        ownBuilding('sanctuary', 8, 8),
+        ownBuilding('barracks', 5, 5),
+      ],
+      // Стрелков у врага нет: нужен грифон, до него копить пару ходов
+      // (доход ратуши есть).
+      enemies: [foe('swordsman', 11, 0), foe('swordsman', 10, 0)],
+      stock: { gold: 290, wood: 200 },
+      population: { max: 30, occupied: 28 },
+      turn: 24,
+    });
+
+    const hired = N02.evaluate(ctx);
+
+    expect(hired).toHaveLength(1);
+    expect(hired[0].action).not.toMatchObject({ unitType: 'griffon' });
+  });
+
   it('при срочной обороне берёт мечника, а не лекаря из святилища', () => {
     const { ctx } = scene({
       map,
@@ -347,10 +386,11 @@ describe('W07 и накопление: один порядок', () => {
       ],
       buildings: [ownBuilding('base', 5, 5), ownBuilding('barracks', 8, 8)],
       // Видны рабочий и два лучника врага: нужен всадник, грифон — нет.
+      // Дальше радиуса тревоги + 2: башня не нужна.
       enemies: [
         foe('worker', 11, 0),
-        foe('archer', 11, 2),
-        foe('archer', 11, 3),
+        foe('archer', 11, 1),
+        foe('archer', 10, 0),
       ],
       // Сверх резерва на рабочего (40/40) хватает и на конюшню (120/160),
       // и на кузницу (100/150), но не на обе.
