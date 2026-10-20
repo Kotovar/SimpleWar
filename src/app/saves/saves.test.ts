@@ -338,6 +338,28 @@ describe('формат и восстановление партии', () => {
     });
   });
 
+  it('сохраняет дорогу и половину очка движения после шага по ней', () => {
+    const worker = Object.values(useUnitsStore.getState().units).find(
+      u => u.owner === 'p1' && u.role === 'civil',
+    )!;
+    const road = useMapStore
+      .getState()
+      .grid.flat()
+      .find(cell => cell.type === 'grass')!;
+    useMapStore.getState().setCell(road.x, road.y, { road: true });
+    useUnitsStore.setState(state => ({
+      units: {
+        ...state.units,
+        [worker.id]: { ...state.units[worker.id], movePoints: 1.5 },
+      },
+    }));
+
+    applySnapshot(parseSnapshot(JSON.stringify(captureSnapshot())));
+
+    expect(useMapStore.getState().grid[road.y][road.x].road).toBe(true);
+    expect(useUnitsStore.getState().units[worker.id].movePoints).toBe(1.5);
+  });
+
   it('восстанавливает завершённую партию с историческим населением выбывшего', () => {
     expect(surrender('p1').ok).toBe(true);
     const saved = captureSnapshot();

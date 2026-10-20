@@ -62,7 +62,8 @@ export const useUnitsStore = create<UnitsState>()(
         const unit = state.units[id];
         if (!unit) return;
 
-        if (!Number.isInteger(cost) || cost <= 0 || cost > unit.movePoints)
+        // Цена кратна половине очка: дорога стоит 0.5.
+        if (!Number.isInteger(cost * 2) || cost <= 0 || cost > unit.movePoints)
           return;
 
         unit.x = x;

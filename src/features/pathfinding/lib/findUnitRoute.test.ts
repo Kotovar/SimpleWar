@@ -67,4 +67,21 @@ describe('findSegmentedPath', () => {
       ).cost,
     ).toBe(Infinity);
   });
+
+  it('считает отрезок транзита по дороге в половинах очка', () => {
+    const costs = [[0.5, 0.5, 0.5, 1]];
+    const landable = Uint8Array.from([1, 0, 0, 1]);
+    const route = findSegmentedPath(
+      costs,
+      { x: 0, y: 0 },
+      { x: 3, y: 0 },
+      landable,
+      2,
+    );
+    expect(route.cost).toBe(2);
+    expect(
+      findSegmentedPath(costs, { x: 0, y: 0 }, { x: 3, y: 0 }, landable, 1.5)
+        .cost,
+    ).toBe(Infinity);
+  });
 });

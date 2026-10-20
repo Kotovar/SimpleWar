@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { findCheapestPaths, type MovementGrid } from './terrain';
+import { findCheapestPaths, getMoveCost, type MovementGrid } from './terrain';
 
 /** Эталон: прежний Дейкстра с корзинами на `Map`. */
 const reference = (
@@ -75,5 +75,35 @@ describe('findCheapestPaths', () => {
     expect(findCheapestPaths(costs, { x: 0, y: 0 }).cost.get(2)).toBe(2);
     expect(findCheapestPaths(costs, { x: 5, y: 0 }).cost.size).toBe(0);
     expect(findCheapestPaths(costs, { x: 0.5, y: 0 }).cost.size).toBe(0);
+  });
+
+  it('дорога за 0.5 дешевле обхода по полю', () => {
+    // Верхний ряд — дорога, нижний — поле; цель в правом нижнем углу.
+    const costs = [
+      [0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+      [1, 1, 1, 1, 1, 1],
+    ];
+    const { cost, previous } = findCheapestPaths(costs, { x: 0, y: 1 });
+
+    // Подняться на дорогу, пройти по ней и спуститься: 0.5 + 2.5 + 1 < 5.
+    expect(cost.get(11)).toBe(4);
+    expect(previous.get(11)).toBe(5);
+    expect(findCheapestPaths(costs, { x: 0, y: 0 }, 1).cost.get(2)).toBe(1);
+    expect(findCheapestPaths(costs, { x: 0, y: 0 }, 1).cost.has(3)).toBe(false);
+  });
+});
+
+describe('getMoveCost', () => {
+  it('дорога стоит 0.5 на поле, холме и болоте', () => {
+    for (const type of ['grass', 'hill', 'swamp'] as const) {
+      expect(getMoveCost({ type, isWalkable: true, road: true })).toBe(0.5);
+    }
+    expect(getMoveCost({ type: 'hill', isWalkable: true })).toBe(2);
+  });
+
+  it('дорога не делает непроходимую клетку проходимой', () => {
+    expect(getMoveCost({ type: 'water', isWalkable: false, road: true })).toBe(
+      0,
+    );
   });
 });

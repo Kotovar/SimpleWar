@@ -294,3 +294,24 @@ describe('canUnitStep', () => {
     expect(canUnitStep(units().units[id])).toBe(true);
   });
 });
+
+describe('движение по дороге', () => {
+  it('шаг по дороге стоит 0.5, остаток в половинах очка', () => {
+    for (const x of [1, 2, 3]) {
+      useMapStore.getState().setCell(x, 0, { road: true });
+    }
+    const id = readyWorker(0);
+
+    expect(move({ actor: 'p1', unitId: id, x: 3, y: 0 })).toEqual({
+      ok: true,
+    });
+    expect(units().units[id]).toMatchObject({ x: 3, movePoints: 2.5 });
+
+    expect(move({ actor: 'p1', unitId: id, x: 5, y: 0 })).toEqual({
+      ok: true,
+    });
+    expect(units().units[id]).toMatchObject({ x: 5, movePoints: 0.5 });
+    // Половины очка на поле не хватает.
+    expect(canUnitStep(units().units[id])).toBe(false);
+  });
+});

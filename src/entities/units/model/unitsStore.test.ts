@@ -35,7 +35,7 @@ describe('useUnitsStore', () => {
     ]);
   });
 
-  it('перемещает юнита только при целой положительной цене в пределах очков', () => {
+  it('перемещает юнита только при положительной цене, кратной 0.5, в пределах очков', () => {
     const id = spawn('worker');
     useUnitsStore.getState().resetUnitsForNewTurn('p1');
 
@@ -46,7 +46,7 @@ describe('useUnitsStore', () => {
       movePoints: 2,
     });
 
-    for (const cost of [0, -1, 1.5, 3]) {
+    for (const cost of [0, -1, 0.25, 3]) {
       useUnitsStore.getState().moveUnit(id, 8, 9, cost);
     }
     expect(useUnitsStore.getState().units[id]).toMatchObject({
@@ -55,6 +55,13 @@ describe('useUnitsStore', () => {
       movePoints: 2,
     });
     expect(useUnitsStore.getState().getUnitAt(4, 5)?.id).toBe(id);
+
+    // Шаг по дороге стоит половину очка.
+    useUnitsStore.getState().moveUnit(id, 5, 5, 0.5);
+    expect(useUnitsStore.getState().units[id]).toMatchObject({
+      x: 5,
+      movePoints: 1.5,
+    });
   });
 
   it('наносит урон, удаляет погибшего юнита и сообщает о смерти', () => {

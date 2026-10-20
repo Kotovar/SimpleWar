@@ -37,6 +37,11 @@ const int =
   (min = 0, max = 1_000_000_000): Check =>
   v =>
     num(min, max)(v) && Number.isInteger(v);
+/** Число, кратное половине: очки движения после шага по дороге. */
+const half =
+  (min = 0, max = 1_000_000_000): Check =>
+  v =>
+    num(min, max)(v) && Number.isInteger((v as number) * 2);
 const text =
   (max = 200): Check =>
   v =>
@@ -159,7 +164,7 @@ const unit: Check = v => {
       ...base,
       type: unitType,
       ...role,
-      movePoints: int(0, 100),
+      movePoints: half(0, 100),
       maxMovePoints: int(0, 100),
       requiresLimit: int(0, 30),
     },
@@ -348,12 +353,15 @@ const snapshotShape = shape({
     usedFallback: bool,
     grid: list(
       list(
-        shape({
-          x: int(0, MAP_SIDE_LIMIT - 1),
-          y: int(0, MAP_SIDE_LIMIT - 1),
-          type: one(TERRAIN_CODES),
-          isWalkable: bool,
-        }),
+        shape(
+          {
+            x: int(0, MAP_SIDE_LIMIT - 1),
+            y: int(0, MAP_SIDE_LIMIT - 1),
+            type: one(TERRAIN_CODES),
+            isWalkable: bool,
+          },
+          { road: one([true]) },
+        ),
         100,
       ),
       100,

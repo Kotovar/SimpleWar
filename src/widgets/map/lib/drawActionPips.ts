@@ -3,6 +3,8 @@ import type { Unit } from '@shared/config';
 const PIP_X = 29;
 const PIP_STEP = 3.4;
 const PIP_RADIUS = 1.3;
+/** Половина очка после шага по дороге: тусклее полного. */
+const HALF_PIP = '#7d8fa1';
 
 const dot = (
   ctx: CanvasRenderingContext2D,
@@ -46,7 +48,11 @@ export const drawActionPips = (
       ctx,
       PIP_X,
       22.5 - index * PIP_STEP,
-      index < unit.movePoints ? '#d8ecff' : '#3b444d',
+      index + 1 <= unit.movePoints
+        ? '#d8ecff'
+        : index < unit.movePoints
+          ? HALF_PIP
+          : '#3b444d',
     );
   }
 

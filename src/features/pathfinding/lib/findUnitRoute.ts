@@ -1,5 +1,5 @@
 import type { ParticipantId, Position, Unit } from '@shared/config';
-import type { MovementGrid } from '@shared/lib';
+import { MOVE_COST_SCALE, type MovementGrid } from '@shared/lib';
 import { createLandingCheck, createUnitMovementGrid } from './air';
 import { TURN_UNKNOWN_COST } from './createKnownMovementGrid';
 import { countRouteTurns } from './countRouteTurns';
@@ -8,7 +8,8 @@ import { getPath } from './getPath';
 /**
  * Самый дешёвый путь, где каждый отрезок транзита (клетки без остановки
  * плюс следующая свободная) стоит не больше `maxSegment`. Дейкстра с
- * корзинами по состоянию «клетка + накопленный транзит».
+ * корзинами по состоянию «клетка + накопленный транзит»; внутри цены
+ * в долях очка (`MOVE_COST_SCALE`).
  *
  * @param landable - Маска клеток, где можно остановиться, `y * width + x`.
  * @returns Путь от начала до цели и цена; пустой путь и `Infinity` — нет.
@@ -32,13 +33,14 @@ export const findSegmentedPath = (
   if (
     !inside(start) ||
     !inside(target) ||
-    !Number.isInteger(maxSegment) ||
+    !Number.isInteger(maxSegment * MOVE_COST_SCALE) ||
     maxSegment <= 0 ||
     !landable[target.y * width + target.x]
   ) {
     return { path: [] as Position[], cost: Infinity };
   }
-  const span = maxSegment + 1;
+  const limit = maxSegment * MOVE_COST_SCALE;
+  const span = limit + 1;
   const targetKey = target.y * width + target.x;
   const startState = (start.y * width + start.x) * span;
   const best = new Map([[startState, 0]]);
@@ -56,7 +58,7 @@ export const findSegmentedPath = (
           path.push({ x: cell % width, y: Math.floor(cell / width) });
           s = from.get(s);
         }
-        return { path: path.reverse(), cost: current };
+        return { path: path.reverse(), cost: current / MOVE_COST_SCALE };
       }
       const pending = state % span;
       const x = key % width;
@@ -68,9 +70,9 @@ export const findSegmentedPath = (
         [x, y - 1],
       ]) {
         if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
-        const enter = costs[ny][nx];
+        const enter = Math.round(costs[ny][nx] * MOVE_COST_SCALE);
         const segment = pending + enter;
-        if (!enter || segment > maxSegment) continue;
+        if (!enter || segment > limit) continue;
         const cell = ny * width + nx;
         const next = current + enter;
         const nextState = cell * span + (landable[cell] ? 0 : segment);

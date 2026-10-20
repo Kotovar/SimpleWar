@@ -1,5 +1,6 @@
 import {
   MOVE_COST,
+  ROAD_MOVE_COST,
   type Cell,
   type CellType,
   type Position,
@@ -12,7 +13,14 @@ import {
 export type MovementGrid = number[][];
 
 /**
- * Цена входа наземного юнита в клетку.
+ * Доли очка движения, которые различают цены пути: дорога стоит `0.5`.
+ * Поиск пути считает в долях, чтобы работать с целыми корзинами.
+ */
+export const MOVE_COST_SCALE = 2;
+
+/**
+ * Цена входа наземного юнита в клетку; дорога удешевляет любую
+ * проходимую местность до `ROAD_MOVE_COST`.
  *
  * @param cell - Клетка карты.
  * @returns Очки движения за вход или `0` для непроходимой местности.
@@ -20,8 +28,11 @@ export type MovementGrid = number[][];
 export const getMoveCost = ({
   type,
   isWalkable,
-}: Pick<Cell, 'type' | 'isWalkable'>) =>
-  isWalkable ? (MOVE_COST[type] ?? 0) : 0;
+  road,
+}: Pick<Cell, 'type' | 'isWalkable' | 'road'>) => {
+  const cost = isWalkable ? (MOVE_COST[type] ?? 0) : 0;
+  return cost && road ? ROAD_MOVE_COST : cost;
+};
 
 /**
  * Можно ли поставить здание или нанять юнита на местность. Холм подходит
@@ -38,7 +49,8 @@ export const isBuildableTerrain = (
 
 /**
  * Самые дешёвые пути от клетки по сетке цен (Дейкстра с корзинами:
- * сетка прямоугольная, цены целые неотрицательные, `0` — войти нельзя).
+ * сетка прямоугольная, цены кратны `1 / MOVE_COST_SCALE`, `0` — войти
+ * нельзя; внутри поиск идёт в долях очка).
  * Стартовая клетка может быть занята. Поиск идёт по типизированным
  * массивам, результат — в `Map`.
  *
@@ -72,12 +84,13 @@ export const findCheapestPaths = (
   // Порядок первого обнаружения клеток: так же, как вставка в `Map`.
   const found = [startKey];
 
+  const limit = maxCost * MOVE_COST_SCALE;
   const relax = (key: number, current: number, nx: number, ny: number) => {
-    const enter = costs[ny][nx];
+    const enter = Math.round(costs[ny][nx] * MOVE_COST_SCALE);
     if (!enter) return;
     const next = current + enter;
     const nextKey = ny * width + nx;
-    if (next > maxCost || (best[nextKey] !== -1 && next >= best[nextKey])) {
+    if (next > limit || (best[nextKey] !== -1 && next >= best[nextKey])) {
       return;
     }
     if (best[nextKey] === -1) found.push(nextKey);
@@ -99,7 +112,7 @@ export const findCheapestPaths = (
   }
 
   for (const key of found) {
-    cost.set(key, best[key]);
+    cost.set(key, best[key] / MOVE_COST_SCALE);
     if (from[key] !== -1) previous.set(key, from[key]);
   }
 
