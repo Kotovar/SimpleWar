@@ -104,16 +104,10 @@ const CellDetails = ({ cell }: { cell: Cell }) => (
         className={cell.isWalkable ? styles.IsWalkable : styles.IsNotWalkable}
       >
         {cell.isWalkable
-          ? `Проходима, ход ${getMoveCost(cell)} ${getMoveCost(cell) === 1 ? 'очко' : 'очка'}`
+          ? `${cell.road ? 'Дорога' : 'Проходима'}, ход ${getMoveCost(cell)} ${getMoveCost(cell) === 1 ? 'очко' : 'очка'}`
           : 'Непроходима'}
       </dd>
     </div>
-    {cell.road && (
-      <div>
-        <dt>Дорога</dt>
-        <dd>Ничья: дешёвый ход для всех</dd>
-      </div>
-    )}
   </>
 );
 
