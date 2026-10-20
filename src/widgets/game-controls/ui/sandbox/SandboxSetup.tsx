@@ -131,7 +131,7 @@ export const SandboxSetup = () => {
         Пустое поле без рельефа
       </Checkbox>
       <button type='button' className={styles.Secondary} onClick={clearAi}>
-        Обнулить юниты и здания ИИ
+        Сбросить юниты и здания
       </button>
 
       <div
