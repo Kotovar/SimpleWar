@@ -6,44 +6,34 @@ type RoadStyle = {
   fill: string;
   edgeHalf: number;
   fillHalf: number;
-  /** Прозрачность: на холме сквозь тропу виден склон. */
-  alpha: number;
-  /** Колея по полотну. */
-  ruts?: boolean;
   /** Поперечные доски гати. */
   planks?: boolean;
 };
 
 const STYLES: Partial<Record<CellType, RoadStyle>> = {
   grass: {
-    edge: '#7f6a48',
-    fill: '#c8ab78',
-    edgeHalf: 8,
-    fillHalf: 6.5,
-    alpha: 1,
-    ruts: true,
+    edge: '#887a52',
+    fill: '#b7a575',
+    edgeHalf: 4.8,
+    fillHalf: 4,
   },
   // Узкая тропа поверх склона: холм остаётся читаемым.
   hill: {
-    edge: '#6f6446',
-    fill: '#d6bf8e',
-    edgeHalf: 4.5,
-    fillHalf: 3.4,
-    alpha: 0.8,
+    edge: '#8c805a',
+    fill: '#c0b083',
+    edgeHalf: 3.8,
+    fillHalf: 3.1,
   },
   // Гать: настил из досок между заводями.
   swamp: {
-    edge: '#4f3d26',
-    fill: '#a07c4c',
-    edgeHalf: 6,
-    fillHalf: 5,
-    alpha: 1,
+    edge: '#6e6546',
+    fill: '#a5976c',
+    edgeHalf: 4.8,
+    fillHalf: 4,
     planks: true,
   },
 };
 
-const RUT_OFFSET = 2.8;
-const RUT_WIDTH = 0.8;
 const PLANK_STEP = 3;
 
 /** Стороны клетки: смещение соседа. */
@@ -82,23 +72,40 @@ const band = (
 const layer = (
   ctx: CanvasRenderingContext2D,
   sides: Side[],
-  color: string,
-  half: number,
-  edgeHalf: (next: RoadStyle) => number,
+  style: RoadStyle,
+  color: 'edge' | 'fill',
+  width: 'edgeHalf' | 'fillHalf',
 ) => {
-  ctx.fillStyle = color;
+  const half = style[width];
+  ctx.fillStyle = style[color];
   ctx.beginPath();
   // Против часовой, как и полосы: при заливке перекрытия складываются,
   // а не вычитаются.
   ctx.arc(16, 16, half, 0, Math.PI * 2, true);
   for (const side of sides) {
-    band(ctx, side, half, (half + edgeHalf(side.next)) / 2);
+    band(ctx, side, half, (half + side.next[width]) / 2);
   }
   ctx.fill();
+  for (const side of sides) {
+    if (side.next[color] === style[color]) continue;
+    // На общей границе оба тайла дают один цвет — середину градиента.
+    const gradient = ctx.createLinearGradient(
+      16,
+      16,
+      16 + side.dx * 32,
+      16 + side.dy * 32,
+    );
+    gradient.addColorStop(0.15, style[color]);
+    gradient.addColorStop(0.85, side.next[color]);
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    band(ctx, side, half, (half + side.next[width]) / 2);
+    ctx.fill();
+  }
 };
 
 /**
- * Рисует дорогу на клетке по виду местности: грунтовка с колеёй на поле,
+ * Рисует дорогу на клетке по виду местности: грунтовка на поле,
  * узкая тропа на холме, гать на болоте. Полосы к соседним дорогам
  * сходятся в центре, поэтому прямые, углы, развилки и перекрёстки
  * получаются сами; одиночная дорога — площадка.
@@ -122,30 +129,21 @@ export const drawRoad = (
   ctx.save();
   ctx.translate(x * cellSize, y * cellSize);
   ctx.scale(cellSize / 32, cellSize / 32);
-  ctx.globalAlpha = style.alpha;
-
-  layer(ctx, sides, style.edge, style.edgeHalf, next => next.edgeHalf);
-  layer(ctx, sides, style.fill, style.fillHalf, next => next.fillHalf);
-
-  if (style.ruts) {
-    // Колея — кант общего контура: тёмный слой и полотно поже поверх,
-    // так линии сходятся на углах и развилках.
-    const rut = RUT_OFFSET + RUT_WIDTH / 2;
-    const inner = RUT_OFFSET - RUT_WIDTH / 2;
-    layer(ctx, sides, 'rgba(110, 88, 56, 0.6)', rut, () => rut);
-    layer(ctx, sides, style.fill, inner, () => inner);
-  }
+  layer(ctx, sides, style, 'edge', 'edgeHalf');
+  layer(ctx, sides, style, 'fill', 'fillHalf');
 
   if (style.planks) {
-    ctx.strokeStyle = '#6e5434';
+    ctx.strokeStyle = '#776d4d';
     ctx.lineWidth = 0.7;
     ctx.beginPath();
-    for (const { dx, dy } of sides) {
+    for (const { dx, dy, next } of sides) {
       for (let t = style.fillHalf + 1; t < 16; t += PLANK_STEP) {
         const cx = 16 + dx * t;
         const cy = 16 + dy * t;
-        ctx.moveTo(cx - dy * style.fillHalf, cy + dx * style.fillHalf);
-        ctx.lineTo(cx + dy * style.fillHalf, cy - dx * style.fillHalf);
+        const half =
+          style.fillHalf + ((next.fillHalf - style.fillHalf) * t) / 32;
+        ctx.moveTo(cx - dy * half, cy + dx * half);
+        ctx.lineTo(cx + dy * half, cy - dx * half);
       }
     }
     ctx.stroke();
