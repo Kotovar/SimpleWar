@@ -99,7 +99,9 @@ export const T04 = towerRule(
         e.armed &&
         ctx.obs.ownUnits.some(
           u =>
-            (u.role === 'civil' || u.type === 'archer') &&
+            (u.role === 'civil' ||
+              u.type === 'archer' ||
+              u.type === 'horseArcher') &&
             manhattan(u, e) <= e.range,
         ),
     ),

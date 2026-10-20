@@ -98,6 +98,10 @@ const participants = (check: Check) => dictionary(check, participant, 4);
 const unitType = one(Object.keys(UNITS_CONFIG));
 const buildingType = one(Object.keys(BUILDINGS_CONFIG));
 const researchType = one(Object.keys(RESEARCH_CONFIG));
+const entityTypes = [
+  ...Object.keys(UNITS_CONFIG),
+  ...Object.keys(BUILDINGS_CONFIG),
+];
 const position = shape({
   x: int(0, MAP_SIDE_LIMIT - 1),
   y: int(0, MAP_SIDE_LIMIT - 1),
@@ -288,8 +292,12 @@ const summary = shape(
 const side = shape(
   {
     controller,
-    units: dictionary(int(0, 20), unitType, 10),
-    buildings: dictionary(int(0, 5), buildingType, 11),
+    units: dictionary(int(0, 20), unitType, Object.keys(UNITS_CONFIG).length),
+    buildings: dictionary(
+      int(0, 5),
+      buildingType,
+      Object.keys(BUILDINGS_CONFIG).length,
+    ),
     stock: resources,
   },
   { profile: one(Object.keys(AI_PROFILES)) },
@@ -483,16 +491,8 @@ const snapshotShape = shape({
     }),
     stats: participants(
       shape({
-        losses: dictionary(
-          int(),
-          one([...Object.keys(UNITS_CONFIG), ...Object.keys(BUILDINGS_CONFIG)]),
-          21,
-        ),
-        damage: dictionary(
-          int(),
-          one([...Object.keys(UNITS_CONFIG), ...Object.keys(BUILDINGS_CONFIG)]),
-          21,
-        ),
+        losses: dictionary(int(), one(entityTypes), entityTypes.length),
+        damage: dictionary(int(), one(entityTypes), entityTypes.length),
       }),
     ),
     skipped: list(text(), 1000),

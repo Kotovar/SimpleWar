@@ -4,6 +4,7 @@ import {
   DAMAGE_BONUS,
   UNITS_CONFIG,
   type BuildingType,
+  type MilitaryType,
   type UnitType,
 } from '@shared/config';
 import {
@@ -14,9 +15,7 @@ import {
   hasFormationNeighbor,
 } from './damage';
 
-const hit = (
-  attacker: 'swordsman' | 'spearman' | 'rider' | 'siege' | 'scout',
-) => ({
+const hit = (attacker: MilitaryType) => ({
   type: attacker,
   attack: UNITS_CONFIG[attacker].attack,
 });
@@ -172,5 +171,32 @@ describe('Строй', () => {
         { id: 'c', type: 'swordsman', owner: 'p1', x: 2, y: 3 },
       ]),
     ).toBe(false);
+  });
+});
+
+describe('конница P06', () => {
+  it('латник ломает пехоту, но копейщик встречает его с бонусом', () => {
+    // 30 + 12 против пехоты; у копейщика ещё броня 2.
+    expect(calculateDamage(hit('knight'), { type: 'swordsman' })).toBe(42);
+    expect(calculateDamage(hit('knight'), { type: 'spearman' })).toBe(40);
+    // Копейщик латнику: 22 + 20 − броня 3.
+    expect(calculateDamage(hit('spearman'), { type: 'knight' })).toBe(39);
+  });
+
+  it('броня латника держит стрелы, но не магию', () => {
+    expect(calculateDamage(hit('archer'), { type: 'knight' })).toBe(27);
+    expect(calculateDamage(hit('mage'), { type: 'knight' })).toBe(28);
+  });
+
+  it('конный лучник бьёт рабочих с бонусом и достаёт воздух', () => {
+    expect(calculateDamage(hit('horseArcher'), { type: 'worker' })).toBe(30);
+    expect(canHitTarget('horseArcher', 'griffon')).toBe(true);
+    expect(canHitTarget('knight', 'griffon')).toBe(false);
+  });
+
+  it('обе новые конницы — категория cavalry: копейщик бьёт их с бонусом', () => {
+    expect(getTargetCategory('knight')).toBe('cavalry');
+    expect(getTargetCategory('horseArcher')).toBe('cavalry');
+    expect(calculateDamage(hit('spearman'), { type: 'horseArcher' })).toBe(42);
   });
 });

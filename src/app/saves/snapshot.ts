@@ -1,5 +1,6 @@
 import { version as GAME_VERSION } from '../../../package.json';
 import {
+  BUILDINGS_CONFIG,
   DEBUG_AVAILABLE,
   DEFAULT_AI_SETUP,
   MAP_GENERATOR_VERSION,
@@ -25,6 +26,23 @@ import { useMovementStore, useHighlightStore } from '@features/pathfinding';
 import { useGuidanceStore } from '@widgets/game-controls';
 import type { GameSnapshot } from './types';
 import { parseSnapshot } from './validation';
+
+/**
+ * Список найма — из текущей конфигурации, а не из сохранения: конюшня из
+ * старой партии получает конницу, добавленную позже.
+ */
+const withCurrentHires = (buildings: GameSnapshot['buildings']) =>
+  Object.fromEntries(
+    Object.entries(buildings).map(([id, building]) => {
+      const config = BUILDINGS_CONFIG[building.type];
+      return [
+        id,
+        building.role === 'production' && 'spawningUnits' in config
+          ? { ...building, spawningUnits: [...config.spawningUnits] }
+          : building,
+      ];
+    }),
+  );
 
 const data = <T extends object>(state: T) =>
   Object.fromEntries(
@@ -160,7 +178,7 @@ export const applySnapshot = (input: GameSnapshot) => {
       selectedUnitForSpawn: null,
     });
     useBuildingsStore.setState({
-      buildings: snapshot.buildings,
+      buildings: withCurrentHires(snapshot.buildings),
       selectedBuildingForSpawn: null,
       selectedRallyBuildingId: null,
     });

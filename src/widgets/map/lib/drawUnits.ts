@@ -2,6 +2,8 @@ export {
   drawArcher,
   drawGriffon,
   drawHealer,
+  drawHorseArcher,
+  drawKnight,
   drawMage,
   drawRider,
   drawScout,

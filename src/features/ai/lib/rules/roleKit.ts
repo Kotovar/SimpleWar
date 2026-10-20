@@ -15,7 +15,13 @@ export const unitsOf = (ctx: AiContext, type: UnitType) =>
   ctx.military.filter(unit => unit.type === type && isFree(ctx, unit.id));
 
 /** Типы, которые держат ближний бой и прикрывают стрелков, осаду и лекаря. */
-const COVER: UnitType[] = ['swordsman', 'spearman', 'rider', 'griffon'];
+const COVER: UnitType[] = [
+  'swordsman',
+  'spearman',
+  'rider',
+  'knight',
+  'griffon',
+];
 
 /** Свои бойцы прикрытия, кроме самого юнита. */
 export const coverUnits = (ctx: AiContext, self?: { id: string }) =>

@@ -3,6 +3,7 @@ import {
   RESEARCH_TYPES,
   type ResearchType,
 } from '@shared/config';
+import { getTargetCategory } from '@shared/lib';
 import type { StrategyScore } from '../model/types';
 import type { AiContext } from './context';
 import { hasStrikeArmy, isMining, nearest } from './facts';
@@ -20,7 +21,11 @@ export const researchValue = (ctx: AiContext, type: ResearchType): number => {
     case 'formation': {
       const spears = count('spearman');
       if (spears < 2) return 0;
-      const riders = foes.some(({ type: foe }) => foe === 'rider') ? 10 : 0;
+      const riders = foes.some(
+        ({ type: foe }) => getTargetCategory(foe) === 'cavalry',
+      )
+        ? 10
+        : 0;
       return 15 + spears * 5 + riders;
     }
     case 'cartography': {

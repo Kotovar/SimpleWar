@@ -10,7 +10,14 @@ import { renderHiDpiCanvas } from '@shared/lib';
 import { drawBarracks, drawBase, drawTower } from './drawBuildings';
 import { drawFarm, drawGoldMine, drawSawmill } from './drawEconomyBuildings';
 import { drawArcher, drawSwordsman, drawWorker } from './drawUnits';
-import { drawRider, drawScout, drawSiege, drawSpearman } from './drawNewUnits';
+import {
+  drawHorseArcher,
+  drawKnight,
+  drawRider,
+  drawScout,
+  drawSiege,
+  drawSpearman,
+} from './drawNewUnits';
 import {
   drawForge,
   drawPalisade,
@@ -34,6 +41,8 @@ const DRAW_ENTITY = {
   scout: drawScout,
   spearman: drawSpearman,
   rider: drawRider,
+  knight: drawKnight,
+  horseArcher: drawHorseArcher,
   siege: drawSiege,
   stable: drawStable,
   workshop: drawWorkshop,

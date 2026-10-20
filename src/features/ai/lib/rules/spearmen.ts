@@ -61,7 +61,7 @@ export const P01: AiRule = {
 /** Свои уязвимые к коннице: стрелки, маг, лекарь, осада. */
 const wards = (ctx: AiContext) =>
   ctx.military.filter(unit =>
-    ['archer', 'mage', 'healer', 'siege'].includes(unit.type),
+    ['archer', 'horseArcher', 'mage', 'healer', 'siege'].includes(unit.type),
   );
 
 /** P02: коннице доступны свои стрелки или осада — встать между ними. */
@@ -72,7 +72,7 @@ export const P02: AiRule = {
   evaluate: ctx => {
     const riders = cavalry(ctx);
     const exposed = wards(ctx).filter(ward =>
-      riders.some(r => ctx.reaches(r, ward, 1)),
+      riders.some(r => ctx.reaches(r, ward, r.range)),
     );
     if (!exposed.length) return [];
     return spearmen(ctx).flatMap((unit): Candidate[] => {

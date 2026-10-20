@@ -10,6 +10,8 @@ export const UNITS_NAME = {
   scout: 'Разведчик',
   spearman: 'Копейщик',
   rider: 'Всадник',
+  knight: 'Латник',
+  horseArcher: 'Конный лучник',
   siege: 'Осадная машина',
   mage: 'Маг',
   healer: 'Лекарь',

@@ -8,7 +8,12 @@ import {
 } from 'vite-plus/test';
 import { useGameLoopStore } from '@entities/games';
 import { useUnitsStore } from '@entities/units';
-import { useBuildingsStore } from '@entities/buildings';
+import {
+  BUILDINGS_CONFIG,
+  DEFAULT_SANDBOX,
+  UNITS_CONFIG,
+} from '@shared/config';
+import { createBuilding, useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
 import { useEconomyStore } from '@entities/economies';
 import { useResearchStore } from '@entities/researches';
@@ -111,6 +116,7 @@ beforeEach(() => {
   resetGame();
   useSandboxStore.setState({
     enabled: false,
+    scenario: DEFAULT_SANDBOX,
     stats: {},
     paused: false,
     fast: false,
@@ -183,6 +189,48 @@ describe('формат и восстановление партии', () => {
       p2: 'red',
       p3: 'yellow',
       p4: 'purple',
+    });
+  });
+
+  it('сохраняет песочницу, где у стороны заданы все типы юнитов и зданий', () => {
+    const all = <T extends string>(types: T[]) =>
+      Object.fromEntries(types.map(type => [type, 0]));
+    const { scenario } = useSandboxStore.getState();
+    useSandboxStore.setState({
+      scenario: {
+        ...scenario,
+        sides: scenario.sides.map(side => ({
+          ...side,
+          units: all(Object.keys(UNITS_CONFIG)),
+          buildings: all(Object.keys(BUILDINGS_CONFIG)),
+        })),
+      },
+    });
+
+    expect(() => captureSnapshot()).not.toThrow();
+  });
+
+  it('конюшня старого сохранения получает текущий список найма', () => {
+    const stable = createBuilding('stable', 0, 0, 'p1')!;
+    useBuildingsStore.setState(state => ({
+      buildings: { ...state.buildings, [stable.id]: stable },
+    }));
+    const saved = captureSnapshot();
+    const legacy = {
+      ...saved,
+      buildings: {
+        ...saved.buildings,
+        [stable.id]: {
+          ...saved.buildings[stable.id],
+          spawningUnits: ['rider'],
+        },
+      },
+    };
+
+    applySnapshot(parseSnapshot(JSON.stringify(legacy)));
+
+    expect(useBuildingsStore.getState().buildings[stable.id]).toMatchObject({
+      spawningUnits: ['rider', 'knight', 'horseArcher'],
     });
   });
 

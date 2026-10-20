@@ -22,10 +22,15 @@ import {
   targetsInRange,
 } from './common';
 
-/** Мечники, ещё действующие в этом ходу. */
+/**
+ * Ближний бой линии — мечники и латники, ещё действующие в этом ходу:
+ * латник держит строй и бьёт пехоту, как тяжёлый мечник.
+ */
 export const swordsmen = (ctx: AiContext) =>
   ctx.military.filter(
-    unit => unit.type === 'swordsman' && isFree(ctx, unit.id),
+    unit =>
+      (unit.type === 'swordsman' || unit.type === 'knight') &&
+      isFree(ctx, unit.id),
   );
 
 /** Ценность цели: опасность, возможность добить, близость к своим. */
@@ -112,7 +117,9 @@ export const M02: AiRule = {
   evaluate: ctx => {
     const exposed = ctx.obs.ownUnits.filter(
       unit =>
-        (unit.role === 'civil' || unit.type === 'archer') &&
+        (unit.role === 'civil' ||
+          unit.type === 'archer' ||
+          unit.type === 'horseArcher') &&
         ctx.threatAt(unit) > 0,
     );
     if (!exposed.length) return [];

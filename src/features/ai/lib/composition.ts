@@ -6,7 +6,11 @@ import {
   type Unit,
   type UnitType,
 } from '@shared/config';
-import { hasFormationNeighbor, isFlyingType } from '@shared/lib';
+import {
+  getTargetCategory,
+  hasFormationNeighbor,
+  isFlyingType,
+} from '@shared/lib';
 import type { AiContext } from './context';
 import { basesKnown, enemyTarget, ofRival } from './facts';
 import { effectiveness, powerOf } from './stats';
@@ -90,17 +94,31 @@ export const roleWishes = (ctx: AiContext): RoleWish[] => {
     ctx.military.filter(unit => unit.type === type).length;
   const army = ctx.military.length;
   const flyers = foes.filter(({ type }) => isFlyingType(type)).length;
+  const cavalry = foes.filter(
+    ({ type }) => getTargetCategory(type) === 'cavalry',
+  ).length;
   const antiAir = [...ctx.enemies, ...ctx.remembered].some(
     ({ type }) => HITS_AIR.includes(type) && type !== 'griffon',
   );
   const wishes: [boolean, UnitType, BuildingType, string][] = [
-    [
-      seen('rider') > own('spearman'),
-      'spearman',
-      'barracks',
-      'у врага конница',
-    ],
+    [cavalry > own('spearman'), 'spearman', 'barracks', 'у врага конница'],
     [flyers > own('mage'), 'mage', 'sanctuary', 'у врага летающие'],
+    [
+      flyers > own('mage') + own('horseArcher'),
+      'horseArcher',
+      'stable',
+      'у врага летающие',
+    ],
+    // Латник ломает пехоту, но копейщики врага его встречают с бонусом.
+    [
+      seen('swordsman') >= 2 &&
+        seen('spearman') < seen('swordsman') &&
+        army >= 3 &&
+        own('knight') < Math.ceil(army / 4),
+      'knight',
+      'stable',
+      'у врага мечники без копейщиков',
+    ],
     [own('scout') === 0 && !basesKnown(ctx), 'scout', 'base', 'нужна разведка'],
     [
       !!enemyTarget(ctx) && army >= 4 && own('siege') < Math.floor(army / 4),

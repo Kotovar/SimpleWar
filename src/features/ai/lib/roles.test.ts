@@ -3,7 +3,9 @@ import { ownPower, roleWishes } from './composition';
 import { foe, grass, own, ownBuilding, scene } from './scene.test-utils';
 import { W07 } from './rules/construction';
 import { N03 } from './rules/recruitment';
-import { T03 } from './rules/towers';
+import { C03 } from './rules/riders';
+import { P02 } from './rules/spearmen';
+import { T03, T04 } from './rules/towers';
 
 const map = grass(12, 12);
 
@@ -24,6 +26,51 @@ describe('roleWishes: состав по известному врагу', () => 
       type: 'spearman',
       producer: 'barracks',
     });
+  });
+
+  it('латник тоже конница — нужен копейщик', () => {
+    const { ctx } = scene({ map, enemies: [foe('knight', 9, 9)] });
+
+    expect(roleWishes(ctx)[0]).toMatchObject({ type: 'spearman' });
+  });
+
+  it('летающих больше, чем магов, — нужен и конный лучник', () => {
+    const { ctx } = scene({
+      map,
+      units: [own('mage', 1, 1)],
+      enemies: [foe('griffon', 9, 9), foe('griffon', 10, 9)],
+    });
+
+    expect(roleWishes(ctx)).toContainEqual(
+      expect.objectContaining({ type: 'horseArcher', producer: 'stable' }),
+    );
+  });
+
+  it('мечники врага без копейщиков — нужен латник', () => {
+    const { ctx } = scene({
+      map,
+      units: [0, 1, 2].map(i => own('swordsman', i, 1)),
+      enemies: [foe('swordsman', 9, 9), foe('swordsman', 10, 9)],
+    });
+
+    expect(roleWishes(ctx)).toContainEqual(
+      expect.objectContaining({ type: 'knight', producer: 'stable' }),
+    );
+  });
+
+  it('у врага копейщики наравне с мечниками — латник не нужен', () => {
+    const { ctx } = scene({
+      map,
+      units: [0, 1, 2].map(i => own('swordsman', i, 1)),
+      enemies: [
+        foe('swordsman', 9, 9),
+        foe('swordsman', 10, 9),
+        foe('spearman', 9, 10),
+        foe('spearman', 10, 10),
+      ],
+    });
+
+    expect(roleWishes(ctx).map(({ type }) => type)).not.toContain('knight');
   });
 
   it('конницы не видно — копейщик не нужен', () => {
@@ -87,6 +134,23 @@ describe('N03: найм новых ролей', () => {
     ]);
   });
 
+  it('латника нанимает в конюшне', () => {
+    const { ctx } = scene({
+      map,
+      units: [0, 1, 2].map(i => own('swordsman', i, 0)),
+      buildings: [ownBuilding('stable', 5, 5)],
+      enemies: [foe('swordsman', 10, 10), foe('swordsman', 11, 10)],
+      stock: { gold: 2000, wood: 2000 },
+      population: { max: 40, occupied: 6 },
+      // К 20-му ходу желаемая армия — 6: трёх мечников мало.
+      turn: 20,
+    });
+
+    expect(N03.evaluate(ctx)).toMatchObject([
+      { action: { type: 'spawn', unitType: 'knight' } },
+    ]);
+  });
+
   it('нет здания найма — не нанимает', () => {
     const { ctx } = scene({
       map,
@@ -144,6 +208,43 @@ describe('T03: налёт на орудие', () => {
     expect(T03.evaluate(ctx)).toMatchObject([
       { action: { type: 'attack', targetId: siege.id } },
     ]);
+  });
+});
+
+describe('конный лучник в защитных правилах', () => {
+  it('T04: башня прикрывает своего конного лучника', () => {
+    const spear = foe('spearman', 8, 5);
+    const { ctx } = scene({
+      map,
+      units: [own('horseArcher', 8, 6)],
+      buildings: [ownBuilding('tower', 5, 5)],
+      enemies: [spear],
+    });
+
+    expect(T04.evaluate(ctx)).toMatchObject([
+      { action: { type: 'attack', targetId: spear.id } },
+    ]);
+  });
+
+  it('P02: угрозу считает по дальности выстрела, а не вплотную', () => {
+    // 5 клеток хода + 2 выстрела: до лучника ровно 7.
+    const { ctx } = scene({
+      map,
+      units: [own('spearman', 2, 2), own('archer', 5, 5)],
+      enemies: [foe('horseArcher', 11, 6)],
+    });
+
+    expect(P02.evaluate(ctx)).toMatchObject([{ ruleId: 'P02' }]);
+  });
+
+  it('C03: налёт конного лучника на рабочего перехватывается', () => {
+    const { ctx } = scene({
+      map,
+      units: [own('rider', 7, 9), own('worker', 4, 8)],
+      enemies: [foe('horseArcher', 10, 9)],
+    });
+
+    expect(C03.evaluate(ctx)).toMatchObject([{ ruleId: 'C03' }]);
   });
 });
 

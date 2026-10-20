@@ -118,7 +118,7 @@ export const C03: AiRule = {
         e.armed &&
         e.move >= 5 &&
         e.type !== 'griffon' &&
-        economy.some(p => ctx.reaches(e, p, 1)),
+        economy.some(p => ctx.reaches(e, p, e.range)),
     );
     if (!raiders.length) return [];
     return riders(ctx).flatMap(unit =>
