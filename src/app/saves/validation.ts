@@ -118,7 +118,7 @@ const order: Check = v => {
         : {};
   return shape(
     {
-      type: one(['goto', 'explore', 'build', 'work']),
+      type: one(['goto', 'explore', 'build', 'work', 'road']),
       x: int(0, MAP_SIDE_LIMIT - 1),
       y: int(0, MAP_SIDE_LIMIT - 1),
       ...extra,

@@ -23,12 +23,16 @@ import {
   runWorkerCommand,
 } from './common';
 
-/** Приказ дороги: кто, каким рабочим и на какой клетке. */
+/**
+ * Приказ дороги: кто, каким рабочим и на какой клетке. `byOrder` — шаг
+ * приказа «Проложить дорогу до…»: сам приказ не снимается.
+ */
 export type BuildRoadCommand = {
   actor: ParticipantId;
   workerId: string;
   x: number;
   y: number;
+  byOrder?: boolean;
 };
 
 /**
@@ -118,7 +122,12 @@ export const buildRoad = (command: BuildRoadCommand) =>
     {
       type: 'buildRoad',
       actor: command.actor,
-      details: { workerId: command.workerId, x: command.x, y: command.y },
+      details: {
+        workerId: command.workerId,
+        x: command.x,
+        y: command.y,
+        ...(command.byOrder && { byOrder: 1 }),
+      },
     },
     () => validateAndBuild(command),
   );

@@ -7,7 +7,11 @@ import type {
   Unit,
   UnitType,
 } from '@shared/config';
-import type { GoToCommand, MoveCommand } from '@features/pathfinding';
+import type {
+  GoToCommand,
+  MoveCommand,
+  RoadOrderCommand,
+} from '@features/pathfinding';
 import type {
   AttackCommand,
   HealCommand,
@@ -62,6 +66,8 @@ export type MapClickContext = {
     setRallyPoint?: (command: RallyPointCommand) => CommandResult;
     clearForest?: (command: ClearForestCommand) => CommandResult;
     buildRoad?: (command: BuildRoadCommand) => CommandResult;
+    /** Приказ «Проложить дорогу до…» дальней клетки. */
+    orderRoad?: (command: RoadOrderCommand) => CommandResult;
     prepareStrike?: (command: PrepareStrikeCommand) => CommandResult;
     heal?: (command: HealCommand) => CommandResult;
     /** Приказ «Идти в точку» с исполнением на оставшиеся очки. */

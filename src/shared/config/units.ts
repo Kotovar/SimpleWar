@@ -35,6 +35,8 @@ export type UnitOrder = (
   /** `free` — поставлен с отладочной бесплатной стройкой: без резерва. */
   | { type: 'build'; buildingType: BuildingType; free?: true }
   | { type: 'work'; buildingId: string }
+  /** Проложить дорогу до клетки, по клетке за ход. */
+  | { type: 'road' }
 ) & {
   x: number;
   y: number;

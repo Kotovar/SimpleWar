@@ -2,6 +2,7 @@ import {
   REJECTION_MESSAGE,
   type CommandResult,
   type ParticipantId,
+  type Position,
   type Unit,
   type UnitOrder,
 } from '@shared/config';
@@ -14,6 +15,7 @@ import { createLandingCheck } from './air';
 import { getRoutePreview } from './routePreview';
 import { advanceExploration } from './autoExplore';
 import { getSeenEnemies, move } from './move';
+import { advanceRoadOrder } from './roadOrder';
 
 /** Приказ «Идти в точку»: кто, каким юнитом и куда. */
 export type GoToCommand = {
@@ -31,7 +33,11 @@ export const getOrderRoutePreview = (
   actor: ParticipantId,
   order: UnitOrder,
 ) => {
-  if (order.type === 'goto' || order.type === 'explore')
+  if (
+    order.type === 'goto' ||
+    order.type === 'explore' ||
+    order.type === 'road'
+  )
     return getRoutePreview(unit, actor, order);
   if (Math.max(Math.abs(unit.x - order.x), Math.abs(unit.y - order.y)) === 1)
     return null;
@@ -47,9 +53,15 @@ export const getOrderRoutePreview = (
   return routes.sort((a, b) => a.cost - b.cost)[0] ?? null;
 };
 
-/** Действие по прибытии выполняет вызывающий слой обычной командой. */
+/**
+ * Действие по прибытии выполняет вызывающий слой обычной командой; приказу
+ * дороги передаётся клетка, где класть дорогу.
+ */
 export type OrderArrival = (
-  unit: Unit & { order: Extract<UnitOrder, { type: 'build' | 'work' }> },
+  unit: Unit & {
+    order: Extract<UnitOrder, { type: 'build' | 'work' | 'road' }>;
+  },
+  cell?: Position,
 ) => CommandResult;
 
 /** Причина остановки приказа для игрока. */
@@ -157,6 +169,9 @@ export const advanceOrder = (
   };
 
   if (order.type !== 'goto' && !onArrival) return false;
+  if (order.type === 'road') {
+    return advanceRoadOrder(actor, unitId, onArrival!, stop);
+  }
   const arrive = (worker: Unit) => {
     if (order.type === 'goto' || !onArrival) return false;
     // Отсутствие рабочего действия означает ожидание следующего своего хода.

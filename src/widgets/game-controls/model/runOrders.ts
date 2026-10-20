@@ -1,4 +1,4 @@
-import { assignWorker } from '@features/workers';
+import { assignWorker, buildRoad } from '@features/workers';
 import { build } from '@features/build';
 import type { ParticipantId } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
@@ -7,7 +7,7 @@ import { executeOrders, useMovementStore } from '@features/pathfinding';
 import { useSelectionStore } from '@features/selection';
 
 /**
- * Исполняет приказы движения, стройки и работы на оставшиеся очки. Остановившийся
+ * Исполняет приказы движения, стройки, работы и дороги на оставшиеся очки. Остановившийся
  * приказ возвращает управление: юнит выбран, камера на нём, причина —
  * в карточке.
  *
@@ -19,14 +19,21 @@ export const runOrders = (
   clearInteraction: () => void,
 ) => {
   if (!humanId) return false;
-  const [stopped] = executeOrders(humanId, unit =>
+  const [stopped] = executeOrders(humanId, (unit, cell) =>
     unit.order.type === 'work'
       ? assignWorker({
           actor: humanId,
           workerId: unit.id,
           buildingId: unit.order.buildingId,
         })
-      : build({ actor: humanId, workerId: unit.id, ...unit.order }),
+      : unit.order.type === 'road'
+        ? buildRoad({
+            actor: humanId,
+            workerId: unit.id,
+            ...cell!,
+            byOrder: true,
+          })
+        : build({ actor: humanId, workerId: unit.id, ...unit.order }),
   );
   const unit = stopped && useUnitsStore.getState().units[stopped];
   if (!unit) return false;

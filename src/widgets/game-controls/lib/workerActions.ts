@@ -97,11 +97,12 @@ export const workerActions = (
   });
 
   // Цена на поле; холм и болото дороже — об этом подсказка и отказ команды.
+  // Без очка стройки режим доступен: приказ до дальней клетки начнётся
+  // со следующего хода.
   const road = action('buildRoad', {
     pressed: mode.road,
     cost: ROAD.cost,
     lacking: lackingOf(ROAD.cost, payableBuild),
-    reason: hasPoint || mode.road ? undefined : NO_BUILD_POINT,
   });
 
   // Чиним самое повреждённое из соседних своих зданий.

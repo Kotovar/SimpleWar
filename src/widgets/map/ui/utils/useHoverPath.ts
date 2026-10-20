@@ -9,7 +9,11 @@ import { getOrderRoutePreview, getRoutePreview } from '@features/pathfinding';
  */
 const getOrderPath = (unit: Unit, humanId: Owner, order: UnitOrder) => {
   const route = getOrderRoutePreview(unit, humanId, order);
-  if (order.type === 'goto' || order.type === 'explore')
+  if (
+    order.type === 'goto' ||
+    order.type === 'explore' ||
+    order.type === 'road'
+  )
     return route && { ...route, goal: true };
   const target = { x: order.x, y: order.y };
   if (route) return { ...route, path: [...route.path, target] };

@@ -39,14 +39,14 @@ describe('кнопки рабочего', () => {
     ).toBe(true);
   });
 
-  it('без очка стройки: стройка и расчистка недоступны, но видны', () => {
+  it('без очка стройки: стройка и расчистка недоступны, дорога — для приказа', () => {
     const worker = unit('worker', { buildPoints: 0 });
     const { build, clearForest, buildRoad } = byId(
       getSelectionActions(input({ unit: worker })),
     );
     expect(build.reason).toBe('Нет очка стройки');
     expect(clearForest.reason).toBe('Нет очка стройки');
-    expect(buildRoad.reason).toBe('Нет очка стройки');
+    expect(buildRoad.reason).toBeUndefined();
   });
 
   it('дорога: цена на поле, нехватка дерева и нажатый режим', () => {

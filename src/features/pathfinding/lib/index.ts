@@ -10,6 +10,7 @@ export * from './createKnownMovementGrid';
 export * from './air';
 export * from './countRouteTurns';
 export * from './goTo';
+export * from './roadOrder';
 export * from './findUnitRoute';
 export * from './autoExplore';
 export * from './explorationDanger';

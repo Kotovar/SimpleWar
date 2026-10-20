@@ -102,14 +102,14 @@ const clickWithOwnUnit = (
     return;
   }
 
-  if (
-    unit.role === 'civil' &&
-    commands.buildRoad &&
-    isHighlighted(highlights.road ?? null, x, y)
-  ) {
-    commands.buildRoad({ actor, workerId: unit.id, x, y });
-    resetInteraction(ctx);
-    return;
+  // Режим дороги: соседняя подсвеченная клетка — дорога сразу, дальняя —
+  // приказ проложить дорогу до неё; отказ оставляет режим.
+  if (unit.role === 'civil' && highlights.road) {
+    const result = isHighlighted(highlights.road, x, y)
+      ? commands.buildRoad?.({ actor, workerId: unit.id, x, y })
+      : commands.orderRoad?.({ actor, workerId: unit.id, x, y });
+    if (result?.ok) resetInteraction(ctx);
+    if (result) return;
   }
 
   if (isPlacing(unit, ctx)) {

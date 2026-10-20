@@ -4,7 +4,7 @@ import {
   DEFAULT_PARTICIPANTS,
   type Cell,
 } from '@shared/config';
-import { getAvailableResources, ok } from '@shared/lib';
+import { getAvailableResources, ok, reject } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
@@ -42,11 +42,13 @@ const arrival = (
 ) =>
   unit.order.type === 'build'
     ? build({ actor: 'p1', workerId: unit.id, ...unit.order })
-    : assignWorker({
-        actor: 'p1',
-        workerId: unit.id,
-        buildingId: unit.order.buildingId,
-      });
+    : unit.order.type === 'work'
+      ? assignWorker({
+          actor: 'p1',
+          workerId: unit.id,
+          buildingId: unit.order.buildingId,
+        })
+      : reject('target');
 const order = () =>
   giveBuildOrder({ actor: 'p1', workerId, buildingType: 'mine', ...target });
 const execute = () => executeOrders('p1', arrival);

@@ -220,7 +220,9 @@ const UnitDetails = ({ unit }: { unit: Unit }) => (
                 ? 'Работать'
                 : unit.order.type === 'build'
                   ? `Построить: ${BUILDINGS_NAME[unit.order.buildingType]}`
-                  : 'Идти в точку'}
+                  : unit.order.type === 'road'
+                    ? 'Проложить дорогу'
+                    : 'Идти в точку'}
         </dd>
       </div>
     )}
