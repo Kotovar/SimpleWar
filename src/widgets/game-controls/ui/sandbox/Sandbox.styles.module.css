@@ -124,7 +124,8 @@
 }
 
 .Roster {
-  max-height: 430px;
+  /* Меню целиком в окне: прокручивается только таблица, а не страница. */
+  max-height: clamp(220px, calc(100dvh - 720px), 430px);
   overflow: auto;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -141,9 +142,14 @@
     z-index: 1;
     background: var(--surface-strong);
     padding-block: 10px;
+    padding-inline: 4px;
   }
 
   & tbody th {
+    /* Подписи переносятся: колонкам сторон нужна ширина при 4 сторонах. */
+    width: 1%;
+    min-width: 72px;
+    white-space: normal;
     font-weight: 500;
   }
 
@@ -169,6 +175,10 @@
   & thead select {
     width: 100%;
     min-width: 100px;
+    /* «Сбалансированный» влезает и при 4 сторонах. */
+    padding-inline: 6px 20px;
+    background-position: right 6px center;
+    font-size: 0.75rem;
   }
 }
 
