@@ -1,7 +1,8 @@
 import type { ParticipantId, Position, UnitOrder } from '@shared/config';
-import { isAdjacent, isWorker, ok, reject } from '@shared/lib';
+import { canHaveRoad, isAdjacent, isWorker, ok, reject } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useMapStore } from '@entities/maps';
+import { useBuildingsStore } from '@entities/buildings';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand } from '@entities/journals';
 import { getParticipantKnowledge, isKnownRoad } from '@entities/perceptions';
@@ -51,7 +52,7 @@ export const giveRoadOrder = ({ actor, workerId, x, y }: RoadOrderCommand) =>
  * Ход приказа дороги: рабочий идёт по маршруту к цели до первой клетки,
  * где дороги по его знаниям нет, и кладёт её командой `onArrival`.
  * После шага выбор повторяется: дорога, открытая по пути, продолжает
- * приказ. Клетка, где он стоял при приказе, остаётся без дороги. Нет очка
+ * приказ. Начинает с клетки под собой, если дорога там возможна. Нет очка
  * стройки или клетку (в том числе цель) занял юнит — ждёт следующего хода;
  * отказ команды, новый враг или пропавший путь останавливают приказ.
  * Дорога на цели снимает приказ.
@@ -84,11 +85,18 @@ export const advanceRoadOrder = (
     const occupant = useUnitsStore.getState().getUnitAt(target.x, target.y);
     return occupant?.owner === actor ? false : stop('path');
   }
+  const { getCell } = useMapStore.getState();
   const index = plan.path.findIndex(
-    ({ x, y }, i) => i > 0 && !isKnownRoad(knowledge, x, y),
+    ({ x, y }, i) =>
+      !isKnownRoad(knowledge, x, y) &&
+      // Под собой — только там, где дорога возможна: не в руднике, не в лесу.
+      (i > 0 ||
+        (canHaveRoad(getCell(x, y)!.type) &&
+          !useBuildingsStore.getState().getBuildingAt(x, y))),
   );
   // Дорога уже до самой цели: остаётся дойти.
-  const walkTo: Position = index === -1 ? target : plan.path[index - 1];
+  const walkTo: Position =
+    index === -1 ? target : plan.path[Math.max(0, index - 1)];
 
   if (walkTo.x !== unit.x || walkTo.y !== unit.y) {
     // Очков на первый шаг нет (в том числе при завершении хода) — ждать.
@@ -115,9 +123,10 @@ export const advanceRoadOrder = (
     return false;
   }
   const cell = plan.path[index];
-  if (!isAdjacent(worker, cell)) return false;
+  const own = worker.x === cell.x && worker.y === cell.y;
+  if (!own && !isAdjacent(worker, cell)) return false;
   if (worker.role !== 'civil' || worker.buildPoints <= 0) return false;
-  if (useUnitsStore.getState().getUnitAt(cell.x, cell.y)) return false;
+  if (!own && useUnitsStore.getState().getUnitAt(cell.x, cell.y)) return false;
   const result = onArrival({ ...worker, order }, cell);
   if (!result.ok) return result.code === 'busy' ? false : stop(result.code);
   if (cell.x === target.x && cell.y === target.y) setOrder(unitId, null);

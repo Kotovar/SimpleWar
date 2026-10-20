@@ -69,20 +69,21 @@ beforeEach(() => {
 describe('приказ «Проложить дорогу до…»', () => {
   it('кладёт по клетке за ход, идя по своей дороге, и снимается на цели', () => {
     expect(orderRoad({ actor: 'p1', workerId, x: 5, y: 0 })).toEqual(ok);
-    expect(roads()).toEqual([1]);
+    // Первая — под собой.
+    expect(roads()).toEqual([0]);
     expect(units().units[workerId]).toMatchObject({
       x: 0,
       movePoints: 0,
       order: { type: 'road', x: 5 },
     });
 
-    for (let turn = 2; turn <= 5; turn++) expect(nextTurn()).toEqual([]);
+    for (let turn = 2; turn <= 6; turn++) expect(nextTurn()).toEqual([]);
 
-    expect(roads()).toEqual([1, 2, 3, 4, 5]);
-    // Рабочий стоит у последней клетки, приказ снят; клетка старта без дороги.
+    expect(roads()).toEqual([0, 1, 2, 3, 4, 5]);
+    // Рабочий стоит у последней клетки, приказ снят.
     expect(units().units[workerId]).toMatchObject({ x: 4 });
     expect(units().units[workerId].order).toBeUndefined();
-    expect(wood()).toBe(120 - 50);
+    expect(wood()).toBe(120 - 60);
   });
 
   it('без очков движения ждёт, а не останавливается', () => {
@@ -105,28 +106,28 @@ describe('приказ «Проложить дорогу до…»', () => {
     expect(units().units[workerId].order).toMatchObject({
       stopped: 'resources',
     });
-    expect(roads()).toEqual([1]);
+    expect(roads()).toEqual([0]);
   });
 
   it('открытая по пути дорога продолжает приказ', () => {
-    for (let x = 1; x <= 5; x++)
+    for (let x = 0; x <= 5; x++)
       useMapStore.getState().setCell(x, 0, { road: true });
     initVisibilitySystem();
 
     expect(orderRoad({ actor: 'p1', workerId, x: 8, y: 0 })).toEqual(ok);
     // Дошёл до конца готовой дороги и положил следующую клетку.
-    expect(roads()).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(roads()).toEqual([0, 1, 2, 3, 4, 5, 6]);
     expect(units().units[workerId]).toMatchObject({ x: 5 });
     expect(units().units[workerId].order?.stopped).toBeUndefined();
   });
 
   it('ждёт, пока свой юнит занимает цель или точку подхода', () => {
     orderRoad({ actor: 'p1', workerId, x: 5, y: 0 });
-    for (let turn = 2; turn <= 4; turn++) nextTurn();
+    for (let turn = 2; turn <= 5; turn++) nextTurn();
     // На цели встал разведчик: приказ ждёт.
     const scout = units().spawnUnit('scout', 5, 0, 'p1')!;
     expect(nextTurn()).toEqual([]);
-    expect(roads()).toEqual([1, 2, 3, 4]);
+    expect(roads()).toEqual([0, 1, 2, 3, 4]);
     expect(units().units[workerId].order).toMatchObject({ type: 'road' });
 
     place(scout, 4);
@@ -135,7 +136,7 @@ describe('приказ «Проложить дорогу до…»', () => {
 
     place(scout, 11);
     expect(nextTurn()).toEqual([]);
-    expect(roads()).toEqual([1, 2, 3, 4, 5]);
+    expect(roads()).toEqual([0, 1, 2, 3, 4, 5]);
     expect(units().units[workerId].order).toBeUndefined();
   });
 

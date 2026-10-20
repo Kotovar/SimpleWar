@@ -146,6 +146,22 @@ describe('handleMapCellClick', () => {
     expect(buildRoad).not.toHaveBeenCalled();
   });
 
+  it('ЛКМ по своей клетке в режиме дороги кладёт дорогу под рабочим', () => {
+    const selectedUnit = unitAt('worker', 1, 1);
+    const m = makeContext({ selectedUnit, isCurrent: () => true });
+    const buildRoad = vi.fn((): CommandResult => ok);
+    m.ctx.highlights.road = [{ x: 1, y: 1 }];
+    m.ctx.commands.buildRoad = buildRoad;
+
+    handleMapCellClick(1, 1, m.ctx);
+    expect(buildRoad).toHaveBeenCalledWith({
+      actor: 'p1',
+      workerId: selectedUnit.id,
+      x: 1,
+      y: 1,
+    });
+  });
+
   it('второй дальний ПКМ отдаёт приказ и снимает выбор без повторного выбора', () => {
     const selectedUnit = unitAt('worker', 1, 1);
     const m = makeContext({

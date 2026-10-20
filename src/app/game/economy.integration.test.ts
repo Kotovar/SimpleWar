@@ -342,14 +342,23 @@ describe('дорога', () => {
     ).toMatchObject({ code: 'hidden' });
   });
 
-  it('предлагает только подходящие соседние клетки', () => {
+  it('кладёт дорогу под самим рабочим', () => {
+    const roader = readyWorker(2, 2);
+    expect(buildRoad({ actor: 'p1', workerId: roader, x: 2, y: 2 }).ok).toBe(
+      true,
+    );
+    expect(useMapStore.getState().grid[2][2].road).toBe(true);
+  });
+
+  it('предлагает свою и подходящие соседние клетки', () => {
     const roader = readyWorker(3, 2);
     readyWorker(2, 2);
     useMapStore.getState().setCell(3, 1, { road: true });
 
     const cells = getRoadCells('p1', worker(roader));
-    // Вокруг 8 клеток: рудник (4, 3), юнит (2, 2) и дорога (3, 1) — нет.
-    expect(cells).toHaveLength(5);
+    // Своя клетка и 8 вокруг: рудник (4, 3), юнит (2, 2) и дорога (3, 1) — нет.
+    expect(cells).toHaveLength(6);
+    expect(cells).toContainEqual({ x: 3, y: 2 });
     expect(cells).not.toContainEqual({ x: 4, y: 3 });
     expect(cells).not.toContainEqual({ x: 2, y: 2 });
     expect(cells).not.toContainEqual({ x: 3, y: 1 });

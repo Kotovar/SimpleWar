@@ -36,8 +36,9 @@ export type BuildRoadCommand = {
 };
 
 /**
- * Клетки, где рабочий может проложить дорогу сейчас: соседние, видимые
- * участнику, на поле, холме или болоте, без дороги и без объекта.
+ * Клетки, где рабочий может проложить дорогу сейчас: своя и соседние,
+ * видимые участнику, на поле, холме или болоте, без дороги и без
+ * другого объекта.
  * Ресурсы не проверяются: их нехватку покажет отказ команды.
  *
  * @param actor - Участник.
@@ -55,10 +56,10 @@ export const getRoadCells = (
     for (let dx = -1; dx <= 1; dx++) {
       const x = worker.x + dx;
       const y = worker.y + dy;
-      if (!dx && !dy) continue;
       const cell = getCell(x, y);
       if (!cell || cell.road || !canHaveRoad(cell.type)) continue;
-      if (getUnitAt(x, y) || getBuildingAt(x, y)) continue;
+      if ((dx || dy) && getUnitAt(x, y)) continue;
+      if (getBuildingAt(x, y)) continue;
       if (isVisibleTo(actor, x, y)) cells.push({ x, y });
     }
   }
@@ -79,11 +80,12 @@ const validateAndBuild = ({
   if (!cell) return reject('bounds');
   // Скрытая клетка отклоняется до проверки местности: рельеф не раскрывается.
   if (!isVisibleTo(actor, x, y)) return reject('hidden');
-  if (!isAdjacent(worker, { x, y })) return reject('distance');
+  const own = worker.x === x && worker.y === y;
+  if (!own && !isAdjacent(worker, { x, y })) return reject('distance');
   if (!canHaveRoad(cell.type)) return reject('terrain');
   if (cell.road) return reject('target');
   if (
-    useUnitsStore.getState().getUnitAt(x, y) ||
+    (!own && useUnitsStore.getState().getUnitAt(x, y)) ||
     useBuildingsStore.getState().getBuildingAt(x, y)
   ) {
     return reject('occupied');
@@ -110,7 +112,8 @@ const validateAndBuild = ({
 };
 
 /**
- * Прокладывает дорогу на соседней видимой клетке поля, холма или болота:
+ * Прокладывает дорогу под рабочим или на соседней видимой клетке поля,
+ * холма или болота:
  * дорога ничья и сразу удешевляет наземный ход, тратится очко стройки
  * и дерево, движение рабочего заканчивается.
  *
