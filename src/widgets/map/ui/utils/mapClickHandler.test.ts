@@ -124,6 +124,28 @@ describe('handleMapCellClick', () => {
     expect(m.clearHighlight).not.toHaveBeenCalled();
   });
 
+  it('ЛКМ по подсвеченной клетке в режиме дороги кладёт дорогу', () => {
+    const selectedUnit = unitAt('worker', 1, 1);
+    const m = makeContext({ selectedUnit });
+    const buildRoad = vi.fn((): CommandResult => ok);
+    m.ctx.highlights.road = [{ x: 2, y: 1 }];
+    m.ctx.commands.buildRoad = buildRoad;
+
+    handleMapCellClick(2, 1, m.ctx);
+    expect(buildRoad).toHaveBeenCalledWith({
+      actor: 'p1',
+      workerId: selectedUnit.id,
+      x: 2,
+      y: 1,
+    });
+    expect(m.clearHighlight).toHaveBeenCalled();
+
+    // Клетка вне подсветки — обычный выбор, без дороги.
+    buildRoad.mockClear();
+    handleMapCellClick(3, 3, m.ctx);
+    expect(buildRoad).not.toHaveBeenCalled();
+  });
+
   it('второй дальний ПКМ отдаёт приказ и снимает выбор без повторного выбора', () => {
     const selectedUnit = unitAt('worker', 1, 1);
     const m = makeContext({

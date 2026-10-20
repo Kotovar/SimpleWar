@@ -108,6 +108,12 @@ const CellDetails = ({ cell }: { cell: Cell }) => (
           : 'Непроходима'}
       </dd>
     </div>
+    {cell.road && (
+      <div>
+        <dt>Дорога</dt>
+        <dd>Ничья: дешёвый ход для всех</dd>
+      </div>
+    )}
   </>
 );
 

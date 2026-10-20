@@ -1,6 +1,7 @@
 import type { Cell } from '@shared/config';
 import { drawBackgroundAndGrid } from './drawGrid';
 import { drawClearing } from './drawClearing';
+import { drawRoad } from './drawRoad';
 import { sample, type CellRange } from '@shared/lib';
 import { forEachCellIn, getFullRange } from './cellRange';
 import {
@@ -50,5 +51,6 @@ export const renderTerrainLayer = (
     if (cell.type === 'gold') drawGoldOre(ctx, x, y, cellSize);
     if (cell.type === 'hill') drawHill(ctx, x, y, cellSize);
     if (cell.type === 'swamp') drawSwamp(ctx, x, y, cellSize);
+    if (cell.road) drawRoad(ctx, grid, x, y, cellSize);
   });
 };

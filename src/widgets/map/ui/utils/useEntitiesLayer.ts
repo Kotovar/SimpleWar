@@ -204,9 +204,11 @@ export const useEntitiesLayer = ({
               typeof workerId === 'string' &&
               useUnitsStore.getState().units[workerId];
             const plan = createPlan({
-              sounds: [{ sfx: 'clearForest', at: 0 }],
+              sounds: [
+                { sfx: effect.clearing ? 'clearForest' : 'build', at: 0 },
+              ],
             });
-            if (worker) {
+            if (worker && effect.clearing) {
               const dx = effect.x - worker.x;
               const dy = effect.y - worker.y;
               const length = Math.hypot(dx, dy) || 1;

@@ -70,6 +70,8 @@ const useMapMode = (
     };
   } else if (highlight.clearableCells) {
     mapMode = { kind: 'clear', cells: highlight.clearableCells.length };
+  } else if (highlight.roadCells) {
+    mapMode = { kind: 'road', cells: highlight.roadCells.length };
   } else if (highlight.strikeCells) {
     mapMode = { kind: 'strike', cells: highlight.strikeCells.length };
   } else if (planned && planned.unitId === selectedUnitId) {
@@ -150,6 +152,7 @@ export const useSelectionActions = () => {
       building: modeBuilding,
       unit: modeUnit,
       clearing: !!highlight.clearableCells,
+      road: !!highlight.roadCells,
       striking: !!highlight.strikeCells,
       rally,
     },

@@ -86,6 +86,8 @@ export type SelectionActionInput = {
     building: BuildingType | null;
     unit: UnitType | null;
     clearing: boolean;
+    /** Включён режим дороги. */
+    road?: boolean;
     striking: boolean;
     rally?: boolean;
   };

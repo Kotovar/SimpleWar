@@ -47,6 +47,7 @@ const cancelStep = (humanId: Owner | null) => {
     !!highlight.buildableCells ||
     !!highlight.spawnableCells ||
     !!highlight.clearableCells ||
+    !!highlight.roadCells ||
     !!highlight.strikeCells ||
     // Отметка другого юнита невидима и не считается режимом выбранного.
     (selection?.kind === 'unit' &&

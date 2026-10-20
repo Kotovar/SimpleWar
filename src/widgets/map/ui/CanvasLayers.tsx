@@ -217,10 +217,11 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   ]);
 
   const clearableCells = useHighlightStore(state => state.clearableCells);
+  const roadCells = useHighlightStore(state => state.roadCells);
   // Какой приказ даст клик под курсором: путь к нему виден до клика.
-  // Прицел и расчистка не ведут юнит: пути нет.
+  // Прицел, расчистка и дорога не ведут юнит: пути нет.
   const hoverOrder = useMemo((): UnitOrder | false | null => {
-    if (strikeCells || clearableCells) return false;
+    if (strikeCells || clearableCells || roadCells) return false;
     if (ghost) {
       return ghost.valid
         ? { type: 'build', buildingType: ghost.type, x: ghost.x, y: ghost.y }
@@ -240,6 +241,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     clearableCells,
     ghost,
     hover,
+    roadCells,
     humanId,
     selection,
     strikeCells,

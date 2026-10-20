@@ -11,6 +11,8 @@ interface HighlightState {
   buildableCells: Position[] | null;
   /** Клетки леса для расчистки; не `null` — включён режим расчистки. */
   clearableCells: Position[] | null;
+  /** Клетки для дороги; не `null` — включён режим дороги. */
+  roadCells: Position[] | null;
   /** Клетки для подготовленного удара осады; не `null` — режим прицела. */
   strikeCells: Position[] | null;
 
@@ -18,6 +20,7 @@ interface HighlightState {
   /** Клетки, где можно заложить здание; не `null` — режим выбора места. */
   setBuildableCells: (cells: Position[] | null) => void;
   setClearableCells: (cells: Position[] | null) => void;
+  setRoadCells: (cells: Position[] | null) => void;
   setStrikeCells: (cells: Position[] | null) => void;
 
   resetStore: () => void;
@@ -28,6 +31,7 @@ export const useHighlightStore = create<HighlightState>()(
     spawnableCells: null,
     buildableCells: null,
     clearableCells: null,
+    roadCells: null,
     strikeCells: null,
 
     calculateSpawnableCells: (buildingId, cellType) => {
@@ -54,6 +58,11 @@ export const useHighlightStore = create<HighlightState>()(
         state.clearableCells = cells;
       }),
 
+    setRoadCells: cells =>
+      set(state => {
+        state.roadCells = cells;
+      }),
+
     setStrikeCells: cells =>
       set(state => {
         state.strikeCells = cells;
@@ -64,6 +73,7 @@ export const useHighlightStore = create<HighlightState>()(
         state.spawnableCells = null;
         state.buildableCells = null;
         state.clearableCells = null;
+        state.roadCells = null;
         state.strikeCells = null;
       });
     },

@@ -19,6 +19,7 @@ export type MapMode =
   | { kind: 'build'; type: BuildingType; cells: number }
   | { kind: 'spawn'; type: UnitType; cells: number }
   | { kind: 'clear'; cells: number }
+  | { kind: 'road'; cells: number }
   | { kind: 'strike'; cells: number }
   /** Далёкая цель отмечена первым кликом. */
   | { kind: 'goto' }
@@ -47,6 +48,10 @@ export const getModePrompt = (mode: MapMode) => {
       return mode.cells
         ? 'Кликните по подсвеченному лесу: клетка станет равниной.'
         : 'Рядом нет видимого свободного леса.';
+    case 'road':
+      return mode.cells
+        ? 'Кликните по подсвеченной клетке: там появится дорога.'
+        : 'Рядом нет видимой свободной клетки поля, холма или болота без дороги.';
     case 'strike':
       return mode.cells
         ? `Кликните по клетке в ${SIEGE_STRIKE.minRange}–${SIEGE_STRIKE.maxRange} клетках: удар — в начале вашего следующего хода.`

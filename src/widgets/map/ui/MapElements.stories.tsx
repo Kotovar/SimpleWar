@@ -505,3 +505,43 @@ export const FogOfWar: Story = {
     <Scene columns={8} rows={5} cellSize={cellSize} draw={drawFog} />
   ),
 };
+
+/**
+ * Дороги: `=` — дорога на поле, `h`/`~` — на холме и болоте. Видны
+ * прямая, углы, развилка, перекрёсток, тупик и одиночная площадка.
+ */
+const ROAD_MAP = [
+  '.=====.=.',
+  '.=...=.=.',
+  '.=.=====.',
+  '.=...=...',
+  '.hh~~=..=',
+];
+
+const ROAD_GRID: Cell[][] = ROAD_MAP.map((row, y) =>
+  row.split('').map((char, x): Cell => {
+    const type: CellType =
+      char === 'h' ? 'hill' : char === '~' ? 'swamp' : 'grass';
+    return {
+      x,
+      y,
+      type,
+      isWalkable: true,
+      ...(char !== '.' && { road: true as const }),
+    };
+  }),
+);
+
+export const Roads: Story = {
+  name: 'Дороги',
+  render: ({ cellSize }) => (
+    <Scene
+      columns={ROAD_MAP[0].length}
+      rows={ROAD_MAP.length}
+      cellSize={cellSize}
+      draw={(ctx, size) =>
+        renderTerrainLayer(ctx, ROAD_GRID, size, ROAD_MAP[0].length)
+      }
+    />
+  ),
+};

@@ -14,6 +14,7 @@ const PATHS: Record<ActionId | `research:${ResearchType}`, string> = {
   shelter: 'M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-5h4v5',
   clearForest:
     'M4 21 14.5 10.5M12 8c2-3 6-4 9-2-1 3-3 5-6 6.5zM8 3l2 4-4 2-2-4z',
+  buildRoad: 'M8 3 4 21M16 3l4 18M12 4v3M12 10.5v3M12 17v3',
   repair:
     'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z',
   prepareStrike:

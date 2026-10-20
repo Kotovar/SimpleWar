@@ -82,4 +82,18 @@ describe('dirtyTiles', () => {
 
     expect([...tiles]).toEqual([5]);
   });
+
+  it('новая дорога метит свой тайл: стыки рисуются заново', () => {
+    const grid = map(24, 16);
+    const next = grid.map(row => row.map(cell => ({ ...cell })));
+    next[4][12] = { ...next[4][12], road: true };
+
+    const { tiles } = dirtyTiles(
+      { range, grid, builtCells: new Set() },
+      next,
+      new Set(),
+    );
+
+    expect([...tiles]).toEqual([1]);
+  });
 });

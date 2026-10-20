@@ -102,6 +102,16 @@ const clickWithOwnUnit = (
     return;
   }
 
+  if (
+    unit.role === 'civil' &&
+    commands.buildRoad &&
+    isHighlighted(highlights.road ?? null, x, y)
+  ) {
+    commands.buildRoad({ actor, workerId: unit.id, x, y });
+    resetInteraction(ctx);
+    return;
+  }
+
   if (isPlacing(unit, ctx)) {
     placeBuilding(unit, x, y, ctx);
     return;

@@ -25,6 +25,7 @@ import { setUnitRest } from '@features/game-loop';
 import {
   assignWorker,
   getClearableCells,
+  getRoadCells,
   repair,
   unassignWorker,
 } from '@features/workers';
@@ -173,6 +174,15 @@ export const runSelectionAction = (
         useHighlightStore
           .getState()
           .setClearableCells(getClearableCells(actor, unit));
+      }
+      return;
+    }
+    case 'buildRoad': {
+      if (!unit) return;
+      const wasOn = !!input.mode.road;
+      resetModes(wasOn ? unit.id : undefined);
+      if (!wasOn) {
+        useHighlightStore.getState().setRoadCells(getRoadCells(actor, unit));
       }
       return;
     }
