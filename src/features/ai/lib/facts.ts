@@ -5,6 +5,7 @@ import {
   type CivilUnit,
   type Cost,
   type Position,
+  type UnitType,
 } from '@shared/config';
 import { findServingWorker } from '@shared/lib';
 import type { AiContext, EnemyView } from './context';
@@ -133,11 +134,52 @@ export const desiredArmy = (ctx: AiContext) => {
   return Math.min(max, base + Math.floor(ctx.obs.turn / every));
 };
 
-/** Кого нанять следующим: лучника при мечниках ≥ 2 × лучники + 1. */
-export const nextRecruit = (ctx: AiContext): 'swordsman' | 'archer' => {
-  const swords = ctx.military.filter(({ type }) => type === 'swordsman');
-  const archers = ctx.military.filter(({ type }) => type === 'archer').length;
-  return swords.length >= archers * 2 + 1 ? 'archer' : 'swordsman';
+/**
+ * Целевые доли состава при обычном найме: мечники — основа, лучники —
+ * вторые, роли других зданий — понемногу. Копейщик без конницы врага
+ * слаб — в обычном найме он редок; против конницы его добавляет N03, как
+ * и разведчика, осаду и прочие контрмеры по составу врага.
+ */
+const RECRUIT_SHARE = {
+  swordsman: 4,
+  archer: 2,
+  spearman: 0.25,
+  rider: 1,
+  knight: 1,
+  horseArcher: 1,
+  mage: 1,
+  healer: 0.5,
+  griffon: 1,
+} satisfies Partial<Record<UnitType, number>>;
+
+type Recruit = keyof typeof RECRUIT_SHARE;
+
+/**
+ * Кого нанять следующим: тип, сильнее всех отстающий от своей доли, из
+ * тех, кого свои здания могут нанять уже в этом ходу (очко найма и
+ * население; деньги — нет: на них ИИ копит); без таких — мечник или
+ * лучник. Отставание считается с учётом найма: иначе при нуле юнитов
+ * редкий копейщик шёл бы третьим. При равенстве — мечник: он первый.
+ */
+export const nextRecruit = (ctx: AiContext): Recruit => {
+  const { occupied, max } = ctx.obs.population;
+  const hired = new Set(
+    ctx.obs.ownBuildings.flatMap(b =>
+      b.role === 'production' && b.spawnPoints > 0 ? b.spawningUnits : [],
+    ),
+  );
+  const fits = (type: UnitType) =>
+    occupied + UNITS_CONFIG[type].requiresLimit <= max;
+  const ready = (Object.keys(RECRUIT_SHARE) as Recruit[]).filter(
+    type => hired.has(type) && fits(type),
+  );
+  const options: Recruit[] = ready.length ? ready : ['swordsman', 'archer'];
+  // Сдвиг на половину найма (как в методе Сент-Лагю): при нуле всех
+  // типов редкая роль не идёт вперёд.
+  const lag = (type: Recruit) =>
+    (ctx.military.filter(unit => unit.type === type).length + 0.5) /
+    RECRUIT_SHARE[type];
+  return options.reduce((best, type) => (lag(type) < lag(best) ? type : best));
 };
 
 /** Ближайшие траты стратегии: что ИИ хочет купить в первую очередь. */

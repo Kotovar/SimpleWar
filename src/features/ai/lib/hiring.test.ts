@@ -15,7 +15,8 @@ describe('savingGoals: здание найма для роли', () => {
       map,
       units: [own('worker', 1, 1), own('worker', 2, 1), ...army(4)],
       buildings: [ownBuilding('base', 5, 5), ownBuilding('barracks', 8, 8)],
-      enemies: [foe('base', 11, 0)],
+      // Стрелки врага видны: грифон не в приоритете, первой идёт осада.
+      enemies: [foe('base', 11, 0), foe('archer', 11, 3), foe('archer', 11, 4)],
     });
 
     expect(savingGoals(ctx).map(({ key }) => key)).toContain('workshop');
@@ -42,6 +43,21 @@ describe('savingGoals: здание найма для роли', () => {
       gold: 300,
       wood: 150,
     });
+  });
+});
+
+describe('savingGoals при срочной обороне', () => {
+  it('не копит на здание найма: резерв не держит найм защитников', () => {
+    const { ctx } = scene({
+      map,
+      units: [own('worker', 1, 1), own('worker', 2, 1), ...army(4)],
+      buildings: [ownBuilding('base', 5, 5), ownBuilding('barracks', 8, 8)],
+      // База врага известна: нужна осада, мастерской нет.
+      enemies: [foe('base', 11, 0), foe('archer', 11, 3), foe('archer', 11, 4)],
+      memory: { strategy: 'G01' },
+    });
+
+    expect(savingGoals(ctx).map(({ key }) => key)).not.toContain('workshop');
   });
 });
 

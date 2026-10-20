@@ -74,7 +74,9 @@ export const A04: AiRule = {
     if ((phase !== 'advance' && phase !== 'engage') || !target) return [];
     const group = strikeGroup(ctx);
     const members = new Set(group.map(({ id }) => id));
-    const cover = group.filter(({ type }) => type === 'swordsman');
+    const cover = group.filter(
+      ({ type }) => type === 'swordsman' || type === 'knight',
+    );
     return archers(ctx)
       .filter(unit => members.has(unit.id) && unit.movePoints > 0)
       .flatMap((unit): Candidate[] => {

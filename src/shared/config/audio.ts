@@ -323,6 +323,7 @@ export const getSfxFiles = (sfx: Sfx, count = SFX_VARIANTS[sfx] ?? 0) =>
 /** Звук удара по типу атакующего; остальные — по типу урона. */
 export const ATTACK_SFX: Partial<Record<UnitType | BuildingType, Sfx>> = {
   archer: 'shot',
+  horseArcher: 'shot',
   tower: 'shot',
   griffon: 'griffonAttack',
 };
@@ -332,6 +333,8 @@ export const MOVE_SFX: Partial<Record<UnitType | BuildingType, Sfx>> = {
   griffon: 'griffonFlight',
   siege: 'siegeMove',
   rider: 'riderMove',
+  knight: 'riderMove',
+  horseArcher: 'riderMove',
 };
 
 /** Звук гибели по типу юнита; остальные — `death`. */

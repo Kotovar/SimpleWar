@@ -1,4 +1,5 @@
 import {
+  ARMOR,
   FORMATION_ARMOR,
   HITS_AIR,
   type BuildingType,
@@ -6,7 +7,11 @@ import {
   type Unit,
   type UnitType,
 } from '@shared/config';
-import { hasFormationNeighbor, isFlyingType } from '@shared/lib';
+import {
+  getTargetCategory,
+  hasFormationNeighbor,
+  isFlyingType,
+} from '@shared/lib';
 import type { AiContext } from './context';
 import { basesKnown, enemyTarget, ofRival } from './facts';
 import { effectiveness, powerOf } from './stats';
@@ -90,17 +95,79 @@ export const roleWishes = (ctx: AiContext): RoleWish[] => {
     ctx.military.filter(unit => unit.type === type).length;
   const army = ctx.military.length;
   const flyers = foes.filter(({ type }) => isFlyingType(type)).length;
-  const antiAir = [...ctx.enemies, ...ctx.remembered].some(
+  const cavalry = foes.filter(
+    ({ type }) => getTargetCategory(type) === 'cavalry',
+  ).length;
+  // Кто у врага бьёт воздух с земли: стрелки, маги, башни.
+  const antiAir = [...ctx.enemies, ...ctx.remembered].filter(
     ({ type }) => HITS_AIR.includes(type) && type !== 'griffon',
-  );
+  ).length;
+  // Доля армии под роль: потолок держит состав смешанным.
+  const share = (per: number) => Math.floor(army / per);
+  const armored = foes.filter(({ type }) => (ARMOR[type] ?? 0) > 0).length;
+  const slowFoot = seen('swordsman') + seen('spearman');
+  // Армия врага разведана: без этого «нет зенитчиков» — просто незнание.
+  const scouted = foes.filter(({ armed }) => armed).length >= 2;
+  const soft = foes.filter(({ type }) =>
+    ['ranged', 'siege'].includes(getTargetCategory(type)),
+  ).length;
   const wishes: [boolean, UnitType, BuildingType, string][] = [
+    // Копейщик — ответ на конницу: один на двух конных врага.
     [
-      seen('rider') > own('spearman'),
+      own('spearman') < Math.ceil(cavalry / 2),
       'spearman',
       'barracks',
       'у врага конница',
     ],
+    // Воздух без зенитчиков врага — в приоритете: грифон бьёт безнаказанно.
+    [
+      antiAir <= 1 &&
+        scouted &&
+        army >= 4 &&
+        own('griffon') < (antiAir === 0 ? 1 + share(5) : 1),
+      'griffon',
+      'sanctuary',
+      antiAir === 0
+        ? 'у врага нет защиты от воздуха'
+        : 'у врага мало защиты от воздуха',
+    ],
     [flyers > own('mage'), 'mage', 'sanctuary', 'у врага летающие'],
+    // Магия проходит сквозь броню копейщиков, конницы и грифонов.
+    [
+      armored >= 2 && army >= 3 && own('mage') < 1 + share(6),
+      'mage',
+      'sanctuary',
+      'у врага броня',
+    ],
+    [
+      flyers > own('mage') + own('horseArcher'),
+      'horseArcher',
+      'stable',
+      'у врага летающие',
+    ],
+    // Латник ломает пехоту, но копейщики врага его встречают с бонусом.
+    [
+      seen('swordsman') >= 2 &&
+        seen('spearman') < seen('swordsman') &&
+        army >= 3 &&
+        own('knight') < Math.ceil(army / 4),
+      'knight',
+      'stable',
+      'у врага мечники без копейщиков',
+    ],
+    [
+      army >= 6 && seen('spearman') < 2 && own('knight') < share(6),
+      'knight',
+      'stable',
+      'ударной группе нужен таран',
+    ],
+    // Медленную пехоту конный лучник обстреливает, не подпуская вплотную.
+    [
+      slowFoot >= 3 && army >= 4 && own('horseArcher') < Math.max(1, share(5)),
+      'horseArcher',
+      'stable',
+      'против медленной пехоты',
+    ],
     [own('scout') === 0 && !basesKnown(ctx), 'scout', 'base', 'нужна разведка'],
     [
       !!enemyTarget(ctx) && army >= 4 && own('siege') < Math.floor(army / 4),
@@ -121,10 +188,10 @@ export const roleWishes = (ctx: AiContext): RoleWish[] => {
       'видна экономика врага',
     ],
     [
-      !antiAir && army >= 5 && own('griffon') === 0,
-      'griffon',
-      'sanctuary',
-      'у врага нет защиты от воздуха',
+      soft >= 2 && own('rider') < 2 && army >= 3,
+      'rider',
+      'stable',
+      'у врага стрелки и осада',
     ],
   ];
   return wishes

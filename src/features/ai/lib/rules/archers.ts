@@ -19,7 +19,11 @@ import {
 
 /** Лучники, ещё действующие в этом ходу. */
 export const archers = (ctx: AiContext) =>
-  ctx.military.filter(unit => unit.type === 'archer' && isFree(ctx, unit.id));
+  ctx.military.filter(
+    unit =>
+      (unit.type === 'archer' || unit.type === 'horseArcher') &&
+      isFree(ctx, unit.id),
+  );
 
 /** Предпочтение целей лучника: опасный стрелок > пехота > безоружные. */
 const preference = (enemy: EnemyView) =>

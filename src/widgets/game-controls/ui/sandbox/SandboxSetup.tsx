@@ -94,6 +94,14 @@ export const SandboxSetup = () => {
     setScenario({ ...scenario, sides });
     fitMapTo(count);
   };
+  // Состав ИИ с нуля: юниты и здания обнуляются, запасы остаются.
+  const clearAi = () =>
+    setScenario({
+      ...scenario,
+      sides: scenario.sides.map(side =>
+        side.controller === 'ai' ? { ...side, units: {}, buildings: {} } : side,
+      ),
+    });
 
   return (
     <div className={styles.Setup}>
@@ -122,6 +130,9 @@ export const SandboxSetup = () => {
       >
         Пустое поле без рельефа
       </Checkbox>
+      <button type='button' className={styles.Secondary} onClick={clearAi}>
+        Обнулить юниты и здания ИИ
+      </button>
 
       <div
         className={styles.Categories}

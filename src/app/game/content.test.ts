@@ -22,8 +22,8 @@ const NEW_UNITS: UnitType[] = [
 ];
 
 describe('состав S14–S14b', () => {
-  it('10 юнитов и 10 зданий в конфигурации — состав MVP', () => {
-    expect(Object.keys(UNITS_CONFIG)).toHaveLength(10);
+  it('12 юнитов и 10 зданий: состав MVP и конница P06', () => {
+    expect(Object.keys(UNITS_CONFIG)).toHaveLength(12);
     // Частокол Инженерии (S16) — укрепление, а не одно из 10 зданий.
     const buildings = Object.keys(BUILDINGS_CONFIG).filter(
       type => type !== 'palisade',
@@ -44,6 +44,8 @@ describe('состав S14–S14b', () => {
       archer: 'barracks',
       spearman: 'barracks',
       rider: 'stable',
+      knight: 'stable',
+      horseArcher: 'stable',
       siege: 'workshop',
       mage: 'sanctuary',
       healer: 'sanctuary',

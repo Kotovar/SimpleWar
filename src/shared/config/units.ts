@@ -10,6 +10,8 @@ export type MilitaryType =
   | 'scout'
   | 'spearman'
   | 'rider'
+  | 'knight'
+  | 'horseArcher'
   | 'siege'
   | 'mage'
   | 'healer'
@@ -167,6 +169,34 @@ export const MILITARY_UNITS_CONFIG: Record<
     maxAttackPoints: 1,
     requiresLimit: 3,
     cost: { gold: 240, wood: 60 },
+    preparedStrike: null,
+  },
+  // Тяжёлая конница: медленнее всадника, ломает пехоту, но не копейщиков.
+  knight: {
+    maxHp: 170,
+    sightRange: 3,
+    attack: 30,
+    movePoints: 0,
+    maxMovePoints: 4,
+    attackPoints: 0,
+    attackRange: 1,
+    maxAttackPoints: 1,
+    requiresLimit: 4,
+    cost: { gold: 330, wood: 80 },
+    preparedStrike: null,
+  },
+  // Быстрый стрелок: бьёт и воздух, но хрупок и уступает лучнику в дальности.
+  horseArcher: {
+    maxHp: 70,
+    sightRange: 4,
+    attack: 22,
+    movePoints: 0,
+    maxMovePoints: 5,
+    attackPoints: 0,
+    attackRange: 2,
+    maxAttackPoints: 1,
+    requiresLimit: 3,
+    cost: { gold: 260, wood: 120 },
     preparedStrike: null,
   },
   /**

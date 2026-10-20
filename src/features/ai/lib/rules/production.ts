@@ -52,8 +52,11 @@ const spawnCell = (ctx: AiContext, building: Building, toward?: Position) => {
   )[0];
 };
 
-/** Сколько ходов копить на лучника, прежде чем взять мечника. */
-const WAIT_TURNS = 4;
+/**
+ * Сколько ходов копить на выбранную роль, прежде чем взять мечника:
+ * конница, маг и грифон дороги, при коротком ожидании их вытесняют мечники.
+ */
+const WAIT_TURNS = 7;
 
 /** Через сколько ходов хватит свободного бюджета при текущем доходе. */
 const turnsToAfford = (ctx: AiContext, cost: Cost) =>
@@ -65,21 +68,32 @@ const turnsToAfford = (ctx: AiContext, cost: Cost) =>
     }),
   );
 
-export const canHire = (
+/** Здание может нанять тип в этом ходу, если хватит денег. */
+const canHireLater = (
   ctx: AiContext,
   building: ProductionBuilding,
   type: UnitType,
 ) => {
-  const { cost, requiresLimit } = UNITS_CONFIG[type];
   const { occupied, max } = ctx.obs.population;
   return (
     isFree(ctx, building.id) &&
     building.spawnPoints > 0 &&
     building.spawningUnits.includes(type) &&
-    occupied + requiresLimit <= max &&
-    affordable(ctx, cost, type === 'worker' ? 'worker' : 'army')
+    occupied + UNITS_CONFIG[type].requiresLimit <= max
   );
 };
+
+export const canHire = (
+  ctx: AiContext,
+  building: ProductionBuilding,
+  type: UnitType,
+) =>
+  canHireLater(ctx, building, type) &&
+  affordable(
+    ctx,
+    UNITS_CONFIG[type].cost,
+    type === 'worker' ? 'worker' : 'army',
+  );
 
 export const hire = (
   ctx: AiContext,
@@ -141,10 +155,10 @@ export const N01: AiRule = {
 };
 
 /**
- * N02 (G04): армии меньше нужного — нанять в казармах. Состав задаёт
- * `nextRecruit`: пока копятся ресурсы на лучника, мечник вместо него не
- * покупается — иначе золото уходит на мечников и лучников нет. При срочной
- * обороне берётся любой доступный.
+ * N02 (G04): армии меньше нужного — нанять в своих зданиях найма. Состав
+ * задаёт `nextRecruit` по долям ролей: пока копятся ресурсы на нужную роль,
+ * мечник вместо неё не покупается — иначе золото уходит на мечников. При
+ * срочной обороне — мечник, затем лучник, затем выбранный тип (не лекарь).
  */
 export const N02: AiRule = {
   id: 'N02',
@@ -154,21 +168,30 @@ export const N02: AiRule = {
     const lack = desiredArmy(ctx) - ctx.military.length;
     const urgent = ctx.memory.strategy === 'G01';
     if (lack <= 0 && !urgent) return [];
-    // Нужная роль с готовым зданием найма пока не по карману, но скоро
-    // накопится — не тратить бюджет на мечника (её наймёт N03).
+    // Нужная роль, которую здание может нанять, пока не по карману, но
+    // скоро накопится — не тратить бюджет на мечника (её наймёт N03).
+    // Без очка найма или населения ждать её незачем.
     const role = roleWishes(ctx).find(wish =>
-      ctx.obs.ownBuildings.some(({ type }) => type === wish.producer),
+      producers(ctx).some(b => canHireLater(ctx, b, wish.type)),
     );
     const wait = role ? turnsToAfford(ctx, UNITS_CONFIG[role.type].cost) : 0;
     if (!urgent && wait > 0 && wait <= WAIT_TURNS) return [];
     const preferred = nextRecruit(ctx);
-    // Лучника ждём, только если он накопится за несколько ходов.
+    // Дорогую роль ждём, только если она накопится за несколько ходов.
     const wanted =
       turnsToAfford(ctx, UNITS_CONFIG[preferred].cost) <= WAIT_TURNS
         ? preferred
         : 'swordsman';
+    // При срочной обороне — сначала боевое подкрепление: последние деньги
+    // не уходят на лекаря, пока доступен мечник.
     const order: UnitType[] = urgent
-      ? [wanted, wanted === 'archer' ? 'swordsman' : 'archer']
+      ? [
+          ...new Set<UnitType>([
+            'swordsman',
+            'archer',
+            ...(wanted === 'healer' ? [] : [wanted]),
+          ]),
+        ]
       : [wanted];
     for (const building of producers(ctx)) {
       const type = order.find(t => canHire(ctx, building, t));

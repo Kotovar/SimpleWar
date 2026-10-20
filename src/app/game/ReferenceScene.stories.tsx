@@ -139,6 +139,8 @@ const setupScene = () => {
     unit('healer', 6, 6, 'p1'),
     unit('swordsman', 10, 4, 'p2', { hp: 35 }),
     unit('rider', 11, 6, 'p2'),
+    unit('knight', 10, 5, 'p2'),
+    unit('horseArcher', 8, 6, 'p1'),
     unit('archer', 12, 3, 'p2'),
   ];
   // Разведчик открыл заставу и ушёл: она остаётся в памяти под туманом.

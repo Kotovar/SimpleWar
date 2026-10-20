@@ -33,6 +33,8 @@ export const UNIT_CATEGORY = {
   scout: 'infantry',
   archer: 'ranged',
   rider: 'cavalry',
+  knight: 'cavalry',
+  horseArcher: 'cavalry',
   siege: 'siege',
   mage: 'ranged',
   healer: 'ranged',
@@ -53,6 +55,7 @@ export const DAMAGE_TYPE: Partial<Record<UnitType | BuildingType, DamageType>> =
 export const ARMOR: Partial<Record<UnitType | BuildingType, number>> = {
   spearman: 2,
   rider: 1,
+  knight: 3,
   griffon: 1,
 };
 
@@ -84,10 +87,11 @@ export const FLYING_UNITS: readonly UnitType[] = ['griffon'];
 
 /**
  * Кто может атаковать воздушные цели (S14b). Мечник, копейщик, всадник,
- * разведчик и осада воздух не бьют.
+ * латник, разведчик и осада воздух не бьют.
  */
 export const HITS_AIR: readonly (UnitType | BuildingType)[] = [
   'archer',
+  'horseArcher',
   'tower',
   'mage',
   'griffon',
@@ -105,6 +109,8 @@ export const DAMAGE_BONUS: Partial<
   swordsman: { building: 28 },
   spearman: { cavalry: 20 },
   rider: { ranged: 10, civil: 10 },
+  knight: { infantry: 12 },
+  horseArcher: { civil: 8 },
   siege: { building: 108 },
   archer: { flying: 6, building: 10 },
   griffon: { building: 17 },

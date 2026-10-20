@@ -512,7 +512,7 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
       <p>Стреляет сама: урон 20, дальность 3, раз в ход. Бьёт и наземные, и воздушные цели.</p></article>
     <article class="card"><img src="assets/screenshots/portraits/stable.png" alt="" width="56" height="56"><div><div class="role">найм · на равнине</div><h3>Конюшня</h3></div>
       <dl><dt>HP</dt><dt>Цена</dt><dt>Обзор</dt><dd>160</dd><dd>120 з · 160 д</dd><dd>3</dd></dl>
-      <p>Всадник.</p></article>
+      <p>Всадник, латник, конный лучник.</p></article>
     <article class="card"><img src="assets/screenshots/portraits/workshop.png" alt="" width="56" height="56"><div><div class="role">найм · на равнине</div><h3>Мастерская</h3></div>
       <dl><dt>HP</dt><dt>Цена</dt><dt>Обзор</dt><dd>150</dd><dd>140 з · 180 д</dd><dd>3</dd></dl>
       <p>Осадная машина.</p></article>
@@ -554,7 +554,7 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   </div>
   <figure class="shot" style="margin-top:16px">
     <button type="button"><img src="assets/screenshots/base-overview.png" alt="База синих со всеми зданиями и всеми юнитами" width="1600" height="900"></button>
-    <figcaption><span class="src debug">Игра · отладка, пример</span> Все 11 типов зданий, включая частокол, и все 10 типов юнитов на одной базе. Точки рядом с юнитами показывают оставшиеся очки движения и действия. Выбрана ратуша: её карточка — внизу слева, кнопки найма — в нижней панели.</figcaption>
+    <figcaption><span class="src debug">Игра · отладка, пример</span> Все 11 типов зданий, включая частокол, и юниты на одной базе. Точки рядом с юнитами показывают оставшиеся очки движения и действия. Выбрана ратуша: её карточка — внизу слева, кнопки найма — в нижней панели.</figcaption>
   </figure>
 </section>
 
@@ -589,6 +589,12 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
     <article class="card" data-b="stable"><img src="assets/screenshots/portraits/rider.png" alt="" width="56" height="56"><div><div class="role">рейды · конница</div><h3>Всадник</h3></div>
       <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>120</dd><dd>5</dd><dd>4</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>30 · 1</dd><dd>3</dd><dd>240 / 60</dd></dl>
       <p>Броня 1, +10 против стрелков и рабочих.</p></article>
+    <article class="card" data-b="stable"><img src="assets/screenshots/portraits/knight.png" alt="" width="56" height="56"><div><div class="role">таран · конница</div><h3>Латник</h3></div>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>170</dd><dd>4</dd><dd>3</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>30 · 1</dd><dd>4</dd><dd>330 / 80</dd></dl>
+      <p>Броня 3, +12 против пехоты. Копейщик всё равно бьёт его с бонусом, маг — сквозь броню. Не может атаковать воздушные цели.</p></article>
+    <article class="card" data-b="stable" data-air><img src="assets/screenshots/portraits/horseArcher.png" alt="" width="56" height="56"><div><div class="role">дальний бой · конница</div><h3>Конный лучник</h3></div>
+      <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>70</dd><dd>5</dd><dd>4</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>22 · 2</dd><dd>3</dd><dd>260 / 120</dd></dl>
+      <p>Стреляет на 2 клетки, бьёт и воздушные цели, +8 против рабочих. Хрупок; лучник перестреливает его, копейщик ловит как конницу.</p></article>
     <article class="card" data-b="workshop"><img src="assets/screenshots/portraits/siege.png" alt="" width="56" height="56"><div><div class="role">осада</div><h3>Осадная машина</h3></div>
       <dl><dt>HP</dt><dt>Ход</dt><dt>Обзор</dt><dd>70</dd><dd>2</dd><dd>2</dd><dt>Атака</dt><dt>Место</dt><dt>Цена</dt><dd>12 · 2–5</dd><dd>3</dd><dd>300 / 150</dd></dl>
       <p>Атакует только подготовленным ударом по клетке. Бонус урона против зданий — +108.</p></article>
@@ -613,6 +619,8 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
         <tr><td>Лучник</td><td>Казармы</td><td class="num">55</td><td class="num">3</td><td class="num">4</td><td class="num">30</td><td class="num">3</td><td class="num">2</td><td class="num">220 / 120</td><td>стрелки</td><td>+6 летающие; +10 здания</td></tr>
         <tr><td>Копейщик</td><td>Казармы</td><td class="num">100</td><td class="num">3</td><td class="num">3</td><td class="num">22</td><td class="num">1</td><td class="num">2</td><td class="num">140 / 40</td><td>пехота</td><td>броня 2; +20 конница</td></tr>
         <tr><td>Всадник</td><td>Конюшня</td><td class="num">120</td><td class="num">5</td><td class="num">4</td><td class="num">30</td><td class="num">1</td><td class="num">3</td><td class="num">240 / 60</td><td>конница</td><td>броня 1; +10 стрелки и рабочие</td></tr>
+        <tr><td>Латник</td><td>Конюшня</td><td class="num">170</td><td class="num">4</td><td class="num">3</td><td class="num">30</td><td class="num">1</td><td class="num">4</td><td class="num">330 / 80</td><td>конница</td><td>броня 3; +12 пехота</td></tr>
+        <tr><td>Конный лучник</td><td>Конюшня</td><td class="num">70</td><td class="num">5</td><td class="num">4</td><td class="num">22</td><td class="num">2</td><td class="num">3</td><td class="num">260 / 120</td><td>конница</td><td>+8 рабочие</td></tr>
         <tr><td>Осадная машина</td><td>Мастерская</td><td class="num">70</td><td class="num">2</td><td class="num">2</td><td class="num">12</td><td class="num">2–5</td><td class="num">3</td><td class="num">300 / 150</td><td>осада</td><td>+108 здания</td></tr>
         <tr><td>Маг</td><td>Святилище</td><td class="num">50</td><td class="num">3</td><td class="num">3</td><td class="num">28 маг.</td><td class="num">3</td><td class="num">2</td><td class="num">240 / 80</td><td>стрелки</td><td>маг. защита 4</td></tr>
         <tr><td>Лекарь</td><td>Святилище</td><td class="num">45</td><td class="num">3</td><td class="num">3</td><td class="num">+12 HP</td><td class="num">2</td><td class="num">2</td><td class="num">180 / 60</td><td>стрелки</td><td>маг. защита 4</td></tr>
@@ -898,6 +906,7 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
         <li>Число юнитов каждого типа (до 20), зданий (до 5, кроме ратуши) и стартовые запасы.</li>
         <li>Сторон от двух до четырёх — каждая сама за себя; для трёх и четырёх нужна карта от 30 × 30.</li>
         <li>Можно взять пустое поле без рельефа.</li>
+        <li>Кнопка «Обнулить юниты и здания ИИ» очищает состав всех сторон ИИ (запасы остаются), чтобы собрать его с нуля.</li>
         <li>Юниты и здания размещаются рядом со своей ратушей; то, что не поместилось, перечисляется в панели.</li>
         <li>Во время партии доступны отметка «Тест», кнопки «Пауза» и «Быстро» (задержка перед ходом ИИ — 30 мс вместо 0,6 с), а также итог в формате JSON с данными о победителе, числе ходов, потерях и полученном уроне по типам.</li>
       </ul>
@@ -936,7 +945,7 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
         <li><b>Туман войны</b> с плавными границами и памятью о местности, зданиях и врагах.</li>
         <li><b>Приказы</b>: движение в точку, авторазведка, стройка и работа по прибытии, прокладка дороги, точки сбора, пропуск хода и сон.</li>
         <li><b>Экономика</b>: добыча рабочими, ремонт, снос, расчистка леса, дороги, население.</li>
-        <li><b>10 зданий</b> и <b>10 юнитов</b>, включая магию, лечение и полёт.</li>
+        <li><b>10 зданий</b> и <b>12 юнитов</b>, включая магию, лечение, полёт и три вида конницы.</li>
         <li><b>Бой</b> с бронёй, магической защитой и бонусами против категорий.</li>
         <li><b>Подготовленный удар осады</b> с меткой цели.</li>
         <li><b>Исследования</b>: пять новых правил в кузнице и частокол.</li>
@@ -985,6 +994,8 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
     "archer": {"n": "Лучник", "hp": 55, "atk": 30, "cat": "ranged", "air": 1, "bonus": {"flying": 6, "building": 10}},
     "spearman": {"n": "Копейщик", "hp": 100, "atk": 22, "cat": "infantry", "armor": 2, "bonus": {"cavalry": 20}},
     "rider": {"n": "Всадник", "hp": 120, "atk": 30, "cat": "cavalry", "armor": 1, "bonus": {"ranged": 10, "civil": 10}},
+    "knight": {"n": "Латник", "hp": 170, "atk": 30, "cat": "cavalry", "armor": 3, "bonus": {"infantry": 12}},
+    "horseArcher": {"n": "Конный лучник", "hp": 70, "atk": 22, "cat": "cavalry", "air": 1, "bonus": {"civil": 8}},
     "siege": {"n": "Осадная машина", "hp": 70, "atk": 12, "cat": "siege", "strike": 1, "bonus": {"building": 108}},
     "mage": {"n": "Маг", "hp": 50, "atk": 28, "cat": "ranged", "air": 1, "magic": 1, "mres": 4},
     "healer": {"n": "Лекарь", "hp": 45, "cat": "ranged", "mres": 4, "heal": 1},
@@ -1042,9 +1053,9 @@ dialog button{position:absolute;top:8px;right:8px;background:#000b;color:#fff;bo
   var CAT = {infantry: 'пехота', ranged: 'стрелки', cavalry: 'конница', siege: 'осада', civil: 'рабочие', flying: 'летающие', building: 'здания'};
   var atk = document.getElementById('atk'), tgt = document.getElementById('tgt');
   function add(parent, value, text) { var o = document.createElement('option'); o.value = value; o.textContent = text; parent.appendChild(o); }
-  ['swordsman', 'archer', 'spearman', 'rider', 'scout', 'mage', 'griffon', 'siege', 'healer', 'tower'].forEach(function (k) { add(atk, k, U[k].n); });
+  ['swordsman', 'archer', 'spearman', 'rider', 'knight', 'horseArcher', 'scout', 'mage', 'griffon', 'siege', 'healer', 'tower'].forEach(function (k) { add(atk, k, U[k].n); });
   var gu = document.createElement('optgroup'); gu.label = 'Юниты'; tgt.appendChild(gu);
-  ['worker', 'scout', 'swordsman', 'archer', 'spearman', 'rider', 'siege', 'mage', 'healer', 'griffon'].forEach(function (k) { add(gu, 'u:' + k, U[k].n); });
+  ['worker', 'scout', 'swordsman', 'archer', 'spearman', 'rider', 'knight', 'horseArcher', 'siege', 'mage', 'healer', 'griffon'].forEach(function (k) { add(gu, 'u:' + k, U[k].n); });
   var gb = document.createElement('optgroup'); gb.label = 'Здания'; tgt.appendChild(gb);
   Object.keys(B).forEach(function (k) { add(gb, 'b:' + k, B[k][0]); });
   atk.value = 'spearman'; tgt.value = 'u:rider';

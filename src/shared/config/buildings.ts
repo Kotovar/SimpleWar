@@ -128,7 +128,7 @@ export const PRODUCTION_BUILDINGS_CONFIG: Record<
     sightRange: 3,
     cost: { gold: 120, wood: 160 },
     requiredField: 'grass',
-    spawningUnits: ['rider'],
+    spawningUnits: ['rider', 'knight', 'horseArcher'],
     spawnPoints: 0,
     maxSpawnPoints: 1,
   },

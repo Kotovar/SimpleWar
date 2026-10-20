@@ -139,7 +139,12 @@ export const F03: AiRule = {
   },
 };
 
-/** F04: сильная ПВО рядом — сменить путь или отступить. */
+/**
+ * F04: сильная ПВО рядом — сменить путь или отступить. Здоровый грифон
+ * не бежит от ПВО, которая не убьёт его за ход, если рядом своих бойцов
+ * больше, чем её стрелков: бьёт ближайшего из них слабейшего, иначе
+ * подлетает — иначе стая бросает рейд и гибнет поодиночке.
+ */
 export const F04: AiRule = {
   id: 'F04',
   group: 'defense',
@@ -149,6 +154,32 @@ export const F04: AiRule = {
       const danger = ctx.threatAt(unit, 'griffon');
       const weak = unit.hp <= unit.maxHp * ctx.config.lowHp;
       if (danger < unit.hp / 2 && !(weak && danger > 0)) return [];
+      const shooters = antiAir(ctx, unit);
+      const friends = ctx.military.filter(
+        ally => ally.attack > 0 && manhattan(ally, unit) <= 3,
+      ).length;
+      if (!weak && danger < unit.hp && friends > shooters.length) {
+        const ids = new Set(shooters.map(({ id }) => id));
+        const hit = strikeBest(
+          ctx,
+          'F04',
+          unit,
+          e => -e.hp,
+          88,
+          'бью ПВО вместе с группой',
+          e => ids.has(e.id),
+        );
+        return hit.length
+          ? hit
+          : approachEnemy(
+              ctx,
+              'F04',
+              unit,
+              nearest(unit, shooters)!,
+              70,
+              'иду на ПВО группой',
+            );
+      }
       return retreat(ctx, 'F04', unit, 86, 'сильная ПВО: отступаю');
     }),
 };

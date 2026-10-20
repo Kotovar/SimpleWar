@@ -1,5 +1,6 @@
 import {
   BUILDINGS_CONFIG,
+  COMBAT_BUILDINGS_CONFIG,
   RESEARCH_CONFIG,
   RESEARCH_TYPES,
   UNITS_CONFIG,
@@ -7,6 +8,7 @@ import {
 } from '@shared/config';
 import { roleWishes } from './composition';
 import type { AiContext } from './context';
+import { manhattan } from './geometry';
 import { bestResearch } from './researchValue';
 import {
   baseAlarm,
@@ -54,13 +56,57 @@ const inOpening = (ctx: AiContext, type: 'mine' | 'sawmill') =>
 export const openingPending = (ctx: AiContext) =>
   inOpening(ctx, 'mine') || inOpening(ctx, 'sawmill');
 
+/**
+ * Нужна ли ещё башня: при обороне (G10, G01) или когда вооружённый враг
+ * виден либо запомнен у ратуши (радиус тревоги + 2). Не больше одной плюс
+ * по одной за каждые 40 ходов, до трёх; только при казармах — иначе
+ * башня отнимает стартовую добычу (при угрозе до казарм W07 строит её
+ * отдельно).
+ */
+export const towerWanted = (ctx: AiContext) => {
+  const { base } = ctx;
+  if (!base) return false;
+  const towers = ctx.obs.ownBuildings.filter(b => b.type === 'tower').length;
+  if (towers >= Math.min(3, 1 + Math.floor(ctx.obs.turn / 40))) return false;
+  const defending =
+    ctx.memory.strategy === 'G10' || ctx.memory.strategy === 'G01';
+  return (
+    defending ||
+    [...ctx.enemies, ...ctx.remembered].some(
+      enemy =>
+        enemy.armed &&
+        enemy.kind === 'unit' &&
+        manhattan(enemy, base) <= ctx.config.alertRadius + 2,
+    )
+  );
+};
+
 /** Цель накопления: ключ покупки и её цена. */
 export type SavingGoal = { key: string; cost: Cost };
 
 /**
+ * Здание найма нужной роли, на которое копят раньше кузницы: роль есть,
+ * здания нет, нанять по пожеланиям в готовых зданиях некого, армия от 3.
+ * При стратегии исследований (G12) кузница остаётся первой; при срочной
+ * обороне (G01) резерв на здание не держит найм защитников. W07 строит в
+ * том же порядке, иначе резерв одной цели запрещал бы другую.
+ */
+export const earlyProducer = (ctx: AiContext, roles = roleWishes(ctx)) => {
+  const { strategy } = ctx.memory;
+  if (strategy === 'G12' || strategy === 'G01' || ctx.military.length < 3)
+    return null;
+  const has = (type: string) =>
+    ctx.obs.ownBuildings.some(building => building.type === type);
+  if (!has('barracks')) return null;
+  if (roles.some(wish => has(wish.producer))) return null;
+  return roles.find(wish => !has(wish.producer)) ?? null;
+};
+
+/**
  * Две первые по важности покупки, на которые копит ИИ: рудник → второй
  * рабочий → лесопилка → рабочие до нормы → стартовая добыча → казармы →
- * ферма → ещё рудник/лесопилка → кузница → исследование → здание найма нужной роли → армия. Их цена откладывается от
+ * ферма → ещё рудник/лесопилка → здание найма нужной роли → башня →
+ * кузница → исследование → здание найма → армия. Их цена откладывается от
  * бюджета остальных правил, иначе мелкие траты не дают накопить на добычу.
  */
 export const savingGoals = (ctx: AiContext): SavingGoal[] => {
@@ -76,6 +122,7 @@ export const savingGoals = (ctx: AiContext): SavingGoal[] => {
     has('forge') && !ctx.obs.researching ? bestResearch(ctx) : null;
   // Кузница и исследование не отнимают резерв, пока нет минимальной обороны.
   const defended = ctx.military.length >= 2 && !baseAlarm(ctx).length;
+  const early = earlyProducer(ctx, roles);
   const wishes: [string, boolean, Cost][] = [
     [
       'mine',
@@ -102,6 +149,19 @@ export const savingGoals = (ctx: AiContext): SavingGoal[] => {
     ['farm', max - occupied < 3 && max < 30, BUILDINGS_CONFIG.farm.cost],
     ['mine', expansionWanted(ctx, 'mine'), BUILDINGS_CONFIG.mine.cost],
     ['sawmill', expansionWanted(ctx, 'sawmill'), BUILDINGS_CONFIG.sawmill.cost],
+    // Здание найма нужной роли — раньше кузницы, как и в W07.
+    [
+      early?.producer ?? 'producer',
+      !!early,
+      early ? BUILDINGS_CONFIG[early.producer].cost : NOTHING,
+    ],
+    // Башня у подходов, где враг уже был: копится после здания найма,
+    // иначе бюджет уходит на армию и башня не строится никогда.
+    [
+      'tower',
+      has('barracks') && towerWanted(ctx),
+      COMBAT_BUILDINGS_CONFIG.tower.cost,
+    ],
     // Кузница в затянувшейся партии, пока есть что изучать (G12, W07).
     [
       'forge',
@@ -120,8 +180,13 @@ export const savingGoals = (ctx: AiContext): SavingGoal[] => {
     ],
     [
       producer?.producer ?? 'producer',
-      // Пока есть кого нанять в готовых зданиях, копим на юнита, не на здание.
-      !!producer && !recruit && ctx.military.length >= 3,
+      // Пока есть кого нанять в готовых зданиях, копим на юнита, не на
+      // здание; раньше кузницы оно уже учтено выше.
+      !!producer &&
+        !recruit &&
+        ctx.military.length >= 3 &&
+        !early &&
+        ctx.memory.strategy !== 'G01',
       producer ? BUILDINGS_CONFIG[producer.producer].cost : NOTHING,
     ],
     [

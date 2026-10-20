@@ -74,7 +74,7 @@ export const palisadeSite = (
   const { base } = ctx;
   if (!base) return null;
   const guards = [...ctx.military, ...ctx.obs.ownBuildings].filter(({ type }) =>
-    ['archer', 'tower', 'siege', 'mage'].includes(type),
+    ['archer', 'horseArcher', 'tower', 'siege', 'mage'].includes(type),
   );
   let best: Position | null = null;
   let bestScore = -Infinity;

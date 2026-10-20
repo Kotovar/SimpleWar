@@ -64,6 +64,51 @@ export const drawSpearman = (
   ctx.restore();
 };
 
+/** Масть коня: корпус, тень (дальние ноги, грива, хвост). */
+type Coat = { body: string; shade: string; mane: string };
+
+const BAY: Coat = { body: '#8b6340', shade: '#61432e', mane: '#4f3622' };
+const GREY: Coat = { body: '#c9c0ae', shade: '#9a917f', mane: '#6f675a' };
+
+/** Конь в профиль: ноги, хвост, корпус, шея с головой и копыта. */
+const drawHorse = (ctx: CanvasRenderingContext2D, coat: Coat) => {
+  // Дальние ноги и хвост позади округлого корпуса.
+  shape(ctx, coat.shade, [10, 18, 13, 18, 12, 22, 10, 25, 8, 25, 10, 21]);
+  shape(ctx, coat.shade, [19, 18, 21, 18, 23, 23, 25, 23, 25, 25, 21, 25]);
+  shape(ctx, coat.mane, [8, 14, 5, 15, 3.5, 21, 5, 23, 6, 18, 9, 17]);
+  ctx.fillStyle = coat.body;
+  ctx.beginPath();
+  ctx.ellipse(15, 16.5, 8, 4.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  shape(ctx, coat.body, [9, 18, 12, 19, 11, 23, 11, 25, 8.5, 25]);
+  shape(ctx, coat.body, [19, 18, 22, 17, 21.5, 22, 22, 25, 19.5, 25]);
+  // Высокая шея, уши и вытянутая морда.
+  shape(
+    ctx,
+    coat.body,
+    [
+      19, 15, 21, 9, 22, 5.5, 23.5, 7.5, 25, 6, 25.5, 9, 29, 11, 28, 13, 24, 12,
+      23, 18,
+    ],
+  );
+  shape(ctx, coat.mane, [21, 8, 23, 7.5, 22, 12, 21, 16, 19, 16]);
+  circle(ctx, OUTLINE, 25, 9.8, 0.45);
+  rect(ctx, '#302c28', 8.5, 24, 2.5, 1.5);
+  rect(ctx, '#302c28', 19.5, 24, 2.8, 1.5);
+};
+
+/** Поводья от морды к руке наездника. */
+const reins = (ctx: CanvasRenderingContext2D) => {
+  ctx.strokeStyle = '#e0c27f';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(27, 10.5);
+  ctx.lineTo(26, 13);
+  ctx.lineTo(20, 12);
+  ctx.stroke();
+};
+
 /** Всадник: конь с гривой, седлом и поводьями. */
 export const drawRider = (
   ctx: CanvasRenderingContext2D,
@@ -75,31 +120,7 @@ export const drawRider = (
   team: TeamStyle = TEAM_MARKERS[owner],
 ) => {
   beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
-  const horse = '#8b6340';
-  // Дальние ноги и хвост позади округлого корпуса.
-  shape(ctx, '#61432e', [10, 18, 13, 18, 12, 22, 10, 25, 8, 25, 10, 21]);
-  shape(ctx, '#61432e', [19, 18, 21, 18, 23, 23, 25, 23, 25, 25, 21, 25]);
-  shape(ctx, '#4f3622', [8, 14, 5, 15, 3.5, 21, 5, 23, 6, 18, 9, 17]);
-  ctx.fillStyle = horse;
-  ctx.beginPath();
-  ctx.ellipse(15, 16.5, 8, 4.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-  shape(ctx, horse, [9, 18, 12, 19, 11, 23, 11, 25, 8.5, 25]);
-  shape(ctx, horse, [19, 18, 22, 17, 21.5, 22, 22, 25, 19.5, 25]);
-  // Высокая шея, уши и вытянутая морда.
-  shape(
-    ctx,
-    horse,
-    [
-      19, 15, 21, 9, 22, 5.5, 23.5, 7.5, 25, 6, 25.5, 9, 29, 11, 28, 13, 24, 12,
-      23, 18,
-    ],
-  );
-  shape(ctx, '#4f3622', [21, 8, 23, 7.5, 22, 12, 21, 16, 19, 16]);
-  circle(ctx, OUTLINE, 25, 9.8, 0.45);
-  rect(ctx, '#302c28', 8.5, 24, 2.5, 1.5);
-  rect(ctx, '#302c28', 19.5, 24, 2.8, 1.5);
+  drawHorse(ctx, BAY);
   // Чепрак стороны.
   shape(ctx, team.color, [11, 13, 18, 13, 19, 19, 10, 19]);
   rect(ctx, '#4f3622', 11.5, 12.5, 7, 2);
@@ -110,12 +131,91 @@ export const drawRider = (
   // Сапог поверх чепрака и рука на поводьях.
   shape(ctx, '#41464b', [14, 13.5, 17, 13.5, 17, 19, 19, 19, 19, 21, 14.5, 21]);
   shape(ctx, SKIN, [18, 9, 20, 11, 21, 11, 21, 13, 18, 12]);
-  ctx.strokeStyle = '#e0c27f';
-  ctx.lineWidth = 0.8;
+  reins(ctx);
+  ctx.restore();
+};
+
+/**
+ * Латник: длинная попона стороны до колен коня, стальной налобник,
+ * наездник в латах с закрытым шлемом и копьё с флажком над силуэтом.
+ */
+export const drawKnight = (
+  ctx: CanvasRenderingContext2D,
+  cellX: number,
+  cellY: number,
+  cellSize: number,
+  owner: Owner,
+  scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
+) => {
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
+  // Копьё позади наездника: древко наклонено вперёд, флажок стороны.
+  rect(ctx, '#8a6238', 9, 2, 1.4, 17);
+  shape(ctx, STEEL, [9.7, -2, 11.2, 2.4, 8.2, 2.4]);
+  shape(ctx, team.color, [10.4, 3, 15, 4.4, 10.4, 6]);
+  drawHorse(ctx, BAY);
+  // Попона: закрывает корпус почти до колен, кайма светлая.
+  shape(ctx, team.color, [7, 13, 20, 12.5, 21.5, 21, 7.5, 21.5]);
+  rect(ctx, '#f3eedd', 7.5, 20.2, 13.8, 1.2);
+  // Налобник на морде.
+  shape(ctx, STEEL, [23, 7.5, 25.5, 9, 28.5, 11, 27.8, 12.5, 24, 11.5]);
+  // Наездник в латах: стальной торс, наплечник и закрытый шлем с прорезью.
+  shape(ctx, STEEL, [12, 13.5, 12.8, 7.2, 18.2, 7.2, 19, 13.5]);
+  circle(ctx, STEEL, 17.6, 8.2, 1.8);
+  shape(ctx, STEEL, [13, 6.5, 13, 2.6, 15.5, 1.2, 18, 2.6, 18, 6.5]);
+  rect(ctx, OUTLINE, 15, 3.8, 3, 0.7);
+  shape(ctx, team.shade, [15.5, 1.2, 14, -1.5, 13, 0.5]);
+  shape(ctx, '#7c8489', [14, 13.5, 17, 13.5, 17, 19, 19, 19, 19, 21, 14.5, 21]);
+  shape(ctx, STEEL, [18, 9, 20, 11, 21, 11, 21, 13, 18, 12]);
+  reins(ctx);
+  ctx.restore();
+};
+
+/**
+ * Конный лучник: светлый конь без попоны, наездник в капюшоне стороны
+ * натягивает лук перед собой, колчан со стрелами за спиной.
+ */
+export const drawHorseArcher = (
+  ctx: CanvasRenderingContext2D,
+  cellX: number,
+  cellY: number,
+  cellSize: number,
+  owner: Owner,
+  scale: number = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
+) => {
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
+  // Колчан за спиной, оперение торчит над плечом.
+  rect(ctx, '#7a5532', 9.2, 6, 2.6, 7);
+  rect(ctx, '#f3eedd', 9.4, 4.4, 0.8, 1.8);
+  rect(ctx, '#f3eedd', 10.8, 4, 0.8, 2.2);
+  drawHorse(ctx, GREY);
+  // Седло на коротком чепраке стороны.
+  shape(ctx, team.color, [12, 13.5, 18, 13.5, 18.5, 17.5, 11.5, 17.5]);
+  rect(ctx, '#6a4a2c', 12.5, 12.5, 5.5, 2);
+  // Наездник: лёгкая куртка и капюшон стороны.
+  shape(ctx, '#8a6a44', [12.5, 13.5, 13.2, 7.5, 17.8, 7.5, 18.5, 13.5]);
+  circle(ctx, SKIN, 15.5, 5.2, 2.8);
+  shape(
+    ctx,
+    team.shade,
+    [12.4, 6, 12.8, 2.8, 15.5, 1.4, 18, 2.6, 15, 3.6, 13.8, 6.5],
+  );
+  shape(ctx, '#5b4430', [14, 13.5, 17, 13.5, 17, 19, 19, 19, 19, 21, 14.5, 21]);
+  // Лук перед наездником: дуга, тетива и вытянутая рука.
+  shape(ctx, SKIN, [17.5, 8.5, 22, 8, 22, 9.6, 17.5, 10.2]);
+  ctx.strokeStyle = '#7a5532';
+  ctx.lineWidth = 1.4;
   ctx.beginPath();
-  ctx.moveTo(27, 10.5);
-  ctx.lineTo(26, 13);
-  ctx.lineTo(20, 12);
+  ctx.moveTo(22.5, 1.5);
+  ctx.quadraticCurveTo(27, 9, 22.5, 16);
+  ctx.stroke();
+  ctx.strokeStyle = '#f3eedd';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(22.5, 1.5);
+  ctx.lineTo(18.5, 9);
+  ctx.lineTo(22.5, 16);
   ctx.stroke();
   ctx.restore();
 };
