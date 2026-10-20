@@ -15,7 +15,8 @@ describe('savingGoals: здание найма для роли', () => {
       map,
       units: [own('worker', 1, 1), own('worker', 2, 1), ...army(4)],
       buildings: [ownBuilding('base', 5, 5), ownBuilding('barracks', 8, 8)],
-      enemies: [foe('base', 11, 0)],
+      // Стрелки врага видны: грифон не в приоритете, первой идёт осада.
+      enemies: [foe('base', 11, 0), foe('archer', 11, 3), foe('archer', 11, 4)],
     });
 
     expect(savingGoals(ctx).map(({ key }) => key)).toContain('workshop');

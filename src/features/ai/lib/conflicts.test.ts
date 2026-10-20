@@ -199,6 +199,34 @@ describe('nextRecruit: новые роли не считаются лучник�
 
     expect(nextRecruit(ctx)).toBe('archer');
   });
+
+  it('с конюшней берёт отстающую конную роль, а не очередного мечника', () => {
+    const { ctx } = scene({
+      map,
+      units: [
+        ...[0, 1, 2, 3].map(i => own('swordsman', i, 1)),
+        ...[0, 1].map(i => own('archer', i, 2)),
+        own('spearman', 0, 3),
+      ],
+      buildings: [ownBuilding('barracks', 5, 5), ownBuilding('stable', 7, 7)],
+    });
+
+    expect(nextRecruit(ctx)).toBe('rider');
+  });
+
+  it('без конюшни и святилища — только роли казарм', () => {
+    const { ctx } = scene({
+      map,
+      units: [
+        ...[0, 1, 2, 3].map(i => own('swordsman', i, 1)),
+        ...[0, 1].map(i => own('archer', i, 2)),
+        own('spearman', 0, 3),
+      ],
+      buildings: [ownBuilding('barracks', 5, 5)],
+    });
+
+    expect(nextRecruit(ctx)).toBe('swordsman');
+  });
 });
 
 describe('O05: защитный удар', () => {

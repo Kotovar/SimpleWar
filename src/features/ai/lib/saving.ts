@@ -58,6 +58,22 @@ export const openingPending = (ctx: AiContext) =>
 export type SavingGoal = { key: string; cost: Cost };
 
 /**
+ * Здание найма нужной роли, на которое копят раньше кузницы: роль есть,
+ * здания нет, нанять по пожеланиям в готовых зданиях некого, армия от 3.
+ * При стратегии исследований (G12) кузница остаётся первой. W07 строит в
+ * том же порядке, иначе резерв одной цели запрещал бы другую.
+ */
+export const earlyProducer = (ctx: AiContext) => {
+  if (ctx.memory.strategy === 'G12' || ctx.military.length < 3) return null;
+  const has = (type: string) =>
+    ctx.obs.ownBuildings.some(building => building.type === type);
+  if (!has('barracks')) return null;
+  const roles = roleWishes(ctx);
+  if (roles.some(wish => has(wish.producer))) return null;
+  return roles.find(wish => !has(wish.producer)) ?? null;
+};
+
+/**
  * Две первые по важности покупки, на которые копит ИИ: рудник → второй
  * рабочий → лесопилка → рабочие до нормы → стартовая добыча → казармы →
  * ферма → ещё рудник/лесопилка → кузница → исследование → здание найма нужной роли → армия. Их цена откладывается от
@@ -76,6 +92,7 @@ export const savingGoals = (ctx: AiContext): SavingGoal[] => {
     has('forge') && !ctx.obs.researching ? bestResearch(ctx) : null;
   // Кузница и исследование не отнимают резерв, пока нет минимальной обороны.
   const defended = ctx.military.length >= 2 && !baseAlarm(ctx).length;
+  const early = earlyProducer(ctx);
   const wishes: [string, boolean, Cost][] = [
     [
       'mine',
@@ -102,6 +119,12 @@ export const savingGoals = (ctx: AiContext): SavingGoal[] => {
     ['farm', max - occupied < 3 && max < 30, BUILDINGS_CONFIG.farm.cost],
     ['mine', expansionWanted(ctx, 'mine'), BUILDINGS_CONFIG.mine.cost],
     ['sawmill', expansionWanted(ctx, 'sawmill'), BUILDINGS_CONFIG.sawmill.cost],
+    // Здание найма нужной роли — раньше кузницы, как и в W07.
+    [
+      early?.producer ?? 'producer',
+      !!early,
+      early ? BUILDINGS_CONFIG[early.producer].cost : NOTHING,
+    ],
     // Кузница в затянувшейся партии, пока есть что изучать (G12, W07).
     [
       'forge',
@@ -120,8 +143,9 @@ export const savingGoals = (ctx: AiContext): SavingGoal[] => {
     ],
     [
       producer?.producer ?? 'producer',
-      // Пока есть кого нанять в готовых зданиях, копим на юнита, не на здание.
-      !!producer && !recruit && ctx.military.length >= 3,
+      // Пока есть кого нанять в готовых зданиях, копим на юнита, не на
+      // здание; раньше кузницы оно уже учтено выше.
+      !!producer && !recruit && ctx.military.length >= 3 && !early,
       producer ? BUILDINGS_CONFIG[producer.producer].cost : NOTHING,
     ],
     [

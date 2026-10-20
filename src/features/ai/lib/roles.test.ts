@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import { ownPower, roleWishes } from './composition';
 import { foe, grass, own, ownBuilding, scene } from './scene.test-utils';
 import { W07 } from './rules/construction';
+import { N02 } from './rules/production';
 import { N03 } from './rules/recruitment';
 import { C03 } from './rules/riders';
 import { P02 } from './rules/spearmen';
@@ -71,6 +72,83 @@ describe('roleWishes: состав по известному врагу', () => 
     });
 
     expect(roleWishes(ctx).map(({ type }) => type)).not.toContain('knight');
+  });
+
+  it('копейщик — один на двух конных врага', () => {
+    const riders = [foe('rider', 9, 9), foe('rider', 10, 9)];
+    const one = scene({ map, units: [own('spearman', 1, 1)], enemies: riders });
+    const three = scene({
+      map,
+      units: [own('spearman', 1, 1)],
+      enemies: [...riders, foe('knight', 9, 10)],
+    });
+
+    expect(roleWishes(one.ctx).map(({ type }) => type)).not.toContain(
+      'spearman',
+    );
+    expect(roleWishes(three.ctx)[0]).toMatchObject({ type: 'spearman' });
+  });
+
+  it('у врага нет стрелков — грифон первым', () => {
+    const { ctx } = scene({
+      map,
+      units: [0, 1, 2, 3].map(i => own('swordsman', i, 1)),
+      enemies: [foe('swordsman', 9, 9)],
+    });
+
+    expect(roleWishes(ctx)[0]).toMatchObject({
+      type: 'griffon',
+      producer: 'sanctuary',
+    });
+  });
+
+  it('у врага два стрелка — грифон не нужен', () => {
+    const { ctx } = scene({
+      map,
+      units: [0, 1, 2, 3].map(i => own('swordsman', i, 1)),
+      enemies: [foe('archer', 9, 9), foe('mage', 10, 9)],
+    });
+
+    expect(roleWishes(ctx).map(({ type }) => type)).not.toContain('griffon');
+  });
+
+  it('у врага броня — маг пробивает её магией', () => {
+    const { ctx } = scene({
+      map,
+      units: [0, 1, 2].map(i => own('swordsman', i, 1)),
+      enemies: [foe('spearman', 9, 9), foe('griffon', 10, 9)],
+    });
+
+    expect(roleWishes(ctx)).toContainEqual(
+      expect.objectContaining({ type: 'mage', reason: 'у врага броня' }),
+    );
+  });
+
+  it('медленная пехота врага — конный лучник', () => {
+    const { ctx } = scene({
+      map,
+      units: [0, 1, 2, 3].map(i => own('swordsman', i, 1)),
+      enemies: [0, 1, 2].map(i => foe('swordsman', 9, 7 + i)),
+    });
+
+    expect(roleWishes(ctx)).toContainEqual(
+      expect.objectContaining({ type: 'horseArcher', producer: 'stable' }),
+    );
+  });
+
+  it('у врага стрелки — всадник для удара во фланг', () => {
+    const { ctx } = scene({
+      map,
+      units: [0, 1, 2].map(i => own('swordsman', i, 1)),
+      enemies: [foe('archer', 9, 9), foe('mage', 10, 9)],
+    });
+
+    expect(roleWishes(ctx)).toContainEqual(
+      expect.objectContaining({
+        type: 'rider',
+        reason: 'у врага стрелки и осада',
+      }),
+    );
   });
 
   it('конницы не видно — копейщик не нужен', () => {
@@ -208,6 +286,79 @@ describe('T03: налёт на орудие', () => {
     expect(T03.evaluate(ctx)).toMatchObject([
       { action: { type: 'attack', targetId: siege.id } },
     ]);
+  });
+});
+
+describe('найм по долям: отказ и срочная оборона', () => {
+  const core = () => [
+    ...[0, 1, 2, 3].map(i => own('swordsman', i, 1)),
+    ...[0, 1].map(i => own('archer', i, 2)),
+  ];
+
+  it('латнику не хватает населения — нанимает доступного мечника', () => {
+    const { ctx } = scene({
+      map,
+      units: [
+        ...core(),
+        own('spearman', 0, 3),
+        own('rider', 1, 3),
+        own('horseArcher', 2, 3),
+      ],
+      buildings: [ownBuilding('barracks', 5, 5), ownBuilding('stable', 8, 8)],
+      stock: { gold: 2000, wood: 2000 },
+      population: { max: 30, occupied: 27 },
+      turn: 40,
+    });
+
+    expect(N02.evaluate(ctx)).toMatchObject([
+      { action: { type: 'spawn', unitType: 'swordsman' } },
+    ]);
+  });
+
+  it('при срочной обороне берёт мечника, а не лекаря из святилища', () => {
+    const { ctx } = scene({
+      map,
+      units: [...core(), own('spearman', 0, 3), own('mage', 1, 3)],
+      buildings: [
+        ownBuilding('sanctuary', 8, 8),
+        ownBuilding('barracks', 5, 5),
+      ],
+      stock: { gold: 300, wood: 200 },
+      population: { max: 40, occupied: 16 },
+      memory: { strategy: 'G01' },
+    });
+
+    expect(N02.evaluate(ctx)).toMatchObject([
+      { action: { type: 'spawn', unitType: 'swordsman' } },
+    ]);
+  });
+});
+
+describe('W07 и накопление: один порядок', () => {
+  it('конюшня для роли строится сразу, резерв кузницы её не держит', () => {
+    const { ctx } = scene({
+      map,
+      // Ударная группа собрана (кузница нужна), лекарь уже есть.
+      units: [
+        own('worker', 4, 4),
+        own('scout', 0, 0),
+        own('healer', 4, 11),
+        ...[0, 1, 2].map(i => own('swordsman', i, 11)),
+      ],
+      buildings: [ownBuilding('base', 5, 5), ownBuilding('barracks', 8, 8)],
+      // Видны рабочий и два лучника врага: нужен всадник, грифон — нет.
+      enemies: [
+        foe('worker', 11, 0),
+        foe('archer', 11, 2),
+        foe('archer', 11, 3),
+      ],
+      // Сверх резерва на рабочего (40/40) хватает и на конюшню (120/160),
+      // и на кузницу (100/150), но не на обе.
+      stock: { gold: 170, wood: 200 },
+      turn: 40,
+    });
+
+    expect(W07.evaluate(ctx)[0]?.basis).toMatchObject({ building: 'stable' });
   });
 });
 

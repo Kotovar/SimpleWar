@@ -3,7 +3,7 @@ import type { AiRule, Candidate } from '../../model/types';
 import type { AiContext } from '../context';
 import { roleWishes } from '../composition';
 import { hasStrikeArmy, isNear, nearest } from '../facts';
-import { affordable, openingPending } from '../saving';
+import { affordable, earlyProducer, openingPending } from '../saving';
 import { manhattan } from '../geometry';
 import { standCells, stepToward } from '../movement';
 import { isFree, moveTo, taskOf } from './common';
@@ -65,11 +65,15 @@ export const W07: AiRule = {
           : 'barracks'
         : wantsTower
           ? 'tower'
-          : wantsForge
-            ? 'forge'
-            : moreBarracks
-              ? 'barracks'
-              : (producer?.producer ?? null);
+          : // Здание нужной роли — раньше кузницы и вторых казарм, в том же
+            // порядке, что и накопление: иначе армия годами состоит из
+            // одних мечников и лучников.
+            (earlyProducer(ctx)?.producer ??
+            (wantsForge
+              ? 'forge'
+              : moreBarracks
+                ? 'barracks'
+                : (producer?.producer ?? null)));
     if (!type) return [];
     const picked = pickBuildSite(
       ctx,

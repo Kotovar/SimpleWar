@@ -52,8 +52,11 @@ const spawnCell = (ctx: AiContext, building: Building, toward?: Position) => {
   )[0];
 };
 
-/** Сколько ходов копить на лучника, прежде чем взять мечника. */
-const WAIT_TURNS = 4;
+/**
+ * Сколько ходов копить на выбранную роль, прежде чем взять мечника:
+ * конница, маг и грифон дороги, при коротком ожидании их вытесняют мечники.
+ */
+const WAIT_TURNS = 7;
 
 /** Через сколько ходов хватит свободного бюджета при текущем доходе. */
 const turnsToAfford = (ctx: AiContext, cost: Cost) =>
@@ -141,10 +144,10 @@ export const N01: AiRule = {
 };
 
 /**
- * N02 (G04): армии меньше нужного — нанять в казармах. Состав задаёт
- * `nextRecruit`: пока копятся ресурсы на лучника, мечник вместо него не
- * покупается — иначе золото уходит на мечников и лучников нет. При срочной
- * обороне берётся любой доступный.
+ * N02 (G04): армии меньше нужного — нанять в своих зданиях найма. Состав
+ * задаёт `nextRecruit` по долям ролей: пока копятся ресурсы на нужную роль,
+ * мечник вместо неё не покупается — иначе золото уходит на мечников. При
+ * срочной обороне берётся любой доступный, затем мечник или лучник.
  */
 export const N02: AiRule = {
   id: 'N02',
@@ -162,13 +165,21 @@ export const N02: AiRule = {
     const wait = role ? turnsToAfford(ctx, UNITS_CONFIG[role.type].cost) : 0;
     if (!urgent && wait > 0 && wait <= WAIT_TURNS) return [];
     const preferred = nextRecruit(ctx);
-    // Лучника ждём, только если он накопится за несколько ходов.
+    // Дорогую роль ждём, только если она накопится за несколько ходов.
     const wanted =
       turnsToAfford(ctx, UNITS_CONFIG[preferred].cost) <= WAIT_TURNS
         ? preferred
         : 'swordsman';
+    // При срочной обороне — сначала боевое подкрепление: последние деньги
+    // не уходят на лекаря, пока доступен мечник.
     const order: UnitType[] = urgent
-      ? [wanted, wanted === 'archer' ? 'swordsman' : 'archer']
+      ? [
+          ...new Set<UnitType>([
+            'swordsman',
+            'archer',
+            ...(wanted === 'healer' ? [] : [wanted]),
+          ]),
+        ]
       : [wanted];
     for (const building of producers(ctx)) {
       const type = order.find(t => canHire(ctx, building, t));
