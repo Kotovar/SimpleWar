@@ -37,6 +37,14 @@ holy and soothing…`; `heal1..2` — прежние короткие.
 - Начало хода `turnStart` (1 с, частый — тише, −24 дБ): `Soft gentle
 notification chime for the start of a turn in a medieval strategy game: two
 quiet warm wooden marimba notes rising, soft attack, calm and unobtrusive…`.
+- Гибель живого юнита `death1..3` (~0,5–0,6 с, без низкого гула, чтобы не
+  путаться с разрушением здания): `Short isolated medieval strategy game sound
+effect: a soldier is struck down in battle, one brief pained grunt, then
+cloth, leather and light armor rattling as the body drops onto dirt with a
+soft thud…`. Разрушение катапульты `siegeDeath1..3` (~1,4 с): `…a wooden
+siege catapult is destroyed, heavy timber beams cracking and splintering,
+ropes snapping, a wheel and planks clattering to the ground…`. Тишина в
+  начале и конце обрезана, затухание 0,2 с.
 - Музыкальные темы перекрываются плавным затиханием и нарастанием по 5 с;
   старая тема звучит до загрузки новой.
 - Громкость файлов выравнивается при загрузке, сами файлы не меняются:
@@ -57,4 +65,5 @@ quiet warm wooden marimba notes rising, soft attack, calm and unobtrusive…`.
 | `music/*.mp3`                                                                                         | Suno, промпты из обсуждения S18             | Free  | 01.10.2026    | Некоммерческое использование   |
 | `sfx/*.mp3`                                                                                           | ElevenLabs Sound Effects                    | Free  | 01–02.10.2026 | Некоммерческое использование   |
 | `music/menu.mp3`, `sfx/siegeMove*.mp3`, `sfx/riderMove*.mp3`, `sfx/heal3..5.mp3`, `sfx/turnStart.mp3` | AI Studio, Stable Audio 3 Medium (локально) | —     | 18.10.2026    | Stability AI Community License |
+| `sfx/death1..3.mp3`, `sfx/siegeDeath1..3.mp3`                                                         | AI Studio, Stable Audio 3 Medium (локально) | —     | 20.10.2026    | Stability AI Community License |
 | Запасной синтез                                                                                       | Код проекта (`SFX_TONES`)                   | —     | —             | Лицензия проекта               |
