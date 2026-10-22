@@ -91,7 +91,9 @@ export type DiffContext = {
    * Где объект погиб. Нужна, чтобы гибель после ухода в туман не
    * рисовалась на последней видимой клетке; без неё — прежняя клетка.
    */
-  deathCell?: (id: string) => { x: number; y: number } | undefined;
+  deathCell?: (
+    id: string,
+  ) => { x: number; y: number; hidden?: boolean } | undefined;
 };
 
 /** Удар осады исполнен по клетке: отметка была видна и исчезла. */
@@ -198,7 +200,9 @@ export const diffScene = (
     // Ушёл в туман — не гибель; гибель показываем только в обзоре и
     // по клетке, где объект погиб, а не где его видели последний раз.
     // Свой — всегда: с ним пропадает и обзор вокруг клетки.
-    const cell = deathCell?.(id) ?? before;
+    const death = deathCell?.(id);
+    if (death?.hidden) continue;
+    const cell = death ?? before;
     if (worldIds.has(id)) continue;
     if (before.owner !== humanId && !isVisible(cell.x, cell.y)) continue;
     events.push({

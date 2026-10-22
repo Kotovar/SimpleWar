@@ -69,6 +69,10 @@ export const useUnitsStore = create<UnitsState>()(
         unit.x = x;
         unit.y = y;
         unit.movePoints -= cost;
+        if (unit.type === 'scout') {
+          delete unit.concealed;
+          unit.scoutActed = true;
+        }
         // Новый приказ движения снимает назначение: рабочий ушёл от здания.
         if (unit.role === 'civil') unit.workplaceId = null;
         // Движение орудия отменяет подготовленный удар.
@@ -108,6 +112,10 @@ export const useUnitsStore = create<UnitsState>()(
       set(state => {
         const unit = state.units[id];
         if (unit?.role === 'military' && unit.attackPoints > 0) {
+          if (unit.type === 'scout') {
+            delete unit.concealed;
+            unit.scoutActed = true;
+          }
           unit.attackPoints--;
           if (unit.attackPoints === 0) unit.movePoints = 0;
         }
@@ -134,6 +142,10 @@ export const useUnitsStore = create<UnitsState>()(
       set(state => {
         const unit = state.units[id];
         if (!unit) return;
+        if (unit.type === 'scout' && (unit.x !== x || unit.y !== y)) {
+          delete unit.concealed;
+          unit.scoutActed = true;
+        }
         unit.x = x;
         unit.y = y;
       }),
@@ -181,6 +193,11 @@ export const useUnitsStore = create<UnitsState>()(
       set(state => {
         Object.values(state.units).forEach(unit => {
           if (unit.owner !== owner) return;
+          if (unit.type === 'scout') {
+            if (!unit.scoutActed) unit.concealed = true;
+            else delete unit.concealed;
+            delete unit.scoutActed;
+          }
           if (unit.restMode === 'skip') delete unit.restMode;
 
           unit.movePoints = unit.maxMovePoints;

@@ -10,6 +10,8 @@ import {
   gameEvents,
   getSightSources,
   getShelteredIds,
+  getConcealedIds,
+  isScoutExposed,
   isCellVisible,
   isHostile,
   isRestoringGame,
@@ -72,6 +74,7 @@ export const getVisibleEnemies = (
   const { participants } = useGameLoopStore.getState();
   // Рабочего внутри здания снаружи не видно.
   const sheltered = getShelteredIds(units, buildings);
+  const concealed = getConcealedIds(owner, units, buildings, participants);
   const scouts = getSightSources(
     owner,
     units.filter(({ type }) => type === 'scout'),
@@ -83,6 +86,7 @@ export const getVisibleEnemies = (
     (entity: Unit | Building): Omit<Contact, 'seenTurn'>[] =>
       isHostile(owner, entity.owner, participants) &&
       !sheltered.has(entity.id) &&
+      !concealed.has(entity.id) &&
       visible[entity.y * width + entity.x] === 1
         ? [
             {
@@ -187,6 +191,21 @@ export const refreshKnowledge = () => {
   if (isRestoringGame()) return;
   const { grid } = useMapStore.getState();
   const { participants, eliminated, currentTurn } = useGameLoopStore.getState();
+  const units = Object.values(useUnitsStore.getState().units);
+  const viewers = [
+    ...units,
+    ...Object.values(useBuildingsStore.getState().buildings),
+  ];
+  const exposed = units.filter(
+    unit => unit.concealed && isScoutExposed(unit, viewers, participants),
+  );
+  if (exposed.length) {
+    // Обновление стора повторно запустит подписку уже с раскрытыми разведчиками.
+    useUnitsStore.setState(state => {
+      for (const unit of exposed) delete state.units[unit.id].concealed;
+    });
+    return;
+  }
   const { byParticipant, setKnowledge } = useKnowledgeStore.getState();
   if (grid.length === 0) {
     if (Object.keys(byParticipant).length) setKnowledge({});

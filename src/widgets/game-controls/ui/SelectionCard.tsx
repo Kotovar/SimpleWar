@@ -3,6 +3,9 @@ import { useMapViewer } from '@entities/settings';
 import { useGameLoopStore } from '@entities/games';
 import { useSitesStore } from '@entities/sites';
 import { useMapStore } from '@entities/maps';
+import { useUnitsStore } from '@entities/units';
+import { useBuildingsStore } from '@entities/buildings';
+import { getConcealedIds } from '@shared/lib';
 import {
   getCellKnowledge,
   getKnownCellType,
@@ -29,6 +32,18 @@ const useKnownSelection = () => {
   const knowledge = useParticipantKnowledge(viewer === 'world' ? null : viewer);
   const worldSites = useSitesStore(state => state.sites);
   const grid = useMapStore(state => state.grid);
+  const units = useUnitsStore(state => state.units);
+  const buildings = useBuildingsStore(state => state.buildings);
+  const participants = useGameLoopStore(state => state.participants);
+  const concealed =
+    viewer === 'world'
+      ? new Set<string>()
+      : getConcealedIds(
+          viewer,
+          Object.values(units),
+          Object.values(buildings),
+          participants,
+        );
 
   // Карточка показывает только то, что видит смотрящий: чужой объект
   // вне обзора и настоящий рельеф неразведанной клетки не раскрываются.
@@ -39,7 +54,10 @@ const useKnownSelection = () => {
       getCellKnowledge(knowledge, entity.x, entity.y) === 'visible');
   const selectedUnit = unitsSelection.getSelectedUnit();
   const selectedBuilding = buildingsSelection.getSelectedBuilding();
-  const unit = canSee(selectedUnit) ? selectedUnit : null;
+  const unit =
+    canSee(selectedUnit) && selectedUnit && !concealed.has(selectedUnit.id)
+      ? selectedUnit
+      : null;
   const building = canSee(selectedBuilding) ? selectedBuilding : null;
   const realCell =
     terrainSelection.getSelectedCell() ??

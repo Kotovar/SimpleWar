@@ -1,6 +1,11 @@
 import { useUnitsStore } from '@entities/units';
 import { useGameLoopStore, useParticipantStyles } from '@entities/games';
-import { getAiPlayback, usePreferencesStore } from '@entities/settings';
+import {
+  getAiPlayback,
+  useMapViewer,
+  usePreferencesStore,
+} from '@entities/settings';
+import { useBuildingsStore } from '@entities/buildings';
 import { useSandboxStore } from '@features/sandbox';
 import { useEffect, useMemo, useRef, type RefObject } from 'react';
 import {
@@ -10,7 +15,7 @@ import {
   type Position,
   type Unit,
 } from '@shared/config';
-import { audio, gameEvents } from '@shared/lib';
+import { audio, gameEvents, getConcealedIds } from '@shared/lib';
 import { useResearchStore } from '@entities/researches';
 import { canUnitStep } from '@features/pathfinding';
 import {
@@ -94,6 +99,8 @@ export const useEntitiesLayer = ({
   strikeMarks,
 }: Props) => {
   const worldUnits = useUnitsStore(state => state.units);
+  const viewer = useMapViewer(humanId);
+  const fullView = !scene.fog;
   const teams = useParticipantStyles();
   const aiTurn = useGameLoopStore(state =>
     state.participants.some(
@@ -141,7 +148,7 @@ export const useEntitiesLayer = ({
   const redraw = useRef<() => void>(() => {});
   const isFirstRun = useRef(true);
   /** Клетки гибели с прошлого сравнения: события приходят раньше рендера. */
-  const deaths = useRef(new Map<string, Position>());
+  const deaths = useRef(new Map<string, Position & { hidden?: boolean }>());
 
   /** Ставит план показа: мгновенные звуки — сразу, отложенные — в цикле кадров. */
   const play = (
@@ -231,11 +238,23 @@ export const useEntitiesLayer = ({
             : event.type === 'BUILDING_DESTROYED'
               ? event.building
               : null;
-        if (entity) deaths.current.set(entity.id, { x: entity.x, y: entity.y });
+        if (entity) {
+          const hidden =
+            event.type === 'UNIT_DESTROYED' &&
+            !fullView &&
+            viewer !== 'world' &&
+            getConcealedIds(
+              viewer,
+              [...Object.values(useUnitsStore.getState().units), event.unit],
+              Object.values(useBuildingsStore.getState().buildings),
+              useGameLoopStore.getState().participants,
+            ).has(entity.id);
+          deaths.current.set(entity.id, { x: entity.x, y: entity.y, hidden });
+        }
       }),
     // play читает только refs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [aiTurn, humanId, isVisible],
+    [aiTurn, humanId, isVisible, viewer, fullView],
   );
 
   // Ход идёт по клеткам через стор: записываем пройденный путь.

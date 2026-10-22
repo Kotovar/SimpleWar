@@ -6,7 +6,12 @@ import {
   type Unit,
   type Site,
 } from '@shared/config';
-import { findServingWorker, getShelteredIds } from '@shared/lib';
+import {
+  findServingWorker,
+  getShelteredIds,
+  getConcealedIds,
+} from '@shared/lib';
+import { useGameLoopStore } from '@entities/games';
 import {
   getKnownCellType,
   isKnownRoad,
@@ -136,6 +141,13 @@ export const buildScene = (
   }
 
   const { viewer, knowledge } = view;
+  const concealed = getConcealedIds(
+    viewer,
+    Object.values(world.units),
+    Object.values(world.buildings),
+    useGameLoopStore.getState().participants,
+  );
+  for (const id of concealed) delete outside[id];
   const buildings = filterVisible(world.buildings, viewer, knowledge);
   const width = knowledge?.width ?? 0;
   const snapshots = Object.values(knowledge?.contacts ?? {}).filter(

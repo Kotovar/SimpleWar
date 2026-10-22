@@ -8,6 +8,7 @@ import {
   reject,
   calculateDamage,
   canHitTarget,
+  getConcealedIds,
 } from '@shared/lib';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
@@ -56,6 +57,15 @@ const validateAndAttack = ({
   const target = targetId in unitsStore.units ? targetUnit : targetBuilding;
 
   if (!target) return reject('notFound');
+  if (
+    getConcealedIds(
+      actor,
+      Object.values(unitsStore.units),
+      Object.values(buildingsStore.buildings),
+      useGameLoopStore.getState().participants,
+    ).has(targetId)
+  )
+    return reject('notFound');
   // Рабочий внутри здания не виден снаружи: целью может быть только здание.
   if (targetUnit && buildingsStore.getBuildingAt(target.x, target.y)) {
     return reject('notFound');

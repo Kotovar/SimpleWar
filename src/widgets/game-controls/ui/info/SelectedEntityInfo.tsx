@@ -220,6 +220,25 @@ const UnitDefense = ({ unit }: { unit: Unit }) => (
 
 const UnitDetails = ({ unit }: { unit: Unit }) => (
   <>
+    {unit.concealed && (
+      <div>
+        <dt>Маскировка</dt>
+        <dd title='Движение, атака или враг вплотную снимают маскировку.'>
+          <svg
+            width='14'
+            height='14'
+            viewBox='0 0 16 16'
+            fill='none'
+            stroke='currentColor'
+            strokeWidth='1.8'
+            aria-hidden='true'
+          >
+            <path d='M1 8Q8 0 15 8Q8 16 1 8M2 2L14 14' />
+          </svg>{' '}
+          Скрыт
+        </dd>
+      </div>
+    )}
     {unit.order && (
       <div>
         <dt>Приказ</dt>

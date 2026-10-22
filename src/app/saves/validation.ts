@@ -185,6 +185,7 @@ const base = {
 };
 const unit: Check = v => {
   if (!obj(v) || !unitType(v.type)) return false;
+  if (v.concealed && v.scoutActed) return false;
   const civil = v.type === 'worker';
   const role: Record<string, Check> = civil
     ? {
@@ -212,7 +213,13 @@ const unit: Check = v => {
       maxMovePoints: int(0, 100),
       requiresLimit: int(0, 30),
     },
-    { restMode: one(['skip', 'sleep']), order },
+    {
+      restMode: one(['skip', 'sleep']),
+      order,
+      ...(v.type === 'scout'
+        ? { concealed: one([true]), scoutActed: one([true]) }
+        : {}),
+    },
   )(v);
 };
 const building: Check = v => {

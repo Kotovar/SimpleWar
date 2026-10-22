@@ -10,6 +10,7 @@ import {
 import {
   getAvailableResources,
   getSightSources,
+  getConcealedIds,
   isCellVisible,
   isBuildableTerrain,
   isBuildingUnlocked,
@@ -49,8 +50,18 @@ const createKnownPlacement = (actor: ParticipantId): Placement => {
     useGameLoopStore.getState().participants,
   );
   const knowledge = getParticipantKnowledge(actor);
+  const concealed = getConcealedIds(
+    actor,
+    units,
+    buildings,
+    useGameLoopStore.getState().participants,
+  );
   const key = (x: number, y: number) => `${x},${y}`;
-  const occupied = new Set([...units, ...buildings].map(e => key(e.x, e.y)));
+  const occupied = new Set(
+    [...units, ...buildings]
+      .filter(e => !concealed.has(e.id))
+      .map(e => key(e.x, e.y)),
+  );
   // Скрытая занятость не раскрывается: вне обзора — только известные здания.
   const remembered = new Set(
     Object.values(knowledge?.contacts ?? {})

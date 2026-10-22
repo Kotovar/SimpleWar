@@ -22,6 +22,33 @@ export const getDetailLevel = (cellSize: number): DetailLevel => {
   return 'detail';
 };
 
+/** Перечёркнутый глаз слева сверху: разведчик скрыт от врагов. */
+export const drawConcealedBadge = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  cellSize: number,
+) => {
+  const size = Math.max(10, cellSize * 0.32);
+  ctx.save();
+  ctx.translate(x * cellSize + cellSize * 0.04, y * cellSize + cellSize * 0.12);
+  ctx.scale(size / 16, size / 16);
+  ctx.lineJoin = ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(1, 8);
+  ctx.quadraticCurveTo(8, 0, 15, 8);
+  ctx.quadraticCurveTo(8, 16, 1, 8);
+  ctx.moveTo(2, 2);
+  ctx.lineTo(14, 14);
+  ctx.strokeStyle = '#17232c';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  ctx.strokeStyle = '#bfe8e1';
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+  ctx.restore();
+};
+
 /** Сон (Z) или пропуск (Ⅱ): золотые штрихи с обводкой, без фоновой плашки. */
 export const drawRestBadge = (
   ctx: CanvasRenderingContext2D,

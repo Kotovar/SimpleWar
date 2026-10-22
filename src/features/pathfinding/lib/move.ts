@@ -2,6 +2,7 @@ import type { CommandResult, ParticipantId } from '@shared/config';
 import {
   gameEvents,
   getMoveCost,
+  getConcealedIds,
   isFlyingType,
   isHostile,
   ok,
@@ -42,6 +43,12 @@ export const getSeenEnemies = (actor: ParticipantId) => {
   const visible = getActorVisibility(actor);
   const width = useMapStore.getState().grid[0]?.length ?? 0;
   const { participants } = useGameLoopStore.getState();
+  const concealed = getConcealedIds(
+    actor,
+    Object.values(useUnitsStore.getState().units),
+    Object.values(useBuildingsStore.getState().buildings),
+    participants,
+  );
   const seen = new Set<string>();
   for (const entity of [
     ...Object.values(useUnitsStore.getState().units),
@@ -49,6 +56,7 @@ export const getSeenEnemies = (actor: ParticipantId) => {
   ]) {
     if (
       isHostile(actor, entity.owner, participants) &&
+      !concealed.has(entity.id) &&
       visible[entity.y * width + entity.x]
     ) {
       seen.add(entity.id);
@@ -78,7 +86,13 @@ const validateAndMove = ({
     return reject('bounds');
   }
   // Занятость скрытой клетки не раскрывается: движение остановится перед ней.
-  if (isVisibleTo(actor, x, y) && isCellOccupied(x, y)) {
+  const concealed = getConcealedIds(
+    actor,
+    Object.values(units),
+    Object.values(useBuildingsStore.getState().buildings),
+    useGameLoopStore.getState().participants,
+  );
+  if (isVisibleTo(actor, x, y) && isCellOccupied(x, y, concealed)) {
     return reject('occupied');
   }
 

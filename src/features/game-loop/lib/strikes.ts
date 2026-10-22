@@ -3,6 +3,7 @@ import {
   calculateDamage,
   gameEvents,
   getSightSources,
+  getConcealedIds,
   isCellVisible,
   isFlyingType,
 } from '@shared/lib';
@@ -60,13 +61,19 @@ export const executePreparedStrikes = (owner: ParticipantId) => {
       y,
     );
     const hits: string[] = [];
+    const concealed = getConcealedIds(
+      owner,
+      Object.values(useUnitsStore.getState().units),
+      Object.values(useBuildingsStore.getState().buildings),
+      useGameLoopStore.getState().participants,
+    );
     for (const unit of units) {
       const damage = calculateDamage(
         siege,
         unit,
         getResearchArmor(unit, Object.values(useUnitsStore.getState().units)),
       );
-      if (unit.owner === owner || !building)
+      if (!concealed.has(unit.id) && (unit.owner === owner || !building))
         hits.push(`${unit.type}:${damage}`);
       gameEvents.emit({ type: 'ATTACK_LANDED', target: unit, damage });
       useUnitsStore.getState().damageUnit(unit.id, damage);

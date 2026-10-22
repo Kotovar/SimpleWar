@@ -4,8 +4,9 @@ import {
   type ParticipantId,
   type Position,
 } from '@shared/config';
-import { isHostile } from '@shared/lib';
+import { getConcealedIds, isHostile } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
+import { useBuildingsStore } from '@entities/buildings';
 import { getParticipantKnowledge } from '@entities/perceptions';
 
 /** Клеток сверх дальности атаки, которые разведчик держит до угрозы. */
@@ -26,11 +27,18 @@ export const getExplorationDanger = (
   visible: ArrayLike<number>,
 ) => {
   const { participants } = useGameLoopStore.getState();
+  const concealed = getConcealedIds(
+    actor,
+    Object.values(useUnitsStore.getState().units),
+    Object.values(useBuildingsStore.getState().buildings),
+    participants,
+  );
   const sources: (Position & { range: number })[] = [];
   for (const unit of Object.values(useUnitsStore.getState().units)) {
     if (
       unit.role === 'military' &&
       isHostile(actor, unit.owner, participants) &&
+      !concealed.has(unit.id) &&
       visible[unit.y * width + unit.x]
     )
       sources.push({ ...unit, range: unit.attackRange + DANGER_MARGIN });

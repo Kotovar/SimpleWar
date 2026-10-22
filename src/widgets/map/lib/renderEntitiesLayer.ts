@@ -21,6 +21,7 @@ import {
   drawRoleIcon,
   drawOrderBadge,
   drawRestBadge,
+  drawConcealedBadge,
   getDetailLevel,
 } from './drawEntityStatus';
 import { isHostile } from '@shared/lib';
@@ -255,6 +256,7 @@ export const renderEntitiesLayer = (
       if (owner === humanId) {
         drawRestBadge(ctx, x + dx, y + dy, cellSize, unit.restMode);
         drawOrderBadge(ctx, x + dx, y + dy, cellSize, unit.order);
+        if (unit.concealed) drawConcealedBadge(ctx, x + dx, y + dy, cellSize);
       }
       return;
     }
@@ -280,6 +282,7 @@ export const renderEntitiesLayer = (
     if (owner === humanId) {
       drawRestBadge(ctx, x + dx, y + dy, cellSize, unit.restMode);
       drawOrderBadge(ctx, x + dx, y + dy, cellSize, unit.order);
+      if (unit.concealed) drawConcealedBadge(ctx, x + dx, y + dy, cellSize);
     }
     if (detail !== 'detail') return;
     if (owner === humanId) drawActionPips(ctx, x + dx, y + dy, cellSize, unit);
