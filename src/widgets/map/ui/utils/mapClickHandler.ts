@@ -61,7 +61,9 @@ const placeBuilding = (
   const result =
     buildingType === 'beacon'
       ? commands.lightBeacon?.({ actor, unitId: unit.id, x, y })
-      : place({ actor, workerId: unit.id, buildingType, x, y });
+      : buildingType === 'outpost'
+        ? commands.occupyRuins?.({ actor, unitId: unit.id, x, y })
+        : place({ actor, workerId: unit.id, buildingType, x, y });
   if (!result?.ok) return;
   resetInteraction(ctx);
   if (ctx.ui.hasOrder && !ctx.ui.hasOrder(unit.id)) return;
@@ -76,6 +78,8 @@ const placeBuilding = (
 const isPlacing = (unit: Unit, ctx: MapClickContext) =>
   !!ctx.selection.buildingTypeToPlace &&
   ((unit.type === 'worker' && unit.role === 'civil') ||
+    (unit.role === 'military' &&
+      ctx.selection.buildingTypeToPlace === 'outpost') ||
     (unit.type === 'scout' && ctx.selection.buildingTypeToPlace === 'beacon'));
 
 const clickWithOwnUnit = (

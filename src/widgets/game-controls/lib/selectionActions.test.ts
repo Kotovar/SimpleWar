@@ -56,6 +56,7 @@ describe('getSelectionActions', () => {
         b.code,
       ]),
     ).toEqual([
+      ['occupyRuins', 'KeyO'],
       ['skip', 'Space'],
       ['sleep', 'KeyF'],
     ]);

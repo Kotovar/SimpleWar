@@ -11,6 +11,7 @@ import { useHighlightStore, useMovementStore } from '@features/pathfinding';
 import {
   getPlacementRejection,
   getBeaconPlacementRejection,
+  getOutpostPlacementRejection,
 } from '@features/build';
 import { getContextWorkplace } from '@features/workers';
 import {
@@ -70,7 +71,10 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   const placing = useBuildingsStore(state => state.selectedBuildingForSpawn);
   // Места стройки не заливаются: их слишком много, годность видна по
   // призраку под курсором. Подсветка остаётся у расчистки.
-  const buildableCells = placing && placing !== 'beacon' ? null : produceCells;
+  const buildableCells =
+    placing && placing !== 'beacon' && placing !== 'outpost'
+      ? null
+      : produceCells;
   const placeCells = useHighlightStore(state => state.buildableCells);
   const fogQuality = usePreferencesStore(state => state.fogQuality);
 
@@ -211,7 +215,9 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
       !!placeCells?.some(({ x, y }) => x === hover.x && y === hover.y) &&
       !(placing === 'beacon'
         ? getBeaconPlacementRejection(humanId, worker, hover)
-        : getPlacementRejection(worker, humanId, placing, hover));
+        : placing === 'outpost'
+          ? getOutpostPlacementRejection(humanId, worker, hover)
+          : getPlacementRejection(worker, humanId, placing, hover));
     return { ...hover, type: placing, owner: humanId, valid };
     // Здания читает проверка места из стора: при их смене — пересчёт.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -232,7 +238,13 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   // Какой приказ даст клик под курсором: путь к нему виден до клика.
   // Прицел, расчистка и дорога не ведут юнит: пути нет.
   const hoverOrder = useMemo((): UnitOrder | false | null => {
-    if (placing === 'beacon' || strikeCells || clearableCells || roadCells)
+    if (
+      placing === 'beacon' ||
+      placing === 'outpost' ||
+      strikeCells ||
+      clearableCells ||
+      roadCells
+    )
       return false;
     if (ghost) {
       return ghost.valid

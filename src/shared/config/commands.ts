@@ -24,6 +24,7 @@ export type CommandType =
   | 'demolish'
   | 'prepareStrike'
   | 'lightBeacon'
+  | 'occupyRuins'
   | 'heal'
   | 'startResearch'
   | 'cancelResearch';

@@ -301,6 +301,22 @@ const BuildingDetails = ({
 }) => (
   <>
     <DefenseRow type={building.type} />
+    {building.type === 'outpost' && building.role === 'supply' && (
+      <>
+        <div>
+          <dt>Обзор</dt>
+          <dd>{building.sightRange}</dd>
+        </div>
+        <div>
+          <dt>Доход</dt>
+          <dd>+{building.income?.gold ?? 0} золота / ход</dd>
+        </div>
+        <div>
+          <dt>Население</dt>
+          <dd>+{building.populationSupply}</dd>
+        </div>
+      </>
+    )}
     {building.type === 'beacon' && (
       <div>
         <dt>Костёр</dt>

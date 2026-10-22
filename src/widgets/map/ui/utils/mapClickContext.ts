@@ -17,7 +17,11 @@ import type {
   HealCommand,
   PrepareStrikeCommand,
 } from '@features/combat';
-import type { LightBeaconCommand, BuildCommand } from '@features/build';
+import type {
+  OccupyRuinsCommand,
+  LightBeaconCommand,
+  BuildCommand,
+} from '@features/build';
 import type { RallyPointCommand, SpawnCommand } from '@features/spawn';
 import type { BuildRoadCommand, ClearForestCommand } from '@features/workers';
 
@@ -59,6 +63,7 @@ export type MapClickContext = {
   commands: {
     move: (command: MoveCommand) => CommandResult;
     attack: (command: AttackCommand) => CommandResult;
+    occupyRuins?: (command: OccupyRuinsCommand) => CommandResult;
     lightBeacon?: (command: LightBeaconCommand) => CommandResult;
     build: (command: BuildCommand) => CommandResult;
     /** Приказ «идти и построить»: место может быть далеко от рабочего. */

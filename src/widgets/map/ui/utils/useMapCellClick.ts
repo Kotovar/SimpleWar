@@ -6,7 +6,7 @@ import type { Scene } from '@widgets/map/lib';
 import { useSelectionSelectors } from '@features/selection';
 import { attack, heal, prepareStrike } from '@features/combat';
 import { useGameLoopSelectors } from '@features/game-loop';
-import { build, lightBeacon } from '@features/build';
+import { build, lightBeacon, occupyRuins } from '@features/build';
 import { setRallyPoint, spawn } from '@features/spawn';
 import { buildRoad, clearForest } from '@features/workers';
 import {
@@ -41,6 +41,7 @@ const getCommands = (x: number, y: number) => ({
   attack: withRejectSignal(attack, x, y),
   build: withRejectSignal(build, x, y),
   lightBeacon: withRejectSignal(lightBeacon, x, y),
+  occupyRuins: withRejectSignal(occupyRuins, x, y),
   orderBuild: withRejectSignal(orderBuild, x, y),
   spawn: withRejectSignal(spawn, x, y),
   setRallyPoint: withRejectSignal(setRallyPoint, x, y),

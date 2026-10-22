@@ -16,7 +16,8 @@ export type BuildingType =
   | 'forge'
   | 'sanctuary'
   | 'palisade'
-  | 'beacon';
+  | 'beacon'
+  | 'outpost';
 
 /** Частичный набор ресурсов, которые здание производит за ход. */
 export type Income = Partial<Cost>;
@@ -185,9 +186,17 @@ export const RESOURCE_BUILDINGS_CONFIG: Record<
 };
 
 export const SUPPLY_BUILDINGS_CONFIG: Record<
-  Extract<BuildingType, 'farm'>,
+  Extract<BuildingType, 'farm' | 'outpost'>,
   Omit<SupplyBuilding, InstanceKeys>
 > = {
+  outpost: {
+    maxHp: 120,
+    sightRange: 4,
+    cost: { gold: 0, wood: 0 },
+    income: { gold: 5 },
+    populationSupply: 2,
+    requiredField: 'grass',
+  },
   farm: {
     maxHp: 70,
     sightRange: 3,

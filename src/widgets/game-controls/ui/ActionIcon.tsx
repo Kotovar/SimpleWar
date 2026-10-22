@@ -2,6 +2,8 @@ import type { ActionId, ResearchType } from '@shared/config';
 
 /** Контуры в сетке 24×24, обводка цветом текста кнопки. */
 const PATHS: Record<ActionId | `research:${ResearchType}`, string> = {
+  occupyRuins:
+    'M4 21V10h5v5h6V10h5v11M4 10V5h5v5M15 10V5h5v5M12 4v9M12 4h6l-2-3h-4',
   lightBeacon:
     'M4 21l16-5M4 16l16 5M12 3c1 5 7 7 5 12-2 4-8 4-10 0-2-4 2-6 2-8 1 2 2 3 3 3 1-2 1-4 0-7z',
   explore:

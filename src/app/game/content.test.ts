@@ -24,9 +24,9 @@ const NEW_UNITS: UnitType[] = [
 describe('состав S14–S14b', () => {
   it('12 юнитов и 10 зданий: состав MVP и конница P06', () => {
     expect(Object.keys(UNITS_CONFIG)).toHaveLength(12);
-    // Частокол и временный костёр не входят в исходные 10 зданий.
+    // Частокол, костёр и аванпост не входят в исходные 10 зданий.
     const buildings = Object.keys(BUILDINGS_CONFIG).filter(
-      type => type !== 'palisade' && type !== 'beacon',
+      type => type !== 'palisade' && type !== 'beacon' && type !== 'outpost',
     );
     expect(buildings).toHaveLength(10);
   });
@@ -53,12 +53,18 @@ describe('состав S14–S14b', () => {
     });
   });
 
-  it('рабочий строит все постоянные здания, кроме ратуши', () => {
+  it('рабочий не строит ратушу, костёр и аванпост', () => {
     const worker = createUnit('worker', 0, 0, 'p1', false)!;
     const all = Object.keys(BUILDINGS_CONFIG) as BuildingType[];
     expect(
       worker.role === 'civil' && [...worker.buildableBuildings].sort(),
-    ).toEqual(all.filter(type => type !== 'base' && type !== 'beacon').sort());
+    ).toEqual(
+      all
+        .filter(
+          type => type !== 'base' && type !== 'beacon' && type !== 'outpost',
+        )
+        .sort(),
+    );
   });
 
   it('нанятый юнит появляется без очков и без подготовленного удара', () => {

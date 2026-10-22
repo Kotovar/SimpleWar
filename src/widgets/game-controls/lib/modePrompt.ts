@@ -34,6 +34,10 @@ export type MapMode =
 export const getModePrompt = (mode: MapMode) => {
   switch (mode.kind) {
     case 'build': {
+      if (mode.type === 'outpost')
+        return mode.cells
+          ? 'Кликните по соседним свободным руинам: аванпост даст обзор 4, +5 золота за ход и +2 населения. Захват тратит боевое действие.'
+          : 'Рядом нет видимых свободных руин для захвата.';
       if (mode.type === 'beacon')
         return mode.cells
           ? 'Кликните по соседней свободной равнине или холму: костёр даст обзор 5 на 6 кругов.'

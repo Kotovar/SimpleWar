@@ -246,6 +246,16 @@ const building: Check = v => {
     case 'mine':
     case 'sawmill':
       return shape({ ...common, role: one(['resource']), income }, optional)(v);
+    case 'outpost':
+      return shape(
+        {
+          ...common,
+          role: one(['supply']),
+          populationSupply: int(0, 100),
+          income,
+        },
+        optional,
+      )(v);
     case 'farm':
       return shape(
         { ...common, role: one(['supply']), populationSupply: int(0, 100) },
@@ -367,6 +377,7 @@ const eventTypes = [
   'demolish',
   'prepareStrike',
   'lightBeacon',
+  'occupyRuins',
   'heal',
   'startResearch',
   'cancelResearch',

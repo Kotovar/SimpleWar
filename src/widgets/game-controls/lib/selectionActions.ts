@@ -196,6 +196,17 @@ export const getSelectionActions = (
               }),
             ]
           : []),
+        ...(input.unit.role === 'military'
+          ? [
+              action('occupyRuins', {
+                pressed: input.mode.building === 'outpost',
+                reason:
+                  input.unit.attackPoints > 0
+                    ? undefined
+                    : 'Нет боевого действия',
+              }),
+            ]
+          : []),
         ...(input.unit.order ? [action('cancelOrder')] : []),
         action('skip', {
           pressed: input.unit.restMode === 'skip',

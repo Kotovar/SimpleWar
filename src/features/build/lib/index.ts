@@ -4,3 +4,5 @@ export * from './demolish';
 export * from './buildOrder';
 
 export * from './beacon';
+
+export * from './outpost';
