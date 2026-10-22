@@ -68,22 +68,19 @@ export const getVisibleEnemies = (
   const width = grid[0]?.length ?? 0;
   const units = Object.values(useUnitsStore.getState().units);
   const buildings = Object.values(useBuildingsStore.getState().buildings);
+  const { participants } = useGameLoopStore.getState();
   // Рабочего внутри здания снаружи не видно.
   const sheltered = getShelteredIds(units, buildings);
   const scouts = getSightSources(
     owner,
     units.filter(({ type }) => type === 'scout'),
     grid,
-    useGameLoopStore.getState().participants,
+    participants,
   );
   const pick =
     (kind: Contact['kind']) =>
     (entity: Unit | Building): Omit<Contact, 'seenTurn'>[] =>
-      isHostile(
-        owner,
-        entity.owner,
-        useGameLoopStore.getState().participants,
-      ) &&
+      isHostile(owner, entity.owner, participants) &&
       !sheltered.has(entity.id) &&
       visible[entity.y * width + entity.x] === 1
         ? [
@@ -122,21 +119,18 @@ export const getStrikeSightings = (owner: Owner): StrikeSighting[] => {
     unit => unit.role === 'military' && unit.preparedStrike,
   );
   if (sieges.length === 0) return [];
+  const { participants } = useGameLoopStore.getState();
   const scouts = getSightSources(
     owner,
     units.filter(({ type }) => type === 'scout'),
     useMapStore.getState().grid,
-    useGameLoopStore.getState().participants,
+    participants,
   );
   return sieges.flatMap(siege => {
     if (siege.role !== 'military' || !siege.preparedStrike) return [];
     const { x, y } = siege.preparedStrike;
     const seen =
-      !isHostile(
-        owner,
-        siege.owner,
-        useGameLoopStore.getState().participants,
-      ) ||
+      !isHostile(owner, siege.owner, participants) ||
       !hasResearch(siege.owner, 'hiddenAiming') ||
       isCellVisible(scouts, x, y);
     return [{ id: siege.id, x, y, seen }];

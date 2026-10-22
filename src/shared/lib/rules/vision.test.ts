@@ -32,7 +32,7 @@ const visibleCells = (mask: Uint8Array, width: number) =>
 describe('обзор', () => {
   it('видит ромб по Manhattan включительно до границы радиуса', () => {
     const grid = makeGrid(7, 7);
-    const sources = getSightSources('p1', [viewer(3, 3, 2)], grid);
+    const sources = getSightSources('p1', [viewer(3, 3, 2)], grid, []);
     const mask = computeVisibility(7, 7, sources);
 
     expect(visibleCells(mask, 7)).toHaveLength(13);
@@ -48,6 +48,7 @@ describe('обзор', () => {
       'p1',
       [viewer(0, 0, 1), viewer(8, 0, 1), { ...viewer(4, 0, 4), owner: 'p2' }],
       grid,
+      [],
     );
 
     expect(visibleCells(computeVisibility(9, 1, sources), 9)).toEqual([
@@ -59,7 +60,12 @@ describe('обзор', () => {
   });
 
   it('обрезает ромб у края карты', () => {
-    const sources = getSightSources('p1', [viewer(0, 0, 3)], makeGrid(2, 2));
+    const sources = getSightSources(
+      'p1',
+      [viewer(0, 0, 3)],
+      makeGrid(2, 2),
+      [],
+    );
     expect(computeVisibility(2, 2, sources)).toEqual(
       new Uint8Array([1, 1, 1, 1]),
     );
@@ -68,8 +74,8 @@ describe('обзор', () => {
   it('холм под источником добавляет единицу к радиусу', () => {
     const grid = makeGrid(9, 1);
     grid[0][4].type = 'hill';
-    const [onHill] = getSightSources('p1', [viewer(4, 0, 2)], grid);
-    const [onGrass] = getSightSources('p1', [viewer(3, 0, 2)], grid);
+    const [onHill] = getSightSources('p1', [viewer(4, 0, 2)], grid, []);
+    const [onGrass] = getSightSources('p1', [viewer(3, 0, 2)], grid, []);
 
     expect(onHill.radius).toBe(3);
     expect(onGrass.radius).toBe(2);
@@ -78,7 +84,7 @@ describe('обзор', () => {
   it('объект без обзора (частокол) не источник даже на холме', () => {
     const grid = makeGrid(3, 1);
     grid[0][1].type = 'hill';
-    expect(getSightSources('p1', [viewer(1, 0, 0)], grid)).toEqual([]);
+    expect(getSightSources('p1', [viewer(1, 0, 0)], grid, [])).toEqual([]);
   });
 
   it('без источников ничего не видно: гибель последнего снимает обзор', () => {

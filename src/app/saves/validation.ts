@@ -509,7 +509,7 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
     obj(value) && value.version === SAVE_VERSION,
     'Неизвестная версия сохранения',
   );
-  // Снимки 1.0 хранили настройку единственного противника.
+  // Снимки до команд: каждая сторона в своей команде.
   if (
     obj(value) &&
     obj(value.rules) &&
@@ -517,17 +517,7 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
   ) {
     value.rules.teamChoices = { ...DEFAULT_TEAMS };
   }
-  if (obj(value) && obj(value.rules) && obj(value.rules.teamChoices)) {
-    // Прежний выбор без команды получает свободный номер, сохраняя остальные команды.
-    const teams = value.rules.teamChoices;
-    const used = new Set(Object.values(teams));
-    for (const id of PARTICIPANT_IDS) {
-      if (teams[id] !== null) continue;
-      const team = TEAM_IDS.find(team => !used.has(team));
-      teams[id] = team;
-      used.add(team);
-    }
-  }
+  // Снимки 1.0 хранили настройку единственного противника.
   if (
     obj(value) &&
     obj(value.rules) &&

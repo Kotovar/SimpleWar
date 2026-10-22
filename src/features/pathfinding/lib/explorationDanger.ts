@@ -25,11 +25,12 @@ export const getExplorationDanger = (
   height: number,
   visible: ArrayLike<number>,
 ) => {
+  const { participants } = useGameLoopStore.getState();
   const sources: (Position & { range: number })[] = [];
   for (const unit of Object.values(useUnitsStore.getState().units)) {
     if (
       unit.role === 'military' &&
-      isHostile(actor, unit.owner, useGameLoopStore.getState().participants) &&
+      isHostile(actor, unit.owner, participants) &&
       visible[unit.y * width + unit.x]
     )
       sources.push({ ...unit, range: unit.attackRange + DANGER_MARGIN });
@@ -39,7 +40,7 @@ export const getExplorationDanger = (
   )) {
     if (
       contact.kind !== 'building' ||
-      !isHostile(actor, contact.owner, useGameLoopStore.getState().participants)
+      !isHostile(actor, contact.owner, participants)
     )
       continue;
     const config =

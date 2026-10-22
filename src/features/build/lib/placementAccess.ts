@@ -20,17 +20,17 @@ const getKnownAccessMap = (actor: ParticipantId): AccessMap => {
   const width = grid[0]?.length ?? 0;
   const knowledge = getParticipantKnowledge(actor);
   const buildings = Object.values(useBuildingsStore.getState().buildings);
+  const { participants } = useGameLoopStore.getState();
   const own = buildings.filter(({ owner }) => owner === actor);
 
   const walls = new Set(own.map(({ x, y }) => y * width + x));
   for (const b of buildings) {
-    if (!isHostile(actor, b.owner, useGameLoopStore.getState().participants))
-      walls.add(b.y * width + b.x);
+    if (!isHostile(actor, b.owner, participants)) walls.add(b.y * width + b.x);
   }
   const enemies: Position[] = Object.values(knowledge?.contacts ?? {}).filter(
     contact =>
       contact.kind === 'building' &&
-      isHostile(actor, contact.owner, useGameLoopStore.getState().participants),
+      isHostile(actor, contact.owner, participants),
   );
   for (const { x, y } of enemies) walls.add(y * width + x);
 

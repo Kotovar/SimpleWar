@@ -23,6 +23,7 @@ export const getEnemyTargets = (owner: Owner): Attackable[] => {
   const units = useUnitsStore.getState().units;
   const buildings = useBuildingsStore.getState().buildings;
 
+  const { participants } = useGameLoopStore.getState();
   // Рабочий внутри здания целью не бывает: удар приходится в здание.
   const sheltered = getShelteredIds(
     Object.values(units),
@@ -31,11 +32,7 @@ export const getEnemyTargets = (owner: Owner): Attackable[] => {
   const enemyUnits: Attackable[] = Object.values(units)
     .filter(
       unit =>
-        isHostile(
-          owner,
-          unit.owner,
-          useGameLoopStore.getState().participants,
-        ) && !sheltered.has(unit.id),
+        isHostile(owner, unit.owner, participants) && !sheltered.has(unit.id),
     )
     .map(unit => ({
       id: unit.id,
@@ -47,13 +44,7 @@ export const getEnemyTargets = (owner: Owner): Attackable[] => {
     }));
 
   const enemyBuildings: Attackable[] = Object.values(buildings)
-    .filter(building =>
-      isHostile(
-        owner,
-        building.owner,
-        useGameLoopStore.getState().participants,
-      ),
-    )
+    .filter(building => isHostile(owner, building.owner, participants))
     .map(building => ({
       id: building.id,
       type: building.type,

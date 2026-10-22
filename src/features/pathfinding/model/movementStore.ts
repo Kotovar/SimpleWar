@@ -55,16 +55,13 @@ export const useMovementStore = create<MovementState>()(
 
       // Лекарь вместо атаки лечит своих раненых в дальности.
       const heal = unit?.role === 'military' && HEALING[unit.type];
+      const { participants } = useGameLoopStore.getState();
       const healable =
         unit?.role === 'military' && heal && unit.attackPoints > 0
           ? Object.values(units).filter(
               other =>
                 other.id !== unit.id &&
-                !isHostile(
-                  unit.owner,
-                  other.owner,
-                  useGameLoopStore.getState().participants,
-                ) &&
+                !isHostile(unit.owner, other.owner, participants) &&
                 other.hp < other.maxHp &&
                 Math.abs(other.x - unit.x) + Math.abs(other.y - unit.y) <=
                   unit.attackRange,

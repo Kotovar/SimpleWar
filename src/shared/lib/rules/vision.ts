@@ -48,7 +48,7 @@ export const getSightSources = (
   owner: Owner,
   viewers: Iterable<Viewer>,
   grid: Cell[][],
-  participants: readonly Participant[] = [],
+  participants: readonly Participant[],
 ): SightSource[] => {
   const sources: SightSource[] = [];
   for (const viewer of viewers) {

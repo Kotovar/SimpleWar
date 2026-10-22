@@ -37,14 +37,11 @@ export const getHealAmount = (
  */
 export const getHealTargets = (healer: Unit, units: Iterable<Unit>): Unit[] => {
   if (healer.role !== 'military' || !HEALING[healer.type]) return [];
+  const { participants } = useGameLoopStore.getState();
   return [...units].filter(
     unit =>
       unit.id !== healer.id &&
-      !isHostile(
-        healer.owner,
-        unit.owner,
-        useGameLoopStore.getState().participants,
-      ) &&
+      !isHostile(healer.owner, unit.owner, participants) &&
       unit.hp < unit.maxHp &&
       Math.abs(unit.x - healer.x) + Math.abs(unit.y - healer.y) <=
         healer.attackRange,

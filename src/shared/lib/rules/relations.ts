@@ -13,7 +13,7 @@ export type Relation = 'own' | 'allied' | 'hostile';
 export const getRelation = (
   from: Owner,
   to: Owner,
-  participants: readonly Pick<Participant, 'id' | 'team'>[] = [],
+  participants: readonly Pick<Participant, 'id' | 'team'>[],
 ): Relation => {
   if (from === to) return 'own';
   const team = participants.find(p => p.id === from)?.team;
@@ -33,5 +33,5 @@ export const getRelation = (
 export const isHostile = (
   from: Owner,
   to: Owner,
-  participants: readonly Pick<Participant, 'id' | 'team'>[] = [],
+  participants: readonly Pick<Participant, 'id' | 'team'>[],
 ) => getRelation(from, to, participants) === 'hostile';

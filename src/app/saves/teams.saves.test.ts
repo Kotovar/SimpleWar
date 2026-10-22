@@ -104,30 +104,4 @@ describe('сохранения командных партий', () => {
       expect(useGameLoopStore.getState()).toBe(before);
     },
   );
-
-  it.each([
-    [
-      { p1: null, p2: null, p3: null, p4: null },
-      { p1: 1, p2: 2, p3: 3, p4: 4 },
-    ],
-    [
-      { p1: null, p2: 1, p3: 2, p4: 3 },
-      { p1: 4, p2: 1, p3: 2, p4: 3 },
-    ],
-    [
-      { p1: null, p2: null, p3: 1, p4: 1 },
-      { p1: 2, p2: 3, p3: 1, p4: 1 },
-    ],
-  ])(
-    'заменяет прежний выбор без команды на свободные команды: %j',
-    (legacy, expected) => {
-      const old = JSON.parse(JSON.stringify(captureSnapshot()));
-      old.rules.teamChoices = legacy;
-      applySnapshot(old);
-      expect(useSettingsStore.getState().teamChoices).toEqual(expected);
-      expect(useGameLoopStore.getState().participants.map(p => p.team)).toEqual(
-        [1, 1, 2, 2],
-      );
-    },
-  );
 });

@@ -4,6 +4,7 @@ import { createTurnState } from '../memory';
 import { grass, own, ownBuilding, foe, scene } from '../scene.test-utils';
 import { decideStep } from '../decide';
 import { M07 } from './soldiers';
+import { hitsOwn } from './siege';
 
 describe('защита союзника', () => {
   it('реальный выбор шага отправляет своего бойца защищать союзную базу', () => {
@@ -54,5 +55,8 @@ describe('защита союзника', () => {
     expect(ctx.grid(1, true)[1][2]).toBe(1);
     expect(ctx.grid(1, true)[4][4]).toBe(0);
     expect(ctx.military.map(u => u.owner)).toEqual(['p2']);
+    expect(hitsOwn(ctx, { x: 2, y: 1 })).toBe(true);
+    expect(hitsOwn(ctx, { x: 4, y: 4 })).toBe(true);
+    expect(hitsOwn(ctx, { x: 6, y: 6 })).toBe(false);
   });
 });

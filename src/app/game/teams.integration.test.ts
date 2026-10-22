@@ -74,7 +74,7 @@ describe('P02: постоянные команды', () => {
     expect(getRelation('p1', 'p1', sides)).toBe('own');
     expect(getRelation('p1', 'p2', sides)).toBe('allied');
     expect(isHostile('p1', 'p3', sides)).toBe(true);
-    expect(isHostile('p1', 'p2')).toBe(true);
+    expect(isHostile('p1', 'p2', [])).toBe(true);
   });
 
   it('общий обзор открывает врага через союзника, скрытый враг остаётся неизвестным', () => {
