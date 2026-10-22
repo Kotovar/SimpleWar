@@ -4,6 +4,7 @@ import {
   type ActionId,
   type Building,
   type BuildingType,
+  type CampSite,
   type Cost,
   type PopulationCap,
   type ResearchType,
@@ -63,6 +64,10 @@ export type SelectionActionInput = {
   unit: Unit | null;
   /** Своё выбранное здание. */
   building: Building | null;
+  /** Выбранный лагерь по знаниям участника; запомненный запас не раскрывает мир. */
+  camp?: CampSite | null;
+  campVisible?: boolean;
+  campHasScout?: boolean;
   /** Свой ход: в чужой ход все кнопки недоступны. */
   isTurn: boolean;
   /** Запасы с учётом отладочных исключений для стройки и найма. */

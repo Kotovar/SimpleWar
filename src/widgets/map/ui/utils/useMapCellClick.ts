@@ -114,16 +114,27 @@ export const useMapCellClick = (scene: Scene) => {
     const units = useUnitsStore.getState();
     const buildings = useBuildingsStore.getState();
 
+    const selectedCell = terrainSelection.getSelectedCell();
+    const selectedSite = selectedCell
+      ? Object.values(scene.sites).find(
+          s => s.x === selectedCell.x && s.y === selectedCell.y,
+        )
+      : null;
+    const clickedSite = Object.values(scene.sites).find(
+      s => s.x === x && s.y === y,
+    );
     const handler = order ? handleMapCellOrder : handleMapCellClick;
     handler(x, y, {
       humanId,
       clicked: {
         unit: findAt(scene.units, x, y) ?? null,
         building: findAt(scene.buildings, x, y) ?? null,
+        camp: clickedSite?.type === 'camp' ? clickedSite : null,
       },
       selection: {
         unit: unitsSelection.getSelectedUnit(),
         building: buildingsSelection.getSelectedBuilding(),
+        camp: selectedSite?.type === 'camp' ? selectedSite : null,
         buildingTypeToPlace: buildings.selectedBuildingForSpawn,
         unitTypeToSpawn: units.selectedUnitForSpawn,
         choosingRallyPoint:

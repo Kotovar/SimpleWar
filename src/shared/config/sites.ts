@@ -1,3 +1,4 @@
+import { UNITS_CONFIG } from './units';
 import type { Position } from './common';
 
 export const SITE_TYPES = [
@@ -22,6 +23,17 @@ export const SITE_COUNTS = { cache: 2, refugees: 1, obelisk: 1, ruins: 1 };
 export const SITE_MIN_START_DISTANCE = 6;
 export const CACHE_REWARDS = { gold: [60, 120], wood: [80, 140] } as const;
 export const CAMP_HIRES = 3;
+/** Цена лагеря: +30% золота от обычной цены, без дерева. */
+export const CAMP_HIRE_COST = {
+  swordsman: {
+    gold: Math.ceil((UNITS_CONFIG.swordsman.cost.gold * 13) / 10),
+    wood: 0,
+  },
+  archer: {
+    gold: Math.ceil((UNITS_CONFIG.archer.cost.gold * 13) / 10),
+    wood: 0,
+  },
+};
 export const OBELISK_REVEAL_RADIUS = 10;
 
 /** Нейтральная находка; содержимое фиксируется при генерации, владельца нет. */
@@ -30,3 +42,5 @@ export type Site = Position & { id: string } & (
     | { type: 'camp'; hiresLeft: number }
     | { type: 'refugees' | 'obelisk' | 'ruins' }
   );
+
+export type CampSite = Extract<Site, { type: 'camp' }>;

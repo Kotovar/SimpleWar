@@ -7,6 +7,7 @@ type SitesState = {
   setSites: (sites: Site[]) => void;
   getSiteAt: (x: number, y: number) => Site | null;
   removeSite: (id: string) => void;
+  consumeCampHire: (id: string) => void;
   /** Возвращает нейтральные руины после потери аванпостов. */
   restoreOutpostRuins: (buildings: readonly Building[]) => void;
   resetStore: () => void;
@@ -23,6 +24,11 @@ export const useSitesStore = create<SitesState>()(
     removeSite: id =>
       set(state => {
         delete state.sites[id];
+      }),
+    consumeCampHire: id =>
+      set(state => {
+        const camp = state.sites[id];
+        if (camp?.type === 'camp' && camp.hiresLeft > 0) camp.hiresLeft--;
       }),
     restoreOutpostRuins: buildings =>
       set(state => {

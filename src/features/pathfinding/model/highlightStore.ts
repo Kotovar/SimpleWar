@@ -19,6 +19,7 @@ interface HighlightState {
   calculateSpawnableCells: (buildingId: string, cellType: Cell['type']) => void;
   /** Клетки, где можно заложить здание; не `null` — режим выбора места. */
   setBuildableCells: (cells: Position[] | null) => void;
+  setSpawnableCells: (cells: Position[] | null) => void;
   setClearableCells: (cells: Position[] | null) => void;
   setRoadCells: (cells: Position[] | null) => void;
   setStrikeCells: (cells: Position[] | null) => void;
@@ -48,6 +49,7 @@ export const useHighlightStore = create<HighlightState>()(
       });
     },
 
+    setSpawnableCells: cells => set({ spawnableCells: cells }),
     setBuildableCells: cells =>
       set(state => {
         state.buildableCells = cells;

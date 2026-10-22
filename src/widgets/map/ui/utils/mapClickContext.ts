@@ -1,6 +1,7 @@
 import type {
   Building,
   BuildingType,
+  CampSite,
   CommandResult,
   Owner,
   Position,
@@ -30,11 +31,16 @@ export type MapClickContext = {
   /** Участник, которым управляет человек; его объекты — «свои». */
   humanId: Owner;
   /** Объекты в клетке клика. */
-  clicked: { unit: Unit | null; building: Building | null };
+  clicked: {
+    unit: Unit | null;
+    building: Building | null;
+    camp?: CampSite | null;
+  };
   /** Текущий выбор интерфейса. */
   selection: {
     unit: Unit | null;
     building: Building | null;
+    camp?: CampSite | null;
     /** Здание, выбранное рабочему для постройки. */
     buildingTypeToPlace: BuildingType | null;
     /** Юнит, выбранный зданию для найма. */

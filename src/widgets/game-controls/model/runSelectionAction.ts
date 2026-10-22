@@ -20,7 +20,7 @@ import { cancelResearch, startResearch } from '@features/research';
 import { useSelectionStore } from '@features/selection';
 import { spawnAtRallyPoint } from './spawnAtRallyPoint';
 import { getReachableBuildPlacements } from './buildPlacements';
-import { setRallyPoint } from '@features/spawn';
+import { setRallyPoint, getCampSpawnCells } from '@features/spawn';
 import { setUnitRest } from '@features/game-loop';
 import {
   assignWorker,
@@ -156,19 +156,25 @@ export const runSelectionAction = (
       return;
     }
     case 'spawn': {
-      if (!building || !target) return;
+      const camp = input.camp;
+      if ((!building && !camp) || !target) return;
       const type = target as UnitType;
       const wasSelected = input.mode.unit === type;
       resetModes();
-      if (building.role === 'production' && building.rallyPoint) {
+      if (building?.role === 'production' && building.rallyPoint) {
         spawnAtRallyPoint(actor, building, type);
         return;
       }
       if (wasSelected) return;
       useUnitsStore.getState().selectUnitForSpawn(type);
-      useHighlightStore
-        .getState()
-        .calculateSpawnableCells(building.id, 'grass');
+      if (camp)
+        useHighlightStore
+          .getState()
+          .setSpawnableCells(getCampSpawnCells(actor, camp.id));
+      else if (building)
+        useHighlightStore
+          .getState()
+          .calculateSpawnableCells(building.id, 'grass');
       return;
     }
     case 'work':

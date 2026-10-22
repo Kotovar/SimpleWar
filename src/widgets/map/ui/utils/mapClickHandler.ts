@@ -33,6 +33,11 @@ const selectClicked = (x: number, y: number, ctx: MapClickContext) => {
     return;
   }
 
+  if (clicked.camp) {
+    ui.selectCell(x, y);
+    return;
+  }
+
   if (clicked.unit) {
     ui.selectUnit(clicked.unit.id);
     if (clicked.unit.owner === humanId) {
@@ -170,6 +175,24 @@ const clickWithOwnBuilding = (
   selectClicked(x, y, ctx);
 };
 
+/** Лагерь использует обычный выбор клетки найма, оставаясь выбранным после успеха. */
+const hireFromCamp = (x: number, y: number, ctx: MapClickContext) => {
+  const { camp, unitTypeToSpawn } = ctx.selection;
+  if (!camp || !unitTypeToSpawn) return false;
+  const result = ctx.commands.spawn({
+    actor: ctx.humanId,
+    campId: camp.id,
+    unitType: unitTypeToSpawn,
+    x,
+    y,
+  });
+  if (result.ok) {
+    resetInteraction(ctx);
+    ctx.ui.selectCell(camp.x, camp.y);
+  }
+  return true;
+};
+
 /** ЛКМ выбирает объект или подтверждает режим стройки, найма, расчистки, прицела. */
 export const handleMapCellClick = (
   x: number,
@@ -186,6 +209,7 @@ export const handleMapCellClick = (
     resetInteraction(ctx);
     return;
   }
+  if (hireFromCamp(x, y, ctx)) return;
   const selectedOwner = (unit ?? building)?.owner;
   if (selectedOwner !== undefined && selectedOwner !== ctx.humanId) {
     ctx.ui.clearHighlight();
@@ -205,6 +229,7 @@ export const handleMapCellOrder = (
   ctx: MapClickContext,
 ) => {
   const { selection, clicked, highlights, commands, humanId: actor } = ctx;
+  if (hireFromCamp(x, y, ctx)) return;
   const entity = selection.unit ?? selection.building;
   if (!entity || entity.owner !== actor) return;
   // ПКМ в режиме выбора места закладывает здание, как и ЛКМ.
