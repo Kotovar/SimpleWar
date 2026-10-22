@@ -1,6 +1,8 @@
 import type { ParticipantId } from '@shared/config';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
+import { useGameLoopStore } from '@entities/games';
+import { isHostile } from '@shared/lib';
 
 /**
  * Проверяет, занята ли клетка юнитом или зданием.
@@ -25,6 +27,7 @@ export const blocksGroundTransit = (
   const unit = useUnitsStore.getState().getUnitAt(x, y);
   return (
     !!useBuildingsStore.getState().getBuildingAt(x, y) ||
-    (!!unit && unit.owner !== actor)
+    (!!unit &&
+      isHostile(actor, unit.owner, useGameLoopStore.getState().participants))
   );
 };

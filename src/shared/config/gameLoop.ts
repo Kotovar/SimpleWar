@@ -7,6 +7,16 @@ export const PARTICIPANT_IDS = ['p1', 'p2', 'p3', 'p4'] as const;
 /** ID участника партии. */
 export type ParticipantId = (typeof PARTICIPANT_IDS)[number];
 
+export const TEAM_IDS = [1, 2, 3, 4] as const;
+export type TeamId = (typeof TEAM_IDS)[number];
+export type TeamChoices = Record<ParticipantId, TeamId>;
+export const DEFAULT_TEAMS: TeamChoices = {
+  p1: 1,
+  p2: 2,
+  p3: 3,
+  p4: 4,
+};
+
 /**
  * Кто отдаёт приказы участнику. `passive` — только в режиме тестирования:
  * сторона сразу завершает ход.
@@ -21,6 +31,8 @@ export type Participant = {
   ai?: AiSetup;
   /** Закреплённая на партию палитра; отсутствие означает прежний цвет слота. */
   palette?: PaletteId;
+  /** Постоянная команда; без неё участник играет сам за себя. */
+  team?: TeamId;
 };
 
 /** Состав партии по умолчанию: человек против одного ИИ. */

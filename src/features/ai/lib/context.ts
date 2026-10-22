@@ -123,10 +123,13 @@ export const buildContext = (
   const blocked = new Set<number>();
   const block = ({ x, y }: Position) => blocked.add(cellKey(x, y, width));
   obs.ownBuildings.forEach(block);
+  obs.alliedBuildings?.forEach(block);
   enemies.forEach(block);
   remembered.filter(({ kind }) => kind === 'building').forEach(block);
   const ownCells = new Set(
-    obs.ownUnits.map(({ x, y }) => cellKey(x, y, width)),
+    [...obs.ownUnits, ...(obs.alliedUnits ?? [])].map(({ x, y }) =>
+      cellKey(x, y, width),
+    ),
   );
   const occupied = (x: number, y: number) => {
     const key = cellKey(x, y, width);
@@ -157,6 +160,7 @@ export const buildContext = (
   const buildingCells = new Set(
     [
       ...obs.ownBuildings,
+      ...(obs.alliedBuildings ?? []),
       ...obs.visibleEnemies.filter(({ kind }) => kind === 'building'),
       ...remembered.filter(({ kind }) => kind === 'building'),
     ].map(({ x, y }) => cellKey(x, y, width)),

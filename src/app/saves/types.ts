@@ -43,6 +43,7 @@ export type GameSnapshot = {
     | 'customSeed'
     | 'aiSetups'
     | 'paletteChoices'
+    | 'teamChoices'
   >;
   view: Pick<
     ReturnType<typeof useSettingsStore.getState>,

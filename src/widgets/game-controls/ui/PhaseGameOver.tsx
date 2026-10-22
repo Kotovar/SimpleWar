@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { isHostile } from '@shared/lib';
 import { useGameLoopStore } from '@entities/games';
 import { useSelectionStore } from '@features/selection';
 import { useMovementStore, useHighlightStore } from '@features/pathfinding';
@@ -32,7 +33,7 @@ export const PhaseGameOver = ({
   const title =
     humanId === null
       ? 'Партия завершена'
-      : winner !== null && winner === humanId
+      : winner !== null && !isHostile(humanId, winner, participants)
         ? 'Победа!'
         : isDraw
           ? 'Ничья'

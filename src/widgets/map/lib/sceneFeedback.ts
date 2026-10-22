@@ -1,3 +1,4 @@
+import { useGameLoopStore } from '@entities/games';
 import {
   ATTACK_SFX,
   COMBAT_MUSIC_DISTANCE,
@@ -82,13 +83,14 @@ export const isInCombat = (
   humanId: Owner | null,
 ) => {
   if (!humanId) return false;
+  const { participants } = useGameLoopStore.getState();
   const own = [...units, ...buildings].filter(
-    entity => entity.owner === humanId,
+    entity => !isHostile(humanId, entity.owner, participants),
   );
   return units.some(
     enemy =>
       enemy.role === 'military' &&
-      isHostile(humanId, enemy.owner) &&
+      isHostile(humanId, enemy.owner, participants) &&
       own.some(
         entity =>
           Math.abs(entity.x - enemy.x) + Math.abs(entity.y - enemy.y) <=

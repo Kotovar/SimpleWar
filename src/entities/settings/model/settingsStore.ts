@@ -13,6 +13,8 @@ import {
   CELL_SIZE,
   CELL_SIZE_LIMITS,
   DEFAULT_AI_SETUP,
+  DEFAULT_TEAMS,
+  TEAM_IDS,
   DEFAULT_PALETTES,
   PALETTES,
   PARTICIPANT_IDS,
@@ -24,6 +26,8 @@ import {
   type PaletteChoices,
   type ParticipantId,
   type Position,
+  type TeamId,
+  type TeamChoices,
 } from '@shared/config';
 
 type MapGenerationMode = 'random' | 'fixed';
@@ -43,6 +47,8 @@ type SettingsState = {
   /** Профиль и сложность каждого противника обычной партии. */
   aiSetups: AiSetup[];
   paletteChoices: PaletteChoices;
+  teamChoices: TeamChoices;
+  setTeamChoice: (owner: ParticipantId, team: TeamId) => void;
 
   setMapGenerationMode: (mode: MapGenerationMode) => void;
   setCustomSeed: (seed: number) => void;
@@ -123,6 +129,7 @@ const DEFAULTS = {
   customSeed: TEMP_START_SEED,
   aiSetups: [DEFAULT_AI_SETUP],
   paletteChoices: { ...DEFAULT_PALETTES },
+  teamChoices: { ...DEFAULT_TEAMS },
 };
 
 let cameraFrame = 0;
@@ -145,6 +152,19 @@ export const useSettingsStore = create<SettingsState>()(
       set(state => {
         if (!Number.isInteger(count) || count < 1 || count >= MAX_PARTICIPANTS)
           return;
+        const previousCount = state.aiSetups.length;
+        const usedTeams = new Set(
+          PARTICIPANT_IDS.slice(0, previousCount + 1).map(
+            id => state.teamChoices[id],
+          ),
+        );
+        for (const id of PARTICIPANT_IDS.slice(previousCount + 1, count + 1)) {
+          if (usedTeams.has(state.teamChoices[id]))
+            state.teamChoices[id] = TEAM_IDS.find(
+              team => !usedTeams.has(team),
+            )!;
+          usedTeams.add(state.teamChoices[id]);
+        }
         state.aiSetups = Array.from(
           { length: count },
           (_, index) => state.aiSetups[index] ?? { ...DEFAULT_AI_SETUP },
@@ -167,6 +187,11 @@ export const useSettingsStore = create<SettingsState>()(
           state.aiSetups[index] = { ...state.aiSetups[index], ...patch };
       }),
 
+    setTeamChoice: (owner, team) =>
+      set(state => {
+        if (TEAM_IDS.includes(team)) state.teamChoices[owner] = team;
+      }),
+
     removeAi: index =>
       set(state => {
         const count = state.aiSetups.length;
@@ -175,8 +200,10 @@ export const useSettingsStore = create<SettingsState>()(
         // Цвет убранного уходит на освободившееся место: вернётся при добавлении.
         const ids = PARTICIPANT_IDS.slice(index + 1, count + 1);
         const choices = ids.map(id => state.paletteChoices[id]);
+        const teams = ids.map(id => state.teamChoices[id]);
         ids.forEach((id, i) => {
           state.paletteChoices[id] = choices[(i + 1) % choices.length];
+          state.teamChoices[id] = teams[(i + 1) % teams.length];
         });
       }),
 

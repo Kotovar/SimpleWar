@@ -2,11 +2,13 @@ import {
   HILL_SIGHT_BONUS,
   type Cell,
   type Owner,
+  type Participant,
   type BuildingType,
   type Position,
   type UnitType,
 } from '@shared/config';
 import { isFlyingType } from './damage';
+import { isHostile } from './relations';
 
 /** Объект, дающий обзор: позиция, владелец и радиус из конфигурации типа. */
 export type Viewer = Position & {
@@ -36,7 +38,7 @@ export const getSightRadius = (viewer: Viewer, grid: Cell[][]) =>
     : 0);
 
 /**
- * Источники обзора участника: все его живые юниты и здания.
+ * Источники общего обзора: живые юниты и здания участника и союзников.
  *
  * @param owner - Участник, чей обзор считаем.
  * @param viewers - Все юниты и здания мира.
@@ -46,11 +48,13 @@ export const getSightSources = (
   owner: Owner,
   viewers: Iterable<Viewer>,
   grid: Cell[][],
+  participants: readonly Participant[],
 ): SightSource[] => {
   const sources: SightSource[] = [];
   for (const viewer of viewers) {
     // Объект без обзора (частокол) не видит даже свою клетку.
-    if (viewer.owner !== owner || viewer.sightRange <= 0) continue;
+    if (isHostile(owner, viewer.owner, participants) || viewer.sightRange <= 0)
+      continue;
     sources.push({
       x: viewer.x,
       y: viewer.y,

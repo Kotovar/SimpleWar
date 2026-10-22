@@ -63,6 +63,20 @@ describe('итоги игрока', () => {
 });
 
 describe('места сторон', () => {
+  it('даёт общее первое место всей победившей команде, включая выбывшего человека', () => {
+    const teams = [
+      { id: 'p1', team: 1 },
+      { id: 'p2', team: 1 },
+      { id: 'p3', team: 2 },
+      { id: 'p4', team: 2 },
+    ] as const;
+    expect(getStandings(teams, ['p1', 'p3', 'p4'], 'p2', () => 0)).toEqual([
+      { id: 'p2', place: 1, out: false },
+      { id: 'p1', place: 1, out: true },
+      { id: 'p4', place: 3, out: true },
+      { id: 'p3', place: 4, out: true },
+    ]);
+  });
   const four = [
     { id: 'p1' },
     { id: 'p2' },

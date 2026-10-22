@@ -12,7 +12,7 @@ import {
   type Observation,
 } from '@entities/perceptions';
 import { FORMATION_ARMOR, type ParticipantId } from '@shared/config';
-import { hasFormationNeighbor } from '@shared/lib';
+import { hasFormationNeighbor, isHostile } from '@shared/lib';
 
 export type { Observation, RememberedContact } from '@entities/perceptions';
 
@@ -28,6 +28,9 @@ export const getObservation = (participant: ParticipantId): Observation => {
   const width = knowledge?.width ?? 0;
   const height = knowledge?.height ?? 0;
   const isOwn = ({ owner }: { owner: ParticipantId }) => owner === participant;
+  const { participants } = useGameLoopStore.getState();
+  const isAlly = ({ owner }: { owner: ParticipantId }) =>
+    owner !== participant && !isHostile(participant, owner, participants);
 
   const knownTerrain = Array.from({ length: height }, (_, y) =>
     Array.from({ length: width }, (_, x) => getKnownCellType(knowledge, x, y)),
@@ -75,13 +78,17 @@ export const getObservation = (participant: ParticipantId): Observation => {
     ownBuildings: Object.values(useBuildingsStore.getState().buildings).filter(
       isOwn,
     ),
+    alliedUnits: Object.values(useUnitsStore.getState().units).filter(isAlly),
+    alliedBuildings: Object.values(
+      useBuildingsStore.getState().buildings,
+    ).filter(isAlly),
     visibleEnemies,
     knownTerrain,
     knownRoads,
     visible,
     opponents: getAliveParticipants(useGameLoopStore.getState())
       .map(({ id }) => id)
-      .filter(id => id !== participant),
+      .filter(id => isHostile(participant, id, participants)),
     resources,
     contacts: contacts
       .filter(contact => !isVisibleNow(contact))

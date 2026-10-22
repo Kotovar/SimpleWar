@@ -22,7 +22,7 @@ const gain = (healer: MilitaryUnit, target: Unit) =>
 
 /** Свои раненые, кроме самого лекаря. */
 const wounded = (ctx: AiContext, healer: MilitaryUnit) =>
-  ctx.obs.ownUnits.filter(
+  [...ctx.obs.ownUnits, ...(ctx.obs.alliedUnits ?? [])].filter(
     unit => unit.id !== healer.id && unit.hp < unit.maxHp,
   );
 

@@ -1,4 +1,5 @@
 import { getParticipantName, type ParticipantId } from '@shared/config';
+import { isHostile } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useJournalStore } from '@entities/journals';
@@ -53,10 +54,12 @@ export const Standings = () => {
                     <SideMark owner={id} participants={participants} />
                     {getParticipantName(id, participants)}
                     {id === humanId && ' (вы)'}
+                    {participants.find(p => p.id === id)?.team !== undefined &&
+                      ` · Команда ${participants.find(p => p.id === id)?.team}`}
                   </span>
                 </td>
                 <td>
-                  {id === winner
+                  {winner !== null && !isHostile(id, winner, participants)
                     ? 'Победа'
                     : out
                       ? `Выбыли${turn ? ` на ходу ${turn}` : ''}`

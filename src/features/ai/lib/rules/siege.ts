@@ -51,11 +51,14 @@ export const buildingTargets = (ctx: AiContext) =>
       (ctx.obs.visible[y]?.[x] || !ctx.memory.blindStrikes[`${x},${y}`]),
   );
 
-/** Удар по клетке заденет своих: там свой юнит или здание. */
+/** Удар по клетке заденет своих или союзников: там их юнит или здание. */
 export const hitsOwn = (ctx: AiContext, cell: Position) =>
-  [...ctx.obs.ownUnits, ...ctx.obs.ownBuildings].some(
-    own => own.x === cell.x && own.y === cell.y,
-  );
+  [
+    ...ctx.obs.ownUnits,
+    ...ctx.obs.ownBuildings,
+    ...(ctx.obs.alliedUnits ?? []),
+    ...(ctx.obs.alliedBuildings ?? []),
+  ].some(own => own.x === cell.x && own.y === cell.y);
 
 /** Ценность цели удара с учётом цели операции. */
 const worth = (ctx: AiContext, target: EnemyView) => {

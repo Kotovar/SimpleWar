@@ -1,3 +1,4 @@
+import { useGameLoopStore } from '@entities/games';
 import {
   MOVE_COST,
   UNKNOWN_MOVE_COST,
@@ -38,7 +39,12 @@ export const getActorVisibility = (actor: ParticipantId) => {
   return computeVisibility(
     grid[0]?.length ?? 0,
     grid.length,
-    getSightSources(actor, viewers, grid),
+    getSightSources(
+      actor,
+      viewers,
+      grid,
+      useGameLoopStore.getState().participants,
+    ),
   );
 };
 

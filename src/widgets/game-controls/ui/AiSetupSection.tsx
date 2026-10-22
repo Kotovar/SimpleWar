@@ -8,6 +8,8 @@ import {
   PALETTE_IDS,
   PARTICIPANT_IDS,
   START_RESOURCES,
+  TEAM_IDS,
+  type TeamId,
   type PaletteChoice,
   type ParticipantId,
 } from '@shared/config';
@@ -97,6 +99,27 @@ const Stock = ({ gold, wood }: { gold: number; wood: number }) => (
   </span>
 );
 
+const TeamChoice = ({ owner }: { owner: ParticipantId }) => {
+  const team = useSettingsStore(state => state.teamChoices[owner]);
+  const setTeam = useSettingsStore(state => state.setTeamChoice);
+  return (
+    <Select
+      name={`team-${owner}`}
+      aria-label={
+        owner === 'p1'
+          ? 'Ваша команда'
+          : `Команда ИИ ${PARTICIPANT_IDS.indexOf(owner)}`
+      }
+      value={String(team)}
+      options={TEAM_IDS.map(id => ({
+        value: String(id),
+        label: `Команда ${id}`,
+      }))}
+      onChange={value => setTeam(owner, Number(value) as TeamId)}
+    />
+  );
+};
+
 /**
  * Стороны обычной партии списком мест, как в лобби: человек и 1–3 ИИ.
  * Мест всегда четыре, поэтому высота блока не зависит от числа противников.
@@ -116,14 +139,20 @@ export const AiSetupSection = () => {
       <div className={styles.Roster}>
         <div className={styles.RosterHead} aria-hidden>
           <span>Сторона</span>
-          <span>Цвет</span>
+          <div className={styles.SideChoices}>
+            <span>Цвет</span>
+            <span>Команда</span>
+          </div>
           <span>Характер</span>
           <span>Сложность</span>
           <span>Старт</span>
         </div>
         <div className={styles.SideRow} data-human>
           <SideBadge owner='p1' choice={choices.p1} name='Вы' />
-          <PaletteSelect owner='p1' label='Ваш цвет' />
+          <div className={styles.SideChoices}>
+            <PaletteSelect owner='p1' label='Ваш цвет' />
+            <TeamChoice owner='p1' />
+          </div>
           <span className={styles.SideNote}>Ваша сторона</span>
           <Stock {...START_RESOURCES.p1} />
         </div>
@@ -150,10 +179,13 @@ export const AiSetupSection = () => {
                 choice={choices[owner]}
                 name={`ИИ ${index + 1}`}
               />
-              <PaletteSelect
-                owner={owner}
-                label={`Цвет противника ${index + 1}`}
-              />
+              <div className={styles.SideChoices}>
+                <PaletteSelect
+                  owner={owner}
+                  label={`Цвет противника ${index + 1}`}
+                />
+                <TeamChoice owner={owner} />
+              </div>
               <Select
                 name={`ai-profile-${owner}`}
                 aria-label={`Характер противника ${index + 1}`}
@@ -185,6 +217,9 @@ export const AiSetupSection = () => {
           );
         })}
       </div>
+      <p className={styles.Hint}>
+        У союзников общий обзор и лечение. Ресурсы и управление — свои.
+      </p>
     </section>
   );
 };

@@ -69,7 +69,8 @@ export const PhaseInProgress = ({ minimap, onOpenSaves }: Props) => {
   const { clearSelection } = useSelectionSelectors();
   const { resetStore: clearMovement } = useMovementStore();
   const { resetStore: clearHighlight } = useHighlightStore();
-  const { humanId } = useGameLoopSelectors();
+  const { humanId, eliminated } = useGameLoopSelectors();
+  const spectating = humanId !== null && eliminated.includes(humanId);
   const ordersCount = useUnitsStore(
     state =>
       Object.values(state.units).filter(
@@ -159,7 +160,7 @@ export const PhaseInProgress = ({ minimap, onOpenSaves }: Props) => {
     <>
       <header className={styles.Toolbar}>
         <TurnInfo />
-        <ResourcesInfo />
+        {!spectating && <ResourcesInfo />}
         <ToolsToggle open={toolsOpen} onToggle={toggleTools} />
         <TurnControls
           onOpenSaves={onOpenSaves}
@@ -167,13 +168,17 @@ export const PhaseInProgress = ({ minimap, onOpenSaves }: Props) => {
           ordersCount={ordersCount}
           onRunOrders={() => runOrders(humanId, clearInteraction)}
           onReset={() => setShowResetConfirm(true)}
-          onSurrender={humanId ? () => setShowSurrender(true) : undefined}
+          onSurrender={
+            humanId && !eliminated.includes(humanId)
+              ? () => setShowSurrender(true)
+              : undefined
+          }
         />
       </header>
 
       <AiTurnBanner />
       <CommandToasts />
-      <Guidance />
+      {!spectating && <Guidance />}
       <div className={styles.Selection}>
         <SelectionCard />
         <ActionBar />
@@ -190,7 +195,7 @@ export const PhaseInProgress = ({ minimap, onOpenSaves }: Props) => {
       <ConfirmDialog
         isOpen={showSurrender}
         title='Сдаться'
-        message='Сдаться и закончить партию поражением?'
+        message='Сдаться? Ваши объекты исчезнут. Союзники продолжат бой, вы сможете наблюдать.'
         confirmText='Сдаться'
         cancelText='Продолжить игру'
         onConfirm={onSurrender}

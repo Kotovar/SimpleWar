@@ -1,3 +1,4 @@
+import { useGameLoopStore } from '@entities/games';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
 import type { BuildingType, Owner, UnitType } from '@shared/config';
@@ -22,13 +23,17 @@ export const getEnemyTargets = (owner: Owner): Attackable[] => {
   const units = useUnitsStore.getState().units;
   const buildings = useBuildingsStore.getState().buildings;
 
+  const { participants } = useGameLoopStore.getState();
   // Рабочий внутри здания целью не бывает: удар приходится в здание.
   const sheltered = getShelteredIds(
     Object.values(units),
     Object.values(buildings),
   );
   const enemyUnits: Attackable[] = Object.values(units)
-    .filter(unit => isHostile(owner, unit.owner) && !sheltered.has(unit.id))
+    .filter(
+      unit =>
+        isHostile(owner, unit.owner, participants) && !sheltered.has(unit.id),
+    )
     .map(unit => ({
       id: unit.id,
       type: unit.type,
@@ -39,7 +44,7 @@ export const getEnemyTargets = (owner: Owner): Attackable[] => {
     }));
 
   const enemyBuildings: Attackable[] = Object.values(buildings)
-    .filter(building => isHostile(owner, building.owner))
+    .filter(building => isHostile(owner, building.owner, participants))
     .map(building => ({
       id: building.id,
       type: building.type,

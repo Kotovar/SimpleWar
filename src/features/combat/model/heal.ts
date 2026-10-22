@@ -4,12 +4,12 @@ import {
   type ParticipantId,
   type Unit,
 } from '@shared/config';
-import { ok, reject } from '@shared/lib';
+import { isHostile, ok, reject } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand } from '@entities/journals';
 
-/** Приказ лечения: кто, каким лекарем и какого своего юнита. */
+/** Приказ лечения своего или союзного юнита. */
 export type HealCommand = {
   actor: ParticipantId;
   healerId: string;
@@ -30,17 +30,18 @@ export const getHealAmount = (
   Math.max(0, Math.min(HEALING[healer]?.amount ?? 0, target.maxHp - target.hp));
 
 /**
- * Свои раненые юниты в дальности лечения лекаря, кроме него самого.
+ * Свои и союзные раненые юниты в дальности лекаря, кроме него самого.
  *
  * @param healer - Лекарь.
  * @param units - Все юниты.
  */
 export const getHealTargets = (healer: Unit, units: Iterable<Unit>): Unit[] => {
   if (healer.role !== 'military' || !HEALING[healer.type]) return [];
+  const { participants } = useGameLoopStore.getState();
   return [...units].filter(
     unit =>
       unit.id !== healer.id &&
-      unit.owner === healer.owner &&
+      !isHostile(healer.owner, unit.owner, participants) &&
       unit.hp < unit.maxHp &&
       Math.abs(unit.x - healer.x) + Math.abs(unit.y - healer.y) <=
         healer.attackRange,
@@ -64,10 +65,13 @@ const validateAndHeal = ({
   }
   if (healer.attackPoints <= 0) return reject('points');
 
-  // Лечатся только живые свои юниты: здание и чужой юнит — не цели.
+  // Лечатся живые свои и союзные юниты; здание и враг — не цели.
   const target = units[targetId];
   if (!target) return reject('notFound');
-  if (target.owner !== actor || target.id === healer.id) {
+  if (
+    isHostile(actor, target.owner, useGameLoopStore.getState().participants) ||
+    target.id === healer.id
+  ) {
     return reject('target');
   }
   const distance =
@@ -83,7 +87,7 @@ const validateAndHeal = ({
 };
 
 /**
- * Лечит своего раненого юнита в дальности лекаря: +HP по конфигурации,
+ * Лечит своего или союзного раненого в дальности: +HP по конфигурации,
  * не выше максимума; тратит боевое действие.
  *
  * @param command - Участник, лекарь и цель.

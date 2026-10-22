@@ -32,11 +32,11 @@ describe('запуск обычной партии из настроек мен�
         phase: 'inProgress',
         activePlayer: 'p1',
         participants: [
-          { id: 'p1', controller: 'human' },
+          { id: 'p1', controller: 'human', team: 1 },
           ...[
-            { id: 'p2', controller: 'ai', ai: setups[0] },
-            { id: 'p3', controller: 'ai', ai: setups[1] },
-            { id: 'p4', controller: 'ai', ai: setups[2] },
+            { id: 'p2', controller: 'ai', ai: setups[0], team: 2 },
+            { id: 'p3', controller: 'ai', ai: setups[1], team: 3 },
+            { id: 'p4', controller: 'ai', ai: setups[2], team: 4 },
           ].slice(0, count),
         ],
       });

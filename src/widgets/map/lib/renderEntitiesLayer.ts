@@ -1,3 +1,4 @@
+import { useGameLoopStore } from '@entities/games';
 import {
   DAMAGED_BUILDING_RATIO,
   TEAM_MARKERS,
@@ -97,8 +98,9 @@ export const getSpentIds = (
 ) => {
   const spent = new Set<string>();
   if (humanId === null) return spent;
+  const { participants } = useGameLoopStore.getState();
   const enemies = [...Object.values(units), ...Object.values(buildings)].filter(
-    entity => isHostile(humanId, entity.owner),
+    entity => isHostile(humanId, entity.owner, participants),
   );
   const hasTarget = (unit: Unit) =>
     unit.role === 'military' &&

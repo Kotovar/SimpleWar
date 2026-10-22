@@ -21,6 +21,7 @@ import {
   moveTo,
   targetsInRange,
 } from './common';
+import { approachEnemy } from './roleKit';
 
 /**
  * Ближний бой линии — мечники и латники, ещё действующие в этом ходу:
@@ -211,5 +212,55 @@ export const M06: AiRule = {
           ]
         : [];
     });
+  },
+};
+
+/** M07: без тревоги у своей базы помочь союзной ратуше против видимой угрозы. */
+export const M07: AiRule = {
+  id: 'M07',
+  group: 'defense',
+  title: 'Помощь союзнику',
+  evaluate: ctx => {
+    if (baseAlarm(ctx).length) return [];
+    const bases = (ctx.obs.alliedBuildings ?? []).filter(
+      b => b.type === 'base',
+    );
+    const danger = ctx.enemies.filter(
+      enemy =>
+        enemy.armed &&
+        bases.some(base => manhattan(enemy, base) <= ctx.config.alertRadius),
+    );
+    return ctx.military
+      .filter(
+        unit =>
+          unit.type !== 'scout' &&
+          unit.type !== 'siege' &&
+          unit.attack > 0 &&
+          unit.hp > unit.maxHp * ctx.config.lowHp &&
+          isFree(ctx, unit.id),
+      )
+      .flatMap((unit): Candidate[] => {
+        const target = nearest(
+          unit,
+          danger.filter(enemy => canHitTarget(unit.type, enemy.type)),
+        );
+        if (!target) return [];
+        if (canAttack(unit) && manhattan(unit, target) <= unit.attackRange) {
+          return [
+            {
+              ...attackOf('M07', unit, target, 82, 'защищаю союзную базу'),
+              group: 'defense',
+            },
+          ];
+        }
+        return approachEnemy(
+          ctx,
+          'M07',
+          unit,
+          target,
+          72,
+          'иду на помощь союзной базе',
+        ).map(candidate => ({ ...candidate, group: 'defense' as const }));
+      });
   },
 };

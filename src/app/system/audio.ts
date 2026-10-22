@@ -1,4 +1,4 @@
-import { audio } from '@shared/lib';
+import { audio, isHostile } from '@shared/lib';
 import { useAudioSettingsStore } from '@entities/settings';
 import { getHumanId, useGameLoopStore } from '@entities/games';
 
@@ -41,7 +41,7 @@ export const initAudioSystem = () => {
       outcome:
         phase !== 'gameOver'
           ? null
-          : winner && winner === humanId
+          : winner && humanId && !isHostile(humanId, winner, participants)
             ? 'victory'
             : 'defeat',
       ...(phase !== 'inProgress' && { combat: false }),

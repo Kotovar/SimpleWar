@@ -1,4 +1,5 @@
 import { useGameLoopSelectors } from '@features/game-loop';
+import { isHostile } from '@shared/lib';
 import { KeyboardHelp } from '../KeyboardHelp';
 import { GameMenu } from './GameMenu';
 import styles from './TurnControls.styles.module.css';
@@ -23,8 +24,12 @@ export const TurnControls = ({
   onSurrender,
   onOpenSaves,
 }: Props) => {
-  const { activePlayer, humanId } = useGameLoopSelectors();
+  const { activePlayer, humanId, participants, eliminated } =
+    useGameLoopSelectors();
   const isOwnTurn = activePlayer === humanId;
+  const spectating = humanId !== null && eliminated.includes(humanId);
+  const alliedTurn =
+    humanId !== null && !isHostile(humanId, activePlayer, participants);
 
   return (
     <div className={styles.ButtonRow}>
@@ -59,7 +64,13 @@ export const TurnControls = ({
             onClick={onNextTurn}
             disabled={!isOwnTurn}
           >
-            {isOwnTurn ? 'Завершить ход' : 'Ход противника…'}
+            {isOwnTurn
+              ? 'Завершить ход'
+              : spectating
+                ? 'Наблюдение…'
+                : alliedTurn
+                  ? 'Ход союзника…'
+                  : 'Ход противника…'}
           </button>
         </>
       )}

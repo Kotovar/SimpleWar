@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { gameEvents, withDevtools } from '@shared/lib';
+import { gameEvents, isHostile, withDevtools } from '@shared/lib';
+import { useGameLoopStore } from '@entities/games';
 import { HEALING, type Position, type Unit } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
@@ -54,12 +55,13 @@ export const useMovementStore = create<MovementState>()(
 
       // Лекарь вместо атаки лечит своих раненых в дальности.
       const heal = unit?.role === 'military' && HEALING[unit.type];
+      const { participants } = useGameLoopStore.getState();
       const healable =
         unit?.role === 'military' && heal && unit.attackPoints > 0
           ? Object.values(units).filter(
               other =>
                 other.id !== unit.id &&
-                other.owner === unit.owner &&
+                !isHostile(unit.owner, other.owner, participants) &&
                 other.hp < other.maxHp &&
                 Math.abs(other.x - unit.x) + Math.abs(other.y - unit.y) <=
                   unit.attackRange,

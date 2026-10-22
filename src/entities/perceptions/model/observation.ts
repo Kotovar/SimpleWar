@@ -25,6 +25,9 @@ export type Observation = {
   height: number;
   ownUnits: Unit[];
   ownBuildings: Building[];
+  /** Объекты союзников под общим обзором; приказами управляет только владелец. */
+  alliedUnits?: Unit[];
+  alliedBuildings?: Building[];
   /** Свои запасы золота и дерева. */
   stock: Resources;
   /** Своё население: занято и предел. */

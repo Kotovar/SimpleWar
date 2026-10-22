@@ -54,6 +54,7 @@ export const executePreparedStrikes = (owner: ParticipantId) => {
           ...Object.values(useBuildingsStore.getState().buildings),
         ],
         useMapStore.getState().grid,
+        useGameLoopStore.getState().participants,
       ),
       x,
       y,

@@ -40,13 +40,14 @@ export type MoveCommand = {
 export const getSeenEnemies = (actor: ParticipantId) => {
   const visible = getActorVisibility(actor);
   const width = useMapStore.getState().grid[0]?.length ?? 0;
+  const { participants } = useGameLoopStore.getState();
   const seen = new Set<string>();
   for (const entity of [
     ...Object.values(useUnitsStore.getState().units),
     ...Object.values(useBuildingsStore.getState().buildings),
   ]) {
     if (
-      isHostile(actor, entity.owner) &&
+      isHostile(actor, entity.owner, participants) &&
       visible[entity.y * width + entity.x]
     ) {
       seen.add(entity.id);

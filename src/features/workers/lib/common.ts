@@ -53,6 +53,7 @@ export const isVisibleTo = (actor: ParticipantId, x: number, y: number) =>
         ...Object.values(useBuildingsStore.getState().buildings),
       ],
       useMapStore.getState().grid,
+      useGameLoopStore.getState().participants,
     ),
     x,
     y,
