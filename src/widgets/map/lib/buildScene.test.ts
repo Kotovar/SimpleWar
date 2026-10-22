@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import type { Building, Cell, Unit } from '@shared/config';
+import type { Building, Cell, Site, Unit } from '@shared/config';
 import { createUnit } from '@entities/units';
 import { createBuilding } from '@entities/buildings';
 import { observe, type ParticipantKnowledge } from '@entities/perceptions';
@@ -27,6 +27,7 @@ const byId = <T extends Unit | Building>(...items: T[]) =>
 
 const world = {
   grid,
+  sites: {},
   units: byId<Unit>(own, seenEnemy, hiddenEnemy),
   buildings: byId<Building>(enemyBase),
 };
@@ -50,6 +51,47 @@ const knowledge = (): ParticipantKnowledge => {
 };
 
 describe('сцена карты', () => {
+  it('не раскрывает находки без знаний, а полный обзор показывает все', () => {
+    const camp: Site = { id: 'camp', type: 'camp', x: 5, y: 0, hiresLeft: 3 };
+    const withSites = { ...world, sites: { camp } };
+    expect(
+      buildScene(withSites, {
+        mode: 'participant',
+        viewer: 'p1',
+        knowledge: undefined,
+      }).sites,
+    ).toEqual({});
+    expect(buildScene(withSites, { mode: 'world' }).sites).toEqual({ camp });
+  });
+
+  it('рисует только известные находки и не читает изменения скрытого мира', () => {
+    const camp: Site = { id: 'camp', type: 'camp', x: 3, y: 0, hiresLeft: 3 };
+    const first = observe(undefined, {
+      grid,
+      visible: mask(0, 3),
+      sites: [camp],
+      enemies: [],
+      turn: 1,
+      eliminated: [],
+    });
+    const knowledge = observe(first, {
+      grid,
+      visible: mask(0, 1),
+      sites: [],
+      enemies: [],
+      turn: 2,
+      eliminated: [],
+    });
+    const hidden: Site = { id: 'hidden', type: 'ruins', x: 5, y: 0 };
+    const changed = {
+      ...world,
+      sites: { hidden, camp: { ...camp, hiresLeft: 0 } },
+    };
+    const view = { mode: 'participant', viewer: 'p1', knowledge } as const;
+    expect(buildScene(changed, view).sites).toEqual({ camp });
+    expect(buildScene(world, view).sites).toEqual({ camp });
+  });
+
   it('рисует своих и видимых врагов, но не скрытых', () => {
     const scene = buildScene(world, {
       mode: 'participant',
@@ -116,6 +158,7 @@ describe('сцена карты', () => {
     };
     const staffedWorld = {
       grid,
+      sites: {},
       units: byId<Unit>(own, miner as Unit),
       buildings: byId<Building>(mine),
     };

@@ -21,6 +21,7 @@ export * from './cellRange';
 export * from './renderFogLayer';
 export * from './drawWorldEdge';
 export * from './renderSnapshots';
+export * from './renderSites';
 export * from './renderMinimap';
 export * from './diffScene';
 export * from './sceneFeedback';

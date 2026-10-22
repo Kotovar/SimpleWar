@@ -128,6 +128,15 @@ const site: Check = v => {
     ...contents,
   })(v);
 };
+const knownSite: Check = v =>
+  obj(v) &&
+  shape({
+    id: text(),
+    x: int(0, MAP_SIDE_LIMIT - 1),
+    y: int(0, MAP_SIDE_LIMIT - 1),
+    type: one(SITE_TYPES),
+    ...(v.type === 'camp' ? { hiresLeft: int(0, CAMP_HIRES) } : {}),
+  })(v);
 const setup = shape({
   profile: one(Object.keys(AI_PROFILES)),
   difficulty: one(Object.keys(AI_DIFFICULTY)),
@@ -470,6 +479,7 @@ const snapshotShape = shape({
           { byScout: bool },
         ),
       ),
+      sites: dictionary(knownSite),
       strikes: dictionary(position),
     }),
   ),
@@ -530,6 +540,11 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
     'Неизвестная версия сохранения',
   );
   if (obj(value) && !Object.hasOwn(value, 'sites')) value.sites = {};
+  if (obj(value) && obj(value.knowledge)) {
+    for (const k of Object.values(value.knowledge)) {
+      if (obj(k) && !Object.hasOwn(k, 'sites')) k.sites = {};
+    }
+  }
   // Снимки до команд: каждая сторона в своей команде.
   if (
     obj(value) &&
@@ -792,6 +807,18 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
               (!!s.strikes[key] && same(mark, s.strikes[key].target))),
           'Повреждена память удара',
         );
+      const rememberedSites = new Set<string>();
+      for (const [key, site] of Object.entries(k.sites)) {
+        const cell = `${site.x},${site.y}`;
+        requireValid(
+          key === site.id &&
+            inside(site) &&
+            !!k.terrain[site.y * width + site.x] &&
+            !rememberedSites.has(cell),
+          'Повреждена память находок',
+        );
+        rememberedSites.add(cell);
+      }
     }
     const memory = s.ai[id];
     if (memory) {

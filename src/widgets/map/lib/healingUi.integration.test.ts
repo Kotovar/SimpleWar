@@ -59,6 +59,7 @@ const setup = () => {
   const scene = buildScene(
     {
       grid: useMapStore.getState().grid,
+      sites: {},
       units: units().units,
       buildings: buildings().buildings,
     },

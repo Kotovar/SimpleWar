@@ -17,6 +17,7 @@ import {
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
+import { useSitesStore } from '@entities/sites';
 import { getHumanId, useGameLoopStore } from '@entities/games';
 import { hasResearch } from '@entities/researches';
 import { useJournalStore } from '@entities/journals';
@@ -196,6 +197,7 @@ export const refreshKnowledge = () => {
   const eliminatedIds = new Set(eliminated);
   let changed = false;
   const humanId = getHumanId(participants);
+  const sites = Object.values(useSitesStore.getState().sites);
   for (const { id } of participants) {
     const previous = byParticipant[id];
     if (
@@ -222,6 +224,7 @@ export const refreshKnowledge = () => {
         ? CARTOGRAPHY_EXTRA_MEMORY
         : 0,
       strikes: getStrikeSightings(id),
+      sites,
     });
     changed ||= next[id] !== previous;
     // ИИ уведомления не читает: его записи только вытесняли бы журнал.
@@ -252,6 +255,7 @@ export const initVisibilitySystem = () => {
     useUnitsStore.subscribe(refreshKnowledge);
     useBuildingsStore.subscribe(refreshKnowledge);
     useMapStore.subscribe(refreshKnowledge);
+    useSitesStore.subscribe(refreshKnowledge);
     useGameLoopStore.subscribe(refreshKnowledge);
     gameEvents.subscribe(event => {
       if (event.type === 'GAME_RESET') {

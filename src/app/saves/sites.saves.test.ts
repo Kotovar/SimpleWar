@@ -3,6 +3,7 @@ import { useSitesStore } from '@entities/sites';
 import { useGameLoopStore } from '@entities/games';
 import { useSettingsStore } from '@entities/settings';
 import { useMapStore } from '@entities/maps';
+import { useKnowledgeStore } from '@entities/perceptions';
 import { initPopulationSystem } from '@app/system';
 import { initVisibilitySystem } from '@features/visibility';
 import type { Site } from '@shared/config';
@@ -94,4 +95,73 @@ it('отклоняет ID находки, совпавший с ID юнита', 
   saved.sites[id] = { ...saved.sites.ruins, id };
   delete saved.sites.ruins;
   expect(() => applySnapshot(saved)).toThrow('находка');
+});
+
+const withMemory = () => {
+  const saved = captureSnapshot();
+  const camp = saved.sites.camp;
+  const k = saved.knowledge.p1!;
+  k.sites = {
+    camp: { id: camp.id, type: 'camp', x: camp.x, y: camp.y, hiresLeft: 3 },
+  };
+  k.terrain[camp.y * k.width + camp.x] = 1;
+  k.visible[camp.y * k.width + camp.x] = 0;
+  return saved;
+};
+
+it('сохраняет память находки после её скрытого исчезновения', () => {
+  const saved = withMemory();
+  saved.sites = {};
+  applySnapshot(saved);
+  expect(captureSnapshot().knowledge.p1!.sites).toEqual(
+    saved.knowledge.p1!.sites,
+  );
+  expect(useSitesStore.getState().sites).toEqual({});
+});
+
+it('старые знания без sites загружаются с пустой памятью без раскрытия мира', () => {
+  const saved = withMemory();
+  const old = {
+    ...saved,
+    knowledge: Object.fromEntries(
+      Object.entries(saved.knowledge).map(([id, k]) => {
+        const { sites: _sites, ...rest } = k;
+        return [id, rest];
+      }),
+    ),
+  };
+  applySnapshot(parseSnapshot(JSON.stringify(old)));
+  for (const k of Object.values(useKnowledgeStore.getState().byParticipant)) {
+    expect(k.sites).toEqual({});
+  }
+  expect(Object.keys(useSitesStore.getState().sites).length).toBeGreaterThan(0);
+});
+
+it.each([
+  ['тип', { type: 'unknown' }],
+  ['ID', { id: 'wrong' }],
+  ['граница', { x: 30 }],
+  ['запас', { hiresLeft: 4 }],
+  ['скрытая награда', { amount: 80 }],
+  ['владелец', { owner: 'p2' }],
+] as const)(
+  'отклоняет повреждённую память находки до изменения знаний: %s',
+  (_name, patch) => {
+    const saved = withMemory();
+    Object.assign(saved.knowledge.p1!.sites.camp, patch);
+    const before = useKnowledgeStore.getState().byParticipant;
+    expect(() => applySnapshot(saved)).toThrow();
+    expect(useKnowledgeStore.getState().byParticipant).toBe(before);
+  },
+);
+
+it('отклоняет память на неизвестной клетке и две находки в одной клетке', () => {
+  const saved = withMemory();
+  const k = saved.knowledge.p1!;
+  const camp = k.sites.camp;
+  k.terrain[camp.y * k.width + camp.x] = 0;
+  expect(() => applySnapshot(saved)).toThrow('память находок');
+  k.terrain[camp.y * k.width + camp.x] = 1;
+  k.sites.other = { ...camp, id: 'other' };
+  expect(() => applySnapshot(saved)).toThrow('память находок');
 });

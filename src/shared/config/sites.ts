@@ -9,6 +9,14 @@ export const SITE_TYPES = [
 ] as const;
 export type SiteType = (typeof SITE_TYPES)[number];
 
+export const SITES_NAME: Record<SiteType, string> = {
+  cache: 'Тайник',
+  refugees: 'Беженцы',
+  obelisk: 'Обелиск',
+  ruins: 'Руины поселения',
+  camp: 'Лагерь наёмников',
+};
+
 /** Находки на сторону на карте 30 × 30; групповые карты сохраняют четыре угла. */
 export const SITE_COUNTS = { cache: 2, refugees: 1, obelisk: 1, ruins: 1 };
 export const SITE_MIN_START_DISTANCE = 6;

@@ -3,6 +3,7 @@ import {
   type Cell,
   type Owner,
   type Position,
+  type Site,
 } from '@shared/config';
 import {
   ROAD_BIT,
@@ -10,6 +11,7 @@ import {
   type CellKnowledge,
   type Contact,
   type ContactConfidence,
+  type KnownSite,
   type ParticipantKnowledge,
   type StrikeSighting,
 } from './types';
@@ -33,6 +35,8 @@ export type ObservationInput = {
   scoutMemoryBonus?: number;
   /** Все подготовленные удары мира; без списка отметок нет. */
   strikes?: StrikeSighting[];
+  /** Находки мира: запоминаются только в видимых клетках, без награды тайника. */
+  sites?: readonly Site[];
 };
 
 const sameMask = (a: Uint8Array, b: Uint8Array) =>
@@ -69,6 +73,7 @@ export const observe = (
     eliminated,
     scoutMemoryBonus = 0,
     strikes: sightings = [],
+    sites: worldSites = [],
   }: ObservationInput,
 ): ParticipantKnowledge => {
   const height = grid.length;
@@ -135,12 +140,43 @@ export const observe = (
     Object.keys(strikes).length !== Object.keys(prevStrikes).length ||
     Object.keys(strikes).some(id => strikes[id] !== prevStrikes[id]);
 
+  const sites: Record<string, KnownSite> = {};
+  const prevSites = base?.sites ?? {};
+  for (const site of worldSites) {
+    const { id, x, y } = site;
+    if (visible[y * width + x] !== 1) continue;
+    const known: KnownSite =
+      site.type === 'camp'
+        ? { id, x, y, type: 'camp', hiresLeft: site.hiresLeft }
+        : { id, x, y, type: site.type };
+    const before = prevSites[id];
+    sites[id] =
+      before &&
+      before.type === known.type &&
+      before.x === x &&
+      before.y === y &&
+      (before.type !== 'camp' ||
+        (known.type === 'camp' && before.hiresLeft === known.hiresLeft))
+        ? before
+        : known;
+  }
+  for (const known of Object.values(prevSites)) {
+    if (!sites[known.id] && visible[known.y * width + known.x] !== 1) {
+      sites[known.id] = known;
+    }
+  }
+  const sitesChanged =
+    !base ||
+    Object.keys(sites).length !== Object.keys(prevSites).length ||
+    Object.keys(sites).some(id => sites[id] !== prevSites[id]);
+
   return {
     width,
     height,
     visible: base && sameMask(base.visible, visible) ? base.visible : visible,
     terrain,
     contacts: changed ? contacts : base!.contacts,
+    sites: sitesChanged ? sites : prevSites,
     strikes: strikesChanged ? strikes : prevStrikes,
   };
 };

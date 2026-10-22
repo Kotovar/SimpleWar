@@ -13,6 +13,7 @@ import { getContextWorkplace } from '@features/workers';
 import {
   drawWorldEdge,
   renderFogLayer,
+  renderSites,
   renderMovementLayer,
   renderSelectionLayer,
   withClear,
@@ -77,7 +78,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     isInteractive,
   );
 
-  const { fog, grid, units, buildings, snapshots } = scene;
+  const { fog, grid, units, buildings, snapshots, sites } = scene;
   const fogShown = useDeathReveal(fog, humanId);
   // Отметки ударов — из знаний смотрящего (Скрытая наводка прячет чужие),
   // в полном обзоре отладки — все.
@@ -139,7 +140,8 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
       cellSize,
       range,
     );
-  }, [builtCells, grid, view]);
+    renderSites(ctx, sites, cellSize, range);
+  }, [builtCells, grid, view, sites]);
 
   useEffect(() => {
     const { cellSize, viewport, offset, range } = view;

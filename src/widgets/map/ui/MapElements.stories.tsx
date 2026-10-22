@@ -354,6 +354,7 @@ const FOG_KNOWLEDGE: ParticipantKnowledge = {
     }),
   ),
   contacts: {},
+  sites: {},
   strikes: {},
 };
 

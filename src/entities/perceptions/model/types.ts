@@ -3,6 +3,7 @@ import type {
   CellType,
   Owner,
   Position,
+  SiteType,
   UnitType,
 } from '@shared/config';
 
@@ -43,6 +44,12 @@ export type Contact = {
 /** Достоверность контакта: свежий или устаревший. */
 export type ContactConfidence = 'recent' | 'stale';
 
+/** Наблюдаемая находка; содержимое тайника раскрывается только при сборе. */
+export type KnownSite = Position & { id: string } & (
+    | { type: 'camp'; hiresLeft: number }
+    | { type: Exclude<SiteType, 'camp'> }
+  );
+
 /** Знания одного участника о мире. Индекс клетки — `y * width + x`. */
 export type ParticipantKnowledge = {
   width: number;
@@ -56,6 +63,8 @@ export type ParticipantKnowledge = {
   terrain: Uint8Array;
   /** Память о вражеских объектах по ID, включая видимые сейчас. */
   contacts: Record<string, Contact>;
+  /** Находки по последнему обзору; скрытое исчезновение не меняет память. */
+  sites: Record<string, KnownSite>;
   /**
    * Известные отметки подготовленных ударов по ID орудия: только клетка
    * цели, без позиции орудия. Живут до удара или отмены.

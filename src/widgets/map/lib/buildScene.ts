@@ -4,6 +4,7 @@ import {
   type Cell,
   type ParticipantId,
   type Unit,
+  type Site,
 } from '@shared/config';
 import { findServingWorker, getShelteredIds } from '@shared/lib';
 import {
@@ -11,6 +12,7 @@ import {
   isKnownRoad,
   type Contact,
   type ParticipantKnowledge,
+  type KnownSite,
 } from '@entities/perceptions';
 
 /** Чьими глазами рисуется карта: участник или полный обзор отладки. */
@@ -32,6 +34,8 @@ export type Scene = {
   buildings: Record<string, Building>;
   /** Запомненные здания вне обзора: устаревший снимок, не цель. */
   snapshots: Contact[];
+  /** Находки по последнему обзору; живой скрытый мир не читается. */
+  sites: Record<string, KnownSite>;
   /** Знания для тумана; `null` — туман не рисуется. */
   fog: ParticipantKnowledge | null;
   /** Свои рудники и лесопилки смотрящего с рабочим внутри. */
@@ -92,6 +96,7 @@ export const buildScene = (
     grid: Cell[][];
     units: Record<string, Unit>;
     buildings: Record<string, Building>;
+    sites: Record<string, Site>;
   },
   view: SceneView,
   knownGrid?: Cell[][],
@@ -142,6 +147,7 @@ export const buildScene = (
     units: filterVisible(outside, viewer, knowledge),
     buildings,
     snapshots,
+    sites: knowledge?.sites ?? {},
     fog: knowledge ?? null,
     staffed: staffedFor(viewer),
   };

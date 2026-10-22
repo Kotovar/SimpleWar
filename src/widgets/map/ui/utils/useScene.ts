@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useMapStore } from '@entities/maps';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
+import { useSitesStore } from '@entities/sites';
 import { useMapViewer } from '@entities/settings';
 import { useParticipantKnowledge } from '@entities/perceptions';
 import { getHumanId, useGameLoopStore } from '@entities/games';
@@ -22,6 +23,7 @@ export const useScene = () => {
   const grid = useMapStore(state => state.grid);
   const units = useUnitsStore(state => state.units);
   const buildings = useBuildingsStore(state => state.buildings);
+  const sites = useSitesStore(state => state.sites);
 
   // Известная местность меняется только с новыми разведанными клетками.
   const terrain = knowledge?.terrain;
@@ -37,13 +39,13 @@ export const useScene = () => {
   const scene = useMemo(
     () =>
       buildScene(
-        { grid, units, buildings },
+        { grid, units, buildings, sites },
         viewer === 'world'
           ? { mode: 'world' }
           : { mode: 'participant', viewer, knowledge },
         knownGrid,
       ),
-    [buildings, grid, knowledge, knownGrid, units, viewer],
+    [buildings, grid, knowledge, knownGrid, units, viewer, sites],
   );
 
   return { scene, viewer, humanId };

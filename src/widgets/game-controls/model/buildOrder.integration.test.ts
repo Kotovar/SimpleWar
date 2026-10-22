@@ -86,6 +86,7 @@ beforeEach(() => {
         terrain,
         visible: new Uint8Array(36),
         contacts: {},
+        sites: {},
         strikes: {},
       },
     },

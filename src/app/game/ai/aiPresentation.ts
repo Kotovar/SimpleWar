@@ -12,6 +12,7 @@ import {
 import { useUnitsStore } from '@entities/units';
 import { useSandboxStore } from '@features/sandbox';
 import { buildScene } from '@widgets/map';
+import { useSitesStore } from '@entities/sites';
 
 /** Только видимые модели и известные отметки; скрытые изменения не создают пауз. */
 export const getAiPresentationSnapshot = () => {
@@ -26,6 +27,7 @@ export const getAiPresentationSnapshot = () => {
       grid,
       units: useUnitsStore.getState().units,
       buildings: useBuildingsStore.getState().buildings,
+      sites: useSitesStore.getState().sites,
     },
     world
       ? { mode: 'world' }
@@ -43,6 +45,7 @@ export const getAiPresentationSnapshot = () => {
       ],
     ),
     knowledge?.strikes,
+    scene.sites,
   ]);
 };
 
