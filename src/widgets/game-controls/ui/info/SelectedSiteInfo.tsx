@@ -1,12 +1,17 @@
-import { SITES_NAME, type SiteType } from '@shared/config';
+import {
+  OBELISK_REVEAL_RADIUS,
+  SITES_NAME,
+  type SiteType,
+} from '@shared/config';
 import { SitePortrait } from '@shared/ui';
 import type { KnownSite } from '@entities/perceptions';
 import styles from './SelectedEntityInfo.styles.module.css';
 
 const HINT: Record<SiteType, string> = {
-  cache: 'Откроет разведчик. Содержимое тайника скрыто.',
-  refugees: 'Поможет разведчик. Для нового рабочего нужно свободное население.',
-  obelisk: 'Активирует разведчик. Открывает местность вокруг.',
+  cache: 'Откроет разведчик при входе в клетку. Содержимое тайника скрыто.',
+  refugees:
+    'Разведчик поможет при входе в клетку. Нужны свободное население и место для рабочего рядом.',
+  obelisk: `Разведчик активирует при входе в клетку. Запоминает местность в радиусе ${OBELISK_REVEAL_RADIUS}, без текущего обзора.`,
   ruins: 'Займёт боец. Здесь можно основать аванпост.',
   camp: 'Для найма нужен свой разведчик рядом.',
 };

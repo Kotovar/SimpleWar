@@ -63,11 +63,11 @@
 }
 
 /* Исследование — цвет успеха; замеченный враг оформлен как отказ. */
-.Toast[data-kind='research'] {
+.Toast:is([data-kind='research'], [data-kind='site']) {
   border-color: var(--success);
 }
 
-.Toast[data-kind='research'] .Mark {
+.Toast:is([data-kind='research'], [data-kind='site']) .Mark {
   color: var(--success-strong);
 }
 

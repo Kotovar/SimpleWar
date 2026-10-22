@@ -1,4 +1,4 @@
-import { audio, isHostile } from '@shared/lib';
+import { audio, gameEvents, isHostile } from '@shared/lib';
 import { useAudioSettingsStore } from '@entities/settings';
 import { getHumanId, useGameLoopStore } from '@entities/games';
 
@@ -17,6 +17,14 @@ export const initAudioSystem = () => {
   initialized = true;
 
   const settings = useAudioSettingsStore;
+  gameEvents.subscribe(event => {
+    if (
+      event.type === 'SITE_CLAIMED' &&
+      event.owner === getHumanId(useGameLoopStore.getState().participants)
+    ) {
+      audio.play('siteClaim');
+    }
+  });
   audio.setVolumes(settings.getState());
   settings.subscribe(state => audio.setVolumes(state));
 

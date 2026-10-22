@@ -29,6 +29,8 @@ export type CommandType =
 
 /** Последствия действий, которые журнал записывает помимо самих команд. */
 export type GameOutcomeType =
+  | 'siteClaimed'
+  | 'siteBlocked'
   | 'unitDestroyed'
   | 'buildingDestroyed'
   | 'eliminated'

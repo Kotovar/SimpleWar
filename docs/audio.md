@@ -37,6 +37,15 @@ holy and soothing…`; `heal1..2` — прежние короткие.
 - Начало хода `turnStart` (1 с, частый — тише, −24 дБ): `Soft gentle
 notification chime for the start of a turn in a medieval strategy game: two
 quiet warm wooden marimba notes rising, soft attack, calm and unobtrusive…`.
+- Сбор находки `siteClaim.mp3` (0,9 с, −24 дБ): AI Studio,
+  Stable Audio 3 Medium, seed `30822`, затухание последних 120 мс.
+  Промпт: `Short isolated reward sound for discovering a hidden cache in a
+medieval strategy game: a tiny wooden chest latch clicks open, followed
+immediately by a soft warm rising two-note bell chime and a delicate sparkle.
+Positive, restrained, gentle and clear. Dry close-up game sound effect,
+0.9 seconds total, immediate onset and short clean natural decay. No voices,
+no music, no background ambience, no reverb, no loop.`
+  Исходник Library: `9f4d76ebf482dfa1d5f2fa57d6538327`.
 - Гибель живого юнита `death1..3` (~0,5–0,6 с, без низкого гула, чтобы не
   путаться с разрушением здания): `Short isolated medieval strategy game sound
 effect: a soldier is struck down in battle, one brief pained grunt, then
@@ -66,4 +75,5 @@ ropes snapping, a wheel and planks clattering to the ground…`. Тишина в
 | `sfx/*.mp3`                                                                                           | ElevenLabs Sound Effects                    | Free  | 01–02.10.2026 | Некоммерческое использование   |
 | `music/menu.mp3`, `sfx/siegeMove*.mp3`, `sfx/riderMove*.mp3`, `sfx/heal3..5.mp3`, `sfx/turnStart.mp3` | AI Studio, Stable Audio 3 Medium (локально) | —     | 18.10.2026    | Stability AI Community License |
 | `sfx/death1..3.mp3`, `sfx/siegeDeath1..3.mp3`                                                         | AI Studio, Stable Audio 3 Medium (локально) | —     | 20.10.2026    | Stability AI Community License |
+| `sfx/siteClaim.mp3`                                                                                   | AI Studio, Stable Audio 3 Medium (локально) | —     | 22.10.2026    | Stability AI Community License |
 | Запасной синтез                                                                                       | Код проекта (`SFX_TONES`)                   | —     | —             | Лицензия проекта               |

@@ -22,6 +22,7 @@ export const SITE_COUNTS = { cache: 2, refugees: 1, obelisk: 1, ruins: 1 };
 export const SITE_MIN_START_DISTANCE = 6;
 export const CACHE_REWARDS = { gold: [60, 120], wood: [80, 140] } as const;
 export const CAMP_HIRES = 3;
+export const OBELISK_REVEAL_RADIUS = 10;
 
 /** Нейтральная находка; содержимое фиксируется при генерации, владельца нет. */
 export type Site = Position & { id: string } & (

@@ -4,7 +4,11 @@ import { useGameLoopStore } from '@entities/games';
 import { useSettingsStore } from '@entities/settings';
 import { useMapStore } from '@entities/maps';
 import { useKnowledgeStore } from '@entities/perceptions';
-import { initPopulationSystem } from '@app/system';
+import { initJournalSystem, initPopulationSystem } from '@app/system';
+import { useUnitsStore } from '@entities/units';
+import { useEconomyStore } from '@entities/economies';
+import { useJournalStore } from '@entities/journals';
+import { move } from '@features/pathfinding';
 import { initVisibilitySystem } from '@features/visibility';
 import type { Site } from '@shared/config';
 import { resetGame } from '@features/game-loop';
@@ -14,6 +18,7 @@ import { parseSnapshot } from './validation';
 
 beforeEach(() => {
   initPopulationSystem();
+  initJournalSystem();
   initVisibilitySystem();
   resetGame();
   useSettingsStore.setState({ mapGenerationMode: 'fixed', customSeed: 43 });
@@ -164,4 +169,34 @@ it('отклоняет память на неизвестной клетке и 
   k.terrain[camp.y * k.width + camp.x] = 1;
   k.sites.other = { ...camp, id: 'other' };
   expect(() => applySnapshot(saved)).toThrow('память находок');
+});
+
+it('сохраняет эффекты трёх находок, журнал и исключает повторную награду после загрузки', () => {
+  for (let y = 9; y <= 11; y++) {
+    for (let x = 9; x <= 15; x++)
+      useMapStore.getState().setCell(x, y, { type: 'grass', isWalkable: true });
+  }
+  useSitesStore.getState().setSites([
+    { id: 'cache', type: 'cache', x: 11, y: 10, resource: 'gold', amount: 80 },
+    { id: 'refugees', type: 'refugees', x: 12, y: 10 },
+    { id: 'obelisk', type: 'obelisk', x: 13, y: 10 },
+  ]);
+  const id = useUnitsStore.getState().spawnUnit('scout', 10, 10, 'p1', true)!;
+  const gold = useEconomyStore.getState().resources.p1.gold;
+  expect(move({ actor: 'p1', unitId: id, x: 14, y: 10 }).ok).toBe(true);
+  expect(useSitesStore.getState().sites).toEqual({});
+  expect(useEconomyStore.getState().resources.p1.gold).toBe(gold + 80);
+  const saved = captureSnapshot();
+  expect(saved.journal.filter(e => e.type === 'siteClaimed')).toHaveLength(3);
+  resetGame();
+  applySnapshot(saved);
+  expect(captureSnapshot().knowledge).toEqual(saved.knowledge);
+  expect(useEconomyStore.getState().resources).toEqual(saved.economy.resources);
+  expect(useUnitsStore.getState().units).toEqual(saved.units);
+  expect(
+    useJournalStore.getState().entries.filter(e => e.type === 'siteClaimed'),
+  ).toHaveLength(3);
+  useUnitsStore.getState().resetUnitsForNewTurn('p1');
+  expect(move({ actor: 'p1', unitId: id, x: 10, y: 10 }).ok).toBe(true);
+  expect(useEconomyStore.getState().resources.p1.gold).toBe(gold + 80);
 });

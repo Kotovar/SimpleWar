@@ -37,6 +37,19 @@ const toNotice = (
   { id, type, details }: JournalEntry,
   participants: readonly Participant[],
 ): Toast | null => {
+  if (type === 'siteClaimed' || type === 'siteBlocked') {
+    const { message, x, y } = details ?? {};
+    if (typeof message !== 'string') return null;
+    return {
+      key: `n${id}`,
+      id,
+      kind: type === 'siteClaimed' ? 'site' : 'rejected',
+      mark: type === 'siteClaimed' ? '✓' : '!',
+      message,
+      position:
+        typeof x === 'number' && typeof y === 'number' ? { x, y } : undefined,
+    };
+  }
   if (type === 'eliminated') {
     const owner = details?.participant;
     if (!isParticipantId(owner)) return null;
@@ -142,7 +155,7 @@ export const CommandToasts = () => {
           className={styles.Toast}
           data-kind={toast.kind}
           data-link={toast.position ? '' : undefined}
-          title={toast.position ? 'Камера к месту встречи' : undefined}
+          title={toast.position ? 'Камера к месту события' : undefined}
           onClick={
             toast.position &&
             (() => {

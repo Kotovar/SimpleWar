@@ -3,9 +3,17 @@ import type {
   CommandMeta,
   ParticipantId,
   Unit,
+  Site,
 } from '@shared/config';
 
 type GameEvent =
+  | { type: 'SITE_CLAIMED'; owner: ParticipantId; site: Site }
+  | {
+      type: 'SITE_BLOCKED';
+      owner: ParticipantId;
+      site: Site;
+      reason: 'population' | 'occupied';
+    }
   | { type: 'ATTACK_LANDED'; target: Unit | Building; damage: number }
   | {
       type: 'SIEGE_STRIKE_EXECUTED';

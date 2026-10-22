@@ -20,6 +20,7 @@ import {
 } from './createKnownMovementGrid';
 import { findUnitRoute } from './findUnitRoute';
 import { blocksGroundTransit, isCellOccupied } from './isCellOccupied';
+import { claimSite } from './claimSite';
 
 /**
  * Приказ движения: кто, каким юнитом и в какую клетку. `partial` — шаг
@@ -112,6 +113,7 @@ const moveAlong = (
   const target = path.at(-1);
   if (!target) return reject('path');
   let pending = 0;
+  let passed: { x: number; y: number }[] = [];
   let steps = 0;
   let seen = getSeenEnemies(actor);
   for (let index = 1; index < path.length; index++) {
@@ -123,11 +125,15 @@ const moveAlong = (
     if (!flying && blocksGroundTransit(step.x, step.y, actor)) break;
     pending += cost;
     if (isCellOccupied(step.x, step.y)) {
+      passed.push(step);
       gameEvents.emit({ type: 'UNIT_PASSED', unitId, x: step.x, y: step.y });
       continue;
     }
 
     moveUnit(unitId, step.x, step.y, pending);
+    for (const cell of [...passed, step])
+      claimSite(unitId, cell, path.slice(index + 1));
+    passed = [];
     pending = 0;
     steps++;
     const now = getSeenEnemies(actor);

@@ -361,6 +361,8 @@ const eventTypes = [
   'attackObserved',
   'income',
   'enemySpotted',
+  'siteClaimed',
+  'siteBlocked',
   'save',
   'load',
   'import',

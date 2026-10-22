@@ -41,6 +41,37 @@ export const initJournalSystem = () => {
     } = useGameLoopStore.getState();
     const { record } = useJournalStore.getState();
 
+    if (event.type === 'SITE_CLAIMED' || event.type === 'SITE_BLOCKED') {
+      const { owner, site } = event;
+      const blocked = event.type === 'SITE_BLOCKED';
+      const message = blocked
+        ? event.reason === 'population'
+          ? 'Беженцам нет места: не хватает лимита населения'
+          : 'Беженцам нет места: рядом нет свободной клетки'
+        : site.type === 'cache'
+          ? `Разведчик нашёл тайник: +${site.amount} ${site.resource === 'gold' ? 'золота' : 'дерева'}`
+          : site.type === 'refugees'
+            ? 'Разведчик помог беженцам: новый рабочий'
+            : 'Разведчик активировал обелиск: раскрыта местность вокруг';
+      record({
+        type: blocked ? 'siteBlocked' : 'siteClaimed',
+        actor: owner,
+        turn,
+        visibleTo: [owner],
+        details: {
+          siteId: site.id,
+          siteType: site.type,
+          x: site.x,
+          y: site.y,
+          message,
+          ...(blocked ? { reason: event.reason } : {}),
+          ...(site.type === 'cache'
+            ? { resource: site.resource, amount: site.amount }
+            : {}),
+        },
+      });
+    }
+
     if (event.type === 'ATTACK_LANDED') {
       const { owner, type, x, y, hp } = event.target;
       const sheltered =
