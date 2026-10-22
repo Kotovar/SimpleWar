@@ -25,8 +25,11 @@ const COVER: UnitType[] = [
 
 /** Свои бойцы прикрытия, кроме самого юнита. */
 export const coverUnits = (ctx: AiContext, self?: { id: string }) =>
-  ctx.military.filter(
-    unit => COVER.includes(unit.type) && unit.id !== self?.id,
+  [...ctx.military, ...(ctx.obs.alliedUnits ?? [])].filter(
+    (unit): unit is MilitaryUnit =>
+      unit.role === 'military' &&
+      COVER.includes(unit.type) &&
+      unit.id !== self?.id,
   );
 
 /** Есть ли своё прикрытие рядом с клеткой. */

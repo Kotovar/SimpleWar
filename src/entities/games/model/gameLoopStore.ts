@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { withDevtools } from '@shared/lib';
+import { isHostile, withDevtools } from '@shared/lib';
 import {
   DEFAULT_PARTICIPANTS,
   type Participant,
@@ -14,7 +14,7 @@ interface GameLoopStoreState {
   eliminated: ParticipantId[];
   activePlayer: ParticipantId;
   phase: Phase;
-  /** Единственный оставшийся участник; `null` — ничья или исход без победителя. */
+  /** Представитель победившей команды; `null` — ничья или исход без победителя. */
   winner: ParticipantId | null;
   /** Полный обзор завершённой партии; не включает отладку и не меняет знания. */
   reviewWorld: boolean;
@@ -133,17 +133,22 @@ export const useGameLoopStore = create<GameLoopStoreState>()(
           state.eliminated.push(...leaving.map(p => p.id));
           const alive = getAliveParticipants(state);
 
-          const isHuman = ({ controller }: Participant) =>
-            controller === 'human';
-
-          // Без живого человека партия для него окончена: оставшиеся ИИ
-          // не объявляются победителями всей партии.
-          if (
-            alive.length <= 1 ||
-            (state.participants.some(isHuman) && !alive.some(isHuman))
-          ) {
+          const humans = state.participants.filter(
+            p => p.controller === 'human',
+          );
+          const oneTeam = alive.every(
+            p => !isHostile(alive[0].id, p.id, state.participants),
+          );
+          const humanTeamOut =
+            humans.length > 0 &&
+            !alive.some(p =>
+              humans.some(
+                human => !isHostile(human.id, p.id, state.participants),
+              ),
+            );
+          if (oneTeam || humanTeamOut) {
             state.phase = 'gameOver';
-            state.winner = alive.length === 1 ? alive[0].id : null;
+            state.winner = oneTeam ? (alive[0]?.id ?? null) : null;
             return;
           }
 

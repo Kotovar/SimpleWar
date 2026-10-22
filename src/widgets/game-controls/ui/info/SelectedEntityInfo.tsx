@@ -10,7 +10,7 @@ import {
   type Unit,
 } from '@shared/config';
 import { EntityPortrait, TerrainPortrait } from '@shared/ui';
-import { getCombatProfile, getMoveCost } from '@shared/lib';
+import { getCombatProfile, getMoveCost, getRelation } from '@shared/lib';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { getOrderStopMessage } from '@features/pathfinding';
 import { useUnitsStore } from '@entities/units';
@@ -32,7 +32,7 @@ type AttackStats = Pick<
 >;
 
 const EntityHeader = ({ cell, unit, building }: Props) => {
-  const { humanId } = useGameLoopSelectors();
+  const { humanId, participants } = useGameLoopSelectors();
   const entity = unit ?? building;
   const palette = useParticipantPalette(entity?.owner ?? 'p1');
   return (
@@ -58,6 +58,9 @@ const EntityHeader = ({ cell, unit, building }: Props) => {
         {entity && (
           <span className={styles.Owner} data-owner={entity.owner}>
             Владелец: {entity.owner === humanId ? 'Вы' : PALETTES[palette].name}
+            {humanId &&
+              getRelation(humanId, entity.owner, participants) === 'allied' &&
+              ' · Союзник'}
           </span>
         )}
         {cell && entity && (

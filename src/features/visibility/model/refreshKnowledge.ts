@@ -44,7 +44,12 @@ export const computeVisibleMask = (owner: Owner) => {
   return computeVisibility(
     grid[0]?.length ?? 0,
     grid.length,
-    getSightSources(owner, viewers, grid),
+    getSightSources(
+      owner,
+      viewers,
+      grid,
+      useGameLoopStore.getState().participants,
+    ),
   );
 };
 
@@ -69,11 +74,16 @@ export const getVisibleEnemies = (
     owner,
     units.filter(({ type }) => type === 'scout'),
     grid,
+    useGameLoopStore.getState().participants,
   );
   const pick =
     (kind: Contact['kind']) =>
     (entity: Unit | Building): Omit<Contact, 'seenTurn'>[] =>
-      isHostile(owner, entity.owner) &&
+      isHostile(
+        owner,
+        entity.owner,
+        useGameLoopStore.getState().participants,
+      ) &&
       !sheltered.has(entity.id) &&
       visible[entity.y * width + entity.x] === 1
         ? [
@@ -116,12 +126,17 @@ export const getStrikeSightings = (owner: Owner): StrikeSighting[] => {
     owner,
     units.filter(({ type }) => type === 'scout'),
     useMapStore.getState().grid,
+    useGameLoopStore.getState().participants,
   );
   return sieges.flatMap(siege => {
     if (siege.role !== 'military' || !siege.preparedStrike) return [];
     const { x, y } = siege.preparedStrike;
     const seen =
-      !isHostile(owner, siege.owner) ||
+      !isHostile(
+        owner,
+        siege.owner,
+        useGameLoopStore.getState().participants,
+      ) ||
       !hasResearch(siege.owner, 'hiddenAiming') ||
       isCellVisible(scouts, x, y);
     return [{ id: siege.id, x, y, seen }];
@@ -171,7 +186,7 @@ const recordSpotted = (
 /**
  * Пересчитывает знания всех участников партии по текущему миру.
  * Полный пересчёт дешёв даже на 100 × 100 и не оставляет обзор погибшего
- * источника. Выбывшие участники больше не наблюдают.
+ * источника. Выбывший наблюдает, пока в игре остался союзник.
  */
 export const refreshKnowledge = () => {
   if (isRestoringGame()) return;
@@ -189,7 +204,12 @@ export const refreshKnowledge = () => {
   const humanId = getHumanId(participants);
   for (const { id } of participants) {
     const previous = byParticipant[id];
-    if (eliminatedIds.has(id)) {
+    if (
+      eliminatedIds.has(id) &&
+      !participants.some(
+        p => !eliminatedIds.has(p.id) && !isHostile(id, p.id, participants),
+      )
+    ) {
       if (previous) next[id] = previous;
       continue;
     }
@@ -200,7 +220,11 @@ export const refreshKnowledge = () => {
       enemies: getVisibleEnemies(id, visible),
       turn: currentTurn,
       eliminated,
-      scoutMemoryBonus: hasResearch(id, 'cartography')
+      scoutMemoryBonus: participants.some(
+        p =>
+          !isHostile(id, p.id, participants) &&
+          hasResearch(p.id, 'cartography'),
+      )
         ? CARTOGRAPHY_EXTRA_MEMORY
         : 0,
       strikes: getStrikeSightings(id),

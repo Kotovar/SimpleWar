@@ -46,7 +46,11 @@ export const getSeenEnemies = (actor: ParticipantId) => {
     ...Object.values(useBuildingsStore.getState().buildings),
   ]) {
     if (
-      isHostile(actor, entity.owner) &&
+      isHostile(
+        actor,
+        entity.owner,
+        useGameLoopStore.getState().participants,
+      ) &&
       visible[entity.y * width + entity.x]
     ) {
       seen.add(entity.id);

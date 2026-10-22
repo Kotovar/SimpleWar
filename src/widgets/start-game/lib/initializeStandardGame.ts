@@ -10,7 +10,7 @@ import { initializeGame } from './initializeGame';
 
 /** Обычная партия: человек против настроенных в меню ИИ. */
 export const initializeStandardGame = (): Participant[] | null => {
-  const { aiSetups, gridColumns, gridRows, paletteChoices } =
+  const { aiSetups, gridColumns, gridRows, paletteChoices, teamChoices } =
     useSettingsStore.getState();
   const palettes = resolvePaletteChoices(
     PARTICIPANT_IDS.slice(0, aiSetups.length + 1).map(id => paletteChoices[id]),
@@ -41,5 +41,6 @@ export const initializeStandardGame = (): Participant[] | null => {
       }),
     ),
   ];
+  for (const p of participants) p.team = teamChoices[p.id];
   return initializeGame(participants) ? participants : null;
 };

@@ -42,7 +42,12 @@ const createKnownPlacement = (actor: ParticipantId): Placement => {
   const { grid } = useMapStore.getState();
   const units = Object.values(useUnitsStore.getState().units);
   const buildings = Object.values(useBuildingsStore.getState().buildings);
-  const sources = getSightSources(actor, [...units, ...buildings], grid);
+  const sources = getSightSources(
+    actor,
+    [...units, ...buildings],
+    grid,
+    useGameLoopStore.getState().participants,
+  );
   const knowledge = getParticipantKnowledge(actor);
   const key = (x: number, y: number) => `${x},${y}`;
   const occupied = new Set([...units, ...buildings].map(e => key(e.x, e.y)));

@@ -1,3 +1,4 @@
+import { useGameLoopStore } from '@entities/games';
 import {
   BUILDINGS_CONFIG,
   type ParticipantId,
@@ -28,7 +29,7 @@ export const getExplorationDanger = (
   for (const unit of Object.values(useUnitsStore.getState().units)) {
     if (
       unit.role === 'military' &&
-      isHostile(actor, unit.owner) &&
+      isHostile(actor, unit.owner, useGameLoopStore.getState().participants) &&
       visible[unit.y * width + unit.x]
     )
       sources.push({ ...unit, range: unit.attackRange + DANGER_MARGIN });
@@ -36,7 +37,10 @@ export const getExplorationDanger = (
   for (const contact of Object.values(
     getParticipantKnowledge(actor)?.contacts ?? {},
   )) {
-    if (contact.kind !== 'building' || !isHostile(actor, contact.owner))
+    if (
+      contact.kind !== 'building' ||
+      !isHostile(actor, contact.owner, useGameLoopStore.getState().participants)
+    )
       continue;
     const config =
       BUILDINGS_CONFIG[contact.type as keyof typeof BUILDINGS_CONFIG];

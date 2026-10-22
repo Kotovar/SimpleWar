@@ -1,10 +1,12 @@
 import type {
   Building,
+  Participant,
   ParticipantId,
   ResearchType,
   Resources,
   Unit,
 } from '@shared/config';
+import { isHostile } from '@shared/lib';
 
 /**
  * Места сторон на конец партии: победитель, затем оставшиеся в игре по
@@ -14,24 +16,25 @@ import type {
  * @param size - Число юнитов и зданий стороны.
  */
 export const getStandings = (
-  participants: readonly { id: ParticipantId }[],
+  participants: readonly Pick<Participant, 'id' | 'team'>[],
   eliminated: readonly ParticipantId[],
   winner: ParticipantId | null,
   size: (id: ParticipantId) => number,
 ) => {
   const out = new Set(eliminated);
+  const won = (id: ParticipantId) =>
+    winner !== null && !isHostile(id, winner, participants);
   const alive = participants
     .map(({ id }) => id)
     .filter(id => !out.has(id))
-    .sort(
-      (a, b) =>
-        Number(b === winner) - Number(a === winner) || size(b) - size(a),
-    );
-  return [...alive, ...[...eliminated].reverse()].map((id, index) => ({
-    id,
-    place: index + 1,
-    out: out.has(id),
-  }));
+    .sort((a, b) => size(b) - size(a));
+  return [...alive, ...[...eliminated].reverse()]
+    .sort((a, b) => Number(won(b)) - Number(won(a)))
+    .map((id, index) => ({
+      id,
+      place: won(id) ? 1 : index + 1,
+      out: out.has(id),
+    }));
 };
 
 /** Итоги собственных сил и запасов на конец партии, без скрытых данных противника. */

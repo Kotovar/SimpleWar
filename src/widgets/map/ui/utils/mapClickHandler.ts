@@ -1,4 +1,6 @@
 import type { Building, Position, Unit } from '@shared/config';
+import { isHostile } from '@shared/lib';
+import { useGameLoopStore } from '@entities/games';
 import type { MapClickContext } from './mapClickContext';
 
 export type { MapClickContext };
@@ -216,7 +218,10 @@ export const handleMapCellOrder = (
       buildingId: entity.id,
       target: onCurrent ? null : { x, y },
     });
-  } else if (target && target.owner !== actor) {
+  } else if (
+    target &&
+    isHostile(actor, target.owner, useGameLoopStore.getState().participants)
+  ) {
     result = commands.attack({
       actor,
       attackerId: entity.id,

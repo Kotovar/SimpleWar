@@ -5,6 +5,8 @@ import {
   CELL_SIZE_LIMITS,
   DEBUG_EXCEPTIONS,
   DEFAULT_PALETTES,
+  DEFAULT_TEAMS,
+  TEAM_IDS,
   PALETTE_IDS,
   MAP_SIDE_LIMIT,
   MAX_PARTICIPANTS,
@@ -16,7 +18,7 @@ import {
   STRATEGY_NAME,
   UNITS_CONFIG,
 } from '@shared/config';
-import { canHouseWorker } from '@shared/lib';
+import { canHouseWorker, isHostile } from '@shared/lib';
 import { ROAD_BIT, TERRAIN_CODES } from '@entities/perceptions';
 import { HINTS, TUTORIAL } from '@widgets/game-controls';
 import {
@@ -346,7 +348,7 @@ const snapshotShape = shape({
     participants: list(
       shape(
         { id: participant, controller, palette: one(PALETTE_IDS) },
-        { ai: setup },
+        { ai: setup, team: one(TEAM_IDS) },
       ),
       4,
     ),
@@ -366,6 +368,9 @@ const snapshotShape = shape({
       Object.fromEntries(
         PARTICIPANT_IDS.map(id => [id, one([...PALETTE_IDS, 'random'])]),
       ),
+    ),
+    teamChoices: shape(
+      Object.fromEntries(PARTICIPANT_IDS.map(id => [id, one(TEAM_IDS)])),
     ),
   }),
   view: shape({
@@ -508,6 +513,24 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
   if (
     obj(value) &&
     obj(value.rules) &&
+    !Object.hasOwn(value.rules, 'teamChoices')
+  ) {
+    value.rules.teamChoices = { ...DEFAULT_TEAMS };
+  }
+  if (obj(value) && obj(value.rules) && obj(value.rules.teamChoices)) {
+    // Прежний выбор без команды получает свободный номер, сохраняя остальные команды.
+    const teams = value.rules.teamChoices;
+    const used = new Set(Object.values(teams));
+    for (const id of PARTICIPANT_IDS) {
+      if (teams[id] !== null) continue;
+      const team = TEAM_IDS.find(team => !used.has(team));
+      teams[id] = team;
+      used.add(team);
+    }
+  }
+  if (
+    obj(value) &&
+    obj(value.rules) &&
     !Object.hasOwn(value.rules, 'aiSetups') &&
     Object.hasOwn(value.rules, 'aiSetup')
   ) {
@@ -549,6 +572,9 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
   const eliminated = new Set(s.loop.eliminated);
   const alive = ids.filter(id => !eliminated.has(id));
   const aliveSet = new Set(alive);
+  const oneTeam =
+    alive.length > 0 &&
+    alive.every(id => !isHostile(alive[0], id, s.loop.participants));
   const inside = (p: { x: number; y: number }) => p.x < width && p.y < height;
   const same = (a: { x: number; y: number }, b: { x: number; y: number }) =>
     a.x === b.x && a.y === b.y;
@@ -563,15 +589,14 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
   requireValid(
     s.loop.phase !== 'inProgress' ||
       (alive.length >= 2 &&
+        !oneTeam &&
         aliveSet.has(s.loop.activePlayer) &&
         s.loop.winner === null),
     'Повреждена очередь ходов',
   );
   requireValid(
     s.loop.winner === null ||
-      (alive.length === 1 &&
-        alive[0] === s.loop.winner &&
-        s.loop.phase === 'gameOver'),
+      (oneTeam && aliveSet.has(s.loop.winner) && s.loop.phase === 'gameOver'),
     'Повреждён исход партии',
   );
   requireValid(
@@ -721,7 +746,7 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
         requireValid(
           key === c.id &&
             idSet.has(c.owner) &&
-            c.owner !== id &&
+            isHostile(id, c.owner, s.loop.participants) &&
             inside(c) &&
             c.hp <= c.maxHp &&
             c.seenTurn <= s.loop.currentTurn &&

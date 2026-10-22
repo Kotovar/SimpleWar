@@ -52,6 +52,7 @@ export const setRallyPoint = ({
             ...Object.values(buildings.buildings),
           ],
           grid,
+          useGameLoopStore.getState().participants,
         ),
         x,
         y,

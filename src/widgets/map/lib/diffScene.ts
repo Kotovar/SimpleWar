@@ -1,3 +1,4 @@
+import { useGameLoopStore } from '@entities/games';
 import type {
   Building,
   BuildingType,
@@ -160,7 +161,7 @@ export const diffScene = (
         humanId &&
         !building &&
         entity.role === 'military' &&
-        isHostile(humanId, owner)
+        isHostile(humanId, owner, useGameLoopStore.getState().participants)
       ) {
         events.push({ kind: 'threat', x, y });
       }

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { gameEvents, withDevtools } from '@shared/lib';
+import { gameEvents, isHostile, withDevtools } from '@shared/lib';
+import { useGameLoopStore } from '@entities/games';
 import { HEALING, type Position, type Unit } from '@shared/config';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
@@ -59,7 +60,11 @@ export const useMovementStore = create<MovementState>()(
           ? Object.values(units).filter(
               other =>
                 other.id !== unit.id &&
-                other.owner === unit.owner &&
+                !isHostile(
+                  unit.owner,
+                  other.owner,
+                  useGameLoopStore.getState().participants,
+                ) &&
                 other.hp < other.maxHp &&
                 Math.abs(other.x - unit.x) + Math.abs(other.y - unit.y) <=
                   unit.attackRange,

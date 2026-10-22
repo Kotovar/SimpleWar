@@ -24,10 +24,10 @@ export const TurnQueueList = ({
   if (participants.length < 3) return null;
   return (
     <ol className={styles.Queue} aria-label='Очередь ходов'>
-      {participants.map(({ id }) => {
+      {participants.map(({ id, team }) => {
         const out = eliminated.includes(id);
         const name = getParticipantName(id, participants);
-        const label = `${name}${id === humanId ? ' (вы)' : ''}${out ? ' — выбыли' : ''}`;
+        const label = `${name}${id === humanId ? ' (вы)' : ''}${team !== undefined ? ` · Команда ${team}` : ''}${out ? ' — выбыли' : ''}`;
         return (
           <li
             key={id}

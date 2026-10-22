@@ -20,7 +20,7 @@ import { useUnitsStore } from '@entities/units';
 import { useSettingsStore } from '@entities/settings';
 import { useGameLoopStore } from '@entities/games';
 import { useJournalStore } from '@entities/journals';
-import { failure, reject } from '@shared/lib';
+import { failure, isHostile, reject } from '@shared/lib';
 import { applyAiStart } from './applyAiStart';
 import { evaluateMap, type StartPosition } from './evaluateMap';
 
@@ -115,6 +115,14 @@ export const initializeGame = (
   }
   const minSide =
     participants.length === 2 ? MIN_MAP_SIDE.duel : MIN_MAP_SIDE.group;
+  if (
+    !participants.some(p => isHostile(participants[0].id, p.id, participants))
+  ) {
+    fail(
+      'Добавьте хотя бы одну вражескую сторону: все участники в одной команде.',
+    );
+    return false;
+  }
   if (
     !Number.isInteger(gridColumns) ||
     !Number.isInteger(gridRows) ||

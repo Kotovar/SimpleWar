@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { getParticipantGenitive } from '@shared/config';
+import { isHostile } from '@shared/lib';
 import { useGameLoopStore } from '@entities/games';
 import { getAiPlayback, usePreferencesStore } from '@entities/settings';
 import { useGameLoopSelectors } from '@features/game-loop';
@@ -15,7 +16,7 @@ const MESSAGE = { ai: 'Ход противника', human: 'Ваш ход' };
  * возврате хода человеку или конце партии.
  */
 const EnemyTurn = () => {
-  const { activePlayer, participants } = useGameLoopSelectors();
+  const { activePlayer, participants, humanId } = useGameLoopSelectors();
   const active = useGameLoopStore(isEnemyTurn);
   const instant = usePreferencesStore(
     state => getAiPlayback(state) === 'instant',
@@ -43,13 +44,16 @@ const EnemyTurn = () => {
       <SideMark owner={activePlayer} participants={participants} />
       <span role='status'>
         Ход {getParticipantGenitive(activePlayer, participants)}
+        {humanId &&
+          !isHostile(humanId, activePlayer, participants) &&
+          ' · Союзник'}
       </span>
       <span className={styles.Elapsed}>{elapsed} с</span>
       {!instant && (
         <button
           type='button'
           className={styles.Rush}
-          title='Остаток хода врагов — без анимаций'
+          title='Оставшиеся ходы ИИ — без анимаций'
           onClick={() => rush(true)}
         >
           Ускорить »

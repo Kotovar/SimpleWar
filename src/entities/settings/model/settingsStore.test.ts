@@ -29,6 +29,24 @@ describe('противники обычной партии', () => {
   const store = () => useSettingsStore.getState();
   beforeEach(() => store().resetStore());
 
+  it('по умолчанию назначает каждой стороне отдельную команду и позволяет объединить их', () => {
+    store().setAiCount(3);
+    expect(store().teamChoices).toEqual({ p1: 1, p2: 2, p3: 3, p4: 4 });
+    store().setTeamChoice('p2', 1);
+    expect(store().teamChoices).toEqual({ p1: 1, p2: 1, p3: 3, p4: 4 });
+    store().resetStore();
+    expect(store().teamChoices).toEqual({ p1: 1, p2: 2, p3: 3, p4: 4 });
+  });
+
+  it('добавляет ИИ в свободную команду, если его прежняя команда уже занята', () => {
+    store().setTeamChoice('p1', 3);
+    store().setAiCount(3);
+    expect(store().teamChoices).toEqual({ p1: 3, p2: 2, p3: 1, p4: 4 });
+    store().setTeamChoice('p2', 3);
+    store().setAiCount(2);
+    expect(store().teamChoices).toEqual({ p1: 3, p2: 3, p3: 1, p4: 4 });
+  });
+
   it('сохраняет отдельный ручной или случайный цвет каждой стороны', () => {
     store().setAiCount(3);
     store().setPaletteChoice('p1', 'pink');
@@ -81,6 +99,7 @@ describe('противники обычной партии', () => {
     store().setAiSetup(1, { difficulty: 'hard' });
     store().setAiSetup(2, { profile: 'defensive' });
     store().setPaletteChoice('p4', 'green');
+    store().setTeamChoice('p4', 1);
     store().removeAi(1);
     expect(store().aiSetups).toEqual([
       DEFAULT_AI_SETUP,
@@ -92,6 +111,7 @@ describe('противники обычной партии', () => {
       p3: 'green',
       p4: 'yellow',
     });
+    expect(store().teamChoices).toEqual({ p1: 1, p2: 2, p3: 1, p4: 3 });
     store().removeAi(0);
     store().removeAi(0);
     expect(store().aiSetups).toEqual([

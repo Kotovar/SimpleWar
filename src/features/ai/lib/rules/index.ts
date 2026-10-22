@@ -6,7 +6,7 @@ import { W12 } from './shelter';
 import { W10 } from './passage';
 import { X01 } from './clearing';
 import { D01, D02 } from './roads';
-import { M01, M02, M05, M06 } from './soldiers';
+import { M01, M02, M05, M06, M07 } from './soldiers';
 import { M03, M04 } from './assault';
 import { A02, A03, A05, A07 } from './archers';
 import { A01, A04, A06 } from './archerMoves';
@@ -84,6 +84,7 @@ export const AI_RULES: AiRule[] = [
   M04,
   M05,
   M06,
+  M07,
   A01,
   A02,
   A03,

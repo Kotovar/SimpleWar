@@ -64,7 +64,18 @@ const validateAndSpawn = (
     ...Object.values(useUnitsStore.getState().units),
     ...Object.values(useBuildingsStore.getState().buildings),
   ];
-  if (!isCellVisible(getSightSources(actor, viewers, grid), x, y)) {
+  if (
+    !isCellVisible(
+      getSightSources(
+        actor,
+        viewers,
+        grid,
+        useGameLoopStore.getState().participants,
+      ),
+      x,
+      y,
+    )
+  ) {
     return reject('hidden');
   }
   if (!isBuildableTerrain('grass', cell.type)) return reject('terrain');

@@ -131,6 +131,7 @@ export const accessMap = (ctx: AiContext): AccessMap => {
   const buildings = ctx.obs.ownBuildings;
   const walls = new Set<string>();
   for (const { x, y } of buildings) walls.add(`${x},${y}`);
+  for (const { x, y } of ctx.obs.alliedBuildings ?? []) walls.add(`${x},${y}`);
   const enemyBuildings = [...ctx.enemies, ...ctx.remembered].filter(
     ({ kind }) => kind === 'building',
   );

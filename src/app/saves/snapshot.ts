@@ -106,6 +106,7 @@ export const captureSnapshot = (): GameSnapshot => {
         : 0,
       aiSetups: settings.aiSetups,
       paletteChoices: settings.paletteChoices,
+      teamChoices: settings.teamChoices,
     },
     view: { camera: settings.camera, cellSize: settings.cellSize },
     debug: data(useDebugStore.getState()),

@@ -68,9 +68,11 @@ const validateAndAttack = ({
       ...Object.values(buildingsStore.buildings),
     ],
     useMapStore.getState().grid,
+    useGameLoopStore.getState().participants,
   );
   if (!isCellVisible(sources, target.x, target.y)) return reject('notFound');
-  if (!isHostile(actor, target.owner)) return reject('target');
+  if (!isHostile(actor, target.owner, useGameLoopStore.getState().participants))
+    return reject('target');
   // Матрица «земля / воздух»: не всякий атакующий достаёт летающего.
   if (!canHitTarget(attacker.type, target.type)) return reject('target');
   const distance =
