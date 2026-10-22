@@ -22,7 +22,7 @@ import {
   UNITS_CONFIG,
 } from '@shared/config';
 import { canHouseWorker, isHostile } from '@shared/lib';
-import { ROAD_BIT, TERRAIN_CODES } from '@entities/perceptions';
+import { ROAD_BIT, RICH_BIT, TERRAIN_CODES } from '@entities/perceptions';
 import { HINTS, TUTORIAL } from '@widgets/game-controls';
 import {
   MAX_SAVE_BYTES,
@@ -93,11 +93,16 @@ const shape =
 const requireValid = (ok: boolean, message: string) => {
   if (!ok) throw new Error(message);
 };
-/** Код памяти о клетке: местность и, возможно, бит дороги на ней. */
-const terrainCode: Check = v =>
-  int(0, TERRAIN_CODES.length | ROAD_BIT)(v) &&
-  ((v as number) & ~ROAD_BIT) <= TERRAIN_CODES.length &&
-  (v === 0 || ((v as number) & ~ROAD_BIT) > 0);
+/** Код памяти о клетке: местность, дорога и открытое богатство золота. */
+const terrainCode: Check = v => {
+  if (!int(0, TERRAIN_CODES.length | ROAD_BIT | RICH_BIT)(v)) return false;
+  const code = (v as number) & ~(ROAD_BIT | RICH_BIT);
+  return (
+    code <= TERRAIN_CODES.length &&
+    (v === 0 || code > 0) &&
+    (!((v as number) & RICH_BIT) || TERRAIN_CODES[code - 1] === 'gold')
+  );
+};
 const participant = one(PARTICIPANT_IDS);
 const participants = (check: Check) => dictionary(check, participant, 4);
 const unitType = one(Object.keys(UNITS_CONFIG));
@@ -419,7 +424,7 @@ const snapshotShape = shape({
             type: one(TERRAIN_CODES),
             isWalkable: bool,
           },
-          { road: one([true]) },
+          { road: one([true]), rich: one([true]) },
         ),
         100,
       ),
@@ -644,7 +649,8 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
             (cell, x) =>
               cell.x === x &&
               cell.y === y &&
-              cell.isWalkable === (MOVE_COST[cell.type] !== undefined),
+              cell.isWalkable === (MOVE_COST[cell.type] !== undefined) &&
+              (!cell.rich || cell.type === 'gold'),
           ),
       ),
     'Повреждена карта',

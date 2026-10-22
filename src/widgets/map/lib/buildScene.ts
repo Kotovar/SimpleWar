@@ -10,6 +10,7 @@ import { findServingWorker, getShelteredIds } from '@shared/lib';
 import {
   getKnownCellType,
   isKnownRoad,
+  isKnownRichGold,
   type Contact,
   type ParticipantKnowledge,
   type KnownSite,
@@ -63,6 +64,7 @@ export const getKnownGrid = (
         isWalkable: MOVE_COST[type] !== undefined,
       };
       if (isKnownRoad(knowledge, x, y)) cell.road = true;
+      if (isKnownRichGold(knowledge, x, y)) cell.rich = true;
       return cell;
     }),
   );

@@ -222,6 +222,7 @@ export const buildContext = (
       obs.ownBuildings,
       obs.ownUnits as Unit[],
       obs.researched.includes('artel'),
+      (x, y) => obs.knownRichGold?.[y]?.[x] ?? false,
     ).income,
     known,
     knownCost,

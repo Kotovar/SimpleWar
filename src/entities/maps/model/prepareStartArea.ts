@@ -13,6 +13,7 @@ export const prepareStartArea = (grid: Cell[][], x: number, y: number) => {
       const cell = grid[y + dy]?.[x + dx];
       if (cell) {
         cell.type = 'grass';
+        delete cell.rich;
         cell.isWalkable = true;
       }
     }

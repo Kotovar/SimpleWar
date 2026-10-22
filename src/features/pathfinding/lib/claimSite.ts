@@ -12,6 +12,7 @@ import { useEconomyStore } from '@entities/economies';
 import { useGameLoopStore } from '@entities/games';
 import {
   ROAD_BIT,
+  RICH_BIT,
   TERRAIN_CODES,
   useKnowledgeStore,
 } from '@entities/perceptions';
@@ -39,7 +40,9 @@ const revealTerrain = (owner: ParticipantId, center: Position) => {
         ) {
           const cell = grid[y][x];
           terrain[y * k.width + x] =
-            (TERRAIN_CODES.indexOf(cell.type) + 1) | (cell.road ? ROAD_BIT : 0);
+            (TERRAIN_CODES.indexOf(cell.type) + 1) |
+            (cell.road ? ROAD_BIT : 0) |
+            (cell.type === 'gold' ? terrain[y * k.width + x] & RICH_BIT : 0);
         }
       }
       byParticipant[id] = { ...k, terrain };

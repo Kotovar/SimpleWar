@@ -17,7 +17,15 @@ import { calculateTurnIncome } from '@shared/lib';
 export const calculateIncome = (
   buildings: Building[],
   units: Unit[] = [],
-  { rested = false, artel = false }: { rested?: boolean; artel?: boolean } = {},
+  {
+    rested = false,
+    artel = false,
+    isRichGold,
+  }: {
+    rested?: boolean;
+    artel?: boolean;
+    isRichGold?: (x: number, y: number) => boolean;
+  } = {},
 ): Resources =>
   calculateTurnIncome(
     buildings,
@@ -29,4 +37,5 @@ export const calculateIncome = (
         )
       : units,
     artel,
+    isRichGold,
   ).income;

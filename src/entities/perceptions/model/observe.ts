@@ -7,6 +7,7 @@ import {
 } from '@shared/config';
 import {
   ROAD_BIT,
+  RICH_BIT,
   TERRAIN_CODES,
   type CellKnowledge,
   type Contact,
@@ -20,6 +21,8 @@ import {
 export type ObservationInput = {
   /** Маска видимых клеток текущего обзора. */
   visible: Uint8Array;
+  /** Клетки общего обзора разведчиков; только они открывают богатые жилы. */
+  scoutVisible?: Uint8Array;
   /** Настоящие клетки мира: запоминаются только видимые. */
   grid: Cell[][];
   /** Вражеские объекты в видимых клетках. */
@@ -67,6 +70,7 @@ export const observe = (
   previous: ParticipantKnowledge | undefined,
   {
     visible,
+    scoutVisible,
     grid,
     enemies,
     turn,
@@ -89,8 +93,13 @@ export const observe = (
   for (let index = 0; index < visible.length; index++) {
     if (!visible[index]) continue;
     const cell = grid[Math.floor(index / width)][index % width];
+    const rich =
+      cell.type === 'gold' &&
+      (scoutVisible?.[index] ? cell.rich : !!(terrain[index] & RICH_BIT));
     const code =
-      (TERRAIN_CODES.indexOf(cell.type) + 1) | (cell.road ? ROAD_BIT : 0);
+      (TERRAIN_CODES.indexOf(cell.type) + 1) |
+      (cell.road ? ROAD_BIT : 0) |
+      (rich ? RICH_BIT : 0);
     if (terrain[index] === code) continue;
     if (!terrainCopied) {
       terrain = terrain.slice();
@@ -208,7 +217,8 @@ export const getKnownCellType = (
   y: number,
 ) => {
   if (!knowledge || x < 0 || y < 0 || x >= knowledge.width) return null;
-  const code = knowledge.terrain[y * knowledge.width + x] & ~ROAD_BIT;
+  const code =
+    knowledge.terrain[y * knowledge.width + x] & ~(ROAD_BIT | RICH_BIT);
   return code ? TERRAIN_CODES[code - 1] : null;
 };
 
@@ -225,6 +235,15 @@ export const isKnownRoad = (
   y >= 0 &&
   x < knowledge.width &&
   (knowledge.terrain[y * knowledge.width + x] & ROAD_BIT) !== 0;
+
+export const isKnownRichGold = (
+  knowledge: Pick<ParticipantKnowledge, 'width' | 'terrain'> | undefined,
+  x: number,
+  y: number,
+) =>
+  !!knowledge &&
+  getKnownCellType(knowledge, x, y) === 'gold' &&
+  !!(knowledge.terrain[y * knowledge.width + x] & RICH_BIT);
 
 /**
  * Достоверность контакта по его возрасту.

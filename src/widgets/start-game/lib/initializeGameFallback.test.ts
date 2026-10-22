@@ -52,6 +52,12 @@ it.each([2, 3, 4])(
       count,
     );
     expect(Object.values(useUnitsStore.getState().units)).toHaveLength(count);
+    const rich = useMapStore
+      .getState()
+      .grid.flat()
+      .filter(c => c.rich);
+    expect(rich).toHaveLength(count === 2 ? 2 : 4);
+    expect(rich.every(c => c.type === 'gold')).toBe(true);
     const types = useMapStore.getState().grid.map(row => row.map(c => c.type));
     if (count > 2) {
       expect(types).toEqual(types.map(row => [...row].reverse()));

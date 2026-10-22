@@ -9,6 +9,10 @@ import { useEconomyStore } from '@entities/economies';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand, useJournalStore } from '@entities/journals';
 import { hasResearch, useResearchStore } from '@entities/researches';
+import {
+  getParticipantKnowledge,
+  isKnownRichGold,
+} from '@entities/perceptions';
 import { eliminateParticipant } from '../model/gameLoopStore';
 import { executePreparedStrikes } from './strikes';
 
@@ -42,6 +46,9 @@ const validateAndEndTurn = (actor: ParticipantId): CommandResult => {
     useBuildingsStore.getState().getEconomicBuildings(actor),
     Object.values(units.units).filter(({ owner }) => owner === actor),
     hasResearch(actor, 'artel'),
+    (x, y) =>
+      !!useMapStore.getState().getCell(x, y)?.rich &&
+      isKnownRichGold(getParticipantKnowledge(actor), x, y),
   );
   for (const id of miners) units.changeBuildPoints(id);
   useEconomyStore.getState().addResources(actor, income);

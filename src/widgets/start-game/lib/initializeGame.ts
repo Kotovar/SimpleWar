@@ -57,6 +57,7 @@ export const placeStartResources = (
       grid[base.y === 1 ? 0 : height - 1][base.x === 1 ? 3 : width - 4];
     gold.type = 'gold';
     forest.type = 'forest';
+    delete forest.rich;
     gold.isWalkable = forest.isWalkable = false;
   }
 };
@@ -84,7 +85,7 @@ const fallbackMap = (
  *
  * @param participants - Участники партии.
  * @param options.emptyField - Поле без рельефа (режим тестирования S15a).
- * @param options.withSites - Находки обычной партии; песочница их не генерирует.
+ * @param options.withSites - Находки и богатые жилы обычной партии.
  */
 export const initializeGame = (
   participants = DEFAULT_PARTICIPANTS,
@@ -185,6 +186,10 @@ export const initializeGame = (
     applyAiStart(participants);
   };
   const commitMap = (grid: Cell[][], sites: Site[], usedFallback = false) => {
+    for (const cell of grid.flat()) {
+      if (!withSites || cell.type !== 'gold') delete cell.rich;
+      else if (usedFallback) cell.rich = true;
+    }
     useMapStore.getState().setGrid(grid, initialSeed, usedFallback);
     useSitesStore.getState().setSites(sites);
     spawnStarts();

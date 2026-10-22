@@ -132,6 +132,22 @@ export const drawGoldOre = (
   ctx.restore();
 };
 
+/** Дополнительные блики открытой богатой жилы, видны и у построенного рудника. */
+export const drawRichGold = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  cellSize: number,
+) => {
+  beginTerrain(ctx, x, y, cellSize, false);
+  ctx.shadowColor = '#ffd557';
+  ctx.shadowBlur = cellSize * 0.12;
+  sparkle(ctx, 4, 6);
+  sparkle(ctx, 28, 6);
+  sparkle(ctx, 27, 27);
+  ctx.restore();
+};
+
 const MOUNTAIN_VARIANTS = [
   // Двойная вершина со снежной шапкой.
   (ctx: CanvasRenderingContext2D) => {

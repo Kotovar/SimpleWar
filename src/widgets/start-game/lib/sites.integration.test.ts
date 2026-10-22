@@ -29,6 +29,12 @@ it.each([
       settings.setCustomSeed(43);
       expect(initializeStandardGame()).toHaveLength(count);
       const sites = Object.values(useSitesStore.getState().sites);
+      const rich = useMapStore
+        .getState()
+        .grid.flat()
+        .filter(c => c.rich);
+      expect(rich.length).toBeGreaterThan(0);
+      expect(rich.every(c => c.type === 'gold')).toBe(true);
       expect(SITE_TYPES.every(type => sites.some(s => s.type === type))).toBe(
         true,
       );
@@ -55,5 +61,11 @@ it.each([false, true])(
       initializeSandbox({ ...DEFAULT_SANDBOX, emptyField }),
     ).not.toBeNull();
     expect(useSitesStore.getState().sites).toEqual({});
+    expect(
+      useMapStore
+        .getState()
+        .grid.flat()
+        .some(c => c.rich),
+    ).toBe(false);
   },
 );

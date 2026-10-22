@@ -2,10 +2,12 @@ import { MOVE_COST, type Cell } from '@shared/config';
 import { useMapViewer } from '@entities/settings';
 import { useGameLoopStore } from '@entities/games';
 import { useSitesStore } from '@entities/sites';
+import { useMapStore } from '@entities/maps';
 import {
   getCellKnowledge,
   getKnownCellType,
   isKnownRoad,
+  isKnownRichGold,
   useParticipantKnowledge,
 } from '@entities/perceptions';
 import { useGameLoopSelectors } from '@features/game-loop';
@@ -26,6 +28,7 @@ const useKnownSelection = () => {
   const viewer = review ? 'world' : configuredViewer;
   const knowledge = useParticipantKnowledge(viewer === 'world' ? null : viewer);
   const worldSites = useSitesStore(state => state.sites);
+  const grid = useMapStore(state => state.grid);
 
   // Карточка показывает только то, что видит смотрящий: чужой объект
   // вне обзора и настоящий рельеф неразведанной клетки не раскрываются.
@@ -38,7 +41,9 @@ const useKnownSelection = () => {
   const selectedBuilding = buildingsSelection.getSelectedBuilding();
   const unit = canSee(selectedUnit) ? selectedUnit : null;
   const building = canSee(selectedBuilding) ? selectedBuilding : null;
-  const realCell = terrainSelection.getSelectedCell();
+  const realCell =
+    terrainSelection.getSelectedCell() ??
+    (building?.type === 'mine' ? grid[building.y]?.[building.x] : null);
   const knownType =
     realCell && viewer !== 'world'
       ? getKnownCellType(knowledge, realCell.x, realCell.y)
@@ -55,6 +60,11 @@ const useKnownSelection = () => {
           type: knownType,
           isWalkable: MOVE_COST[knownType] !== undefined,
           ...(knownRoad && { road: true as const }),
+          ...((viewer === 'world'
+            ? realCell.rich
+            : isKnownRichGold(knowledge, realCell.x, realCell.y)) && {
+            rich: true as const,
+          }),
         }
       : null;
   const isUnknownCell = !!realCell && !knownType;

@@ -7,6 +7,7 @@ import { forEachCellIn, getFullRange } from './cellRange';
 import {
   drawForest,
   drawGoldOre,
+  drawRichGold,
   drawHill,
   drawMountains,
   drawSwamp,
@@ -44,11 +45,13 @@ export const renderTerrainLayer = (
   forEachCellIn(grid, range, (cell, x, y) => {
     if (builtCells.has(`${x},${y}`)) {
       drawClearing(ctx, x, y, cellSize, cell.type);
+      if (cell.rich) drawRichGold(ctx, x, y, cellSize);
       return;
     }
     if (cell.type === 'mountain') drawMountains(ctx, x, y, cellSize);
     if (cell.type === 'forest') drawForest(ctx, x, y, cellSize);
     if (cell.type === 'gold') drawGoldOre(ctx, x, y, cellSize);
+    if (cell.rich) drawRichGold(ctx, x, y, cellSize);
     if (cell.type === 'hill') drawHill(ctx, x, y, cellSize);
     if (cell.type === 'swamp') drawSwamp(ctx, x, y, cellSize);
     if (cell.road) drawRoad(ctx, grid, x, y, cellSize);

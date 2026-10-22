@@ -85,6 +85,7 @@ export const dirtyTiles = (
       if (
         cache.grid[y]?.[x]?.type !== grid[y]?.[x]?.type ||
         cache.grid[y]?.[x]?.road !== grid[y]?.[x]?.road ||
+        cache.grid[y]?.[x]?.rich !== grid[y]?.[x]?.rich ||
         cache.builtCells.has(key) !== builtCells.has(key)
       ) {
         mark(x, y);

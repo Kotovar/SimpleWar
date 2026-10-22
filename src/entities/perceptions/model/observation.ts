@@ -41,6 +41,8 @@ export type Observation = {
   knownTerrain: (CellType | null)[][];
   /** Известные дороги, `knownRoads[y][x]`; без поля дорог не знают. */
   knownRoads?: boolean[][];
+  /** Богатые жилы, обнаруженные разведчиком; скрытые сведения мира не читаются. */
+  knownRichGold?: boolean[][];
   /** Видимость клеток сейчас, `visible[y][x]`. */
   visible: boolean[][];
   /** Невыбывшие соперники: порядок ходов и выбывание публичны. */

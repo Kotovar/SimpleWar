@@ -9,6 +9,10 @@ import { useBuildingsSelectors } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
 import { useResearchStore } from '@entities/researches';
 import { useEconomySelectors } from '@entities/economies';
+import {
+  isKnownRichGold,
+  useParticipantKnowledge,
+} from '@entities/perceptions';
 import { calculateIncome, useGameLoopSelectors } from '@features/game-loop';
 import { GoldIcon, PopulationIcon, WoodIcon } from '@shared/ui';
 import { ResearchStat } from './ResearchStat';
@@ -106,6 +110,7 @@ export const ResourcesInfo = () => {
   const { resources, populationCap } = useEconomySelectors();
   const { getEconomicBuildings } = useBuildingsSelectors();
   const { humanId, activePlayer } = useGameLoopSelectors();
+  const knowledge = useParticipantKnowledge(humanId);
   const units = useUnitsStore(state => state.units);
   const artel = useResearchStore(
     state => !!humanId && !!state.completed[humanId]?.includes('artel'),
@@ -122,6 +127,7 @@ export const ResourcesInfo = () => {
   const income = calculateIncome(ownBuildings, ownUnits, {
     rested: activePlayer !== humanId,
     artel,
+    isRichGold: (x, y) => isKnownRichGold(knowledge, x, y),
   });
   const { occupied, max } = populationCap[humanId];
   // Показываем запас без резерва под назначенные стройки: его не потратить.

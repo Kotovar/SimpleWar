@@ -188,7 +188,9 @@ it('без свободного соседа беженцы остаются', (
 
 it('обелиск запоминает ромб радиуса 10 союзникам без обзора, контактов и находок', () => {
   const id = ready();
-  useMapStore.getState().setCell(12, 4, { type: 'gold', isWalkable: true });
+  useMapStore
+    .getState()
+    .setCell(12, 4, { type: 'gold', isWalkable: true, rich: true });
   useMapStore.getState().setCell(11, 4, { road: true });
   const enemy = units().spawnUnit('swordsman', 12, 4, 'p3', true)!;
   useSitesStore.getState().setSites([

@@ -94,6 +94,8 @@ it('accepts 100 fixed seeds for each preset with 2–4 participants', () => {
             prepareStartArea(candidate, base.x, base.y);
           }
           placeStartResources(candidate, preparedStarts);
+          // Низкоуровневый старт этого корпуса не включает находки и богатые жилы.
+          for (const cell of candidate.flat()) delete cell.rich;
           const result = evaluateMap(candidate, starts);
           if (attempt === 0) candidateReason = result.ok ? null : result.reason;
           if (!result.ok) {

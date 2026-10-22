@@ -27,4 +27,6 @@ export type Cell = Position & {
   type: CellType;
   isWalkable: boolean;
   road?: true;
+  /** Богатая жила: только у золота, открывается разведчиком. */
+  rich?: true;
 };

@@ -210,8 +210,21 @@ export const refreshKnowledge = () => {
       continue;
     }
     const visible = computeVisibleMask(id);
+    const scoutVisible = computeVisibility(
+      grid[0].length,
+      grid.length,
+      getSightSources(
+        id,
+        Object.values(useUnitsStore.getState().units).filter(
+          u => u.type === 'scout',
+        ),
+        grid,
+        participants,
+      ),
+    );
     next[id] = observe(previous, {
       visible,
+      scoutVisible,
       grid,
       enemies: getVisibleEnemies(id, visible),
       turn: currentTurn,

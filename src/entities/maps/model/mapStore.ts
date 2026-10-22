@@ -22,7 +22,7 @@ type MapState = {
   setCell: (
     x: number,
     y: number,
-    newCell: Partial<Pick<Cell, 'type' | 'isWalkable' | 'road'>>,
+    newCell: Partial<Pick<Cell, 'type' | 'isWalkable' | 'road' | 'rich'>>,
   ) => void;
   resetStore: () => void;
 };
@@ -41,7 +41,10 @@ export const useMapStore = create<MapState>()(
     setCell: (x, y, newCell) =>
       set(state => {
         const cell = state.grid[y]?.[x];
-        if (cell) Object.assign(cell, newCell);
+        if (cell) {
+          Object.assign(cell, newCell);
+          if (cell.type !== 'gold') delete cell.rich;
+        }
       }),
 
     resetStore: () => set({ grid: [], seed: null, usedFallback: false }),

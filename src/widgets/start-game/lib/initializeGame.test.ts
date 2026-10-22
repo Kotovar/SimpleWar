@@ -43,7 +43,11 @@ it.each(Object.entries(MAP_PRESETS))(
   (preset, { cols, rows }) => {
     const hash = createHash('sha256');
     for (const seed of [0, 19, 43]) {
-      hash.update(JSON.stringify(generateMap(cols, rows, seed)));
+      // S4 добавляет богатство, но не должен менять прежний рельеф и золото.
+      const terrain = generateMap(cols, rows, seed).map(row =>
+        row.map(({ rich: _rich, ...cell }) => cell),
+      );
+      hash.update(JSON.stringify(terrain));
       resetGame();
       useSettingsStore.setState({
         gridColumns: cols,

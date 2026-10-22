@@ -5,6 +5,7 @@ import {
   UNITS_NAME,
   HEALING,
   SIEGE_STRIKE,
+  RICH_MINE_INCOME,
   type Building,
   type Cell,
   type Unit,
@@ -53,7 +54,7 @@ const EntityHeader = ({ cell, unit, building }: Props) => {
             ? UNITS_NAME[unit.type]
             : building
               ? BUILDINGS_NAME[building.type]
-              : cell && TERRAIN_NAME[cell.type]}
+              : cell && (cell.rich ? 'Богатая жила' : TERRAIN_NAME[cell.type])}
         </h3>
         {entity && (
           <span className={styles.Owner} data-owner={entity.owner}>
@@ -64,7 +65,9 @@ const EntityHeader = ({ cell, unit, building }: Props) => {
           </span>
         )}
         {cell && entity && (
-          <span className={styles.Owner}>{TERRAIN_NAME[cell.type]}</span>
+          <span className={styles.Owner}>
+            {cell.rich ? 'Богатая жила' : TERRAIN_NAME[cell.type]}
+          </span>
         )}
       </div>
     </div>
@@ -95,6 +98,12 @@ const EntityHealth = ({ entity }: { entity: Entity }) => (
 
 const CellDetails = ({ cell }: { cell: Cell }) => (
   <>
+    {cell.rich && (
+      <div>
+        <dt>Рудник с рабочим</dt>
+        <dd>+{RICH_MINE_INCOME} золота/ход</dd>
+      </div>
+    )}
     <div>
       <dt>Координаты</dt>
       <dd>

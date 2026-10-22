@@ -33,4 +33,14 @@ describe('useMapStore', () => {
       [{ ...cell(0, 0), type: 'water', isWalkable: false }, cell(1, 0)],
     ]);
   });
+
+  it('удаляет богатство при замене золота другой местностью', () => {
+    useMapStore.getState().setGrid([[cell(0, 0)]]);
+    useMapStore
+      .getState()
+      .setCell(0, 0, { type: 'gold', isWalkable: false, rich: true });
+    expect(useMapStore.getState().getCell(0, 0)?.rich).toBe(true);
+    useMapStore.getState().setCell(0, 0, { type: 'grass', isWalkable: true });
+    expect(useMapStore.getState().getCell(0, 0)).not.toHaveProperty('rich');
+  });
 });

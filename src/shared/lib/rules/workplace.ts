@@ -1,9 +1,10 @@
-import type {
-  Building,
-  CivilUnit,
-  Position,
-  Resources,
-  Unit,
+import {
+  RICH_MINE_INCOME,
+  type Building,
+  type CivilUnit,
+  type Position,
+  type Resources,
+  type Unit,
 } from '@shared/config';
 
 /**
@@ -95,6 +96,7 @@ export const calculateTurnIncome = (
   buildings: Building[],
   units: Unit[],
   artel = false,
+  isRichGold: (x: number, y: number) => boolean = () => false,
 ): { income: Resources; miners: string[] } => {
   const income: Resources = { gold: 0, wood: 0 };
   const miners = new Set<string>();
@@ -112,7 +114,10 @@ export const calculateTurnIncome = (
       }
       miners.add(worker.id);
     }
-    income.gold += building.income.gold ?? 0;
+    income.gold +=
+      building.type === 'mine' && isRichGold(building.x, building.y)
+        ? RICH_MINE_INCOME
+        : (building.income.gold ?? 0);
     income.wood += building.income.wood ?? 0;
   }
 

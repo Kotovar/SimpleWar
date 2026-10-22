@@ -18,6 +18,19 @@ const miner = (target: Building, patch: Partial<Unit> = {}): Unit => {
 };
 
 describe('calculateIncome', () => {
+  it('открытая богатая жила даёт 25 вместо 15 только работающему руднику', () => {
+    const mine = building('mine', 1);
+    const worker = miner(mine);
+    expect(calculateIncome([mine], [worker])).toEqual({ gold: 15, wood: 0 });
+    expect(
+      calculateIncome([mine], [worker], { isRichGold: x => x === 1 }),
+    ).toEqual({ gold: 25, wood: 0 });
+    expect(calculateIncome([mine], [], { isRichGold: () => true })).toEqual({
+      gold: 0,
+      wood: 0,
+    });
+    expect(mine.income).toEqual({ gold: 15 });
+  });
   it('returns zero income for an empty list', () => {
     expect(calculateIncome([])).toEqual({ gold: 0, wood: 0 });
   });

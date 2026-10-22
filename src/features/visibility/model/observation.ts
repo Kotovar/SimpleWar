@@ -8,6 +8,7 @@ import {
   getKnownCellType,
   getParticipantKnowledge,
   isKnownRoad,
+  isKnownRichGold,
   type Contact,
   type Observation,
 } from '@entities/perceptions';
@@ -43,6 +44,9 @@ export const getObservation = (participant: ParticipantId): Observation => {
       { length: width },
       (_, x) => knowledge?.visible[y * width + x] === 1,
     ),
+  );
+  const knownRichGold = Array.from({ length: height }, (_, y) =>
+    Array.from({ length: width }, (_, x) => isKnownRichGold(knowledge, x, y)),
   );
   const resources = knownTerrain.flatMap((row, y) =>
     row.flatMap((type, x) =>
@@ -85,6 +89,7 @@ export const getObservation = (participant: ParticipantId): Observation => {
     visibleEnemies,
     knownTerrain,
     knownRoads,
+    knownRichGold,
     visible,
     opponents: getAliveParticipants(useGameLoopStore.getState())
       .map(({ id }) => id)
