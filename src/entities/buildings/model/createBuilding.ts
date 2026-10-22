@@ -23,14 +23,17 @@ const hasConfig = <T extends object>(
  * @param x - Столбец клетки.
  * @param y - Строка клетки.
  * @param owner - Сторона владельца.
- * @returns Новое здание или `null` для неизвестного типа во время выполнения.
+ * @param expiresTurn - Круг угасания, обязателен для костра.
+ * @returns Здание или `null` для неизвестного типа либо костра без срока.
  */
 export const createBuilding = (
   type: BuildingType,
   x: number,
   y: number,
   owner: Owner,
+  expiresTurn?: number,
 ): Building | null => {
+  if (type === 'beacon' && expiresTurn === undefined) return null;
   const instance = { id: `building_${crypto.randomUUID()}`, type, x, y, owner };
 
   if (hasConfig(PRODUCTION_BUILDINGS_CONFIG, type)) {
@@ -51,7 +54,13 @@ export const createBuilding = (
   }
   if (hasConfig(OBSTACLE_BUILDINGS_CONFIG, type)) {
     const config = OBSTACLE_BUILDINGS_CONFIG[type];
-    return { ...config, ...instance, hp: config.maxHp, role: 'obstacle' };
+    return {
+      ...config,
+      ...instance,
+      hp: config.maxHp,
+      role: 'obstacle',
+      ...(type === 'beacon' ? { expiresTurn } : {}),
+    };
   }
   if (hasConfig(RESEARCH_BUILDINGS_CONFIG, type)) {
     const config = RESEARCH_BUILDINGS_CONFIG[type];

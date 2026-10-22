@@ -23,7 +23,7 @@ import styles from './Sandbox.styles.module.css';
 const UNIT_TYPES = Object.keys(UNITS_NAME) as UnitType[];
 const BUILDING_TYPES = (
   Object.keys(BUILDINGS_NAME) as SandboxBuildingType[]
-).filter(type => (type as string) !== 'base');
+).filter(type => (type as string) !== 'base' && (type as string) !== 'beacon');
 
 type Row = {
   category: string;

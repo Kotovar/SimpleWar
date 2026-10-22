@@ -292,13 +292,25 @@ const BuildingDetails = ({
   building,
   own,
   canCommand,
+  currentTurn,
 }: {
   building: Building;
   own: boolean;
   canCommand: boolean;
+  currentTurn: number;
 }) => (
   <>
     <DefenseRow type={building.type} />
+    {building.type === 'beacon' && (
+      <div>
+        <dt>Костёр</dt>
+        <dd>
+          Обзор {building.sightRange} · погаснет в круге {building.expiresTurn}{' '}
+          (через{' '}
+          {Math.max(0, (building.expiresTurn ?? currentTurn) - currentTurn)})
+        </dd>
+      </div>
+    )}
     {building.role === 'production' && (
       <div>
         <dt>Очки производства</dt>
@@ -323,7 +335,7 @@ const BuildingDetails = ({
 );
 
 export const SelectedEntityInfo = ({ cell, unit, building }: Props) => {
-  const { humanId, phase } = useGameLoopSelectors();
+  const { humanId, phase, currentTurn } = useGameLoopSelectors();
   const entity = unit ?? building;
   const palette = useParticipantPalette(entity?.owner ?? 'p1');
   if (!cell && !entity) return null;
@@ -345,6 +357,7 @@ export const SelectedEntityInfo = ({ cell, unit, building }: Props) => {
           <BuildingDetails
             building={building}
             own={building.owner === humanId}
+            currentTurn={currentTurn}
             canCommand={phase === 'inProgress'}
           />
         )}

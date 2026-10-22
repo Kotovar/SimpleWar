@@ -1,4 +1,5 @@
 import {
+  BUILDINGS_CONFIG,
   HEALING,
   REJECTION_MESSAGE,
   RESEARCH_CONFIG,
@@ -177,6 +178,17 @@ export const getSelectionActions = (
         ...siegeActions(input.unit, input),
         ...(input.unit.type === 'scout'
           ? [
+              action('lightBeacon', {
+                pressed: input.mode.building === 'beacon',
+                reason:
+                  input.unit.role !== 'military' || input.unit.attackPoints <= 0
+                    ? 'Нет боевого действия'
+                    : input.stock.wood < BUILDINGS_CONFIG.beacon.cost.wood
+                      ? REJECTION_MESSAGE.resources
+                      : undefined,
+                cost: BUILDINGS_CONFIG.beacon.cost,
+                lacking: lackingOf(BUILDINGS_CONFIG.beacon.cost, input.stock),
+              }),
               action('explore', {
                 pressed:
                   input.unit.order?.type === 'explore' &&

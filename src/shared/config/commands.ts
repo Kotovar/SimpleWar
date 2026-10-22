@@ -23,6 +23,7 @@ export type CommandType =
   | 'buildRoad'
   | 'demolish'
   | 'prepareStrike'
+  | 'lightBeacon'
   | 'heal'
   | 'startResearch'
   | 'cancelResearch';

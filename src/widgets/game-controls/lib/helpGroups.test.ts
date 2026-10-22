@@ -6,10 +6,18 @@ describe('getHelpGroups', () => {
   it('включает каждое действие и общую клавишу справочника ровно один раз', () => {
     const items = getHelpGroups().flatMap(group => group.items);
     for (const action of [...Object.values(ACTIONS), ...GLOBAL_HOTKEYS]) {
-      const matches = items.filter(item => item.codes.includes(action.code));
+      const matches = items.filter(
+        item => item.codes.includes(action.code) && item.label === action.label,
+      );
       expect(matches).toHaveLength(1);
       expect(matches[0].label).toBe(action.label);
     }
+    expect(
+      items
+        .filter(item => item.codes.includes('KeyB'))
+        .map(item => item.label)
+        .sort(),
+    ).toEqual(['Построить', 'Разжечь костёр']);
     for (const code of SLOT_CODES) {
       expect(items.filter(item => item.codes.includes(code))).toHaveLength(1);
     }

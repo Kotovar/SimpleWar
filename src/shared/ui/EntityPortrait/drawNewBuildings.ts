@@ -143,3 +143,38 @@ export const drawPalisade = (
   rect(ctx, team.shade, 3, 19, 26, 1);
   ctx.restore();
 };
+
+/** Сигнальный костёр: каменное кольцо, дрова и высокое пламя. */
+export const drawBeacon = (
+  ctx: CanvasRenderingContext2D,
+  cellX: number,
+  cellY: number,
+  cellSize: number,
+  owner: Owner,
+  scale = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
+) => {
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
+  ctx.fillStyle = STONE_DARK;
+  ctx.beginPath();
+  ctx.ellipse(16, 22, 11, 4.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  for (const [x, y] of [
+    [6, 22],
+    [10, 25],
+    [17, 26],
+    [24, 23],
+    [24, 19],
+    [8, 18],
+  ])
+    circle(ctx, STONE, x, y, 2.2);
+  shape(ctx, TIMBER, [7, 22, 23, 18, 25, 21, 9, 25]);
+  shape(ctx, '#855335', [7, 19, 9, 17, 25, 22, 23, 25]);
+  shape(
+    ctx,
+    '#ef773c',
+    [11, 22, 8, 17, 13, 10, 15, 4, 20, 12, 23, 16, 22, 21, 17, 24],
+  );
+  shape(ctx, '#ffd978', [13, 22, 12, 18, 16, 12, 17, 17, 20, 19, 18, 23]);
+  ctx.restore();
+};

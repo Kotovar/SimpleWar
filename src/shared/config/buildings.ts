@@ -15,13 +15,22 @@ export type BuildingType =
   | 'workshop'
   | 'forge'
   | 'sanctuary'
-  | 'palisade';
+  | 'palisade'
+  | 'beacon';
 
 /** Частичный набор ресурсов, которые здание производит за ход. */
 export type Income = Partial<Cost>;
 
 /** Поля, которые есть только у экземпляра на карте, а не в статическом конфиге. */
-export type InstanceKeys = 'role' | 'type' | 'x' | 'y' | 'id' | 'owner' | 'hp';
+export type InstanceKeys =
+  | 'role'
+  | 'type'
+  | 'x'
+  | 'y'
+  | 'id'
+  | 'owner'
+  | 'hp'
+  | 'expiresTurn';
 
 type BaseBuilding = {
   id: string;
@@ -36,6 +45,8 @@ type BaseBuilding = {
   cost: Cost;
   requiredField?: CellType;
   income?: Income;
+  /** Начало хода владельца, когда временная постройка исчезает. */
+  expiresTurn?: number;
 };
 
 /** Здание, которое производит юниты. */
@@ -81,8 +92,8 @@ export type ResearchBuilding = BaseBuilding & {
 };
 
 /**
- * Укрепление (частокол Инженерии S16): непроходимый объект с HP, без найма,
- * дохода, населения и обзора. Сносится и разрушается как здание.
+ * Непроходимый объект с HP без найма, дохода и населения:
+ * частокол или временный источник обзора.
  */
 export type ObstacleBuilding = BaseBuilding & {
   role: 'obstacle';
@@ -214,9 +225,15 @@ export const RESEARCH_BUILDINGS_CONFIG: Record<
 };
 
 export const OBSTACLE_BUILDINGS_CONFIG: Record<
-  Extract<BuildingType, 'palisade'>,
+  Extract<BuildingType, 'palisade' | 'beacon'>,
   Omit<ObstacleBuilding, InstanceKeys>
 > = {
+  beacon: {
+    maxHp: 20,
+    sightRange: 5,
+    cost: { gold: 0, wood: 30 },
+    requiredField: 'grass',
+  },
   // Старт; HP и цена подбираются в S21. Поле или холм.
   palisade: {
     maxHp: 60,
@@ -239,3 +256,6 @@ export const BUILDINGS_CONFIG = {
   ...RESEARCH_BUILDINGS_CONFIG,
   ...OBSTACLE_BUILDINGS_CONFIG,
 };
+
+/** Срок жизни сигнального костра в кругах ходов. */
+export const BEACON_DURATION = 6;

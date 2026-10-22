@@ -42,6 +42,8 @@ export const getBuildingInfoText = (buildingType: BuildingType): string => {
         .map(unit => UNITS_NAME[unit])
         .join(', ')}`;
 
+    case 'beacon':
+      return 'Обзор 5 на 6 кругов; разжигает разведчик за боевое действие';
     case 'palisade':
       return 'Непроходимое укрепление: без дохода, населения и обзора';
 

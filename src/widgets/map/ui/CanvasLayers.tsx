@@ -8,7 +8,10 @@ import { useGameLoopStore, useParticipantStyles } from '@entities/games';
 import { usePreferencesStore } from '@entities/settings';
 import { useSelectionStore } from '@features/selection';
 import { useHighlightStore, useMovementStore } from '@features/pathfinding';
-import { getPlacementRejection } from '@features/build';
+import {
+  getPlacementRejection,
+  getBeaconPlacementRejection,
+} from '@features/build';
 import { getContextWorkplace } from '@features/workers';
 import {
   drawWorldEdge,
@@ -67,7 +70,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   const placing = useBuildingsStore(state => state.selectedBuildingForSpawn);
   // Места стройки не заливаются: их слишком много, годность видна по
   // призраку под курсором. Подсветка остаётся у расчистки.
-  const buildableCells = placing ? null : produceCells;
+  const buildableCells = placing && placing !== 'beacon' ? null : produceCells;
   const placeCells = useHighlightStore(state => state.buildableCells);
   const fogQuality = usePreferencesStore(state => state.fogQuality);
 
@@ -206,7 +209,9 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
     const valid =
       !!worker &&
       !!placeCells?.some(({ x, y }) => x === hover.x && y === hover.y) &&
-      !getPlacementRejection(worker, humanId, placing, hover);
+      !(placing === 'beacon'
+        ? getBeaconPlacementRejection(humanId, worker, hover)
+        : getPlacementRejection(worker, humanId, placing, hover));
     return { ...hover, type: placing, owner: humanId, valid };
     // Здания читает проверка места из стора: при их смене — пересчёт.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -227,7 +232,8 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   // Какой приказ даст клик под курсором: путь к нему виден до клика.
   // Прицел, расчистка и дорога не ведут юнит: пути нет.
   const hoverOrder = useMemo((): UnitOrder | false | null => {
-    if (strikeCells || clearableCells || roadCells) return false;
+    if (placing === 'beacon' || strikeCells || clearableCells || roadCells)
+      return false;
     if (ghost) {
       return ghost.valid
         ? { type: 'build', buildingType: ghost.type, x: ghost.x, y: ghost.y }
@@ -245,6 +251,7 @@ export const CanvasLayers = ({ scene, humanId, onCellClick }: Props) => {
   }, [
     canOrder,
     clearableCells,
+    placing,
     ghost,
     hover,
     roadCells,

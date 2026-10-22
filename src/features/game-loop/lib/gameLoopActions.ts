@@ -74,6 +74,16 @@ const validateAndEndTurn = (actor: ParticipantId): CommandResult => {
   useGameLoopStore.getState().endTurn();
 
   const next = useGameLoopStore.getState().activePlayer;
+  const { currentTurn } = useGameLoopStore.getState();
+  const buildings = useBuildingsStore.getState();
+  for (const building of Object.values(buildings.buildings)) {
+    if (
+      building.owner === next &&
+      building.expiresTurn !== undefined &&
+      building.expiresTurn <= currentTurn
+    )
+      buildings.demolishBuilding(building.id);
+  }
   useUnitsStore.getState().resetUnitsForNewTurn(next);
   useBuildingsStore.getState().resetBuildingsForNewTurn(next);
   // Шаг 8: подготовленные удары нового активного участника.

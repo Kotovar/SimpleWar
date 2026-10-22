@@ -58,8 +58,11 @@ const placeBuilding = (
   const buildingType = selection.buildingTypeToPlace;
   if (!buildingType) return;
   const place = commands.orderBuild ?? commands.build;
-  const result = place({ actor, workerId: unit.id, buildingType, x, y });
-  if (!result.ok) return;
+  const result =
+    buildingType === 'beacon'
+      ? commands.lightBeacon?.({ actor, unitId: unit.id, x, y })
+      : place({ actor, workerId: unit.id, buildingType, x, y });
+  if (!result?.ok) return;
   resetInteraction(ctx);
   if (ctx.ui.hasOrder && !ctx.ui.hasOrder(unit.id)) return;
   ctx.ui.selectUnit(unit.id);
@@ -71,9 +74,9 @@ const placeBuilding = (
  * Негодная клетка даёт отказ с причиной, режим остаётся (как в Warcraft III).
  */
 const isPlacing = (unit: Unit, ctx: MapClickContext) =>
-  unit.type === 'worker' &&
-  unit.role === 'civil' &&
-  !!ctx.selection.buildingTypeToPlace;
+  !!ctx.selection.buildingTypeToPlace &&
+  ((unit.type === 'worker' && unit.role === 'civil') ||
+    (unit.type === 'scout' && ctx.selection.buildingTypeToPlace === 'beacon'));
 
 const clickWithOwnUnit = (
   unit: Unit,

@@ -8,7 +8,7 @@ import {
 } from '@shared/config';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
-import { demolish } from '@features/build';
+import { demolish, getBeaconCells } from '@features/build';
 import { getStrikeCells } from '@features/combat';
 import {
   autoExplore,
@@ -74,6 +74,18 @@ export const runSelectionAction = (
   const actor = humanId;
   const [kind, target] = id.split(':');
   switch (kind) {
+    case 'lightBeacon': {
+      if (unit?.type !== 'scout') return;
+      const wasOn = input.mode.building === 'beacon';
+      resetModes(wasOn ? unit.id : undefined);
+      if (!wasOn) {
+        useBuildingsStore.getState().selectBuildingForSpawn('beacon');
+        useHighlightStore
+          .getState()
+          .setBuildableCells(getBeaconCells(actor, unit));
+      }
+      return;
+    }
     case 'explore':
       if (!unit || unit.type !== 'scout') return;
       if (unit.order?.type === 'explore' && !unit.order.stopped)

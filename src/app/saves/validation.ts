@@ -265,6 +265,11 @@ const building: Check = v => {
       )(v);
     case 'forge':
       return shape({ ...common, role: one(['research']) }, optional)(v);
+    case 'beacon':
+      return shape(
+        { ...common, role: one(['obstacle']), expiresTurn: int(1) },
+        optional,
+      )(v);
     case 'palisade':
       return shape({ ...common, role: one(['obstacle']) }, optional)(v);
     default:
@@ -337,7 +342,7 @@ const side = shape(
     units: dictionary(int(0, 20), unitType, Object.keys(UNITS_CONFIG).length),
     buildings: dictionary(
       int(0, 5),
-      buildingType,
+      one(Object.keys(BUILDINGS_CONFIG).filter(type => type !== 'beacon')),
       Object.keys(BUILDINGS_CONFIG).length,
     ),
     stock: resources,
@@ -361,6 +366,7 @@ const eventTypes = [
   'buildRoad',
   'demolish',
   'prepareStrike',
+  'lightBeacon',
   'heal',
   'startResearch',
   'cancelResearch',

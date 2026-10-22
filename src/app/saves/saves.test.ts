@@ -202,7 +202,9 @@ describe('формат и восстановление партии', () => {
         sides: scenario.sides.map(side => ({
           ...side,
           units: all(Object.keys(UNITS_CONFIG)),
-          buildings: all(Object.keys(BUILDINGS_CONFIG)),
+          buildings: all(
+            Object.keys(BUILDINGS_CONFIG).filter(type => type !== 'beacon'),
+          ),
         })),
       },
     });

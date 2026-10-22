@@ -4,6 +4,7 @@ export {
   drawFarm,
   drawForge,
   drawPalisade,
+  drawBeacon,
   drawGoldMine,
   drawSanctuary,
   drawSawmill,

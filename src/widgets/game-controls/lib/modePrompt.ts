@@ -34,6 +34,10 @@ export type MapMode =
 export const getModePrompt = (mode: MapMode) => {
   switch (mode.kind) {
     case 'build': {
+      if (mode.type === 'beacon')
+        return mode.cells
+          ? 'Кликните по соседней свободной равнине или холму: костёр даст обзор 5 на 6 кругов.'
+          : 'Рядом нет видимого свободного места для костра.';
       const place =
         PLACE[BUILDINGS_CONFIG[mode.type].requiredField ?? 'grass'] ?? '';
       return mode.cells
