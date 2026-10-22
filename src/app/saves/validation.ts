@@ -2,6 +2,8 @@ import {
   AI_DIFFICULTY,
   AI_PROFILES,
   BUILDINGS_CONFIG,
+  CACHE_REWARDS,
+  CAMP_HIRES,
   CELL_SIZE_LIMITS,
   DEBUG_EXCEPTIONS,
   DEFAULT_PALETTES,
@@ -15,6 +17,7 @@ import {
   PARTICIPANT_IDS,
   REJECTION_MESSAGE,
   RESEARCH_CONFIG,
+  SITE_TYPES,
   STRATEGY_NAME,
   UNITS_CONFIG,
 } from '@shared/config';
@@ -109,6 +112,22 @@ const position = shape({
   y: int(0, MAP_SIDE_LIMIT - 1),
 });
 const resources = shape({ gold: int(), wood: int() });
+const site: Check = v => {
+  if (!obj(v)) return false;
+  const contents: Record<string, Check> =
+    v.type === 'cache'
+      ? { resource: one(['gold', 'wood']), amount: int(1, 1000) }
+      : v.type === 'camp'
+        ? { hiresLeft: int(0, CAMP_HIRES) }
+        : {};
+  return shape({
+    id: text(),
+    x: int(0, MAP_SIDE_LIMIT - 1),
+    y: int(0, MAP_SIDE_LIMIT - 1),
+    type: one(SITE_TYPES),
+    ...contents,
+  })(v);
+};
 const setup = shape({
   profile: one(Object.keys(AI_PROFILES)),
   difficulty: one(Object.keys(AI_DIFFICULTY)),
@@ -404,6 +423,7 @@ const snapshotShape = shape({
     exceptions: participants(list(one(DEBUG_EXCEPTIONS.map(e => e.id)), 3)),
   }),
   units: dictionary(unit),
+  sites: dictionary(site),
   buildings: dictionary(building),
   economy: shape({
     resources: shape(
@@ -509,6 +529,7 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
     obj(value) && value.version === SAVE_VERSION,
     'Неизвестная версия сохранения',
   );
+  if (obj(value) && !Object.hasOwn(value, 'sites')) value.sites = {};
   // Снимки до команд: каждая сторона в своей команде.
   if (
     obj(value) &&
@@ -612,6 +633,27 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
     'Повреждена карта',
   );
   const unitCells = new Set<string>();
+  const siteCells = new Set<string>();
+  for (const [id, site] of Object.entries(s.sites)) {
+    const cell = `${site.x},${site.y}`;
+    requireValid(
+      id === site.id &&
+        !s.units[id] &&
+        !s.buildings[id] &&
+        inside(site) &&
+        s.map.grid[site.y][site.x].type === 'grass' &&
+        !siteCells.has(cell),
+      'Повреждена находка',
+    );
+    siteCells.add(cell);
+    if (site.type === 'cache') {
+      const [min, max] = CACHE_REWARDS[site.resource];
+      requireValid(
+        site.amount >= min && site.amount <= max,
+        'Повреждено содержимое тайника',
+      );
+    }
+  }
   const buildingCells = new Set<string>();
   const workers = new Set<string>();
   for (const [id, u] of Object.entries(s.units)) {

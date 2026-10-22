@@ -2,6 +2,7 @@ import type { ParticipantId, Position } from '@shared/config';
 import type { useSettingsStore, useDebugStore } from '@entities/settings';
 import type { useGameLoopStore } from '@entities/games';
 import type { useMapStore } from '@entities/maps';
+import type { useSitesStore } from '@entities/sites';
 import type { useUnitsStore } from '@entities/units';
 import type { useBuildingsStore } from '@entities/buildings';
 import type { useEconomyStore } from '@entities/economies';
@@ -51,6 +52,7 @@ export type GameSnapshot = {
   >;
   debug: Data<ReturnType<typeof useDebugStore.getState>>;
   units: ReturnType<typeof useUnitsStore.getState>['units'];
+  sites: ReturnType<typeof useSitesStore.getState>['sites'];
   buildings: ReturnType<typeof useBuildingsStore.getState>['buildings'];
   economy: Pick<
     ReturnType<typeof useEconomyStore.getState>,

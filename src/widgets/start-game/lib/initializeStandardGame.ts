@@ -42,5 +42,7 @@ export const initializeStandardGame = (): Participant[] | null => {
     ),
   ];
   for (const p of participants) p.team = teamChoices[p.id];
-  return initializeGame(participants) ? participants : null;
+  return initializeGame(participants, { withSites: true })
+    ? participants
+    : null;
 };

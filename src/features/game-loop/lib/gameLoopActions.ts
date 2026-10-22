@@ -3,6 +3,7 @@ import { calculateTurnIncome, gameEvents, ok, reject } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
+import { useSitesStore } from '@entities/sites';
 import { useDebugStore, useSettingsStore } from '@entities/settings';
 import { useEconomyStore } from '@entities/economies';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
@@ -115,6 +116,7 @@ export const resetGame = () => {
   useBuildingsStore.getState().resetStore();
   useUnitsStore.getState().resetStore();
   useMapStore.getState().resetStore();
+  useSitesStore.getState().resetStore();
   useSettingsStore.getState().resetStore();
   useDebugStore.getState().resetStore();
   useEconomyStore.getState().resetStore();
