@@ -21,7 +21,7 @@ import {
   STRATEGY_NAME,
   UNITS_CONFIG,
 } from '@shared/config';
-import { canHouseWorker, isHostile } from '@shared/lib';
+import { canHouseWorker, isBuildableTerrain, isHostile } from '@shared/lib';
 import { ROAD_BIT, RICH_BIT, TERRAIN_CODES } from '@entities/perceptions';
 import { HINTS, TUTORIAL } from '@widgets/game-controls';
 import {
@@ -688,7 +688,10 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
         !s.units[id] &&
         !s.buildings[id] &&
         inside(site) &&
-        s.map.grid[site.y][site.x].type === 'grass' &&
+        // Руины разрушенного аванпоста остаются там, где он стоял.
+        (site.type === 'ruins'
+          ? isBuildableTerrain('grass', s.map.grid[site.y][site.x].type)
+          : s.map.grid[site.y][site.x].type === 'grass') &&
         !siteCells.has(cell),
       'Повреждена находка',
     );

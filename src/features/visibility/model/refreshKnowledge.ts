@@ -25,6 +25,7 @@ import { hasResearch } from '@entities/researches';
 import { useJournalStore } from '@entities/journals';
 import {
   observe,
+  RICH_BIT,
   useKnowledgeStore,
   type Contact,
   type ParticipantKnowledge,
@@ -217,6 +218,11 @@ export const refreshKnowledge = () => {
   let changed = false;
   const humanId = getHumanId(participants);
   const sites = Object.values(useSitesStore.getState().sites);
+  const width = grid[0].length;
+  const goldCells = grid.flat().filter(cell => cell.type === 'gold');
+  const scouts = Object.values(useUnitsStore.getState().units).filter(
+    u => u.type === 'scout',
+  );
   for (const { id } of participants) {
     const previous = byParticipant[id];
     if (
@@ -229,18 +235,22 @@ export const refreshKnowledge = () => {
       continue;
     }
     const visible = computeVisibleMask(id);
-    const scoutVisible = computeVisibility(
-      grid[0].length,
-      grid.length,
-      getSightSources(
-        id,
-        Object.values(useUnitsStore.getState().units).filter(
-          u => u.type === 'scout',
-        ),
-        grid,
-        participants,
-      ),
-    );
+    // Обзор разведчиков нужен, только если видимая жила расходится с памятью
+    // о богатстве: иначе observe его не читает.
+    const known =
+      previous?.terrain.length === visible.length ? previous.terrain : null;
+    const scoutVisible = goldCells.some(cell => {
+      const index = cell.y * width + cell.x;
+      return (
+        visible[index] && !!cell.rich !== !!((known?.[index] ?? 0) & RICH_BIT)
+      );
+    })
+      ? computeVisibility(
+          width,
+          grid.length,
+          getSightSources(id, scouts, grid, participants),
+        )
+      : undefined;
     next[id] = observe(previous, {
       visible,
       scoutVisible,

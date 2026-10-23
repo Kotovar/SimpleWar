@@ -33,11 +33,6 @@ const selectClicked = (x: number, y: number, ctx: MapClickContext) => {
     return;
   }
 
-  if (clicked.camp) {
-    ui.selectCell(x, y);
-    return;
-  }
-
   if (clicked.unit) {
     ui.selectUnit(clicked.unit.id);
     if (clicked.unit.owner === humanId) {
@@ -207,6 +202,8 @@ export const handleMapCellClick = (
     !isHighlighted(ctx.highlights.road ?? null, x, y)
   ) {
     resetInteraction(ctx);
+    // Юнит на лагере выбирается первым; повторный клик — сам лагерь.
+    if (ctx.clicked.camp && ctx.selection.unit) ctx.ui.selectCell(x, y);
     return;
   }
   if (hireFromCamp(x, y, ctx)) return;

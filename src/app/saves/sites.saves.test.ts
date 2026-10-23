@@ -90,8 +90,15 @@ it('отклоняет две находки в одной клетке и на�
   saved.sites.ruins.y = saved.sites.obelisk.y;
   expect(() => applySnapshot(saved)).toThrow('находка');
   const invalid = captureSnapshot();
-  invalid.map.grid[invalid.sites.ruins.y][invalid.sites.ruins.x].type = 'hill';
+  invalid.map.grid[invalid.sites.gold.y][invalid.sites.gold.x].type = 'hill';
   expect(() => applySnapshot(invalid)).toThrow('находка');
+});
+
+it('загружает руины на холме: аванпост песочницы мог стоять там', () => {
+  const saved = captureSnapshot();
+  saved.map.grid[saved.sites.ruins.y][saved.sites.ruins.x].type = 'hill';
+  applySnapshot(saved);
+  expect(useSitesStore.getState().sites.ruins).toEqual(saved.sites.ruins);
 });
 
 it('отклоняет ID находки, совпавший с ID юнита', () => {

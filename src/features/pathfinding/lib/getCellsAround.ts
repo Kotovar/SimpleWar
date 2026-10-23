@@ -10,6 +10,7 @@ import { isCellOccupied } from './isCellOccupied';
  * @param centerY - Строка центральной клетки.
  * @param cellType - Местность, которую требует здание или найм (холм
  *   подходит вместо поля); без неё местность не проверяется.
+ * @param ignored - Юниты, которых не считать занятостью (скрытые от игрока).
  * @returns Координаты подходящих клеток в пределах карты.
  */
 export const getCellsAround = (
@@ -17,6 +18,7 @@ export const getCellsAround = (
   centerX: number,
   centerY: number,
   cellType?: Cell['type'],
+  ignored?: ReadonlySet<string>,
 ): Position[] => {
   const height = grid.length;
   const width = grid[0]?.length ?? 0;
@@ -31,7 +33,7 @@ export const getCellsAround = (
 
       if (x < 0 || x >= width || y < 0 || y >= height) continue;
 
-      if (isCellOccupied(x, y)) continue;
+      if (isCellOccupied(x, y, ignored)) continue;
 
       const cell = grid[y][x];
 

@@ -7,7 +7,13 @@ import { useEconomyStore } from '@entities/economies';
 import { useGameLoopStore } from '@entities/games';
 import { useMapStore } from '@entities/maps';
 import { getParticipantKnowledge } from '@entities/perceptions';
-import { occupyRuins, getOutpostCells, build, demolish } from '@features/build';
+import {
+  occupyRuins,
+  getOutpostCells,
+  build,
+  demolish,
+  getPlacementRejection,
+} from '@features/build';
 import { attack, prepareStrike } from '@features/combat';
 import {
   initGameLoopEvents,
@@ -201,6 +207,19 @@ it('снос и сдача возвращают руины, обычный ра�
   ).toMatchObject({ ok: false, code: 'actionType' });
   expect(surrender('p1').ok).toBe(true);
   expect(buildings().buildings[outpost.id]).toBeUndefined();
+  expect(sites().getSiteAt(8, 7)?.type).toBe('ruins');
+});
+
+it('рабочий не строит на находке: руины не пропадают под зданием', () => {
+  const worker = units().spawnUnit('worker', 8, 8, 'p1', true)!;
+  units().resetUnitsForNewTurn('p1');
+  expect(
+    getPlacementRejection(units().units[worker], 'p1', 'farm', target),
+  ).toBe('occupied');
+  expect(
+    build({ actor: 'p1', workerId: worker, buildingType: 'farm', ...target }),
+  ).toMatchObject({ ok: false, code: 'occupied' });
+  expect(buildings().getBuildingAt(8, 7)).toBeNull();
   expect(sites().getSiteAt(8, 7)?.type).toBe('ruins');
 });
 

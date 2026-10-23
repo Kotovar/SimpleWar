@@ -20,6 +20,7 @@ import {
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
+import { useSitesStore } from '@entities/sites';
 import {
   getParticipantKnowledge,
   getKnownCellType,
@@ -57,16 +58,23 @@ const createKnownPlacement = (actor: ParticipantId): Placement => {
     useGameLoopStore.getState().participants,
   );
   const key = (x: number, y: number) => `${x},${y}`;
+  // Находка тоже занимает клетку: здание на ней сделало бы её недоступной.
   const occupied = new Set(
-    [...units, ...buildings]
-      .filter(e => !concealed.has(e.id))
-      .map(e => key(e.x, e.y)),
+    [
+      ...units.filter(e => !concealed.has(e.id)),
+      ...buildings,
+      ...Object.values(useSitesStore.getState().sites),
+    ].map(e => key(e.x, e.y)),
   );
-  // Скрытая занятость не раскрывается: вне обзора — только известные здания.
+  // Скрытая занятость не раскрывается: вне обзора — только известные здания
+  // и находки.
   const remembered = new Set(
-    Object.values(knowledge?.contacts ?? {})
-      .filter(contact => contact.kind === 'building')
-      .map(contact => key(contact.x, contact.y)),
+    [
+      ...Object.values(knowledge?.contacts ?? {}).filter(
+        contact => contact.kind === 'building',
+      ),
+      ...Object.values(knowledge?.sites ?? {}),
+    ].map(e => key(e.x, e.y)),
   );
   return (x, y) => {
     const cell = grid[y]?.[x];

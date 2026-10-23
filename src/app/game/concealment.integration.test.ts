@@ -18,6 +18,7 @@ import {
   getExplorationDanger,
   getActorVisibility,
   move,
+  useHighlightStore,
 } from '@features/pathfinding';
 import { buildScene, diffScene, isInCombat } from '@widgets/map';
 import { initPopulationSystem, initJournalSystem } from '@app/system';
@@ -83,6 +84,19 @@ it('план строительства не выдаёт скрытую зан�
       { x: 6, y: 6 },
     ),
   ).toBeNull();
+});
+
+it('подсветка найма не выдаёт скрытого разведчика у казармы', () => {
+  const barracks = useBuildingsStore
+    .getState()
+    .spawnBuilding('barracks', 7, 7, 'p2')!;
+  round();
+  expect(useUnitsStore.getState().units[scout].concealed).toBe(true);
+  useHighlightStore.getState().calculateSpawnableCells(barracks, 'grass');
+  expect(useHighlightStore.getState().spawnableCells).toContainEqual({
+    x: 6,
+    y: 6,
+  });
 });
 
 it.each([45, 1])(

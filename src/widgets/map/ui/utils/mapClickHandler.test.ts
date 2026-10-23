@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vite-plus/test';
 import type {
   Building,
   BuildingType,
+  CampSite,
   CommandResult,
   Owner,
   Position,
@@ -41,6 +42,7 @@ type Overrides = {
   spawnableCells?: Position[];
   isCurrent?: () => boolean;
   planned?: (Position & { unitId: string }) | null;
+  camp?: CampSite | null;
 };
 
 /** Контекст клика и плоский доступ к его заглушкам для проверок. */
@@ -69,7 +71,11 @@ const makeContext = (o: Overrides = {}) => {
     mocks;
   const ctx: MapClickContext = {
     humanId: 'p1',
-    clicked: { unit: o.unit ?? null, building: o.building ?? null },
+    clicked: {
+      unit: o.unit ?? null,
+      building: o.building ?? null,
+      camp: o.camp ?? null,
+    },
     selection: {
       unit: o.selectedUnit ?? null,
       building: o.selectedBuilding ?? null,
@@ -92,6 +98,31 @@ const makeContext = (o: Overrides = {}) => {
 };
 
 describe('handleMapCellClick', () => {
+  it('юнит на лагере выбирается первым, повторный клик выбирает лагерь', () => {
+    const scout = unitAt('scout', 2, 1);
+    const camp: CampSite = {
+      id: 'camp',
+      type: 'camp',
+      x: 2,
+      y: 1,
+      hiresLeft: 3,
+    };
+    const first = makeContext({ unit: scout, camp });
+    handleMapCellClick(2, 1, first.ctx);
+    expect(first.selectUnit).toHaveBeenCalledWith(scout.id);
+    expect(first.selectCell).not.toHaveBeenCalled();
+
+    const again = makeContext({
+      unit: scout,
+      camp,
+      selectedUnit: scout,
+      isCurrent: () => true,
+    });
+    handleMapCellClick(2, 1, again.ctx);
+    expect(again.selectCell).toHaveBeenCalledWith(2, 1);
+    expect(again.selectUnit).not.toHaveBeenCalled();
+  });
+
   it('ЛКМ выбирает клетку вместо движения и отметки маршрута', () => {
     const m = makeContext({
       selectedUnit: unitAt('swordsman', 1, 1),
