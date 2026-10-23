@@ -41,6 +41,19 @@ export const getExplorationTarget = (unit: Unit, actor: ParticipantId) => {
     !!(visible[y * width + x] || terrain?.[y * width + x]);
   const canLand = createLandingCheck(actor);
   const reachable = findCheapestPaths(costs, unit).cost;
+  // Известная находка — ориентир интересного сектора; скрытый мир не читаем.
+  const sites = Object.values(
+    getParticipantKnowledge(actor)?.sites ?? {},
+  ).filter(site => site.type !== 'camp' || site.hiresLeft > 0);
+  const interest = (key: number) =>
+    sites.some(
+      site =>
+        Math.abs(site.x - (key % width)) +
+          Math.abs(site.y - Math.floor(key / width)) <=
+        6,
+    )
+      ? 1.25
+      : 1;
   const candidates = [...reachable]
     .filter(([key, cost]) => {
       const x = key % width;
@@ -58,17 +71,21 @@ export const getExplorationTarget = (unit: Unit, actor: ParticipantId) => {
         ].some(([nx, ny]) => known(nx, ny))
       );
     })
-    .sort(([a, ca], [b, cb]) => ca - cb || a - b);
+    .sort(([a, ca], [b, cb]) => ca / interest(a) - cb / interest(b) || a - b);
   let best: ReturnType<typeof getRoutePreview> = null;
+  let bestScore = Infinity;
   for (const [key, lowerCost] of candidates) {
-    if (best && lowerCost >= best.cost) break;
+    if (lowerCost / interest(key) >= bestScore) break;
     const route = getRoutePreview(
       unit,
       actor,
       { x: key % width, y: Math.floor(key / width) },
       avoid,
     );
-    if (route && (!best || route.cost < best.cost)) best = route;
+    if (route && route.cost / interest(key) < bestScore) {
+      best = route;
+      bestScore = route.cost / interest(key);
+    }
   }
   return best && { ...best, avoid };
 };

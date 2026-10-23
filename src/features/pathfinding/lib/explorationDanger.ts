@@ -4,13 +4,14 @@ import {
   type ParticipantId,
   type Position,
 } from '@shared/config';
-import { getConcealedIds, isHostile } from '@shared/lib';
+import {
+  createExplorationDanger,
+  getConcealedIds,
+  isHostile,
+} from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { getParticipantKnowledge } from '@entities/perceptions';
-
-/** Клеток сверх дальности атаки, которые разведчик держит до угрозы. */
-const DANGER_MARGIN = 2;
 
 /**
  * Клетки, куда авторазведка не заходит: у видимых вражеских бойцов и у
@@ -41,7 +42,7 @@ export const getExplorationDanger = (
       !concealed.has(unit.id) &&
       visible[unit.y * width + unit.x]
     )
-      sources.push({ ...unit, range: unit.attackRange + DANGER_MARGIN });
+      sources.push({ ...unit, range: unit.attackRange });
   }
   for (const contact of Object.values(
     getParticipantKnowledge(actor)?.contacts ?? {},
@@ -55,21 +56,7 @@ export const getExplorationDanger = (
       BUILDINGS_CONFIG[contact.type as keyof typeof BUILDINGS_CONFIG];
     const attackRange =
       config && 'attackRange' in config ? config.attackRange : 0;
-    sources.push({ ...contact, range: attackRange + DANGER_MARGIN });
+    sources.push({ ...contact, range: attackRange });
   }
-  const danger = new Uint8Array(width * height);
-  for (const { x, y, range } of sources) {
-    for (let dy = -range; dy <= range; dy++) {
-      const span = range - Math.abs(dy);
-      for (let dx = -span; dx <= span; dx++) {
-        const cx = x + dx;
-        const cy = y + dy;
-        if (cx < 0 || cy < 0 || cx >= width || cy >= height) continue;
-        const depth = span - Math.abs(dx) + 1;
-        const key = cy * width + cx;
-        danger[key] = Math.max(danger[key], depth);
-      }
-    }
-  }
-  return danger;
+  return createExplorationDanger(width, height, sources);
 };

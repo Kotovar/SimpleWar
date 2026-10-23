@@ -6,7 +6,7 @@ import { movedByOther } from './rules/common';
 
 /** Ключ действия: одинаковое действие одного правила — одна попытка. */
 export const actionKey = (candidate: Pick<Candidate, 'ruleId' | 'action'>) =>
-  `${candidate.ruleId}:${JSON.stringify(candidate.action)}`;
+  `${candidate.ruleId}:${JSON.stringify(candidate.action, (key, value) => (key === 'avoid' ? undefined : value))}`;
 
 /**
  * Рабочего в этом ходу уже двигало другое правило: шаг отбрасывается.
@@ -35,12 +35,17 @@ const stableKeys = (ctx: AiContext) => {
     ...ctx.obs.ownBuildings,
     ...ctx.enemies,
     ...ctx.remembered,
+    ...(ctx.obs.sites ?? []),
   ]) {
     places.set(entity.id, `${entity.type}@${entity.x},${entity.y}`);
   }
   return (candidate: Pick<Candidate, 'ruleId' | 'action'>) =>
-    `${candidate.ruleId}:${JSON.stringify(candidate.action, (_, value) =>
-      typeof value === 'string' ? (places.get(value) ?? value) : value,
+    `${candidate.ruleId}:${JSON.stringify(candidate.action, (key, value) =>
+      key === 'avoid'
+        ? undefined
+        : typeof value === 'string'
+          ? (places.get(value) ?? value)
+          : value,
     )}`;
 };
 
@@ -83,11 +88,7 @@ export const decideStep = (
     .map(({ c }) => c);
 
   const chosen =
-    sorted.find(
-      candidate =>
-        candidate.action.type !== 'wait' &&
-        candidate.weighted >= ctx.config.minScore,
-    ) ?? null;
+    sorted.find(candidate => candidate.weighted >= ctx.config.minScore) ?? null;
 
   return {
     chosen,

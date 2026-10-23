@@ -90,6 +90,7 @@ export const getObservation = (participant: ParticipantId): Observation => {
     knownTerrain,
     knownRoads,
     knownRichGold,
+    sites: Object.values(knowledge?.sites ?? {}).map(site => ({ ...site })),
     visible,
     opponents: getAliveParticipants(useGameLoopStore.getState())
       .map(({ id }) => id)

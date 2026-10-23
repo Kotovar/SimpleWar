@@ -15,7 +15,13 @@ import type { AiContext } from '../lib/context';
  * рассматривается в этом ходу.
  */
 export type AiAction =
-  | { type: 'move'; unitId: string; x: number; y: number }
+  | { type: 'move'; unitId: string; x: number; y: number; avoid?: Uint8Array }
+  | {
+      type: 'lightBeacon' | 'occupyRuins';
+      unitId: string;
+      x: number;
+      y: number;
+    }
   | { type: 'attack'; attackerId: string; targetId: string }
   | { type: 'heal'; healerId: string; targetId: string }
   | { type: 'prepareStrike'; unitId: string; x: number; y: number }
@@ -26,13 +32,15 @@ export type AiAction =
       x: number;
       y: number;
     }
-  | {
+  | ({
       type: 'spawn';
-      buildingId: string;
       unitType: UnitType;
       x: number;
       y: number;
-    }
+    } & (
+      | { buildingId: string; campId?: never }
+      | { campId: string; buildingId?: never }
+    ))
   | { type: 'assign'; workerId: string; buildingId: string }
   | { type: 'unassign'; workerId: string }
   | { type: 'repair'; workerId: string; buildingId: string }

@@ -7,7 +7,7 @@ import type {
 } from '@shared/config';
 
 type GameEvent =
-  | { type: 'SITE_CLAIMED'; owner: ParticipantId; site: Site }
+  | { type: 'SITE_CLAIMED'; owner: ParticipantId; unitId: string; site: Site }
   | {
       type: 'SITE_BLOCKED';
       owner: ParticipantId;

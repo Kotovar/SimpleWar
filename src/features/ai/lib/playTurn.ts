@@ -150,6 +150,7 @@ export const playTurn = async (deps: AiTurnDeps): Promise<AiTurnResult> => {
 
     if (result.ok) {
       commands++;
+      if (chosen.action.type === 'wait') turn.done.add(chosen.action.actorId);
       failures = 0;
       if (chosen.action.type === 'move' && chosen.actorId) {
         const mover = turn.movedBy.get(chosen.actorId);

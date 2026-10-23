@@ -1,6 +1,6 @@
 import type { AiRule, Candidate } from '../../model/types';
 import { enemyTarget, nearest } from '../facts';
-import { manhattan, tieBreak } from '../geometry';
+import { chebyshev, manhattan, tieBreak } from '../geometry';
 import { strikeGroup } from '../operation';
 import { bestMove, moveTo, taskOf } from './common';
 import { cellsNear, unitsOf } from './roleKit';
@@ -26,7 +26,25 @@ export const R04: AiRule = {
     // Картография: контакт разведчика живёт дольше — следить и за одиночкой.
     const cartography = ctx.obs.researched.includes('cartography');
     if (!marks.length && armed.length < (cartography ? 1 : 2)) return [];
+    // Разведчик с задачей другого правила её выполняет, а не ждёт.
     return scouts(ctx).flatMap((unit): Candidate[] => {
+      if (
+        !unit.scoutActed &&
+        !marks.length &&
+        armed.some(enemy => manhattan(unit, enemy) <= SCOUT_SIGHT) &&
+        ctx.enemies.every(enemy => chebyshev(unit, enemy) > 1) &&
+        ctx.threatAt(unit, 'scout') === 0
+      )
+        return [
+          {
+            ruleId: 'R04',
+            group: 'scout',
+            actorId: unit.id,
+            action: { type: 'wait', actorId: unit.id },
+            score: 58,
+            reason: 'наблюдаю без движения: сохраняю маскировку',
+          },
+        ];
       if (unit.movePoints <= 0 || taskOf(ctx, unit.id)) return [];
       const mark = nearest(unit, marks);
       if (mark) {

@@ -58,7 +58,13 @@ export const ownBuilding = (
   y: number,
   patch: Partial<Building> = {},
 ): Building => {
-  const building = createBuilding(type, x, y, 'p2')!;
+  const building = createBuilding(
+    type,
+    x,
+    y,
+    'p2',
+    type === 'beacon' ? 10 : undefined,
+  )!;
   const ready =
     building.role === 'production'
       ? { spawnPoints: building.maxSpawnPoints }
@@ -122,6 +128,8 @@ type SceneSpec = {
   strikes?: Position[];
   researched?: ResearchType[];
   researching?: ResearchType | null;
+  sites?: Observation['sites'];
+  knownRichGold?: boolean[][];
   /** Невыбывшие соперники; по умолчанию один — `p1`. */
   opponents?: ParticipantId[];
   /** Профиль ИИ: настройки через `profileConfig`. */
@@ -165,6 +173,8 @@ export const scene = (
     visibleEnemies: spec.enemies ?? [],
     knownTerrain,
     knownRoads,
+    knownRichGold: spec.knownRichGold,
+    sites: spec.sites ?? [],
     visible,
     opponents: spec.opponents ?? ['p1'],
     resources,

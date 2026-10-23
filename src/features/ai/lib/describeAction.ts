@@ -19,6 +19,10 @@ export const describe = (action: AiAction) => {
       return `стройка ${action.buildingType} в (${action.x}, ${action.y})`;
     case 'spawn':
       return `найм ${action.unitType}`;
+    case 'lightBeacon':
+      return `костёр в (${action.x}, ${action.y})`;
+    case 'occupyRuins':
+      return `захват руин (${action.x}, ${action.y})`;
     case 'assign':
       return `на добычу ${short(action.buildingId)}`;
     case 'unassign':

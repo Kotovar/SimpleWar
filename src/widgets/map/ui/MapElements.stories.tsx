@@ -1,14 +1,18 @@
 import { useEffect, useRef } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { ParticipantKnowledge } from '@entities/perceptions';
+import type { KnownSite, ParticipantKnowledge } from '@entities/perceptions';
 import { createBuilding } from '@entities/buildings';
 import { createUnit } from '@entities/units';
 import {
   TERRAIN_NAME,
+  CAMP_HIRES,
+  SITES_NAME,
+  SITE_TYPES,
   type Building,
   type Cell,
   type CellType,
   type Unit,
+  type SiteType,
 } from '@shared/config';
 import {
   drawBackgroundAndGrid,
@@ -29,6 +33,7 @@ import {
   renderMovementLayer,
   renderSelectionLayer,
   renderTerrainLayer,
+  renderSites,
   TERRAIN_VARIANTS,
 } from '../lib';
 import { setupCanvas, useDevicePixelRatio } from './utils';
@@ -424,6 +429,44 @@ const drawSampleMap: Draw = (ctx, size) => {
   );
 };
 
+const SITE_RANGE = { x0: 0, y0: 0, x1: 1, y1: 1 };
+const SITE_MEMORY: ParticipantKnowledge = {
+  width: 1,
+  height: 1,
+  visible: new Uint8Array([0]),
+  terrain: new Uint8Array([1]),
+  contacts: {},
+  sites: {},
+  strikes: {},
+};
+
+const siteTile = (type: SiteType, remembered = false): Tile => ({
+  label: SITES_NAME[type],
+  draw: withGround((ctx, size) => {
+    const site: KnownSite =
+      type === 'camp'
+        ? { id: type, type, x: 0, y: 0, hiresLeft: CAMP_HIRES }
+        : { id: type, type, x: 0, y: 0 };
+    renderSites(ctx, { [type]: site }, size, SITE_RANGE);
+    if (remembered) renderFogLayer(ctx, SITE_MEMORY, size, SITE_RANGE);
+  }),
+});
+
+const goldTile = (label: string, rich: boolean, mine = false): Tile => ({
+  label,
+  draw: (ctx, size) => {
+    const buildings = mine ? [createBuilding('mine', 0, 0, 'p1')!] : [];
+    renderTerrainLayer(
+      ctx,
+      [[{ ...toCell('gold'), rich: rich ? true : undefined }]],
+      size,
+      1,
+      new Set(buildings.map(b => `${b.x},${b.y}`)),
+    );
+    renderEntitiesLayer(ctx, place(buildings), {}, size, undefined, 'p1');
+  },
+});
+
 type Args = { cellSize: number };
 
 const meta = {
@@ -482,6 +525,59 @@ export const RestModes: Story = {
 
 export const Terrain: Story = {
   render: ({ cellSize }) => <Gallery cellSize={cellSize} sections={TERRAIN} />,
+};
+
+export const Sites: Story = {
+  name: 'Находки разведчика',
+  render: ({ cellSize }) => (
+    <Gallery
+      cellSize={cellSize}
+      sections={{
+        'В обзоре': SITE_TYPES.map(type => siteTile(type)),
+        'По последнему обзору': SITE_TYPES.map(type => siteTile(type, true)),
+      }}
+    />
+  ),
+};
+
+export const RichGold: Story = {
+  name: 'Богатые жилы',
+  render: ({ cellSize }) => (
+    <Gallery
+      cellSize={cellSize}
+      sections={{
+        Месторождение: [
+          goldTile('Богатство не открыто', false),
+          goldTile('Открытая богатая жила', true),
+        ],
+        Рудник: [
+          goldTile('Обычный рудник', false, true),
+          goldTile('Рудник на богатой жиле', true, true),
+        ],
+      }}
+    />
+  ),
+};
+
+export const ScoutBuildings: Story = {
+  name: 'Костёр и аванпост',
+  render: ({ cellSize }) => (
+    <Gallery
+      cellSize={cellSize}
+      sections={{
+        'Объекты разведки': [
+          {
+            label: 'Сигнальный костёр',
+            draw: entity([], [createBuilding('beacon', 0, 0, 'p1', 6)!]),
+          },
+          {
+            label: 'Аванпост',
+            draw: entity([], [createBuilding('outpost', 0, 0, 'p1')!]),
+          },
+        ],
+      }}
+    />
+  ),
 };
 
 export const Overlays: Story = {

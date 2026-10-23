@@ -64,14 +64,24 @@ export const turnMoves = (ctx: AiContext, unit: Unit): CostedCell[] => {
 export const pathsFrom = (
   ctx: AiContext,
   unit: Unit,
+  avoid?: Uint8Array,
 ): ReturnType<typeof findCheapestPaths> => {
-  const cacheKey = `paths:${unit.id}`;
+  // Путь с маской хранится отдельно и не вытесняет обычный путь других правил.
+  const cacheKey = avoid ? `paths:${unit.id}:avoid` : `paths:${unit.id}`;
   const cached = ctx.cache.get(cacheKey) as
-    | ReturnType<typeof findCheapestPaths>
+    | { avoid?: Uint8Array; paths: ReturnType<typeof findCheapestPaths> }
     | undefined;
-  const paths =
-    cached ?? findCheapestPaths(gridFor(ctx, unit, UNKNOWN_MOVE_COST), unit);
-  ctx.cache.set(cacheKey, paths);
+  if (cached && cached.avoid === avoid) return cached.paths;
+  const grid = gridFor(ctx, unit, UNKNOWN_MOVE_COST);
+  const paths = findCheapestPaths(
+    avoid
+      ? grid.map((row, y) =>
+          row.map((cost, x) => (avoid[y * ctx.width + x] ? 0 : cost)),
+        )
+      : grid,
+    unit,
+  );
+  ctx.cache.set(cacheKey, { avoid, paths });
   return paths;
 };
 
@@ -89,9 +99,10 @@ export const stepToward = (
   ctx: AiContext,
   unit: Unit,
   goals: Position[],
+  avoid?: Uint8Array,
 ): { next: Position; total: number } | null => {
   if (unit.movePoints <= 0 || goals.length === 0) return null;
-  const { cost, previous, width } = pathsFrom(ctx, unit);
+  const { cost, previous, width } = pathsFrom(ctx, unit, avoid);
 
   let best: number | undefined;
   for (const goal of goals) {

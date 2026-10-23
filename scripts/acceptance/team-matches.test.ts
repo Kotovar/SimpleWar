@@ -20,10 +20,12 @@ import { initGameLoopEvents, nextTurn, resetGame } from '@features/game-loop';
 import { useSandboxStore } from '@features/sandbox';
 import { initVisibilitySystem } from '@features/visibility';
 import { initializeGame } from '@widgets/start-game';
+import { trackSites } from './siteMetrics';
 
 /** P02: полные партии команд от обычного старта, ИИ balanced/normal. */
 const seeds = (process.env.TEAM_SEEDS ?? '0,1,2,3,4').split(',').map(Number);
 const size = Number(process.env.TEAM_SIZE ?? 36);
+const withSites = process.env.ACCEPTANCE_SITES === '1';
 const rounds = Number(process.env.TEAM_ROUNDS ?? 300);
 const output = process.env.TEAM_OUTPUT ?? '/tmp/simplewar-team-matches';
 
@@ -81,8 +83,9 @@ it.each(cases)(
             team,
           },
     );
-    expect(initializeGame(participants)).toBe(true);
+    expect(initializeGame(participants, { withSites })).toBe(true);
     useGameLoopStore.getState().startGame(participants);
+    const sites = trackSites();
 
     const allied = (a: ParticipantId, b: ParticipantId) =>
       a !== b && !isHostile(a, b, participants);
@@ -176,6 +179,7 @@ it.each(cases)(
     } catch (error) {
       failure = error;
     } finally {
+      sites.off();
       off();
       ids.mockRestore();
     }
@@ -184,6 +188,8 @@ it.each(cases)(
       layout,
       seed,
       teams,
+      withSites,
+      sites: sites.data,
       status: failure
         ? 'failed'
         : state.phase === 'gameOver'
@@ -198,6 +204,7 @@ it.each(cases)(
       friendlyStrikeHits,
       aiTurns: turns,
       durationMs: Math.round(performance.now() - started),
+      errors: useJournalStore.getState().errors,
       commandErrors: useJournalStore
         .getState()
         .errors.reduce<Record<string, number>>((acc, e) => {

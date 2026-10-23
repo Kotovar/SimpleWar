@@ -107,5 +107,5 @@ export const claimSite = (
       .addResources(owner, { [site.resource]: site.amount });
   useSitesStore.getState().removeSite(site.id);
   if (site.type === 'obelisk') revealTerrain(owner, site);
-  gameEvents.emit({ type: 'SITE_CLAIMED', owner, site });
+  gameEvents.emit({ type: 'SITE_CLAIMED', owner, unitId, site });
 };
