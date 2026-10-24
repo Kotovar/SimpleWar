@@ -20,6 +20,7 @@ import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
 import { useEconomyStore } from '@entities/economies';
 import { useMapStore } from '@entities/maps';
+import { useSitesStore } from '@entities/sites';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand } from '@entities/journals';
 import { useResearchStore } from '@entities/researches';
@@ -96,7 +97,12 @@ const validateAndBuild = (
     return reject('distance');
   }
   const { spawnBuilding, getBuildingAt } = useBuildingsStore.getState();
-  if (getUnitAt(x, y) || getBuildingAt(x, y)) return reject('occupied');
+  if (
+    getUnitAt(x, y) ||
+    getBuildingAt(x, y) ||
+    useSitesStore.getState().getSiteAt(x, y)
+  )
+    return reject('occupied');
   if (isPlacementBlocking(actor, { x, y })) return reject('blocked');
 
   const { resources, removeResources } = useEconomyStore.getState();

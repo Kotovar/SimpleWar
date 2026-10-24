@@ -3,6 +3,7 @@ import type {
   CellType,
   Owner,
   Position,
+  SiteType,
   UnitType,
 } from '@shared/config';
 
@@ -19,6 +20,8 @@ export const TERRAIN_CODES: readonly CellType[] = [
 
 /** Бит дороги в коде запомненной местности; младшие биты — местность. */
 export const ROAD_BIT = 0x80;
+/** Богатство золота, обнаруженное разведчиком; не входит в код типа местности. */
+export const RICH_BIT = 0x40;
 
 /**
  * Память о вражеском объекте: что и где видели в последний раз. Не
@@ -43,6 +46,12 @@ export type Contact = {
 /** Достоверность контакта: свежий или устаревший. */
 export type ContactConfidence = 'recent' | 'stale';
 
+/** Наблюдаемая находка; содержимое тайника раскрывается только при сборе. */
+export type KnownSite = Position & { id: string } & (
+    | { type: 'camp'; hiresLeft: number }
+    | { type: Exclude<SiteType, 'camp'> }
+  );
+
 /** Знания одного участника о мире. Индекс клетки — `y * width + x`. */
 export type ParticipantKnowledge = {
   width: number;
@@ -50,12 +59,14 @@ export type ParticipantKnowledge = {
   /** `1` — клетка видна сейчас. */
   visible: Uint8Array;
   /**
-   * Код запомненной местности (индекс в `TERRAIN_CODES` + 1) с `ROAD_BIT`,
-   * если на клетке видели дорогу; `0` — неизвестно.
+   * Код местности (индекс в `TERRAIN_CODES` + 1), `ROAD_BIT` для дороги
+   * и `RICH_BIT` для открытой богатой жилы; `0` — неизвестно.
    */
   terrain: Uint8Array;
   /** Память о вражеских объектах по ID, включая видимые сейчас. */
   contacts: Record<string, Contact>;
+  /** Находки по последнему обзору; скрытое исчезновение не меняет память. */
+  sites: Record<string, KnownSite>;
   /**
    * Известные отметки подготовленных ударов по ID орудия: только клетка
    * цели, без позиции орудия. Живут до удара или отмены.

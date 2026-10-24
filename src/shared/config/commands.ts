@@ -23,12 +23,16 @@ export type CommandType =
   | 'buildRoad'
   | 'demolish'
   | 'prepareStrike'
+  | 'lightBeacon'
+  | 'occupyRuins'
   | 'heal'
   | 'startResearch'
   | 'cancelResearch';
 
 /** Последствия действий, которые журнал записывает помимо самих команд. */
 export type GameOutcomeType =
+  | 'siteClaimed'
+  | 'siteBlocked'
   | 'unitDestroyed'
   | 'buildingDestroyed'
   | 'eliminated'
@@ -65,6 +69,8 @@ export type RejectionCode =
   | 'points'
   | 'resources'
   | 'population'
+  | 'scout'
+  | 'campEmpty'
   | 'target'
   | 'workplace'
   | 'blocked'
@@ -95,6 +101,8 @@ export const REJECTION_MESSAGE: Record<RejectionCode, string> = {
   points: 'Не хватает очков действий',
   resources: 'Недостаточно ресурсов',
   population: 'Не хватает лимита населения',
+  scout: 'Нужен свой разведчик рядом с лагерем',
+  campEmpty: 'В лагере больше нет наёмников',
   target: 'Недопустимая цель',
   workplace: 'Здание занято другим рабочим',
   blocked: 'Постройка перекроет последний проход',

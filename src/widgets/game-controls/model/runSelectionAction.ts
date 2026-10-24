@@ -8,7 +8,7 @@ import {
 } from '@shared/config';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
-import { demolish } from '@features/build';
+import { demolish, getBeaconCells, getOutpostCells } from '@features/build';
 import { getStrikeCells } from '@features/combat';
 import {
   autoExplore,
@@ -20,7 +20,7 @@ import { cancelResearch, startResearch } from '@features/research';
 import { useSelectionStore } from '@features/selection';
 import { spawnAtRallyPoint } from './spawnAtRallyPoint';
 import { getReachableBuildPlacements } from './buildPlacements';
-import { setRallyPoint } from '@features/spawn';
+import { setRallyPoint, getCampSpawnCells } from '@features/spawn';
 import { setUnitRest } from '@features/game-loop';
 import {
   assignWorker,
@@ -74,6 +74,29 @@ export const runSelectionAction = (
   const actor = humanId;
   const [kind, target] = id.split(':');
   switch (kind) {
+    case 'occupyRuins':
+    case 'lightBeacon': {
+      if (
+        !unit ||
+        unit.role !== 'military' ||
+        (kind === 'lightBeacon' && unit.type !== 'scout')
+      )
+        return;
+      const type = kind === 'lightBeacon' ? 'beacon' : 'outpost';
+      const wasOn = input.mode.building === type;
+      resetModes(wasOn ? unit.id : undefined);
+      if (!wasOn) {
+        useBuildingsStore.getState().selectBuildingForSpawn(type);
+        useHighlightStore
+          .getState()
+          .setBuildableCells(
+            type === 'beacon'
+              ? getBeaconCells(actor, unit)
+              : getOutpostCells(actor, unit),
+          );
+      }
+      return;
+    }
     case 'explore':
       if (!unit || unit.type !== 'scout') return;
       if (unit.order?.type === 'explore' && !unit.order.stopped)
@@ -133,19 +156,25 @@ export const runSelectionAction = (
       return;
     }
     case 'spawn': {
-      if (!building || !target) return;
+      const camp = input.camp;
+      if ((!building && !camp) || !target) return;
       const type = target as UnitType;
       const wasSelected = input.mode.unit === type;
       resetModes();
-      if (building.role === 'production' && building.rallyPoint) {
+      if (building?.role === 'production' && building.rallyPoint) {
         spawnAtRallyPoint(actor, building, type);
         return;
       }
       if (wasSelected) return;
       useUnitsStore.getState().selectUnitForSpawn(type);
-      useHighlightStore
-        .getState()
-        .calculateSpawnableCells(building.id, 'grass');
+      if (camp)
+        useHighlightStore
+          .getState()
+          .setSpawnableCells(getCampSpawnCells(actor, camp.id));
+      else if (building)
+        useHighlightStore
+          .getState()
+          .calculateSpawnableCells(building.id, 'grass');
       return;
     }
     case 'work':

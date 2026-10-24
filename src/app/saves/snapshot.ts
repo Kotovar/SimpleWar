@@ -10,6 +10,7 @@ import { restoreGameState, stopUnpaidBuildOrders } from '@shared/lib';
 import { useSettingsStore, useDebugStore } from '@entities/settings';
 import { useGameLoopStore } from '@entities/games';
 import { useMapStore } from '@entities/maps';
+import { useSitesStore } from '@entities/sites';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useEconomyStore } from '@entities/economies';
@@ -111,6 +112,7 @@ export const captureSnapshot = (): GameSnapshot => {
     view: { camera: settings.camera, cellSize: settings.cellSize },
     debug: data(useDebugStore.getState()),
     units,
+    sites: useSitesStore.getState().sites,
     buildings: useBuildingsStore.getState().buildings,
     economy: {
       resources: useEconomyStore.getState().resources,
@@ -168,6 +170,7 @@ export const applySnapshot = (input: GameSnapshot) => {
       decisions: [],
     });
     useMapStore.setState(snapshot.map);
+    useSitesStore.setState({ sites: snapshot.sites });
     useSettingsStore.setState({ ...snapshot.rules, ...snapshot.view });
     useDebugStore.setState({
       ...snapshot.debug,

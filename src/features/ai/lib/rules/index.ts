@@ -19,6 +19,9 @@ import { O07, R07 } from './hiddenAiming';
 import { G05, G07, G10 } from './scouting';
 import { R01, R02, R03 } from './scouts';
 import { R04, R05, R06 } from './scoutWatch';
+import { R08, R09 } from './siteScouting';
+import { M08 } from './outposts';
+import { N05 } from './campRecruitment';
 import { P01, P02, P03, P04, P05 } from './spearmen';
 import { C01, C02, C03, C04 } from './riders';
 import { C05, C06 } from './riderMoves';
@@ -104,6 +107,10 @@ export const AI_RULES: AiRule[] = [
   R05,
   R06,
   R07,
+  R08,
+  R09,
+  M08,
+  N05,
   P01,
   P02,
   P03,

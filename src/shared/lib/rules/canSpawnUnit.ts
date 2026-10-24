@@ -1,5 +1,6 @@
 import {
   type Resources,
+  type Cost,
   type PopulationCap,
   UNITS_CONFIG,
   type UnitType,
@@ -12,12 +13,13 @@ export type SpawnCheckResult = {
 };
 
 /**
- * Проверяет ресурсы, население и очки здания для найма юнита.
+ * Проверяет ресурсы, население и доступный запас найма юнита.
  *
  * @param selectedUnitForSpawn - Тип нанимаемого юнита.
  * @param resources - Ресурсы владельца.
  * @param populationCap - Лимит населения владельца.
  * @param availableSpawnPoints - Очки найма; без аргумента проверка пропускается.
+ * @param cost - Цена источника найма; по умолчанию обычная цена юнита.
  * @returns Результат с причиной отказа и текстом для интерфейса.
  */
 export const canSpawnUnit = (
@@ -25,8 +27,9 @@ export const canSpawnUnit = (
   resources: Resources,
   populationCap: PopulationCap,
   availableSpawnPoints?: number,
+  cost: Cost = UNITS_CONFIG[selectedUnitForSpawn].cost,
 ): SpawnCheckResult => {
-  const { cost, requiresLimit } = UNITS_CONFIG[selectedUnitForSpawn];
+  const { requiresLimit } = UNITS_CONFIG[selectedUnitForSpawn];
 
   if (resources.gold < cost.gold || resources.wood < cost.wood) {
     return {

@@ -21,6 +21,8 @@ import {
 import {
   drawForge,
   drawPalisade,
+  drawBeacon,
+  drawOutpost,
   drawSanctuary,
   drawStable,
   drawWorkshop,
@@ -48,6 +50,8 @@ const DRAW_ENTITY = {
   workshop: drawWorkshop,
   forge: drawForge,
   palisade: drawPalisade,
+  beacon: drawBeacon,
+  outpost: drawOutpost,
   sanctuary: drawSanctuary,
   mage: drawMage,
   healer: drawHealer,

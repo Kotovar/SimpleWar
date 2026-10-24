@@ -3,6 +3,26 @@ import { generateMap } from './generateMap';
 
 afterEach(() => vi.restoreAllMocks());
 
+it.each([2, 3, 4])(
+  'богатые жилы воспроизводимы, только на золоте и зеркальны для %s сторон',
+  participants => {
+    for (let seed = 0; seed < 20; seed++) {
+      const grid = generateMap(30, 30, seed, participants);
+      const rich = grid.flat().filter(c => c.rich);
+      expect(rich.length).toBeGreaterThan(0);
+      expect(rich.length).toBeLessThan(
+        grid.flat().filter(c => c.type === 'gold').length,
+      );
+      expect(generateMap(30, 30, seed, participants)).toEqual(grid);
+      for (const c of grid.flat()) {
+        if (c.rich) expect(c.type).toBe('gold');
+        expect(grid[29 - c.y][29 - c.x].rich).toBe(c.rich);
+        if (participants > 2) expect(grid[c.y][29 - c.x].rich).toBe(c.rich);
+      }
+    }
+  },
+);
+
 it.each([0, 1, 12354, 215412312])(
   'reproduces the whole map, including gold, with seed %s',
   seed => {

@@ -1,4 +1,6 @@
 import {
+  BUILDINGS_CONFIG,
+  CAMP_HIRE_COST,
   HEALING,
   REJECTION_MESSAGE,
   RESEARCH_CONFIG,
@@ -7,6 +9,7 @@ import {
   UNITS_CONFIG,
   UNITS_NAME,
   type Building,
+  type CampSite,
   type Unit,
   type UnitType,
 } from '@shared/config';
@@ -61,32 +64,57 @@ const siegeActions = (
 };
 
 const spawnSlots = (
-  building: Building,
-  { payableSpawn, population, mode }: SelectionActionInput,
-): ActionButton[] =>
-  building.role !== 'production'
-    ? []
-    : building.spawningUnits.map((type, index) => {
-        const check = canSpawnUnit(
-          type,
-          payableSpawn,
-          population,
-          building.spawnPoints,
-        );
-        const { cost, requiresLimit } = UNITS_CONFIG[type];
-        const price = { ...cost, population: requiresLimit };
-        return {
-          id: `spawn:${type}`,
-          label: UNITS_NAME[type],
-          code: slot(index),
-          hint: `${UNITS_NAME[type]}: ${unitStats(type)}`,
-          reason: check.canSpawn ? undefined : check.message,
-          pressed: mode.unit === type,
-          cost: price,
-          lacking: lackingOf(price, payableSpawn, population),
-          portrait: type,
-        };
-      });
+  source: Building | CampSite,
+  {
+    payableSpawn,
+    population,
+    mode,
+    campVisible,
+    campHasScout,
+  }: SelectionActionInput,
+): ActionButton[] => {
+  const types =
+    source.type === 'camp'
+      ? (Object.keys(CAMP_HIRE_COST) as (keyof typeof CAMP_HIRE_COST)[])
+      : source.role === 'production'
+        ? source.spawningUnits
+        : [];
+  return types.map((type, index) => {
+    const cost =
+      source.type === 'camp'
+        ? CAMP_HIRE_COST[type as keyof typeof CAMP_HIRE_COST]
+        : UNITS_CONFIG[type].cost;
+    const points =
+      source.type === 'camp'
+        ? source.hiresLeft
+        : source.role === 'production'
+          ? source.spawnPoints
+          : 0;
+    const check = canSpawnUnit(type, payableSpawn, population, points, cost);
+    const reason =
+      source.type === 'camp' && !campVisible
+        ? REJECTION_MESSAGE.hidden
+        : source.type === 'camp' && !campHasScout
+          ? REJECTION_MESSAGE.scout
+          : source.type === 'camp' && source.hiresLeft <= 0
+            ? REJECTION_MESSAGE.campEmpty
+            : check.canSpawn
+              ? undefined
+              : check.message;
+    const price = { ...cost, population: UNITS_CONFIG[type].requiresLimit };
+    return {
+      id: `spawn:${type}`,
+      label: UNITS_NAME[type],
+      code: slot(index),
+      hint: `${UNITS_NAME[type]}: ${unitStats(type)}`,
+      reason,
+      pressed: mode.unit === type,
+      cost: price,
+      lacking: lackingOf(price, payableSpawn, population),
+      portrait: type,
+    };
+  });
+};
 
 const turnsNote = (turns: number) =>
   `${turns} ${pluralRu(turns, ['ход', 'хода', 'ходов'])}`;
@@ -177,10 +205,32 @@ export const getSelectionActions = (
         ...siegeActions(input.unit, input),
         ...(input.unit.type === 'scout'
           ? [
+              action('lightBeacon', {
+                pressed: input.mode.building === 'beacon',
+                reason:
+                  input.unit.role !== 'military' || input.unit.attackPoints <= 0
+                    ? 'Нет боевого действия'
+                    : input.stock.wood < BUILDINGS_CONFIG.beacon.cost.wood
+                      ? REJECTION_MESSAGE.resources
+                      : undefined,
+                cost: BUILDINGS_CONFIG.beacon.cost,
+                lacking: lackingOf(BUILDINGS_CONFIG.beacon.cost, input.stock),
+              }),
               action('explore', {
                 pressed:
                   input.unit.order?.type === 'explore' &&
                   !input.unit.order.stopped,
+              }),
+            ]
+          : []),
+        ...(input.unit.role === 'military'
+          ? [
+              action('occupyRuins', {
+                pressed: input.mode.building === 'outpost',
+                reason:
+                  input.unit.attackPoints > 0
+                    ? undefined
+                    : 'Нет боевого действия',
               }),
             ]
           : []),
@@ -197,7 +247,9 @@ export const getSelectionActions = (
       ]
     : input.building
       ? buildingActions(input.building, input)
-      : [];
+      : input.camp
+        ? spawnSlots(input.camp, input)
+        : [];
   if (input.isTurn) return buttons;
   const notTurn = (button: ActionButton): ActionButton => ({
     ...button,

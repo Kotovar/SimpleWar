@@ -96,4 +96,14 @@ describe('dirtyTiles', () => {
 
     expect([...tiles]).toEqual([1]);
   });
+
+  it('обнаружение богатой жилы перерисовывает тайл с золотом', () => {
+    const grid = map(24, 16, 'gold');
+    const next = grid.map(row => row.map(cell => ({ ...cell })));
+    next[4][12].rich = true;
+    expect([
+      ...dirtyTiles({ range, grid, builtCells: new Set() }, next, new Set())
+        .tiles,
+    ]).toEqual([1]);
+  });
 });

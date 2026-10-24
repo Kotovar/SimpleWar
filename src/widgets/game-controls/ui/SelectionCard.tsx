@@ -1,15 +1,22 @@
 import { MOVE_COST, type Cell } from '@shared/config';
 import { useMapViewer } from '@entities/settings';
 import { useGameLoopStore } from '@entities/games';
+import { useSitesStore } from '@entities/sites';
+import { useMapStore } from '@entities/maps';
+import { useUnitsStore } from '@entities/units';
+import { useBuildingsStore } from '@entities/buildings';
+import { getConcealedIds } from '@shared/lib';
 import {
   getCellKnowledge,
   getKnownCellType,
   isKnownRoad,
+  isKnownRichGold,
   useParticipantKnowledge,
 } from '@entities/perceptions';
 import { useGameLoopSelectors } from '@features/game-loop';
 import { useSelectionSelectors } from '@features/selection';
 import { SelectedEntityInfo } from './info';
+import { SelectedSiteInfo } from './info/SelectedSiteInfo';
 import styles from './Overlays.styles.module.css';
 
 /** Выбранные объекты и рельеф, доступные смотрящему. */
@@ -23,6 +30,20 @@ const useKnownSelection = () => {
   );
   const viewer = review ? 'world' : configuredViewer;
   const knowledge = useParticipantKnowledge(viewer === 'world' ? null : viewer);
+  const worldSites = useSitesStore(state => state.sites);
+  const grid = useMapStore(state => state.grid);
+  const units = useUnitsStore(state => state.units);
+  const buildings = useBuildingsStore(state => state.buildings);
+  const participants = useGameLoopStore(state => state.participants);
+  const concealed =
+    viewer === 'world'
+      ? new Set<string>()
+      : getConcealedIds(
+          viewer,
+          Object.values(units),
+          Object.values(buildings),
+          participants,
+        );
 
   // Карточка показывает только то, что видит смотрящий: чужой объект
   // вне обзора и настоящий рельеф неразведанной клетки не раскрываются.
@@ -33,9 +54,14 @@ const useKnownSelection = () => {
       getCellKnowledge(knowledge, entity.x, entity.y) === 'visible');
   const selectedUnit = unitsSelection.getSelectedUnit();
   const selectedBuilding = buildingsSelection.getSelectedBuilding();
-  const unit = canSee(selectedUnit) ? selectedUnit : null;
+  const unit =
+    canSee(selectedUnit) && selectedUnit && !concealed.has(selectedUnit.id)
+      ? selectedUnit
+      : null;
   const building = canSee(selectedBuilding) ? selectedBuilding : null;
-  const realCell = terrainSelection.getSelectedCell();
+  const realCell =
+    terrainSelection.getSelectedCell() ??
+    (building?.type === 'mine' ? grid[building.y]?.[building.x] : null);
   const knownType =
     realCell && viewer !== 'world'
       ? getKnownCellType(knowledge, realCell.x, realCell.y)
@@ -52,11 +78,26 @@ const useKnownSelection = () => {
           type: knownType,
           isWalkable: MOVE_COST[knownType] !== undefined,
           ...(knownRoad && { road: true as const }),
+          ...((viewer === 'world'
+            ? realCell.rich
+            : isKnownRichGold(knowledge, realCell.x, realCell.y)) && {
+            rich: true as const,
+          }),
         }
       : null;
   const isUnknownCell = !!realCell && !knownType;
+  const site =
+    cell && !unit && !building
+      ? Object.values(
+          viewer === 'world' ? worldSites : (knowledge?.sites ?? {}),
+        ).find(s => s.x === cell.x && s.y === cell.y)
+      : undefined;
+  const remembered =
+    !!site &&
+    viewer !== 'world' &&
+    getCellKnowledge(knowledge, site.x, site.y) !== 'visible';
 
-  return { cell, unit, building, isUnknownCell };
+  return { cell, unit, building, isUnknownCell, site, remembered };
 };
 
 /**
@@ -64,13 +105,16 @@ const useKnownSelection = () => {
  * Без выбора не показывается — карта остаётся свободной.
  */
 export const SelectionCard = () => {
-  const { cell, unit, building, isUnknownCell } = useKnownSelection();
+  const { cell, unit, building, isUnknownCell, site, remembered } =
+    useKnownSelection();
   if (!cell && !unit && !building && !isUnknownCell) return null;
 
   return (
     <aside className={styles.Card} aria-label='Выбранный объект'>
       {isUnknownCell ? (
         <p className={styles.Note}>Клетка не разведана.</p>
+      ) : site ? (
+        <SelectedSiteInfo site={site} remembered={remembered} />
       ) : (
         <SelectedEntityInfo cell={cell} unit={unit} building={building} />
       )}

@@ -1,4 +1,6 @@
-import type { CellType } from './common';
+import type { CellType, Position } from './common';
+
+export type StartPosition = { base: Position; worker: Position };
 
 /** Размер клетки в пикселях. */
 export const CELL_SIZE = 32;
@@ -57,16 +59,18 @@ export const ROAD_MOVE_COST = 0.5;
 /**
  * Версия генератора карт. Повышается при любом изменении, из-за которого
  * тот же сид даёт другую карту: сид воспроизводим только вместе с версией.
- * В v6 добавлена симметрия на 3–4 стороны; режим на двоих сохранён из v5.
+ * В v9 уменьшено число находок и добавлено расстояние между ними.
  */
-export const MAP_GENERATOR_VERSION = 6;
+export const MAP_GENERATOR_VERSION = 9;
+
+/** Доход работающего рудника на открытой богатой жиле. */
+export const RICH_MINE_INCOME = 25;
 
 /** Максимум воспроизводимых попыток (сид, сид + 2³², ...) до резервной раскладки. */
 export const MAP_ATTEMPTS = 10;
 
 /**
- * Допустимая разница в цене пути от стартов до ближайшего подхода к золоту
- * и к лесу. Старт; порог подбирается в S21.
+ * Допустимая разница цены пути от стартов к ближайшим ресурсам и находкам.
  */
 export const START_FAIRNESS_TOLERANCE = 4;
 

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { GRID, type Cell, type CellType } from '@shared/config';
 import { renderHiDpiCanvas } from '@shared/lib';
 import { drawForest } from './drawForest';
-import { drawGoldOre, drawMountains } from './drawTerrain';
+import { drawGoldOre, drawRichGold, drawMountains } from './drawTerrain';
 import { drawHill, drawSwamp } from './drawRelief';
 import styles from './styles.module.css';
 
@@ -67,7 +67,7 @@ type Props = {
 /** Показывает клетку с тем же вариантом рисунка, что и на карте. */
 export const TerrainPortrait = ({ cell, size = 48 }: Props) => {
   const ref = useRef<HTMLCanvasElement>(null);
-  const { x, y, type } = cell;
+  const { x, y, type, rich } = cell;
 
   useEffect(() => {
     const canvas = ref.current;
@@ -90,11 +90,12 @@ export const TerrainPortrait = ({ cell, size = 48 }: Props) => {
       if (type === 'forest') drawForest(ctx, x, y, size);
       if (type === 'mountain') drawMountains(ctx, x, y, size);
       if (type === 'gold') drawGoldOre(ctx, x, y, size);
+      if (type === 'gold' && rich) drawRichGold(ctx, x, y, size);
       if (type === 'hill') drawHill(ctx, x, y, size);
       if (type === 'swamp') drawSwamp(ctx, x, y, size);
       ctx.restore();
     });
-  }, [size, type, x, y]);
+  }, [size, type, x, y, rich]);
 
   return (
     <canvas

@@ -5,7 +5,7 @@ import type { Controller } from './gameLoop';
 import type { UnitType } from './units';
 
 /** Здания, которые можно выставить в тесте: ратуша у каждой стороны одна. */
-export type SandboxBuildingType = Exclude<BuildingType, 'base'>;
+export type SandboxBuildingType = Exclude<BuildingType, 'base' | 'beacon'>;
 
 /**
  * Сторона сценария тестирования: кто управляет, что выставлено на старте

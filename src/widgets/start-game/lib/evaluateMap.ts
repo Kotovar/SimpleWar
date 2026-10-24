@@ -1,18 +1,22 @@
 import {
   START_FAIRNESS_TOLERANCE,
+  SITE_MIN_START_DISTANCE,
+  SITE_TYPES,
   type Cell,
-  type Position,
+  type Site,
+  type StartPosition,
 } from '@shared/config';
 import { findCheapestPaths, getMoveCost } from '@shared/lib';
 
-export type StartPosition = { base: Position; worker: Position };
+export type { StartPosition } from '@shared/config';
 export type MapRejection =
   | 'start'
   | 'exit'
   | 'route'
   | 'gold'
   | 'forest'
-  | 'fairness';
+  | 'fairness'
+  | 'sites';
 
 /** Проверяет, может ли рабочий подойти к соседней клетке ресурса. */
 export const accessibleResourceCost = (
@@ -66,9 +70,10 @@ export const accessibleResourceCost = (
 export const evaluateMap = (
   grid: Cell[][],
   starts: StartPosition[],
+  sites?: readonly Site[],
 ): { ok: true } | { ok: false; reason: MapRejection } => {
   const width = grid[0]?.length ?? 0;
-  const key = ({ x, y }: Position) => y * width + x;
+  const key = ({ x, y }: { x: number; y: number }) => y * width + x;
   const occupied = new Set<number>();
   if (!width || starts.length < 2) return { ok: false, reason: 'start' };
   for (const { base, worker } of starts) {
@@ -91,6 +96,25 @@ export const evaluateMap = (
 
   const movement = grid.map(row => row.map(getMoveCost));
   for (const { base } of starts) movement[base.y][base.x] = 0;
+  if (
+    sites &&
+    (SITE_TYPES.some(type => !sites.some(site => site.type === type)) ||
+      new Set(sites.map(key)).size !== sites.length ||
+      sites.some(
+        site =>
+          !Number.isInteger(site.x) ||
+          !Number.isInteger(site.y) ||
+          grid[site.y]?.[site.x]?.type !== 'grass' ||
+          !grid[site.y][site.x].isWalkable ||
+          starts.some(
+            ({ base }) =>
+              Math.abs(site.x - base.x) + Math.abs(site.y - base.y) <
+              SITE_MIN_START_DISTANCE,
+          ),
+      ))
+  )
+    return { ok: false, reason: 'sites' };
+  const siteDistances: number[][] = SITE_TYPES.map(() => []);
   const distances: Record<'gold' | 'forest', number[]> = {
     gold: [],
     forest: [],
@@ -114,6 +138,19 @@ export const evaluateMap = (
       if (!Number.isFinite(distance)) return { ok: false, reason: type };
       distances[type].push(distance);
     }
+    if (sites) {
+      if (sites.some(site => !cost.has(key(site))))
+        return { ok: false, reason: 'sites' };
+      SITE_TYPES.forEach((type, index) => {
+        siteDistances[index].push(
+          Math.min(
+            ...sites
+              .filter(site => site.type === type)
+              .map(site => cost.get(key(site))!),
+          ),
+        );
+      });
+    }
   }
 
   if (
@@ -125,5 +162,14 @@ export const evaluateMap = (
   )
     return { ok: false, reason: 'fairness' };
 
+  if (
+    sites &&
+    siteDistances.some(
+      distances =>
+        Math.max(...distances) - Math.min(...distances) >
+        START_FAIRNESS_TOLERANCE,
+    )
+  )
+    return { ok: false, reason: 'sites' };
   return { ok: true };
 };

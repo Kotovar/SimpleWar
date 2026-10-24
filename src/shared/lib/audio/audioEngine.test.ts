@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import { AudioEngine } from './audioEngine';
 import {
   MUSIC_CROSSFADE,
+  BATTLE_MUSIC_CROSSFADE,
   SFX_VARIANTS,
   getSfxFiles,
   type Sfx,
@@ -149,6 +150,38 @@ describe('AudioEngine', () => {
     );
     expect(ramps).toContainEqual([0, 15]);
     expect(ramps).toContainEqual([1, 15]);
+  });
+
+  it('разведка не меняет мирную тему; после нападения бой вступает за 8 секунд', async () => {
+    const { engine, context, fetch } = setup(
+      vi.fn(async () => ({
+        ok: true,
+        arrayBuffer: async () => new ArrayBuffer(0),
+      })) as never,
+    );
+    await vi.waitFor(() => expect(context.buffers).toHaveLength(1));
+    engine.setMusicState({ phase: 'inProgress', combat: true });
+    await vi.waitFor(() => expect(context.buffers).toHaveLength(2));
+    expect(
+      fetch.mock.calls.some(([url]) => String(url).includes('music/battle')),
+    ).toBe(false);
+    const peace = context.buffers[1];
+    context.currentTime = 10;
+    engine.setMusicState({ recentAttack: true });
+    await vi.waitFor(() => expect(context.buffers).toHaveLength(3));
+    expect(BATTLE_MUSIC_CROSSFADE).toBe(8);
+    expect(peace.stop).toHaveBeenCalledWith(18);
+    expect(context.buffers[2].start).toHaveBeenCalledWith(10);
+    expect(
+      context.gains.flatMap(
+        gain => gain.gain.linearRampToValueAtTime.mock.calls,
+      ),
+    ).toEqual(
+      expect.arrayContaining([
+        [0, 18],
+        [1, 18],
+      ]),
+    );
   });
 });
 

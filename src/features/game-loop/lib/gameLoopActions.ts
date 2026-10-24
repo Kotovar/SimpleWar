@@ -3,11 +3,16 @@ import { calculateTurnIncome, gameEvents, ok, reject } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
 import { useBuildingsStore } from '@entities/buildings';
 import { useMapStore } from '@entities/maps';
+import { useSitesStore } from '@entities/sites';
 import { useDebugStore, useSettingsStore } from '@entities/settings';
 import { useEconomyStore } from '@entities/economies';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand, useJournalStore } from '@entities/journals';
 import { hasResearch, useResearchStore } from '@entities/researches';
+import {
+  getParticipantKnowledge,
+  isKnownRichGold,
+} from '@entities/perceptions';
 import { eliminateParticipant } from '../model/gameLoopStore';
 import { executePreparedStrikes } from './strikes';
 
@@ -41,6 +46,9 @@ const validateAndEndTurn = (actor: ParticipantId): CommandResult => {
     useBuildingsStore.getState().getEconomicBuildings(actor),
     Object.values(units.units).filter(({ owner }) => owner === actor),
     hasResearch(actor, 'artel'),
+    (x, y) =>
+      !!useMapStore.getState().getCell(x, y)?.rich &&
+      isKnownRichGold(getParticipantKnowledge(actor), x, y),
   );
   for (const id of miners) units.changeBuildPoints(id);
   useEconomyStore.getState().addResources(actor, income);
@@ -66,6 +74,16 @@ const validateAndEndTurn = (actor: ParticipantId): CommandResult => {
   useGameLoopStore.getState().endTurn();
 
   const next = useGameLoopStore.getState().activePlayer;
+  const { currentTurn } = useGameLoopStore.getState();
+  const buildings = useBuildingsStore.getState();
+  for (const building of Object.values(buildings.buildings)) {
+    if (
+      building.owner === next &&
+      building.expiresTurn !== undefined &&
+      building.expiresTurn <= currentTurn
+    )
+      buildings.demolishBuilding(building.id);
+  }
   useUnitsStore.getState().resetUnitsForNewTurn(next);
   useBuildingsStore.getState().resetBuildingsForNewTurn(next);
   // Шаг 8: подготовленные удары нового активного участника.
@@ -115,6 +133,7 @@ export const resetGame = () => {
   useBuildingsStore.getState().resetStore();
   useUnitsStore.getState().resetStore();
   useMapStore.getState().resetStore();
+  useSitesStore.getState().resetStore();
   useSettingsStore.getState().resetStore();
   useDebugStore.getState().resetStore();
   useEconomyStore.getState().resetStore();

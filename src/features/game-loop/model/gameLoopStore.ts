@@ -2,6 +2,7 @@ import type { ParticipantId } from '@shared/config';
 import { gameEvents } from '@shared/lib';
 import { getAliveParticipants, useGameLoopStore } from '@entities/games';
 import { useUnitsStore } from '@entities/units';
+import { useSitesStore } from '@entities/sites';
 import { useBuildingsStore } from '@entities/buildings';
 import { executePreparedStrikes } from '../lib/strikes';
 
@@ -21,7 +22,12 @@ export const eliminateParticipant = (owner: ParticipantId) => {
   const turn = state.currentTurn;
 
   useUnitsStore.getState().removeOwnerUnits(owner);
+  const lostBuildings = Object.values(
+    useBuildingsStore.getState().buildings,
+  ).filter(b => b.owner === owner);
   useBuildingsStore.getState().removeOwnerBuildings(owner);
+  // При выбывании нет событий гибели, но аванпосты также оставляют руины.
+  useSitesStore.getState().restoreOutpostRuins(lostBuildings);
 
   const before = useGameLoopStore.getState().activePlayer;
   useGameLoopStore.getState().eliminate(owner);

@@ -1,6 +1,7 @@
 import type {
   Building,
   BuildingType,
+  CampSite,
   CommandResult,
   Owner,
   Position,
@@ -17,7 +18,11 @@ import type {
   HealCommand,
   PrepareStrikeCommand,
 } from '@features/combat';
-import type { BuildCommand } from '@features/build';
+import type {
+  OccupyRuinsCommand,
+  LightBeaconCommand,
+  BuildCommand,
+} from '@features/build';
 import type { RallyPointCommand, SpawnCommand } from '@features/spawn';
 import type { BuildRoadCommand, ClearForestCommand } from '@features/workers';
 
@@ -26,11 +31,16 @@ export type MapClickContext = {
   /** Участник, которым управляет человек; его объекты — «свои». */
   humanId: Owner;
   /** Объекты в клетке клика. */
-  clicked: { unit: Unit | null; building: Building | null };
+  clicked: {
+    unit: Unit | null;
+    building: Building | null;
+    camp?: CampSite | null;
+  };
   /** Текущий выбор интерфейса. */
   selection: {
     unit: Unit | null;
     building: Building | null;
+    camp?: CampSite | null;
     /** Здание, выбранное рабочему для постройки. */
     buildingTypeToPlace: BuildingType | null;
     /** Юнит, выбранный зданию для найма. */
@@ -59,6 +69,8 @@ export type MapClickContext = {
   commands: {
     move: (command: MoveCommand) => CommandResult;
     attack: (command: AttackCommand) => CommandResult;
+    occupyRuins?: (command: OccupyRuinsCommand) => CommandResult;
+    lightBeacon?: (command: LightBeaconCommand) => CommandResult;
     build: (command: BuildCommand) => CommandResult;
     /** Приказ «идти и построить»: место может быть далеко от рабочего. */
     orderBuild?: (command: BuildCommand) => CommandResult;

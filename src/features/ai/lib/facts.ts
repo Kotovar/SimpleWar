@@ -160,8 +160,12 @@ type Recruit = keyof typeof RECRUIT_SHARE;
  * население; деньги — нет: на них ИИ копит); без таких — мечник или
  * лучник. Отставание считается с учётом найма: иначе при нуле юнитов
  * редкий копейщик шёл бы третьим. При равенстве — мечник: он первый.
+ * `available` задаёт состав найма лагеря независимо от своих зданий.
  */
-export const nextRecruit = (ctx: AiContext): Recruit => {
+export const nextRecruit = (
+  ctx: AiContext,
+  available?: readonly Recruit[],
+): Recruit => {
   const { occupied, max } = ctx.obs.population;
   const hired = new Set(
     ctx.obs.ownBuildings.flatMap(b =>
@@ -173,7 +177,8 @@ export const nextRecruit = (ctx: AiContext): Recruit => {
   const ready = (Object.keys(RECRUIT_SHARE) as Recruit[]).filter(
     type => hired.has(type) && fits(type),
   );
-  const options: Recruit[] = ready.length ? ready : ['swordsman', 'archer'];
+  const options =
+    available ?? (ready.length ? ready : (['swordsman', 'archer'] as const));
   // Сдвиг на половину найма (как в методе Сент-Лагю): при нуле всех
   // типов редкая роль не идёт вперёд.
   const lag = (type: Recruit) =>

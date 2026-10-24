@@ -2,6 +2,7 @@ import type { CommandResult, ParticipantId } from '@shared/config';
 import {
   gameEvents,
   getMoveCost,
+  getConcealedIds,
   isFlyingType,
   isHostile,
   ok,
@@ -20,6 +21,7 @@ import {
 } from './createKnownMovementGrid';
 import { findUnitRoute } from './findUnitRoute';
 import { blocksGroundTransit, isCellOccupied } from './isCellOccupied';
+import { claimSite } from './claimSite';
 
 /**
  * Приказ движения: кто, каким юнитом и в какую клетку. `partial` — шаг
@@ -41,6 +43,12 @@ export const getSeenEnemies = (actor: ParticipantId) => {
   const visible = getActorVisibility(actor);
   const width = useMapStore.getState().grid[0]?.length ?? 0;
   const { participants } = useGameLoopStore.getState();
+  const concealed = getConcealedIds(
+    actor,
+    Object.values(useUnitsStore.getState().units),
+    Object.values(useBuildingsStore.getState().buildings),
+    participants,
+  );
   const seen = new Set<string>();
   for (const entity of [
     ...Object.values(useUnitsStore.getState().units),
@@ -48,6 +56,7 @@ export const getSeenEnemies = (actor: ParticipantId) => {
   ]) {
     if (
       isHostile(actor, entity.owner, participants) &&
+      !concealed.has(entity.id) &&
       visible[entity.y * width + entity.x]
     ) {
       seen.add(entity.id);
@@ -77,7 +86,13 @@ const validateAndMove = ({
     return reject('bounds');
   }
   // Занятость скрытой клетки не раскрывается: движение остановится перед ней.
-  if (isVisibleTo(actor, x, y) && isCellOccupied(x, y)) {
+  const concealed = getConcealedIds(
+    actor,
+    Object.values(units),
+    Object.values(useBuildingsStore.getState().buildings),
+    useGameLoopStore.getState().participants,
+  );
+  if (isVisibleTo(actor, x, y) && isCellOccupied(x, y, concealed)) {
     return reject('occupied');
   }
 
@@ -112,6 +127,7 @@ const moveAlong = (
   const target = path.at(-1);
   if (!target) return reject('path');
   let pending = 0;
+  let passed: { x: number; y: number }[] = [];
   let steps = 0;
   let seen = getSeenEnemies(actor);
   for (let index = 1; index < path.length; index++) {
@@ -123,11 +139,15 @@ const moveAlong = (
     if (!flying && blocksGroundTransit(step.x, step.y, actor)) break;
     pending += cost;
     if (isCellOccupied(step.x, step.y)) {
+      passed.push(step);
       gameEvents.emit({ type: 'UNIT_PASSED', unitId, x: step.x, y: step.y });
       continue;
     }
 
     moveUnit(unitId, step.x, step.y, pending);
+    for (const cell of [...passed, step])
+      claimSite(unitId, cell, path.slice(index + 1));
+    passed = [];
     pending = 0;
     steps++;
     const now = getSeenEnemies(actor);

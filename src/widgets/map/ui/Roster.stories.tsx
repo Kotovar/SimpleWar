@@ -53,7 +53,13 @@ const UNITS = byId(
 const BUILDINGS = byId(
   OWNERS.flatMap((owner, row) =>
     BUILDING_TYPES.map((type, x) => {
-      const building = createBuilding(type, x, row * 2 + 1, owner)!;
+      const building = createBuilding(
+        type,
+        x,
+        row * 2 + 1,
+        owner,
+        type === 'beacon' ? 6 : undefined,
+      )!;
       return {
         ...building,
         hp: x % 4 === 1 ? Math.ceil(building.maxHp * 0.3) : building.hp,

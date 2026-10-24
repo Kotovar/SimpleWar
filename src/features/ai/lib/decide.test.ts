@@ -104,7 +104,7 @@ describe('выбор действия шага', () => {
     });
   });
 
-  it('ожидание и слабые действия не выполняются', () => {
+  it('ожидание без полезности и слабые действия не выполняются', () => {
     const { ctx } = scene({ map: grass(4, 4) });
     const wait = rule('W', 'defense', () => [
       {
@@ -112,7 +112,7 @@ describe('выбор действия шага', () => {
         group: 'defense',
         actorId: 't1',
         action: { type: 'wait', actorId: 't1' },
-        score: 100,
+        score: 0,
         reason: 'тест',
       },
     ]);

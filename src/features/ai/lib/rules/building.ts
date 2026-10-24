@@ -33,7 +33,10 @@ export const siteOk = (ctx: AiContext, type: BuildingType, site: Position) => {
   if (!cell || !isBuildableTerrain(required, cell)) return false;
   if (ctx.occupied(site.x, site.y)) return false;
   if (
-    ctx.memory.tasks.some(({ target: t }) => t.x === site.x && t.y === site.y)
+    ctx.memory.tasks.some(
+      ({ target: t }) => t.x === site.x && t.y === site.y,
+    ) ||
+    (ctx.obs.sites ?? []).some(s => s.x === site.x && s.y === site.y)
   )
     return false;
   return (

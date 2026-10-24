@@ -4,6 +4,7 @@ import { drawSelectionHighlight } from './drawSelectionHighlight';
 export {
   drawForest,
   drawGoldOre,
+  drawRichGold,
   drawHill,
   drawSwamp,
   drawMountains,

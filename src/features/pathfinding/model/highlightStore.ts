@@ -1,10 +1,12 @@
 import { create } from 'zustand';
-import { gameEvents, withDevtools } from '@shared/lib';
+import { gameEvents, getConcealedIds, withDevtools } from '@shared/lib';
 import type { Cell, Position } from '@shared/config';
 
 import { useMapStore } from '@entities/maps';
 import { getCellsAround } from '../lib/getCellsAround';
 import { useBuildingsStore } from '@entities/buildings';
+import { useUnitsStore } from '@entities/units';
+import { useGameLoopStore } from '@entities/games';
 
 interface HighlightState {
   spawnableCells: Position[] | null;
@@ -19,6 +21,7 @@ interface HighlightState {
   calculateSpawnableCells: (buildingId: string, cellType: Cell['type']) => void;
   /** Клетки, где можно заложить здание; не `null` — режим выбора места. */
   setBuildableCells: (cells: Position[] | null) => void;
+  setSpawnableCells: (cells: Position[] | null) => void;
   setClearableCells: (cells: Position[] | null) => void;
   setRoadCells: (cells: Position[] | null) => void;
   setStrikeCells: (cells: Position[] | null) => void;
@@ -41,13 +44,28 @@ export const useHighlightStore = create<HighlightState>()(
 
       const grid = useMapStore.getState().grid;
 
-      const spawnable = getCellsAround(grid, building.x, building.y, cellType);
+      const { buildings } = useBuildingsStore.getState();
+      // Подсветка не выдаёт скрытого разведчика: его клетка выглядит свободной.
+      const concealed = getConcealedIds(
+        building.owner,
+        Object.values(useUnitsStore.getState().units),
+        Object.values(buildings),
+        useGameLoopStore.getState().participants,
+      );
+      const spawnable = getCellsAround(
+        grid,
+        building.x,
+        building.y,
+        cellType,
+        concealed,
+      );
 
       set(state => {
         state.spawnableCells = spawnable;
       });
     },
 
+    setSpawnableCells: cells => set({ spawnableCells: cells }),
     setBuildableCells: cells =>
       set(state => {
         state.buildableCells = cells;

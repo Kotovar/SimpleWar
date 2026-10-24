@@ -32,6 +32,7 @@ export type Sfx =
   /** Гибель юнита. */
   | 'death'
   | 'turnStart'
+  | 'siteClaim'
   | 'reject'
   | 'threat'
   | 'click';
@@ -60,6 +61,17 @@ export type SfxTone = {
  * лицензия — код проекта. Короткие, чтобы не мешать при частых событиях.
  */
 export const SFX_TONES: Record<Sfx, SfxTone[]> = {
+  siteClaim: [
+    { wave: 'sine', from: 660, to: 880, duration: 0.16, gain: 0.15 },
+    {
+      wave: 'sine',
+      from: 990,
+      to: 1320,
+      duration: 0.25,
+      gain: 0.12,
+      delay: 0.12,
+    },
+  ],
   select: [
     { wave: 'triangle', from: 660, to: 880, duration: 0.06, gain: 0.25 },
   ],
@@ -279,6 +291,7 @@ export const SFX_VARIANTS: Partial<Record<Sfx, number>> = {
   spawn: 1,
   destroy: 3,
   turnStart: 1,
+  siteClaim: 1,
   reject: 1,
   threat: 1,
   shot: 3,
@@ -305,6 +318,7 @@ export const SFX_LOUDNESS_OVERRIDE: Partial<Record<Sfx, number>> = {
   reject: -26,
   heal: -24,
   turnStart: -24,
+  siteClaim: -24,
   destroy: -18,
   strike: -18,
 };
@@ -360,10 +374,14 @@ export const SFX_REPEAT_LIMIT: Record<Sfx, { max: number; windowMs: number }> =
 
 /** Плавная смена музыкальной темы, с. */
 export const MUSIC_CROSSFADE = 5;
+/** Более медленное вступление боевой темы, с. */
+export const BATTLE_MUSIC_CROSSFADE = 8;
+/** Попадание по своему или союзному юниту учитывается два круга. */
+export const COMBAT_MUSIC_HOLD_TURNS = 2;
 
 /**
- * Сторона-угроза ближе этого числа клеток к своим объектам включает музыку
- * боя. Считается только по видимым врагам: музыка не выдаёт скрытых.
+ * Для музыки боя нужен видимый враг не дальше этого числа клеток от
+ * своих объектов и недавнее попадание по своему или союзному юниту.
  */
 export const COMBAT_MUSIC_DISTANCE = 6;
 

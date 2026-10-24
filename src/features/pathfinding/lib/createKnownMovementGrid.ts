@@ -8,6 +8,7 @@ import {
   computeVisibility,
   getMoveCost,
   getSightSources,
+  getConcealedIds,
   type MovementGrid,
 } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
@@ -82,6 +83,12 @@ export const createKnownMovementGrid = (
   const width = grid[0]?.length ?? 0;
   const visible = getActorVisibility(actor);
   const knowledge = getParticipantKnowledge(actor);
+  const concealed = getConcealedIds(
+    actor,
+    Object.values(useUnitsStore.getState().units),
+    Object.values(useBuildingsStore.getState().buildings),
+    useGameLoopStore.getState().participants,
+  );
   const remembered = new Set(
     Object.values(knowledge?.contacts ?? {})
       .filter(({ kind }) => kind === 'building')
@@ -92,7 +99,9 @@ export const createKnownMovementGrid = (
     row.map((cell, x) => {
       const index = y * width + x;
       if (visible[index]) {
-        return blocksGroundTransit(x, y, actor) ? 0 : getMoveCost(cell);
+        return blocksGroundTransit(x, y, actor, concealed)
+          ? 0
+          : getMoveCost(cell);
       }
       const known = getKnownCellType(knowledge, x, y);
       if (!known) return unknownCost;

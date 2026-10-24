@@ -1,5 +1,8 @@
 import type { ParticipantId, Position, Unit } from '@shared/config';
-import { isFlyingType, type MovementGrid } from '@shared/lib';
+import { getConcealedIds, isFlyingType, type MovementGrid } from '@shared/lib';
+import { useUnitsStore } from '@entities/units';
+import { useBuildingsStore } from '@entities/buildings';
+import { useGameLoopStore } from '@entities/games';
 import { useMapStore } from '@entities/maps';
 import { getParticipantKnowledge } from '@entities/perceptions';
 import {
@@ -25,6 +28,12 @@ export const createAirGrid = (): MovementGrid =>
  * @param actor - Участник.
  */
 export const createLandingCheck = (actor: ParticipantId) => {
+  const concealed = getConcealedIds(
+    actor,
+    Object.values(useUnitsStore.getState().units),
+    Object.values(useBuildingsStore.getState().buildings),
+    useGameLoopStore.getState().participants,
+  );
   const width = useMapStore.getState().grid[0]?.length ?? 0;
   const visible = getActorVisibility(actor);
   const remembered = new Set(
@@ -34,7 +43,9 @@ export const createLandingCheck = (actor: ParticipantId) => {
   );
   return ({ x, y }: Position) => {
     const index = y * width + x;
-    return visible[index] ? !isCellOccupied(x, y) : !remembered.has(index);
+    return visible[index]
+      ? !isCellOccupied(x, y, concealed)
+      : !remembered.has(index);
   };
 };
 

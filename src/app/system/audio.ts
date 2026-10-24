@@ -1,6 +1,7 @@
-import { audio, isHostile } from '@shared/lib';
+import { audio, gameEvents, isHostile } from '@shared/lib';
 import { useAudioSettingsStore } from '@entities/settings';
 import { getHumanId, useGameLoopStore } from '@entities/games';
+import { COMBAT_MUSIC_HOLD_TURNS } from '@shared/config';
 
 // Подписки общие для всех партий: повторное монтирование Game их не дублирует.
 let initialized = false;
@@ -33,11 +34,21 @@ export const initAudioSystem = () => {
     { capture: true },
   );
 
+  let lastAttackTurn: number | null = null;
   const syncMusic = () => {
-    const { phase, winner, participants } = useGameLoopStore.getState();
+    const { phase, winner, participants, currentTurn } =
+      useGameLoopStore.getState();
+    if (
+      phase !== 'inProgress' ||
+      (lastAttackTurn !== null &&
+        (currentTurn < lastAttackTurn ||
+          currentTurn - lastAttackTurn >= COMBAT_MUSIC_HOLD_TURNS))
+    )
+      lastAttackTurn = null;
     const humanId = getHumanId(participants);
     audio.setMusicState({
       phase,
+      recentAttack: lastAttackTurn !== null,
       outcome:
         phase !== 'gameOver'
           ? null
@@ -48,6 +59,31 @@ export const initAudioSystem = () => {
     });
   };
   syncMusic();
+
+  gameEvents.subscribe(event => {
+    const { participants, phase, currentTurn, activePlayer } =
+      useGameLoopStore.getState();
+    const humanId = getHumanId(participants);
+    if (event.type === 'SITE_CLAIMED' && event.owner === humanId) {
+      audio.play('siteClaim');
+    }
+    if (event.type === 'GAME_RESET') {
+      lastAttackTurn = null;
+      syncMusic();
+    }
+    if (
+      event.type === 'ATTACK_LANDED' &&
+      phase === 'inProgress' &&
+      humanId &&
+      event.damage > 0 &&
+      'movePoints' in event.target &&
+      !isHostile(humanId, event.target.owner, participants) &&
+      isHostile(humanId, activePlayer, participants)
+    ) {
+      lastAttackTurn = currentTurn;
+      syncMusic();
+    }
+  });
 
   useGameLoopStore.subscribe((state, previous) => {
     syncMusic();

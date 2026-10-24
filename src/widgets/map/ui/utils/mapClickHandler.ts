@@ -58,8 +58,13 @@ const placeBuilding = (
   const buildingType = selection.buildingTypeToPlace;
   if (!buildingType) return;
   const place = commands.orderBuild ?? commands.build;
-  const result = place({ actor, workerId: unit.id, buildingType, x, y });
-  if (!result.ok) return;
+  const result =
+    buildingType === 'beacon'
+      ? commands.lightBeacon?.({ actor, unitId: unit.id, x, y })
+      : buildingType === 'outpost'
+        ? commands.occupyRuins?.({ actor, unitId: unit.id, x, y })
+        : place({ actor, workerId: unit.id, buildingType, x, y });
+  if (!result?.ok) return;
   resetInteraction(ctx);
   if (ctx.ui.hasOrder && !ctx.ui.hasOrder(unit.id)) return;
   ctx.ui.selectUnit(unit.id);
@@ -71,9 +76,11 @@ const placeBuilding = (
  * Негодная клетка даёт отказ с причиной, режим остаётся (как в Warcraft III).
  */
 const isPlacing = (unit: Unit, ctx: MapClickContext) =>
-  unit.type === 'worker' &&
-  unit.role === 'civil' &&
-  !!ctx.selection.buildingTypeToPlace;
+  !!ctx.selection.buildingTypeToPlace &&
+  ((unit.type === 'worker' && unit.role === 'civil') ||
+    (unit.role === 'military' &&
+      ctx.selection.buildingTypeToPlace === 'outpost') ||
+    (unit.type === 'scout' && ctx.selection.buildingTypeToPlace === 'beacon'));
 
 const clickWithOwnUnit = (
   unit: Unit,
@@ -163,6 +170,24 @@ const clickWithOwnBuilding = (
   selectClicked(x, y, ctx);
 };
 
+/** Лагерь использует обычный выбор клетки найма, оставаясь выбранным после успеха. */
+const hireFromCamp = (x: number, y: number, ctx: MapClickContext) => {
+  const { camp, unitTypeToSpawn } = ctx.selection;
+  if (!camp || !unitTypeToSpawn) return false;
+  const result = ctx.commands.spawn({
+    actor: ctx.humanId,
+    campId: camp.id,
+    unitType: unitTypeToSpawn,
+    x,
+    y,
+  });
+  if (result.ok) {
+    resetInteraction(ctx);
+    ctx.ui.selectCell(camp.x, camp.y);
+  }
+  return true;
+};
+
 /** ЛКМ выбирает объект или подтверждает режим стройки, найма, расчистки, прицела. */
 export const handleMapCellClick = (
   x: number,
@@ -177,8 +202,11 @@ export const handleMapCellClick = (
     !isHighlighted(ctx.highlights.road ?? null, x, y)
   ) {
     resetInteraction(ctx);
+    // Юнит на лагере выбирается первым; повторный клик — сам лагерь.
+    if (ctx.clicked.camp && ctx.selection.unit) ctx.ui.selectCell(x, y);
     return;
   }
+  if (hireFromCamp(x, y, ctx)) return;
   const selectedOwner = (unit ?? building)?.owner;
   if (selectedOwner !== undefined && selectedOwner !== ctx.humanId) {
     ctx.ui.clearHighlight();
@@ -198,6 +226,7 @@ export const handleMapCellOrder = (
   ctx: MapClickContext,
 ) => {
   const { selection, clicked, highlights, commands, humanId: actor } = ctx;
+  if (hireFromCamp(x, y, ctx)) return;
   const entity = selection.unit ?? selection.building;
   if (!entity || entity.owner !== actor) return;
   // ПКМ в режиме выбора места закладывает здание, как и ЛКМ.

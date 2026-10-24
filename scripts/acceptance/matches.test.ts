@@ -27,6 +27,7 @@ import { initGameLoopEvents, nextTurn, resetGame } from '@features/game-loop';
 import { useSandboxStore } from '@features/sandbox';
 import { initVisibilitySystem } from '@features/visibility';
 import { initializeGame } from '@widgets/start-game';
+import { trackSites } from './siteMetrics';
 
 /** S21: обычный старт, общие команды и честные наблюдения обоих ИИ. */
 const seeds = process.env.ACCEPTANCE_SEEDS
@@ -36,6 +37,7 @@ if (seeds.some(seed => !Number.isSafeInteger(seed) || seed < 0))
   throw new Error('ACCEPTANCE_SEEDS: нужны неотрицательные целые сиды');
 const rounds = Number(process.env.ACCEPTANCE_ROUNDS ?? 200);
 const size = Number(process.env.ACCEPTANCE_SIZE ?? 30);
+const withSites = process.env.ACCEPTANCE_SITES === '1';
 if (
   !Number.isSafeInteger(rounds) ||
   rounds < 1 ||
@@ -144,6 +146,7 @@ afterAll(() => {
           shard,
           shardCount,
           size,
+          withSites,
           maxRounds: rounds,
           reference: 'balanced/normal',
           random:
@@ -198,8 +201,9 @@ it.each(selected)(
             ai: { profile, difficulty: spec.difficulties[i] },
           },
     );
-    expect(initializeGame(participants)).toBe(true);
+    expect(initializeGame(participants, { withSites })).toBe(true);
     useGameLoopStore.getState().startGame(participants);
+    const sites = trackSites();
     expect(useDebugStore.getState().usedInGame).toBe(false);
     const totals = Object.fromEntries(
       participants.map(({ id }) => [
@@ -350,12 +354,14 @@ it.each(selected)(
         );
       }
     } finally {
+      sites.off();
       offJournal();
       offEvents();
       ids.mockRestore();
     }
     const result = {
       ...spec,
+      sites: sites.data,
       status: failure
         ? 'failed'
         : useGameLoopStore.getState().phase === 'gameOver'

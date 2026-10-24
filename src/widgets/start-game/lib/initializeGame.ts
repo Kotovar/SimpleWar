@@ -6,6 +6,7 @@ import {
   MIN_MAP_SIDE,
   REJECTION_MESSAGE,
   type Cell,
+  type Site,
 } from '@shared/config';
 import { useBuildingsStore } from '@entities/buildings';
 import {
@@ -13,6 +14,7 @@ import {
   createRandom,
   isValidSeed,
   prepareStartArea,
+  placeSites,
   randomSeed,
   useMapStore,
 } from '@entities/maps';
@@ -20,6 +22,7 @@ import { useUnitsStore } from '@entities/units';
 import { useSettingsStore } from '@entities/settings';
 import { useGameLoopStore } from '@entities/games';
 import { useJournalStore } from '@entities/journals';
+import { useSitesStore } from '@entities/sites';
 import { failure, isHostile, reject } from '@shared/lib';
 import { applyAiStart } from './applyAiStart';
 import { evaluateMap, type StartPosition } from './evaluateMap';
@@ -54,6 +57,7 @@ export const placeStartResources = (
       grid[base.y === 1 ? 0 : height - 1][base.x === 1 ? 3 : width - 4];
     gold.type = 'gold';
     forest.type = 'forest';
+    delete forest.rich;
     gold.isWalkable = forest.isWalkable = false;
   }
 };
@@ -81,10 +85,14 @@ const fallbackMap = (
  *
  * @param participants - Участники партии.
  * @param options.emptyField - Поле без рельефа (режим тестирования S15a).
+ * @param options.withSites - Находки и богатые жилы обычной партии.
  */
 export const initializeGame = (
   participants = DEFAULT_PARTICIPANTS,
-  { emptyField = false }: { emptyField?: boolean } = {},
+  {
+    emptyField = false,
+    withSites = false,
+  }: { emptyField?: boolean; withSites?: boolean } = {},
 ) => {
   const { gridColumns, gridRows, mapGenerationMode, customSeed } =
     useSettingsStore.getState();
@@ -99,6 +107,7 @@ export const initializeGame = (
   useJournalStore.getState().newGame();
   const fail = (startError: string, rejection = reject('map', startError)) => {
     useMapStore.getState().resetStore();
+    useSitesStore.getState().resetStore();
     useGameLoopStore.setState({ phase: 'setup', currentTurn: 0, startError });
     useJournalStore
       .getState()
@@ -176,6 +185,15 @@ export const initializeGame = (
     }
     applyAiStart(participants);
   };
+  const commitMap = (grid: Cell[][], sites: Site[], usedFallback = false) => {
+    for (const cell of grid.flat()) {
+      if (!withSites || cell.type !== 'gold') delete cell.rich;
+      else if (usedFallback) cell.rich = true;
+    }
+    useMapStore.getState().setGrid(grid, initialSeed, usedFallback);
+    useSitesStore.getState().setSites(sites);
+    spawnStarts();
+  };
 
   try {
     for (
@@ -199,17 +217,23 @@ export const initializeGame = (
       for (const { base } of preparedStarts)
         prepareStartArea(grid, base.x, base.y);
       placeStartResources(grid, preparedStarts);
-      if (!evaluateMap(grid, starts).ok) continue;
-      useMapStore.getState().setGrid(grid, initialSeed);
-      spawnStarts();
+      const sites = withSites ? placeSites(grid, preparedStarts, seed) : [];
+      if (
+        !sites ||
+        !evaluateMap(grid, starts, withSites ? sites : undefined).ok
+      )
+        continue;
+      commitMap(grid, sites);
       return true;
     }
 
     const grid = fallbackMap(gridColumns, gridRows, preparedStarts);
-    if (evaluateMap(grid, starts).ok) {
+    const sites = withSites
+      ? placeSites(grid, preparedStarts, initialSeed)
+      : [];
+    if (sites && evaluateMap(grid, starts, withSites ? sites : undefined).ok) {
       // Пустое поле выбрано явно — это не резервная карта.
-      useMapStore.getState().setGrid(grid, initialSeed, !emptyField);
-      spawnStarts();
+      commitMap(grid, sites, !emptyField);
       return true;
     }
   } catch (error) {

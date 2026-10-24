@@ -1,6 +1,5 @@
 import {
   UNITS_CONFIG,
-  type Building,
   type Cost,
   type Position,
   type ProductionBuilding,
@@ -30,7 +29,11 @@ const urgent = (ctx: AiContext) => ctx.memory.strategy === 'G01';
  * Свободная клетка для новобранца: поле или холм, не под отметкой удара,
  * без угрозы (при G01 — с наименьшей угрозой).
  */
-const spawnCell = (ctx: AiContext, building: Building, toward?: Position) => {
+export const spawnCell = (
+  ctx: AiContext,
+  building: Position,
+  toward?: Position,
+) => {
   const cells = around(building).filter(
     cell =>
       ctx.inside(cell) &&

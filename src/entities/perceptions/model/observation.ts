@@ -8,7 +8,7 @@ import type {
   Resources,
   Unit,
 } from '@shared/config';
-import type { Contact, ContactConfidence } from './types';
+import type { Contact, ContactConfidence, KnownSite } from './types';
 
 /** Устаревший контакт: объект вне обзора с оценкой достоверности. */
 export type RememberedContact = Contact & { confidence: ContactConfidence };
@@ -41,6 +41,10 @@ export type Observation = {
   knownTerrain: (CellType | null)[][];
   /** Известные дороги, `knownRoads[y][x]`; без поля дорог не знают. */
   knownRoads?: boolean[][];
+  /** Богатые жилы, обнаруженные разведчиком; скрытые сведения мира не читаются. */
+  knownRichGold?: boolean[][];
+  /** Находки по последнему обзору, без содержимого тайников. */
+  sites?: KnownSite[];
   /** Видимость клеток сейчас, `visible[y][x]`. */
   visible: boolean[][];
   /** Невыбывшие соперники: порядок ходов и выбывание публичны. */

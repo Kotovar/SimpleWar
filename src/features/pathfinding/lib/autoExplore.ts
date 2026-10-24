@@ -1,6 +1,7 @@
 import type { ParticipantId, Position, Unit } from '@shared/config';
 import { findCheapestPaths, ok, reject } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
+import { useEconomyStore } from '@entities/economies';
 import { getParticipantKnowledge } from '@entities/perceptions';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand } from '@entities/journals';
@@ -15,7 +16,7 @@ import { getExplorationDanger } from './explorationDanger';
 import { move } from './move';
 
 /**
- * Ближайшая по цене достижимая неизвестная клетка на границе известных.
+ * Сначала достижимая находка, затем неизвестная клетка на границе известных.
  * Цель — вне опасных клеток {@link getExplorationDanger}; путь не заходит
  * глубже текущей клетки разведчика, так что из зоны он может выйти.
  *
@@ -41,6 +42,37 @@ export const getExplorationTarget = (unit: Unit, actor: ParticipantId) => {
     !!(visible[y * width + x] || terrain?.[y * width + x]);
   const canLand = createLandingCheck(actor);
   const reachable = findCheapestPaths(costs, unit).cost;
+  // Известная находка — ориентир интересного сектора; скрытый мир не читаем.
+  const sites = Object.values(
+    getParticipantKnowledge(actor)?.sites ?? {},
+  ).filter(site => site.type !== 'camp' || site.hiresLeft > 0);
+  const population = useEconomyStore.getState().populationCap[actor];
+  const pickups = sites
+    .filter(
+      site =>
+        (site.type === 'cache' ||
+          site.type === 'obelisk' ||
+          (site.type === 'refugees' && population.occupied < population.max)) &&
+        !danger[site.y * width + site.x] &&
+        reachable.has(site.y * width + site.x),
+    )
+    .sort(
+      (a, b) =>
+        reachable.get(a.y * width + a.x)! - reachable.get(b.y * width + b.x)!,
+    );
+  for (const site of pickups) {
+    const route = getRoutePreview(unit, actor, site, avoid);
+    if (route) return { ...route, avoid };
+  }
+  const interest = (key: number) =>
+    sites.some(
+      site =>
+        Math.abs(site.x - (key % width)) +
+          Math.abs(site.y - Math.floor(key / width)) <=
+        6,
+    )
+      ? 1.25
+      : 1;
   const candidates = [...reachable]
     .filter(([key, cost]) => {
       const x = key % width;
@@ -58,17 +90,21 @@ export const getExplorationTarget = (unit: Unit, actor: ParticipantId) => {
         ].some(([nx, ny]) => known(nx, ny))
       );
     })
-    .sort(([a, ca], [b, cb]) => ca - cb || a - b);
+    .sort(([a, ca], [b, cb]) => ca / interest(a) - cb / interest(b) || a - b);
   let best: ReturnType<typeof getRoutePreview> = null;
+  let bestScore = Infinity;
   for (const [key, lowerCost] of candidates) {
-    if (best && lowerCost >= best.cost) break;
+    if (lowerCost / interest(key) >= bestScore) break;
     const route = getRoutePreview(
       unit,
       actor,
       { x: key % width, y: Math.floor(key / width) },
       avoid,
     );
-    if (route && (!best || route.cost < best.cost)) best = route;
+    if (route && route.cost / interest(key) < bestScore) {
+      best = route;
+      bestScore = route.cost / interest(key);
+    }
   }
   return best && { ...best, avoid };
 };

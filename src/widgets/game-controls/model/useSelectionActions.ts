@@ -3,6 +3,10 @@ import { getAvailableResources, isAdjacent } from '@shared/lib';
 import { useBuildingsStore } from '@entities/buildings';
 import { useEconomyStore } from '@entities/economies';
 import { useGameLoopStore } from '@entities/games';
+import {
+  getCellKnowledge,
+  useParticipantKnowledge,
+} from '@entities/perceptions';
 import { useResearchStore } from '@entities/researches';
 import { getPayableResources, useDebugException } from '@entities/settings';
 import { useUnitsStore } from '@entities/units';
@@ -25,6 +29,7 @@ const useOwnSelection = () => {
   const selection = useSelectionStore(state => state.selection);
   const units = useUnitsStore(state => state.units);
   const buildings = useBuildingsStore(state => state.buildings);
+  const knowledge = useParticipantKnowledge(humanId);
 
   const selectedUnit =
     selection?.kind === 'unit' ? (units[selection.id] ?? null) : null;
@@ -33,7 +38,30 @@ const useOwnSelection = () => {
   const unit = selectedUnit?.owner === humanId ? selectedUnit : null;
   const building =
     selectedBuilding?.owner === humanId ? selectedBuilding : null;
-  return { humanId, units, buildings, unit, building };
+  const cell = selection?.kind === 'cell' ? selection : null;
+  const site = cell
+    ? Object.values(knowledge?.sites ?? {}).find(
+        s => s.x === cell.x && s.y === cell.y,
+      )
+    : null;
+  const camp = site?.type === 'camp' ? site : null;
+  const campVisible =
+    !!camp && getCellKnowledge(knowledge, camp.x, camp.y) === 'visible';
+  const campHasScout =
+    !!camp &&
+    Object.values(units).some(
+      u => u.owner === humanId && u.type === 'scout' && isAdjacent(u, camp),
+    );
+  return {
+    humanId,
+    units,
+    buildings,
+    unit,
+    building,
+    camp,
+    campVisible,
+    campHasScout,
+  };
 };
 
 /** Режим карты для кнопок и подсказки следующего шага. */
@@ -89,7 +117,16 @@ const useMapMode = (
  *   ключ выбранного для сброса подменю.
  */
 export const useSelectionActions = () => {
-  const { humanId, units, buildings, unit, building } = useOwnSelection();
+  const {
+    humanId,
+    units,
+    buildings,
+    unit,
+    building,
+    camp,
+    campVisible,
+    campHasScout,
+  } = useOwnSelection();
   const owner = humanId ?? 'p1';
   const isTurn = useGameLoopStore(state => state.activePlayer === humanId);
   const resources = useEconomyStore(state => state.resources[owner]);
@@ -122,6 +159,9 @@ export const useSelectionActions = () => {
   const input: SelectionActionInput = {
     unit,
     building,
+    camp,
+    campVisible,
+    campHasScout,
     isTurn,
     payableBuild: getPayableResources(availableBuild, freeBuild),
     payableSpawn: getPayableResources(available, freeSpawn),
@@ -162,12 +202,13 @@ export const useSelectionActions = () => {
   const run = (button: ActionButton) =>
     runSelectionAction(button, { humanId, unit, building, input });
 
-  const prompt = mapMode && (unit || building) ? getModePrompt(mapMode) : null;
+  const prompt =
+    mapMode && (unit || building || camp) ? getModePrompt(mapMode) : null;
 
   return {
     buttons,
     run,
     prompt,
-    selectionKey: unit?.id ?? building?.id ?? null,
+    selectionKey: unit?.id ?? building?.id ?? camp?.id ?? null,
   };
 };

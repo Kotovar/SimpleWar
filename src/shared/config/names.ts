@@ -31,6 +31,8 @@ export const BUILDINGS_NAME = {
   forge: 'Кузница',
   sanctuary: 'Святилище',
   palisade: 'Частокол',
+  beacon: 'Сигнальный костёр',
+  outpost: 'Аванпост',
 } satisfies Record<BuildingType, string>;
 
 /** Названия сторон по умолчанию для настройки режима тестирования. */

@@ -3,13 +3,16 @@ import {
   type Cell,
   type Owner,
   type Position,
+  type Site,
 } from '@shared/config';
 import {
   ROAD_BIT,
+  RICH_BIT,
   TERRAIN_CODES,
   type CellKnowledge,
   type Contact,
   type ContactConfidence,
+  type KnownSite,
   type ParticipantKnowledge,
   type StrikeSighting,
 } from './types';
@@ -18,6 +21,8 @@ import {
 export type ObservationInput = {
   /** Маска видимых клеток текущего обзора. */
   visible: Uint8Array;
+  /** Клетки общего обзора разведчиков; только они открывают богатые жилы. */
+  scoutVisible?: Uint8Array;
   /** Настоящие клетки мира: запоминаются только видимые. */
   grid: Cell[][];
   /** Вражеские объекты в видимых клетках. */
@@ -33,6 +38,8 @@ export type ObservationInput = {
   scoutMemoryBonus?: number;
   /** Все подготовленные удары мира; без списка отметок нет. */
   strikes?: StrikeSighting[];
+  /** Находки мира: запоминаются только в видимых клетках, без награды тайника. */
+  sites?: readonly Site[];
 };
 
 const sameMask = (a: Uint8Array, b: Uint8Array) =>
@@ -63,12 +70,14 @@ export const observe = (
   previous: ParticipantKnowledge | undefined,
   {
     visible,
+    scoutVisible,
     grid,
     enemies,
     turn,
     eliminated,
     scoutMemoryBonus = 0,
     strikes: sightings = [],
+    sites: worldSites = [],
   }: ObservationInput,
 ): ParticipantKnowledge => {
   const height = grid.length;
@@ -84,8 +93,13 @@ export const observe = (
   for (let index = 0; index < visible.length; index++) {
     if (!visible[index]) continue;
     const cell = grid[Math.floor(index / width)][index % width];
+    const rich =
+      cell.type === 'gold' &&
+      (scoutVisible?.[index] ? cell.rich : !!(terrain[index] & RICH_BIT));
     const code =
-      (TERRAIN_CODES.indexOf(cell.type) + 1) | (cell.road ? ROAD_BIT : 0);
+      (TERRAIN_CODES.indexOf(cell.type) + 1) |
+      (cell.road ? ROAD_BIT : 0) |
+      (rich ? RICH_BIT : 0);
     if (terrain[index] === code) continue;
     if (!terrainCopied) {
       terrain = terrain.slice();
@@ -135,12 +149,43 @@ export const observe = (
     Object.keys(strikes).length !== Object.keys(prevStrikes).length ||
     Object.keys(strikes).some(id => strikes[id] !== prevStrikes[id]);
 
+  const sites: Record<string, KnownSite> = {};
+  const prevSites = base?.sites ?? {};
+  for (const site of worldSites) {
+    const { id, x, y } = site;
+    if (visible[y * width + x] !== 1) continue;
+    const known: KnownSite =
+      site.type === 'camp'
+        ? { id, x, y, type: 'camp', hiresLeft: site.hiresLeft }
+        : { id, x, y, type: site.type };
+    const before = prevSites[id];
+    sites[id] =
+      before &&
+      before.type === known.type &&
+      before.x === x &&
+      before.y === y &&
+      (before.type !== 'camp' ||
+        (known.type === 'camp' && before.hiresLeft === known.hiresLeft))
+        ? before
+        : known;
+  }
+  for (const known of Object.values(prevSites)) {
+    if (!sites[known.id] && visible[known.y * width + known.x] !== 1) {
+      sites[known.id] = known;
+    }
+  }
+  const sitesChanged =
+    !base ||
+    Object.keys(sites).length !== Object.keys(prevSites).length ||
+    Object.keys(sites).some(id => sites[id] !== prevSites[id]);
+
   return {
     width,
     height,
     visible: base && sameMask(base.visible, visible) ? base.visible : visible,
     terrain,
     contacts: changed ? contacts : base!.contacts,
+    sites: sitesChanged ? sites : prevSites,
     strikes: strikesChanged ? strikes : prevStrikes,
   };
 };
@@ -172,7 +217,8 @@ export const getKnownCellType = (
   y: number,
 ) => {
   if (!knowledge || x < 0 || y < 0 || x >= knowledge.width) return null;
-  const code = knowledge.terrain[y * knowledge.width + x] & ~ROAD_BIT;
+  const code =
+    knowledge.terrain[y * knowledge.width + x] & ~(ROAD_BIT | RICH_BIT);
   return code ? TERRAIN_CODES[code - 1] : null;
 };
 
@@ -189,6 +235,15 @@ export const isKnownRoad = (
   y >= 0 &&
   x < knowledge.width &&
   (knowledge.terrain[y * knowledge.width + x] & ROAD_BIT) !== 0;
+
+export const isKnownRichGold = (
+  knowledge: Pick<ParticipantKnowledge, 'width' | 'terrain'> | undefined,
+  x: number,
+  y: number,
+) =>
+  !!knowledge &&
+  getKnownCellType(knowledge, x, y) === 'gold' &&
+  !!(knowledge.terrain[y * knowledge.width + x] & RICH_BIT);
 
 /**
  * Достоверность контакта по его возрасту.

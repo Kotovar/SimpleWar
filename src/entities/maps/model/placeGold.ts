@@ -100,6 +100,7 @@ export const placeGold = (
   const radius = Math.floor(Math.min(width, height) / 5);
   const offset = () => Math.floor(random() * (radius * 2 + 1)) - radius;
   let placedGroups = 0;
+  const richClusters = new Set<number>();
 
   for (
     let attempt = 0;
@@ -116,6 +117,19 @@ export const placeGold = (
     const cells = [cell, mirror];
     if (fourCorners)
       cells.push(grid[y][width - 1 - x], grid[height - 1 - y][x]);
-    if (tryPlaceGroup(grid, cells)) placedGroups++;
+    if (tryPlaceGroup(grid, cells)) {
+      // На 3–4 стороны первые два центра — отражения одного кластера.
+      const cluster =
+        fourCorners && attempt % GOLD_CENTERS.length !== 2
+          ? 0
+          : attempt % GOLD_CENTERS.length;
+      if (!richClusters.has(cluster)) {
+        cells.forEach(cell => {
+          cell.rich = true;
+        });
+        richClusters.add(cluster);
+      }
+      placedGroups++;
+    }
   }
 };

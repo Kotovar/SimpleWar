@@ -1,5 +1,6 @@
-import type { ParticipantId } from '@shared/config';
-import { gameEvents } from '@shared/lib';
+import type { Building, Unit, ParticipantId } from '@shared/config';
+import { gameEvents, getConcealedIds } from '@shared/lib';
+import { useUnitsStore } from '@entities/units';
 import { useGameLoopStore } from '@entities/games';
 import { useJournalStore } from '@entities/journals';
 import { useMapStore } from '@entities/maps';
@@ -9,14 +10,29 @@ import { computeVisibleMask } from '@features/visibility';
 // Подписка общая для всех партий и не должна дублироваться при повторном монтировании Game.
 let initialized = false;
 
+const isHiddenUnit = (observer: ParticipantId, entity: Unit | Building) => {
+  if (!('movePoints' in entity)) return false;
+  // Событие гибели приходит после удаления юнита из мира.
+  const units = Object.values(useUnitsStore.getState().units).filter(
+    u => u.id !== entity.id,
+  );
+  return getConcealedIds(
+    observer,
+    [...units, entity],
+    Object.values(useBuildingsStore.getState().buildings),
+    useGameLoopStore.getState().participants,
+  ).has(entity.id);
+};
+
 /** Владелец знает о потере; действующий — только если видит её. */
 const between = (
   actor: ParticipantId,
-  entity: { owner: ParticipantId; x: number; y: number },
+  entity: Unit | Building,
   sheltered = false,
 ) => {
   const { owner, x, y } = entity;
-  if (actor === owner || sheltered) return [owner];
+  if (actor === owner || sheltered || isHiddenUnit(actor, entity))
+    return [owner];
   const width = useMapStore.getState().grid[0]?.length ?? 0;
   return computeVisibleMask(actor)[y * width + x] === 1
     ? [actor, owner]
@@ -41,6 +57,37 @@ export const initJournalSystem = () => {
     } = useGameLoopStore.getState();
     const { record } = useJournalStore.getState();
 
+    if (event.type === 'SITE_CLAIMED' || event.type === 'SITE_BLOCKED') {
+      const { owner, site } = event;
+      const blocked = event.type === 'SITE_BLOCKED';
+      const message = blocked
+        ? event.reason === 'population'
+          ? 'Беженцам нет места: не хватает лимита населения'
+          : 'Беженцам нет места: рядом нет свободной клетки'
+        : site.type === 'cache'
+          ? `Разведчик нашёл тайник: +${site.amount} ${site.resource === 'gold' ? 'золота' : 'дерева'}`
+          : site.type === 'refugees'
+            ? 'Разведчик помог беженцам: новый рабочий'
+            : 'Разведчик активировал обелиск: раскрыта местность вокруг';
+      record({
+        type: blocked ? 'siteBlocked' : 'siteClaimed',
+        actor: owner,
+        turn,
+        visibleTo: [owner],
+        details: {
+          siteId: site.id,
+          siteType: site.type,
+          x: site.x,
+          y: site.y,
+          message,
+          ...(blocked ? { reason: event.reason } : {}),
+          ...(site.type === 'cache'
+            ? { resource: site.resource, amount: site.amount }
+            : {}),
+        },
+      });
+    }
+
     if (event.type === 'ATTACK_LANDED') {
       const { owner, type, x, y, hp } = event.target;
       const sheltered =
@@ -53,6 +100,7 @@ export const initJournalSystem = () => {
           ({ id }) =>
             id === owner ||
             (!sheltered &&
+              !isHiddenUnit(id, event.target) &&
               !eliminatedIds.has(id) &&
               computeVisibleMask(id)[y * width + x] === 1),
         )

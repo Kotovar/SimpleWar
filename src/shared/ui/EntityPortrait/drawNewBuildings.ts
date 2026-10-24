@@ -143,3 +143,74 @@ export const drawPalisade = (
   rect(ctx, team.shade, 3, 19, 26, 1);
   ctx.restore();
 };
+
+/** Сигнальный костёр: каменное кольцо, дрова и высокое пламя. */
+export const drawBeacon = (
+  ctx: CanvasRenderingContext2D,
+  cellX: number,
+  cellY: number,
+  cellSize: number,
+  owner: Owner,
+  scale = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
+) => {
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
+  ctx.fillStyle = STONE_DARK;
+  ctx.beginPath();
+  ctx.ellipse(16, 22, 11, 4.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  for (const [x, y] of [
+    [6, 22],
+    [10, 25],
+    [17, 26],
+    [24, 23],
+    [24, 19],
+    [8, 18],
+  ])
+    circle(ctx, STONE, x, y, 2.2);
+  shape(ctx, TIMBER, [7, 22, 23, 18, 25, 21, 9, 25]);
+  shape(ctx, '#855335', [7, 19, 9, 17, 25, 22, 23, 25]);
+  shape(
+    ctx,
+    '#ef773c',
+    [11, 22, 8, 17, 13, 10, 15, 4, 20, 12, 23, 16, 22, 21, 17, 24],
+  );
+  shape(ctx, '#ffd978', [13, 22, 12, 18, 16, 12, 17, 17, 20, 19, 18, 23]);
+  ctx.restore();
+};
+
+/** Аванпост: небольшой караульный дом с частоколом и флагом. */
+export const drawOutpost = (
+  ctx: CanvasRenderingContext2D,
+  cellX: number,
+  cellY: number,
+  cellSize: number,
+  owner: Owner,
+  scale = 1,
+  team: TeamStyle = TEAM_MARKERS[owner],
+) => {
+  beginEntity(ctx, cellX, cellY, cellSize, owner, scale, team);
+  rect(ctx, STONE, 7, 15, 16, 10);
+  sideShadow(ctx, 20, 15, 3, 10);
+  shape(ctx, team.color, [5, 16, 15, 8, 25, 16]);
+  shape(ctx, team.shade, [15, 8, 25, 16, 21, 16]);
+  rect(ctx, OPENING, 13, 19, 5, 6);
+  for (const x of [4, 8, 24, 28])
+    shape(ctx, TIMBER, [
+      x - 1.5,
+      25,
+      x - 1.5,
+      18,
+      x,
+      15,
+      x + 1.5,
+      18,
+      x + 1.5,
+      25,
+    ]);
+  rect(ctx, TIMBER, 3, 21, 7, 2);
+  rect(ctx, TIMBER, 22, 21, 7, 2);
+  rect(ctx, STONE_DARK, 20, 3, 1.2, 12);
+  shape(ctx, team.color, [21, 3, 28, 4, 26, 7, 21, 7]);
+  ctx.restore();
+};

@@ -12,7 +12,7 @@ import { nextTurn } from '@features/game-loop';
 import { getObservation } from '@features/visibility';
 import { move } from '@features/pathfinding';
 import { attack, heal, prepareStrike } from '@features/combat';
-import { build, demolish } from '@features/build';
+import { build, demolish, lightBeacon, occupyRuins } from '@features/build';
 import { spawn } from '@features/spawn';
 import {
   assignWorker,
@@ -63,6 +63,10 @@ export const executeAiAction = (
       return prepareStrike({ actor, ...action });
     case 'build':
       return build({ actor, ...action });
+    case 'lightBeacon':
+      return lightBeacon({ actor, ...action });
+    case 'occupyRuins':
+      return occupyRuins({ actor, ...action });
     case 'spawn':
       return spawn({ actor, ...action });
     case 'assign':

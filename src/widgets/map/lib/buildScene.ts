@@ -4,13 +4,21 @@ import {
   type Cell,
   type ParticipantId,
   type Unit,
+  type Site,
 } from '@shared/config';
-import { findServingWorker, getShelteredIds } from '@shared/lib';
+import {
+  findServingWorker,
+  getShelteredIds,
+  getConcealedIds,
+} from '@shared/lib';
+import { useGameLoopStore } from '@entities/games';
 import {
   getKnownCellType,
   isKnownRoad,
+  isKnownRichGold,
   type Contact,
   type ParticipantKnowledge,
+  type KnownSite,
 } from '@entities/perceptions';
 
 /** Чьими глазами рисуется карта: участник или полный обзор отладки. */
@@ -32,6 +40,8 @@ export type Scene = {
   buildings: Record<string, Building>;
   /** Запомненные здания вне обзора: устаревший снимок, не цель. */
   snapshots: Contact[];
+  /** Находки по последнему обзору; живой скрытый мир не читается. */
+  sites: Record<string, KnownSite>;
   /** Знания для тумана; `null` — туман не рисуется. */
   fog: ParticipantKnowledge | null;
   /** Свои рудники и лесопилки смотрящего с рабочим внутри. */
@@ -59,6 +69,7 @@ export const getKnownGrid = (
         isWalkable: MOVE_COST[type] !== undefined,
       };
       if (isKnownRoad(knowledge, x, y)) cell.road = true;
+      if (isKnownRichGold(knowledge, x, y)) cell.rich = true;
       return cell;
     }),
   );
@@ -92,6 +103,7 @@ export const buildScene = (
     grid: Cell[][];
     units: Record<string, Unit>;
     buildings: Record<string, Building>;
+    sites: Record<string, Site>;
   },
   view: SceneView,
   knownGrid?: Cell[][],
@@ -129,6 +141,13 @@ export const buildScene = (
   }
 
   const { viewer, knowledge } = view;
+  const concealed = getConcealedIds(
+    viewer,
+    Object.values(world.units),
+    Object.values(world.buildings),
+    useGameLoopStore.getState().participants,
+  );
+  for (const id of concealed) delete outside[id];
   const buildings = filterVisible(world.buildings, viewer, knowledge);
   const width = knowledge?.width ?? 0;
   const snapshots = Object.values(knowledge?.contacts ?? {}).filter(
@@ -142,6 +161,7 @@ export const buildScene = (
     units: filterVisible(outside, viewer, knowledge),
     buildings,
     snapshots,
+    sites: knowledge?.sites ?? {},
     fog: knowledge ?? null,
     staffed: staffedFor(viewer),
   };

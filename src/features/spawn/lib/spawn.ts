@@ -1,13 +1,19 @@
 import {
+  CAMP_HIRE_COST,
   UNITS_CONFIG,
+  type CampSite,
+  type Cost,
   type CommandResult,
   type ParticipantId,
+  type Position,
+  type ProductionBuilding,
   type UnitType,
 } from '@shared/config';
 import {
   canSpawnUnit,
   failure,
   getSightSources,
+  isAdjacent,
   isBuildableTerrain,
   isCellVisible,
   ok,
@@ -15,6 +21,7 @@ import {
   getAvailableResources,
 } from '@shared/lib';
 import { useBuildingsStore } from '@entities/buildings';
+import { useSitesStore } from '@entities/sites';
 import { useUnitsStore } from '@entities/units';
 import { useEconomyStore } from '@entities/economies';
 import { useMapStore } from '@entities/maps';
@@ -22,14 +29,14 @@ import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand } from '@entities/journals';
 import { getDebugExceptions, getPayableResources } from '@entities/settings';
 
-/** Приказ найма: кто, в каком здании, кого и на какую клетку. */
-export type SpawnCommand = {
+/** Приказ найма: здание или нейтральный лагерь, юнит и клетка появления. */
+export type SpawnCommand = Position & {
   actor: ParticipantId;
-  buildingId: string;
   unitType: UnitType;
-  x: number;
-  y: number;
-};
+} & (
+    | { buildingId: string; campId?: never }
+    | { campId: string; buildingId?: never }
+  );
 
 const SPAWN_REJECTION = {
   resources: 'resources',
@@ -38,93 +45,109 @@ const SPAWN_REJECTION = {
 } as const;
 
 const validateAndSpawn = (
-  { actor, buildingId, unitType, x, y }: SpawnCommand,
+  command: SpawnCommand,
   isFree: boolean,
 ): CommandResult => {
+  const { actor, unitType, x, y } = command;
   const turnRejection = getTurnRejection(actor);
   if (turnRejection) return reject(turnRejection);
 
-  const { buildings, changeSpawnPoints, getBuildingAt } =
-    useBuildingsStore.getState();
-  const building = buildings[buildingId];
-  if (!building) return reject('notFound');
-  if (building.owner !== actor) return reject('owner');
-  if (
-    building.role !== 'production' ||
-    !building.spawningUnits.includes(unitType)
-  )
-    return reject('actionType');
+  let building: ProductionBuilding | undefined;
+  let camp: CampSite | undefined;
+  let source: Position;
+  let cost: Cost = UNITS_CONFIG[unitType]?.cost;
+  let spawnPoints: number;
+  const unitState = useUnitsStore.getState();
+  if (command.campId !== undefined) {
+    if (command.buildingId !== undefined) return reject('actionType');
+    const site = useSitesStore.getState().sites[command.campId];
+    if (!site) return reject('notFound');
+    if (site.type !== 'camp') return reject('actionType');
+    camp = site;
+    cost = CAMP_HIRE_COST[unitType as keyof typeof CAMP_HIRE_COST];
+    if (!cost) return reject('actionType');
+    if (
+      !Object.values(unitState.units).some(
+        u => u.owner === actor && u.type === 'scout' && isAdjacent(u, site),
+      )
+    )
+      return reject('scout');
+    source = camp;
+    spawnPoints = camp.hiresLeft;
+  } else {
+    const found = useBuildingsStore.getState().buildings[command.buildingId];
+    if (!found) return reject('notFound');
+    if (found.owner !== actor) return reject('owner');
+    if (found.role !== 'production' || !found.spawningUnits.includes(unitType))
+      return reject('actionType');
+    building = found;
+    source = building;
+    spawnPoints = building.spawnPoints;
+  }
 
   const cell = useMapStore.getState().getCell(x, y);
-  if (!Number.isInteger(x) || !Number.isInteger(y) || !cell) {
+  if (!Number.isInteger(x) || !Number.isInteger(y) || !cell)
     return reject('bounds');
-  }
   const { grid } = useMapStore.getState();
   const viewers = [
-    ...Object.values(useUnitsStore.getState().units),
+    ...Object.values(unitState.units),
     ...Object.values(useBuildingsStore.getState().buildings),
   ];
+  const sources = getSightSources(
+    actor,
+    viewers,
+    grid,
+    useGameLoopStore.getState().participants,
+  );
   if (
-    !isCellVisible(
-      getSightSources(
-        actor,
-        viewers,
-        grid,
-        useGameLoopStore.getState().participants,
-      ),
-      x,
-      y,
-    )
-  ) {
+    (camp && !isCellVisible(sources, camp.x, camp.y)) ||
+    !isCellVisible(sources, x, y)
+  )
     return reject('hidden');
-  }
+  if (camp && camp.hiresLeft <= 0) return reject('campEmpty');
   if (!isBuildableTerrain('grass', cell.type)) return reject('terrain');
-  if (Math.max(Math.abs(building.x - x), Math.abs(building.y - y)) !== 1) {
-    return reject('distance');
-  }
-  const { spawnUnit, getUnitAt, units } = useUnitsStore.getState();
-  if (getUnitAt(x, y) || getBuildingAt(x, y)) return reject('occupied');
+  if (!isAdjacent(source, { x, y })) return reject('distance');
+  if (
+    unitState.getUnitAt(x, y) ||
+    useBuildingsStore.getState().getBuildingAt(x, y)
+  )
+    return reject('occupied');
 
   const { resources, populationCap, removeResources } =
     useEconomyStore.getState();
-  // Бесплатность снимает только цену: население и очки найма проверены как обычно.
   const check = canSpawnUnit(
     unitType,
     getPayableResources(
-      getAvailableResources(resources[actor], Object.values(units), actor),
+      getAvailableResources(
+        resources[actor],
+        Object.values(unitState.units),
+        actor,
+      ),
       isFree,
     ),
     populationCap[actor],
-    building.spawnPoints,
+    spawnPoints,
+    cost,
   );
-  if (!check.canSpawn) {
+  if (!check.canSpawn)
     return reject(
       SPAWN_REJECTION[check.reason as keyof typeof SPAWN_REJECTION],
     );
-  }
 
-  const unitId = spawnUnit(unitType, x, y, actor);
-  if (!unitId) {
-    return failure(`Юнит ${unitType} не создан`);
-  }
-  const target = building.rallyPoint;
+  const unitId = unitState.spawnUnit(unitType, x, y, actor);
+  if (!unitId) return failure(`Юнит ${unitType} не создан`);
+  const target = building?.rallyPoint;
   if (target && (target.x !== x || target.y !== y)) {
-    // Копируем цель без вложенной команды: найм ещё держит runCommand busy.
+    // Найм ещё держит runCommand busy: копируем цель без вложенной команды.
     useUnitsStore.getState().setOrder(unitId, { type: 'goto', ...target });
   }
-  changeSpawnPoints(buildingId);
-  if (!isFree) removeResources(actor, UNITS_CONFIG[unitType].cost);
+  if (building) useBuildingsStore.getState().changeSpawnPoints(building.id);
+  if (camp) useSitesStore.getState().consumeCampHire(camp.id);
+  if (!isFree) removeResources(actor, cost);
   return ok;
 };
 
-/**
- * Нанимает юнита рядом со зданием и списывает ресурсы действующей стороны.
- * Стартовые объекты создаются напрямую через хранилище, а не этой командой.
- * Бесплатный найм отладки снимает только цену и пишется в журнал.
- *
- * @param command - Участник, здание, тип юнита и клетка.
- * @returns Успех либо причина отказа; при отказе состояние не меняется.
- */
+/** Нанимает юнита из здания или лагеря; бесплатность отладки снимает только цену. */
 export const spawn = (command: SpawnCommand) => {
   const isFree = getDebugExceptions(command.actor).includes('freeSpawn');
   return runCommand(
@@ -132,7 +155,9 @@ export const spawn = (command: SpawnCommand) => {
       type: 'spawn',
       actor: command.actor,
       details: {
-        buildingId: command.buildingId,
+        ...(command.campId !== undefined
+          ? { campId: command.campId }
+          : { buildingId: command.buildingId }),
         unitType: command.unitType,
         x: command.x,
         y: command.y,

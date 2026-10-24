@@ -6,7 +6,7 @@ import type { Scene } from '@widgets/map/lib';
 import { useSelectionSelectors } from '@features/selection';
 import { attack, heal, prepareStrike } from '@features/combat';
 import { useGameLoopSelectors } from '@features/game-loop';
-import { build } from '@features/build';
+import { build, lightBeacon, occupyRuins } from '@features/build';
 import { setRallyPoint, spawn } from '@features/spawn';
 import { buildRoad, clearForest } from '@features/workers';
 import {
@@ -40,6 +40,8 @@ const getCommands = (x: number, y: number) => ({
   move: withRejectSignal(move, x, y),
   attack: withRejectSignal(attack, x, y),
   build: withRejectSignal(build, x, y),
+  lightBeacon: withRejectSignal(lightBeacon, x, y),
+  occupyRuins: withRejectSignal(occupyRuins, x, y),
   orderBuild: withRejectSignal(orderBuild, x, y),
   spawn: withRejectSignal(spawn, x, y),
   setRallyPoint: withRejectSignal(setRallyPoint, x, y),
@@ -112,16 +114,27 @@ export const useMapCellClick = (scene: Scene) => {
     const units = useUnitsStore.getState();
     const buildings = useBuildingsStore.getState();
 
+    const selectedCell = terrainSelection.getSelectedCell();
+    const selectedSite = selectedCell
+      ? Object.values(scene.sites).find(
+          s => s.x === selectedCell.x && s.y === selectedCell.y,
+        )
+      : null;
+    const clickedSite = Object.values(scene.sites).find(
+      s => s.x === x && s.y === y,
+    );
     const handler = order ? handleMapCellOrder : handleMapCellClick;
     handler(x, y, {
       humanId,
       clicked: {
         unit: findAt(scene.units, x, y) ?? null,
         building: findAt(scene.buildings, x, y) ?? null,
+        camp: clickedSite?.type === 'camp' ? clickedSite : null,
       },
       selection: {
         unit: unitsSelection.getSelectedUnit(),
         building: buildingsSelection.getSelectedBuilding(),
+        camp: selectedSite?.type === 'camp' ? selectedSite : null,
         buildingTypeToPlace: buildings.selectedBuildingForSpawn,
         unitTypeToSpawn: units.selectedUnitForSpawn,
         choosingRallyPoint:

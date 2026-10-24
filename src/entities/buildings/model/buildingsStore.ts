@@ -22,6 +22,7 @@ type BuildingsState = {
     x: number,
     y: number,
     owner: Owner,
+    expiresTurn?: number,
   ) => string | null;
   damageBuilding: (id: string, damage: number) => void;
   /** Восстанавливает HP, не выше максимума. */
@@ -50,8 +51,8 @@ export const useBuildingsStore = create<BuildingsState>()(
     selectedRallyBuildingId: null,
     selectRallyBuilding: id => set({ selectedRallyBuildingId: id }),
 
-    spawnBuilding: (type, x, y, owner) => {
-      const building = createBuilding(type, x, y, owner);
+    spawnBuilding: (type, x, y, owner, expiresTurn) => {
+      const building = createBuilding(type, x, y, owner, expiresTurn);
       if (!building) return null;
 
       set(state => {

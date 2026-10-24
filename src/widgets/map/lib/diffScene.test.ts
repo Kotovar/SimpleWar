@@ -25,6 +25,18 @@ const before = (...entities: (Unit | Building)[]) =>
 const kinds = (events: { kind: string }[]) => events.map(event => event.kind);
 
 describe('diffScene', () => {
+  it('маскировка и гибель между двумя кадрами не выдают скрытого врага звуком или эффектом', () => {
+    const scout = unit('scout', 4, 'p2');
+    expect(
+      diffScene(
+        before(scout),
+        [],
+        context({
+          deathCell: () => ({ x: 4, y: 0, hidden: true }),
+        }),
+      ).events,
+    ).toEqual([]);
+  });
   it('новый объект мира — найм или стройка, вышедший из тумана враг — угроза', () => {
     const recruit = unit('archer', 1, 'p1');
     const tower = createBuilding('tower', 2, 0, 'p1')!;

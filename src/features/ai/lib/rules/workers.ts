@@ -1,3 +1,8 @@
+import {
+  BUILDINGS_CONFIG,
+  RICH_MINE_INCOME,
+  type Position,
+} from '@shared/config';
 import type { AiRule, Candidate } from '../../model/types';
 import {
   plannedCosts,
@@ -179,13 +184,16 @@ export const W05: AiRule = {
         continue;
       // Пока есть простаивающее место этого типа, новое не строим.
       if (idleWorkplaces(ctx).some(b => b.type === type)) continue;
-      const site = nearest(
-        ctx.base,
-        preferUnstruckSites(
-          ctx,
-          resourceSites(ctx, resource === 'gold' ? 'gold' : 'forest'),
-        ),
+      const sites = preferUnstruckSites(
+        ctx,
+        resourceSites(ctx, resource === 'gold' ? 'gold' : 'forest'),
       );
+      const value = (site: Position) =>
+        manhattan(ctx.base!, site) /
+        (resource === 'gold' && ctx.obs.knownRichGold?.[site.y]?.[site.x]
+          ? RICH_MINE_INCOME
+          : BUILDINGS_CONFIG.mine.income.gold!);
+      const site = sites.sort((a, b) => value(a) - value(b))[0];
       if (!site) continue;
       const worker = [...idleWorkers(ctx, 'W05')].sort(
         (a, b) => manhattan(a, site) - manhattan(b, site),

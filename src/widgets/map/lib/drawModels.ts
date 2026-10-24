@@ -20,6 +20,8 @@ import {
   drawFarm,
   drawForge,
   drawPalisade,
+  drawBeacon,
+  drawOutpost,
   drawGoldMine,
   drawSanctuary,
   drawSawmill,
@@ -39,6 +41,8 @@ const BUILDING_DRAWERS = {
   workshop: drawWorkshop,
   forge: drawForge,
   palisade: drawPalisade,
+  beacon: drawBeacon,
+  outpost: drawOutpost,
   sanctuary: drawSanctuary,
 } satisfies Record<BuildingType, unknown>;
 

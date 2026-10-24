@@ -2,6 +2,8 @@ import {
   AI_DIFFICULTY,
   AI_PROFILES,
   BUILDINGS_CONFIG,
+  CACHE_REWARDS,
+  CAMP_HIRES,
   CELL_SIZE_LIMITS,
   DEBUG_EXCEPTIONS,
   DEFAULT_PALETTES,
@@ -15,11 +17,12 @@ import {
   PARTICIPANT_IDS,
   REJECTION_MESSAGE,
   RESEARCH_CONFIG,
+  SITE_TYPES,
   STRATEGY_NAME,
   UNITS_CONFIG,
 } from '@shared/config';
-import { canHouseWorker, isHostile } from '@shared/lib';
-import { ROAD_BIT, TERRAIN_CODES } from '@entities/perceptions';
+import { canHouseWorker, isBuildableTerrain, isHostile } from '@shared/lib';
+import { ROAD_BIT, RICH_BIT, TERRAIN_CODES } from '@entities/perceptions';
 import { HINTS, TUTORIAL } from '@widgets/game-controls';
 import {
   MAX_SAVE_BYTES,
@@ -90,11 +93,16 @@ const shape =
 const requireValid = (ok: boolean, message: string) => {
   if (!ok) throw new Error(message);
 };
-/** Код памяти о клетке: местность и, возможно, бит дороги на ней. */
-const terrainCode: Check = v =>
-  int(0, TERRAIN_CODES.length | ROAD_BIT)(v) &&
-  ((v as number) & ~ROAD_BIT) <= TERRAIN_CODES.length &&
-  (v === 0 || ((v as number) & ~ROAD_BIT) > 0);
+/** Код памяти о клетке: местность, дорога и открытое богатство золота. */
+const terrainCode: Check = v => {
+  if (!int(0, TERRAIN_CODES.length | ROAD_BIT | RICH_BIT)(v)) return false;
+  const code = (v as number) & ~(ROAD_BIT | RICH_BIT);
+  return (
+    code <= TERRAIN_CODES.length &&
+    (v === 0 || code > 0) &&
+    (!((v as number) & RICH_BIT) || TERRAIN_CODES[code - 1] === 'gold')
+  );
+};
 const participant = one(PARTICIPANT_IDS);
 const participants = (check: Check) => dictionary(check, participant, 4);
 const unitType = one(Object.keys(UNITS_CONFIG));
@@ -109,6 +117,31 @@ const position = shape({
   y: int(0, MAP_SIDE_LIMIT - 1),
 });
 const resources = shape({ gold: int(), wood: int() });
+const site: Check = v => {
+  if (!obj(v)) return false;
+  const contents: Record<string, Check> =
+    v.type === 'cache'
+      ? { resource: one(['gold', 'wood']), amount: int(1, 1000) }
+      : v.type === 'camp'
+        ? { hiresLeft: int(0, CAMP_HIRES) }
+        : {};
+  return shape({
+    id: text(),
+    x: int(0, MAP_SIDE_LIMIT - 1),
+    y: int(0, MAP_SIDE_LIMIT - 1),
+    type: one(SITE_TYPES),
+    ...contents,
+  })(v);
+};
+const knownSite: Check = v =>
+  obj(v) &&
+  shape({
+    id: text(),
+    x: int(0, MAP_SIDE_LIMIT - 1),
+    y: int(0, MAP_SIDE_LIMIT - 1),
+    type: one(SITE_TYPES),
+    ...(v.type === 'camp' ? { hiresLeft: int(0, CAMP_HIRES) } : {}),
+  })(v);
 const setup = shape({
   profile: one(Object.keys(AI_PROFILES)),
   difficulty: one(Object.keys(AI_DIFFICULTY)),
@@ -152,6 +185,7 @@ const base = {
 };
 const unit: Check = v => {
   if (!obj(v) || !unitType(v.type)) return false;
+  if (v.concealed && v.scoutActed) return false;
   const civil = v.type === 'worker';
   const role: Record<string, Check> = civil
     ? {
@@ -179,7 +213,13 @@ const unit: Check = v => {
       maxMovePoints: int(0, 100),
       requiresLimit: int(0, 30),
     },
-    { restMode: one(['skip', 'sleep']), order },
+    {
+      restMode: one(['skip', 'sleep']),
+      order,
+      ...(v.type === 'scout'
+        ? { concealed: one([true]), scoutActed: one([true]) }
+        : {}),
+    },
   )(v);
 };
 const building: Check = v => {
@@ -206,6 +246,16 @@ const building: Check = v => {
     case 'mine':
     case 'sawmill':
       return shape({ ...common, role: one(['resource']), income }, optional)(v);
+    case 'outpost':
+      return shape(
+        {
+          ...common,
+          role: one(['supply']),
+          populationSupply: int(0, 100),
+          income,
+        },
+        optional,
+      )(v);
     case 'farm':
       return shape(
         { ...common, role: one(['supply']), populationSupply: int(0, 100) },
@@ -225,6 +275,11 @@ const building: Check = v => {
       )(v);
     case 'forge':
       return shape({ ...common, role: one(['research']) }, optional)(v);
+    case 'beacon':
+      return shape(
+        { ...common, role: one(['obstacle']), expiresTurn: int(1) },
+        optional,
+      )(v);
     case 'palisade':
       return shape({ ...common, role: one(['obstacle']) }, optional)(v);
     default:
@@ -297,7 +352,7 @@ const side = shape(
     units: dictionary(int(0, 20), unitType, Object.keys(UNITS_CONFIG).length),
     buildings: dictionary(
       int(0, 5),
-      buildingType,
+      one(Object.keys(BUILDINGS_CONFIG).filter(type => type !== 'beacon')),
       Object.keys(BUILDINGS_CONFIG).length,
     ),
     stock: resources,
@@ -321,6 +376,8 @@ const eventTypes = [
   'buildRoad',
   'demolish',
   'prepareStrike',
+  'lightBeacon',
+  'occupyRuins',
   'heal',
   'startResearch',
   'cancelResearch',
@@ -333,6 +390,8 @@ const eventTypes = [
   'attackObserved',
   'income',
   'enemySpotted',
+  'siteClaimed',
+  'siteBlocked',
   'save',
   'load',
   'import',
@@ -389,7 +448,7 @@ const snapshotShape = shape({
             type: one(TERRAIN_CODES),
             isWalkable: bool,
           },
-          { road: one([true]) },
+          { road: one([true]), rich: one([true]) },
         ),
         100,
       ),
@@ -404,6 +463,7 @@ const snapshotShape = shape({
     exceptions: participants(list(one(DEBUG_EXCEPTIONS.map(e => e.id)), 3)),
   }),
   units: dictionary(unit),
+  sites: dictionary(site),
   buildings: dictionary(building),
   economy: shape({
     resources: shape(
@@ -450,6 +510,7 @@ const snapshotShape = shape({
           { byScout: bool },
         ),
       ),
+      sites: dictionary(knownSite),
       strikes: dictionary(position),
     }),
   ),
@@ -509,6 +570,12 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
     obj(value) && value.version === SAVE_VERSION,
     'Неизвестная версия сохранения',
   );
+  if (obj(value) && !Object.hasOwn(value, 'sites')) value.sites = {};
+  if (obj(value) && obj(value.knowledge)) {
+    for (const k of Object.values(value.knowledge)) {
+      if (obj(k) && !Object.hasOwn(k, 'sites')) k.sites = {};
+    }
+  }
   // Снимки до команд: каждая сторона в своей команде.
   if (
     obj(value) &&
@@ -606,12 +673,37 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
             (cell, x) =>
               cell.x === x &&
               cell.y === y &&
-              cell.isWalkable === (MOVE_COST[cell.type] !== undefined),
+              cell.isWalkable === (MOVE_COST[cell.type] !== undefined) &&
+              (!cell.rich || cell.type === 'gold'),
           ),
       ),
     'Повреждена карта',
   );
   const unitCells = new Set<string>();
+  const siteCells = new Set<string>();
+  for (const [id, site] of Object.entries(s.sites)) {
+    const cell = `${site.x},${site.y}`;
+    requireValid(
+      id === site.id &&
+        !s.units[id] &&
+        !s.buildings[id] &&
+        inside(site) &&
+        // Руины разрушенного аванпоста остаются там, где он стоял.
+        (site.type === 'ruins'
+          ? isBuildableTerrain('grass', s.map.grid[site.y][site.x].type)
+          : s.map.grid[site.y][site.x].type === 'grass') &&
+        !siteCells.has(cell),
+      'Повреждена находка',
+    );
+    siteCells.add(cell);
+    if (site.type === 'cache') {
+      const [min, max] = CACHE_REWARDS[site.resource];
+      requireValid(
+        site.amount >= min && site.amount <= max,
+        'Повреждено содержимое тайника',
+      );
+    }
+  }
   const buildingCells = new Set<string>();
   const workers = new Set<string>();
   for (const [id, u] of Object.entries(s.units)) {
@@ -750,6 +842,18 @@ function validateSnapshot(value: unknown): asserts value is GameSnapshot {
               (!!s.strikes[key] && same(mark, s.strikes[key].target))),
           'Повреждена память удара',
         );
+      const rememberedSites = new Set<string>();
+      for (const [key, site] of Object.entries(k.sites)) {
+        const cell = `${site.x},${site.y}`;
+        requireValid(
+          key === site.id &&
+            inside(site) &&
+            !!k.terrain[site.y * width + site.x] &&
+            !rememberedSites.has(cell),
+          'Повреждена память находок',
+        );
+        rememberedSites.add(cell);
+      }
     }
     const memory = s.ai[id];
     if (memory) {

@@ -34,6 +34,14 @@ export type MapMode =
 export const getModePrompt = (mode: MapMode) => {
   switch (mode.kind) {
     case 'build': {
+      if (mode.type === 'outpost')
+        return mode.cells
+          ? 'Кликните по соседним свободным руинам: аванпост даст обзор 4, +5 золота за ход и +2 населения. Захват тратит боевое действие.'
+          : 'Рядом нет видимых свободных руин для захвата.';
+      if (mode.type === 'beacon')
+        return mode.cells
+          ? 'Кликните по соседней свободной равнине или холму: костёр даст обзор 5 на 6 кругов.'
+          : 'Рядом нет видимого свободного места для костра.';
       const place =
         PLACE[BUILDINGS_CONFIG[mode.type].requiredField ?? 'grass'] ?? '';
       return mode.cells
@@ -42,8 +50,8 @@ export const getModePrompt = (mode: MapMode) => {
     }
     case 'spawn':
       return mode.cells
-        ? `Кликните по подсвеченной клетке рядом со зданием, чтобы нанять «${UNITS_NAME[mode.type]}».`
-        : 'Вокруг здания нет свободной клетки для нового юнита.';
+        ? `Кликните по подсвеченной клетке рядом со зданием или лагерем, чтобы нанять «${UNITS_NAME[mode.type]}».`
+        : 'Рядом нет свободной клетки для нового юнита.';
     case 'clear':
       return mode.cells
         ? 'Кликните по подсвеченному лесу: клетка станет равниной.'

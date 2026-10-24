@@ -1,5 +1,6 @@
 import {
   DEFAULT_AUDIO,
+  BATTLE_MUSIC_CROSSFADE,
   MUSIC_CROSSFADE,
   SFX_TONES,
   SFX_LOUDNESS_DB,
@@ -43,7 +44,12 @@ export class AudioEngine {
   private music: Playing | null = null;
   /** Звучащая тема: уходит, только когда новая готова к старту. */
   private audible: Playing | null = null;
-  private state: MusicState = { phase: 'setup', combat: false, outcome: null };
+  private state: MusicState = {
+    phase: 'setup',
+    combat: false,
+    recentAttack: false,
+    outcome: null,
+  };
 
   /** Создаёт контекст по жесту пользователя и запускает текущую тему. */
   unlock() {
@@ -145,7 +151,9 @@ export class AudioEngine {
       // Пока грузили, тема могла смениться.
       if (this.music !== playing) return;
       // Старая тема звучит до готовности новой: без тишины на загрузке.
-      this.fadeOut(context);
+      const duration =
+        track === 'battle' ? BATTLE_MUSIC_CROSSFADE : MUSIC_CROSSFADE;
+      this.fadeOut(context, duration);
       if (!buffer) return;
       const source = context.createBufferSource();
       source.buffer = buffer;
@@ -155,14 +163,14 @@ export class AudioEngine {
       source.connect(gain);
       const now = context.currentTime;
       gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(1, now + MUSIC_CROSSFADE);
+      gain.gain.linearRampToValueAtTime(1, now + duration);
       source.start(now);
       playing.source = source;
       this.audible = playing;
     });
   }
 
-  private fadeOut(context: AudioContext) {
+  private fadeOut(context: AudioContext, duration: number) {
     const old = this.audible;
     if (!old) return;
     this.audible = null;
@@ -171,8 +179,8 @@ export class AudioEngine {
     // Снимаем недоигранный подъём громкости, иначе он продолжится.
     gain.cancelScheduledValues(now);
     gain.setValueAtTime(gain.value, now);
-    gain.linearRampToValueAtTime(0, now + MUSIC_CROSSFADE);
-    old.source?.stop(now + MUSIC_CROSSFADE);
+    gain.linearRampToValueAtTime(0, now + duration);
+    old.source?.stop(now + duration);
   }
 
   private load(context: AudioContext, track: MusicTrack) {

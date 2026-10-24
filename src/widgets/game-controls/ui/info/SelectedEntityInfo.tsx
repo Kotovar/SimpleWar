@@ -5,6 +5,7 @@ import {
   UNITS_NAME,
   HEALING,
   SIEGE_STRIKE,
+  RICH_MINE_INCOME,
   type Building,
   type Cell,
   type Unit,
@@ -53,7 +54,7 @@ const EntityHeader = ({ cell, unit, building }: Props) => {
             ? UNITS_NAME[unit.type]
             : building
               ? BUILDINGS_NAME[building.type]
-              : cell && TERRAIN_NAME[cell.type]}
+              : cell && (cell.rich ? 'Богатая жила' : TERRAIN_NAME[cell.type])}
         </h3>
         {entity && (
           <span className={styles.Owner} data-owner={entity.owner}>
@@ -64,7 +65,9 @@ const EntityHeader = ({ cell, unit, building }: Props) => {
           </span>
         )}
         {cell && entity && (
-          <span className={styles.Owner}>{TERRAIN_NAME[cell.type]}</span>
+          <span className={styles.Owner}>
+            {cell.rich ? 'Богатая жила' : TERRAIN_NAME[cell.type]}
+          </span>
         )}
       </div>
     </div>
@@ -95,6 +98,12 @@ const EntityHealth = ({ entity }: { entity: Entity }) => (
 
 const CellDetails = ({ cell }: { cell: Cell }) => (
   <>
+    {cell.rich && (
+      <div>
+        <dt>Рудник с рабочим</dt>
+        <dd>+{RICH_MINE_INCOME} золота/ход</dd>
+      </div>
+    )}
     <div>
       <dt>Координаты</dt>
       <dd>
@@ -211,6 +220,25 @@ const UnitDefense = ({ unit }: { unit: Unit }) => (
 
 const UnitDetails = ({ unit }: { unit: Unit }) => (
   <>
+    {unit.concealed && (
+      <div>
+        <dt>Маскировка</dt>
+        <dd title='Движение, атака или враг вплотную снимают маскировку.'>
+          <svg
+            width='14'
+            height='14'
+            viewBox='0 0 16 16'
+            fill='none'
+            stroke='currentColor'
+            strokeWidth='1.8'
+            aria-hidden='true'
+          >
+            <path d='M1 8Q8 0 15 8Q8 16 1 8M2 2L14 14' />
+          </svg>{' '}
+          Скрыт
+        </dd>
+      </div>
+    )}
     {unit.order && (
       <div>
         <dt>Приказ</dt>
@@ -264,13 +292,41 @@ const BuildingDetails = ({
   building,
   own,
   canCommand,
+  currentTurn,
 }: {
   building: Building;
   own: boolean;
   canCommand: boolean;
+  currentTurn: number;
 }) => (
   <>
     <DefenseRow type={building.type} />
+    {building.type === 'outpost' && building.role === 'supply' && (
+      <>
+        <div>
+          <dt>Обзор</dt>
+          <dd>{building.sightRange}</dd>
+        </div>
+        <div>
+          <dt>Доход</dt>
+          <dd>+{building.income?.gold ?? 0} золота / ход</dd>
+        </div>
+        <div>
+          <dt>Население</dt>
+          <dd>+{building.populationSupply}</dd>
+        </div>
+      </>
+    )}
+    {building.type === 'beacon' && (
+      <div>
+        <dt>Костёр</dt>
+        <dd>
+          Обзор {building.sightRange} · погаснет в круге {building.expiresTurn}{' '}
+          (через{' '}
+          {Math.max(0, (building.expiresTurn ?? currentTurn) - currentTurn)})
+        </dd>
+      </div>
+    )}
     {building.role === 'production' && (
       <div>
         <dt>Очки производства</dt>
@@ -295,7 +351,7 @@ const BuildingDetails = ({
 );
 
 export const SelectedEntityInfo = ({ cell, unit, building }: Props) => {
-  const { humanId, phase } = useGameLoopSelectors();
+  const { humanId, phase, currentTurn } = useGameLoopSelectors();
   const entity = unit ?? building;
   const palette = useParticipantPalette(entity?.owner ?? 'p1');
   if (!cell && !entity) return null;
@@ -317,6 +373,7 @@ export const SelectedEntityInfo = ({ cell, unit, building }: Props) => {
           <BuildingDetails
             building={building}
             own={building.owner === humanId}
+            currentTurn={currentTurn}
             canCommand={phase === 'inProgress'}
           />
         )}

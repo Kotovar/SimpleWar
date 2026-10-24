@@ -4,6 +4,7 @@ import { generateMap, useMapStore } from '@entities/maps';
 import { useSettingsStore } from '@entities/settings';
 import { useBuildingsStore } from '@entities/buildings';
 import { useUnitsStore } from '@entities/units';
+import { useSitesStore } from '@entities/sites';
 import { resetGame } from '@features/game-loop';
 import { initializeGame } from './initializeGame';
 
@@ -38,7 +39,10 @@ it.each([2, 3, 4])(
     const participants = PARTICIPANT_IDS.slice(0, count).map(
       (id): Participant => ({ id, controller: 'ai' }),
     );
-    expect(initializeGame(participants)).toBe(true);
+    expect(initializeGame(participants, { withSites: true })).toBe(true);
+    expect(
+      Object.values(useSitesStore.getState().sites).length,
+    ).toBeGreaterThan(0);
     expect(generateMap).toHaveBeenCalledTimes(10);
     expect(useMapStore.getState()).toMatchObject({
       seed: 12,
@@ -48,6 +52,12 @@ it.each([2, 3, 4])(
       count,
     );
     expect(Object.values(useUnitsStore.getState().units)).toHaveLength(count);
+    const rich = useMapStore
+      .getState()
+      .grid.flat()
+      .filter(c => c.rich);
+    expect(rich).toHaveLength(count === 2 ? 2 : 4);
+    expect(rich.every(c => c.type === 'gold')).toBe(true);
     const types = useMapStore.getState().grid.map(row => row.map(c => c.type));
     if (count > 2) {
       expect(types).toEqual(types.map(row => [...row].reverse()));
