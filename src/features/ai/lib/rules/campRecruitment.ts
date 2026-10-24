@@ -9,7 +9,7 @@ import { canHire, producers, spawnCell } from './production';
 /** Лагерь выгоден при нехватке дерева, найма или более близком подкреплении. */
 export const campRecruit = (ctx: AiContext, camp: Position) => {
   if (ctx.military.length >= desiredArmy(ctx)) return null;
-  const type = nextRecruit(ctx);
+  const type = nextRecruit(ctx, ['swordsman', 'archer']);
   if (type !== 'swordsman' && type !== 'archer') return null;
   if (
     ctx.obs.population.occupied + UNITS_CONFIG[type].requiresLimit >

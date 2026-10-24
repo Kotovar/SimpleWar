@@ -3,7 +3,9 @@ import { enemyTarget } from '../facts';
 import { chebyshev, manhattan } from '../geometry';
 import { standCells, stepToward } from '../movement';
 import { strikeGroup } from '../operation';
-import { isFree, moveTo, wouldBlock } from './common';
+import { isFree, moveTo, taskOf, wouldBlock } from './common';
+import { unitsOf } from './roleKit';
+import { siteDanger } from './siteScouting';
 
 export const M08: AiRule = {
   id: 'M08',
@@ -14,6 +16,10 @@ export const M08: AiRule = {
       unit => isFree(ctx, unit.id) && unit.attack > 0,
     );
     const result: Candidate[] = [];
+    const scouts = unitsOf(ctx, 'scout').filter(
+      unit => !taskOf(ctx, unit.id) || taskOf(ctx, unit.id)?.kind === 'scout',
+    );
+    const danger = scouts.length ? siteDanger(ctx) : null;
     for (const site of ctx.obs.sites ?? []) {
       if (
         site.type !== 'ruins' ||
@@ -22,9 +28,10 @@ export const M08: AiRule = {
         wouldBlock(ctx, site)
       )
         continue;
-      const unit = [...group].sort(
-        (a, b) => manhattan(a, site) - manhattan(b, site),
-      )[0];
+      const unit = [
+        ...(danger?.[site.y * ctx.width + site.x] ? [] : scouts),
+        ...group,
+      ].sort((a, b) => manhattan(a, site) - manhattan(b, site))[0];
       if (!unit) continue;
       if (chebyshev(unit, site) === 1) {
         if (unit.attackPoints <= 0 || !ctx.obs.visible[site.y]?.[site.x])
@@ -44,11 +51,25 @@ export const M08: AiRule = {
         });
       } else {
         const enemy = enemyTarget(ctx);
-        if (enemy && manhattan(unit, enemy) < manhattan(unit, site)) continue;
-        const step = stepToward(ctx, unit, standCells(ctx, site));
+        if (
+          unit.type !== 'scout' &&
+          enemy &&
+          manhattan(unit, enemy) < manhattan(unit, site)
+        )
+          continue;
+        const here = danger?.[unit.y * ctx.width + unit.x] ?? 0;
+        const avoid =
+          unit.type === 'scout'
+            ? danger?.map(depth => (depth > here ? 1 : 0))
+            : undefined;
+        for (const strike of ctx.obs.strikes)
+          if (avoid) avoid[strike.y * ctx.width + strike.x] = 1;
+        const step = stepToward(ctx, unit, standCells(ctx, site), avoid);
         if (step && ctx.threatAt(step.next, unit.type) === 0)
           result.push(
-            moveTo('M08', unit, step.next, 58, 'иду занимать ближайшие руины'),
+            moveTo('M08', unit, step.next, 58, 'иду занимать ближайшие руины', {
+              action: { type: 'move', unitId: unit.id, ...step.next, avoid },
+            }),
           );
       }
     }

@@ -123,7 +123,7 @@ export const R05: AiRule = {
   },
 };
 
-/** R06: разведчик под угрозой — уклониться, не размениваться на атаку. */
+/** R06: уйти от угрозы; без пути отхода ждать ради маскировки. */
 export const R06: AiRule = {
   id: 'R06',
   group: 'defense',
@@ -131,14 +131,29 @@ export const R06: AiRule = {
   evaluate: ctx =>
     unitsOf(ctx, 'scout').flatMap(unit => {
       const danger = ctx.threatAt(unit, 'scout');
-      if (unit.movePoints <= 0 || danger === 0) return [];
+      if (danger === 0) return [];
       const cell = bestMove(ctx, unit, c => -ctx.threatAt(c, 'scout'));
-      return cell
-        ? [
-            moveTo('R06', unit, cell, 90, 'опасность: ухожу', {
-              basis: { threat: danger },
-            }),
-          ]
-        : [];
+      if (cell)
+        return [
+          moveTo('R06', unit, cell, 90, 'опасность: ухожу', {
+            basis: { threat: danger },
+          }),
+        ];
+      if (
+        unit.scoutActed ||
+        ctx.struck(unit) ||
+        ctx.enemies.some(enemy => manhattan(unit, enemy) <= 1)
+      )
+        return [];
+      return [
+        {
+          ruleId: 'R06',
+          group: 'defense',
+          actorId: unit.id,
+          action: { type: 'wait', actorId: unit.id },
+          score: 90,
+          reason: 'отступить безопаснее нельзя: жду ради маскировки',
+        },
+      ];
     }),
 };

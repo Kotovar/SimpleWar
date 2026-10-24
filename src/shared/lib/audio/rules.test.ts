@@ -31,16 +31,32 @@ describe('createRepeatLimiter', () => {
 });
 
 describe('pickMusicTrack', () => {
-  it('выбирает тему по стадии, видимой угрозе и итогу', () => {
-    const base = { combat: false, outcome: null };
+  it('выбирает бой только после нападения и при видимом враге рядом', () => {
+    const base = { combat: false, recentAttack: false, outcome: null };
 
     expect(pickMusicTrack({ ...base, phase: 'setup' })).toBe('menu');
     expect(pickMusicTrack({ ...base, phase: 'inProgress' })).toBe('peace');
     expect(pickMusicTrack({ ...base, phase: 'inProgress', combat: true })).toBe(
-      'battle',
+      'peace',
     );
     expect(
-      pickMusicTrack({ phase: 'gameOver', combat: true, outcome: 'victory' }),
+      pickMusicTrack({ ...base, phase: 'inProgress', recentAttack: true }),
+    ).toBe('peace');
+    expect(
+      pickMusicTrack({
+        ...base,
+        phase: 'inProgress',
+        combat: true,
+        recentAttack: true,
+      }),
+    ).toBe('battle');
+    expect(
+      pickMusicTrack({
+        ...base,
+        phase: 'gameOver',
+        combat: true,
+        outcome: 'victory',
+      }),
     ).toBe('victory');
     expect(pickMusicTrack({ ...base, phase: 'gameOver' })).toBe('defeat');
   });

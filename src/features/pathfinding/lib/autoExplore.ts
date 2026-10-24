@@ -1,6 +1,7 @@
 import type { ParticipantId, Position, Unit } from '@shared/config';
 import { findCheapestPaths, ok, reject } from '@shared/lib';
 import { useUnitsStore } from '@entities/units';
+import { useEconomyStore } from '@entities/economies';
 import { getParticipantKnowledge } from '@entities/perceptions';
 import { getTurnRejection, useGameLoopStore } from '@entities/games';
 import { runCommand } from '@entities/journals';
@@ -15,7 +16,7 @@ import { getExplorationDanger } from './explorationDanger';
 import { move } from './move';
 
 /**
- * Ближайшая по цене достижимая неизвестная клетка на границе известных.
+ * Сначала достижимая находка, затем неизвестная клетка на границе известных.
  * Цель — вне опасных клеток {@link getExplorationDanger}; путь не заходит
  * глубже текущей клетки разведчика, так что из зоны он может выйти.
  *
@@ -45,6 +46,24 @@ export const getExplorationTarget = (unit: Unit, actor: ParticipantId) => {
   const sites = Object.values(
     getParticipantKnowledge(actor)?.sites ?? {},
   ).filter(site => site.type !== 'camp' || site.hiresLeft > 0);
+  const population = useEconomyStore.getState().populationCap[actor];
+  const pickups = sites
+    .filter(
+      site =>
+        (site.type === 'cache' ||
+          site.type === 'obelisk' ||
+          (site.type === 'refugees' && population.occupied < population.max)) &&
+        !danger[site.y * width + site.x] &&
+        reachable.has(site.y * width + site.x),
+    )
+    .sort(
+      (a, b) =>
+        reachable.get(a.y * width + a.x)! - reachable.get(b.y * width + b.x)!,
+    );
+  for (const site of pickups) {
+    const route = getRoutePreview(unit, actor, site, avoid);
+    if (route) return { ...route, avoid };
+  }
   const interest = (key: number) =>
     sites.some(
       site =>

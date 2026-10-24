@@ -12,17 +12,17 @@ import { useUnitsStore } from '@entities/units';
 import { AI_RULES, playTurn } from '@features/ai';
 import { initGameLoopEvents, nextTurn, resetGame } from '@features/game-loop';
 import { getObservation, initVisibilitySystem } from '@features/visibility';
-import { getExplorationTarget } from '@features/pathfinding';
+import { autoExplore, getExplorationTarget } from '@features/pathfinding';
 import { executeAiAction } from './aiTurn';
 
 const participants: Participant[] = [
   { id: 'p1', controller: 'human' },
   { id: 'p2', controller: 'ai' },
 ];
-const run = (ids: string[]) =>
+const run = (ids?: string[], memory = createAiMemory(7)) =>
   playTurn({
-    memory: createAiMemory(7),
-    rules: AI_RULES.filter(rule => ids.includes(rule.id)),
+    memory,
+    rules: ids ? AI_RULES.filter(rule => ids.includes(rule.id)) : AI_RULES,
     observe: () => getObservation('p2'),
     execute: action => executeAiAction('p2', action),
     isCancelled: () => false,
@@ -55,6 +55,107 @@ beforeEach(() => {
   useEconomyStore.getState().addResources('p2', { gold: 2000, wood: 2000 });
 });
 afterEach(resetGame);
+
+it.each(['cache', 'refugees', 'obelisk'] as const)(
+  'авторазведка сначала подбирает открытый %s',
+  type => {
+    const scout = useUnitsStore
+      .getState()
+      .spawnUnit('scout', 5, 5, 'p2', true)!;
+    useSitesStore
+      .getState()
+      .setSites([
+        type === 'cache'
+          ? { id: 'pickup', type, x: 5, y: 3, resource: 'gold', amount: 90 }
+          : { id: 'pickup', type, x: 5, y: 3 },
+      ]);
+    expect(
+      getExplorationTarget(
+        useUnitsStore.getState().units[scout],
+        'p2',
+      )?.path.at(-1),
+    ).toEqual({ x: 5, y: 3 });
+    expect(autoExplore({ actor: 'p2', unitId: scout }).ok).toBe(true);
+    expect(useSitesStore.getState().sites.pickup).toBeUndefined();
+  },
+);
+
+it('авторазведка не зацикливается на беженцах при полном населении', () => {
+  const scout = useUnitsStore.getState().spawnUnit('scout', 5, 5, 'p2', true)!;
+  useSitesStore
+    .getState()
+    .setSites([{ id: 'ref', type: 'refugees', x: 5, y: 3 }]);
+  const cap = useEconomyStore.getState().populationCap.p2;
+  useEconomyStore.getState().addUnit('p2', cap.max - cap.occupied);
+  expect(
+    getExplorationTarget(useUnitsStore.getState().units[scout], 'p2')?.path.at(
+      -1,
+    ),
+  ).not.toEqual({ x: 5, y: 3 });
+  expect(autoExplore({ actor: 'p2', unitId: scout }).ok).toBe(true);
+});
+
+it('авторазведка собирает находку даже после полного исследования карты', () => {
+  const scout = useUnitsStore.getState().spawnUnit('scout', 5, 5, 'p2', true)!;
+  useSitesStore
+    .getState()
+    .setSites([
+      { id: 'cache', type: 'cache', x: 5, y: 3, resource: 'gold', amount: 90 },
+    ]);
+  const knowledge = useKnowledgeStore.getState().byParticipant.p2!;
+  useKnowledgeStore.setState({
+    byParticipant: {
+      ...useKnowledgeStore.getState().byParticipant,
+      p2: { ...knowledge, terrain: new Uint8Array(400).fill(1) },
+    },
+  });
+  expect(autoExplore({ actor: 'p2', unitId: scout }).ok).toBe(true);
+  expect(useSitesStore.getState().sites.cache).toBeUndefined();
+});
+
+it('полный набор правил ИИ собирает находку и занимает руины разведчиком', async () => {
+  useUnitsStore.getState().spawnUnit('scout', 5, 5, 'p2', true);
+  useUnitsStore.getState().resetUnitsForNewTurn('p2');
+  useSitesStore.getState().setSites([
+    { id: 'cache', type: 'cache', x: 5, y: 4, resource: 'gold', amount: 90 },
+    { id: 'ruins', type: 'ruins', x: 6, y: 5 },
+  ]);
+  const result = await run();
+  expect(result.reason).not.toBe('повторные отказы команд');
+  expect(useSitesStore.getState().sites).toEqual({});
+  expect(useBuildingsStore.getState().getBuildingAt(6, 5)?.type).toBe(
+    'outpost',
+  );
+});
+
+it('разведчик оставляет костёр, рабочий выбирает богатую жилу и запускает рудник', async () => {
+  useMapStore
+    .getState()
+    .setCell(12, 5, { type: 'gold', isWalkable: false, rich: true });
+  useMapStore.getState().setCell(10, 5, { type: 'gold', isWalkable: false });
+  useUnitsStore.getState().spawnUnit('scout', 11, 5, 'p2', true);
+  const worker = useUnitsStore
+    .getState()
+    .spawnUnit('worker', 4, 5, 'p2', true)!;
+  useUnitsStore.getState().resetUnitsForNewTurn('p2');
+  expect(getObservation('p2').knownRichGold?.[5][12]).toBe(true);
+  const result = await run(['R09', 'W05', 'W02']);
+  expect(result.reason).not.toBe('повторные отказы команд');
+  expect(
+    Object.values(useBuildingsStore.getState().buildings).some(
+      b => b.type === 'beacon',
+    ),
+  ).toBe(true);
+  expect(nextTurn('p2').ok).toBe(true);
+  expect(nextTurn('p1').ok).toBe(true);
+  const next = await run(['R09', 'W05', 'W02'], result.memory);
+  expect(next.reason).not.toBe('повторные отказы команд');
+  const mine = useBuildingsStore.getState().getBuildingAt(12, 5);
+  expect(mine).toMatchObject({ type: 'mine', owner: 'p2' });
+  expect(useUnitsStore.getState().units[worker]).toMatchObject({
+    workplaceId: mine?.id,
+  });
+});
 
 it('R08 действительно собирает тайник через общую команду движения', async () => {
   const scout = useUnitsStore.getState().spawnUnit('scout', 2, 3, 'p2', true)!;
@@ -168,24 +269,25 @@ it('авторазведка предпочитает неизвестный с�
   expect(getExplorationTarget(unit, 'p2')!.path.at(-1)).toEqual(before);
 });
 
-it('M08 создаёт аванпост и тратит действие бойца', async () => {
-  const unit = useUnitsStore
-    .getState()
-    .spawnUnit('swordsman', 4, 4, 'p2', true)!;
-  useUnitsStore.getState().resetUnitsForNewTurn('p2');
-  useSitesStore
-    .getState()
-    .setSites([{ id: 'ruins', type: 'ruins', x: 5, y: 5 }]);
-  await run(['M08']);
-  expect(useSitesStore.getState().sites).toEqual({});
-  expect(useBuildingsStore.getState().getBuildingAt(5, 5)).toMatchObject({
-    type: 'outpost',
-    owner: 'p2',
-  });
-  expect(useUnitsStore.getState().units[unit]).toMatchObject({
-    attackPoints: 0,
-  });
-});
+it.each(['swordsman', 'scout'] as const)(
+  'M08 создаёт аванпост юнитом %s и тратит действие',
+  async type => {
+    const unit = useUnitsStore.getState().spawnUnit(type, 4, 4, 'p2', true)!;
+    useUnitsStore.getState().resetUnitsForNewTurn('p2');
+    useSitesStore
+      .getState()
+      .setSites([{ id: 'ruins', type: 'ruins', x: 5, y: 5 }]);
+    await run(['M08']);
+    expect(useSitesStore.getState().sites).toEqual({});
+    expect(useBuildingsStore.getState().getBuildingAt(5, 5)).toMatchObject({
+      type: 'outpost',
+      owner: 'p2',
+    });
+    expect(useUnitsStore.getState().units[unit]).toMatchObject({
+      attackPoints: 0,
+    });
+  },
+);
 
 it('R09 создаёт костёр штатной командой после разведки карты', async () => {
   useUnitsStore.getState().spawnUnit('scout', 5, 5, 'p2', true);
@@ -213,6 +315,24 @@ it('R04 ждёт один раз и получает маскировку в н�
   useUnitsStore.getState().spawnUnit('swordsman', 8, 5, 'p1', true);
   useUnitsStore.getState().spawnUnit('swordsman', 7, 6, 'p1', true);
   const result = await run(['R04']);
+  expect(result.commands).toBe(1);
+  expect(useUnitsStore.getState().units[scout]).toMatchObject({ x: 2, y: 5 });
+  expect(nextTurn('p2').ok).toBe(true);
+  expect(nextTurn('p1').ok).toBe(true);
+  expect(useUnitsStore.getState().units[scout].concealed).toBe(true);
+});
+
+it('R06 без пути отхода ждёт и получает маскировку в следующий свой ход', async () => {
+  for (const [x, y] of [
+    [1, 5],
+    [3, 5],
+    [2, 4],
+    [2, 6],
+  ])
+    useMapStore.getState().setCell(x, y, { type: 'water', isWalkable: false });
+  const scout = useUnitsStore.getState().spawnUnit('scout', 2, 5, 'p2', true)!;
+  useUnitsStore.getState().spawnUnit('archer', 4, 5, 'p1', true);
+  const result = await run(['R06']);
   expect(result.commands).toBe(1);
   expect(useUnitsStore.getState().units[scout]).toMatchObject({ x: 2, y: 5 });
   expect(nextTurn('p2').ok).toBe(true);

@@ -32,11 +32,13 @@ export const createRepeatLimiter = (
   };
 };
 
-/** Что слышит игрок: стадия партии, видимая угроза и итог. */
+/** Что слышит игрок: стадия партии, видимая угроза, нападение и итог. */
 export type MusicState = {
   phase: Phase;
   /** Видимый враг рядом со своими объектами. */
   combat: boolean;
+  /** Враг недавно нанёс урон своему или союзному юниту. */
+  recentAttack: boolean;
   /** Итог для смотрящего; `null`, пока партия идёт. */
   outcome: 'victory' | 'defeat' | null;
 };
@@ -50,9 +52,10 @@ export type MusicState = {
 export const pickMusicTrack = ({
   phase,
   combat,
+  recentAttack,
   outcome,
 }: MusicState): MusicTrack => {
   if (phase === 'setup') return 'menu';
   if (phase === 'gameOver') return outcome ?? 'defeat';
-  return combat ? 'battle' : 'peace';
+  return combat && recentAttack ? 'battle' : 'peace';
 };

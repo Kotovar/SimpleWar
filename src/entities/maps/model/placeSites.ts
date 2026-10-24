@@ -2,6 +2,7 @@ import {
   CACHE_REWARDS,
   CAMP_HIRES,
   SITE_COUNTS,
+  SITE_MIN_DISTANCE,
   SITE_MIN_START_DISTANCE,
   type Cell,
   type Site,
@@ -56,7 +57,6 @@ export const placeSites = (
       hiresLeft: CAMP_HIRES,
     },
   ];
-  const occupied = new Set([key(camp)]);
   const groups = cells.flatMap(cell => {
     const { x, y } = cell;
     const positions = [cell, grid[height - 1 - y][width - 1 - x]];
@@ -87,17 +87,31 @@ export const placeSites = (
         );
       candidates.sort((a, b) => distance(b[0]) - distance(a[0]));
     }
-    const count = Math.max(1, Math.round((perSide * width * height) / 900));
+    const count = Math.max(
+      1,
+      Math.round((perSide * Math.sqrt(width * height)) / 30),
+    );
     for (let i = 0; i < count; i++) {
-      const group = candidates.find(group =>
-        group.every(cell => !occupied.has(key(cell))),
-      );
+      let group: Cell[] | undefined;
+      let bestGap = SITE_MIN_DISTANCE - 1;
+      for (const candidate of candidates) {
+        const gap = Math.min(
+          ...candidate.flatMap((cell, index) =>
+            [...sites, ...candidate.slice(index + 1)].map(
+              other => Math.abs(cell.x - other.x) + Math.abs(cell.y - other.y),
+            ),
+          ),
+        );
+        if (gap > bestGap) {
+          group = candidate;
+          bestGap = gap;
+        }
+      }
       if (!group) return null;
       const resource = random() < 0.5 ? 'gold' : 'wood';
       const [min, max] = CACHE_REWARDS[resource];
       const amount = min + Math.floor(random() * (max - min + 1));
       for (const { x, y } of group) {
-        occupied.add(y * width + x);
         const position = { id: `site_${type}_${x}_${y}`, x, y };
         sites.push(
           type === 'cache'

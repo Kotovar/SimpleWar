@@ -82,7 +82,12 @@ export const decideStep = (
 
   const salt = `${ctx.obs.turn}:${ctx.turn.step}:`;
   const keyOf = stableKeys(ctx);
+  // Вес разведки не должен перебивать спасение того же разведчика.
+  const evading = new Set(
+    candidates.filter(c => c.ruleId === 'R06').map(c => c.actorId),
+  );
   const sorted = candidates
+    .filter(c => c.ruleId === 'R06' || !evading.has(c.actorId))
     .map(c => ({ c, tie: tieBreak(salt + keyOf(c), ctx.memory.seed) }))
     .sort((a, b) => b.c.weighted - a.c.weighted || a.tie - b.tie)
     .map(({ c }) => c);

@@ -84,17 +84,60 @@ it.each([
       }
     }
     if (width === 30)
-      expect(sites.filter(s => s.type === 'cache')).toHaveLength(count * 2);
+      expect(sites.filter(s => s.type === 'cache')).toHaveLength(count);
   },
 );
 
-it('количество обычных находок растёт с площадью', () => {
+it('количество находок растёт медленнее площади', () => {
   const small = placeSites(field(), starts(30, 30, 4), 43)!;
   const large = placeSites(field(100, 100), starts(100, 100, 4), 43)!;
   expect(large).not.toBeNull();
-  expect(large.length).toBeGreaterThan(small.length * 8);
+  expect(large.length).toBeGreaterThan(small.length);
+  expect(large.length).toBeLessThan(small.length * 4);
   expect(large.filter(s => s.type === 'camp')).toHaveLength(1);
 });
+
+it('на большой карте находок меньше: 49 на четверых вместо 221', () => {
+  const sites = placeSites(field(100, 100), starts(100, 100, 4), 43)!;
+  expect(sites).not.toBeNull();
+  expect(sites).toHaveLength(49);
+});
+
+it.each([2, 4])(
+  'находки для %s сторон не кучкуются и занимают все четверти карты',
+  count => {
+    for (const [width, height] of [
+      [30, 30],
+      [31, 35],
+      [100, 60],
+      [100, 100],
+    ]) {
+      for (const seed of [0, 7, 43, 99]) {
+        const sites = placeSites(
+          field(width, height),
+          starts(width, height, count),
+          seed,
+        )!;
+        expect(sites).not.toBeNull();
+        expect(
+          new Set(
+            sites.map(
+              site =>
+                `${Number(site.x >= width / 2)},${Number(site.y >= height / 2)}`,
+            ),
+          ).size,
+        ).toBe(4);
+        for (let i = 0; i < sites.length; i++) {
+          for (const other of sites.slice(i + 1)) {
+            expect(
+              Math.abs(sites[i].x - other.x) + Math.abs(sites[i].y - other.y),
+            ).toBeGreaterThanOrEqual(5);
+          }
+        }
+      }
+    }
+  },
+);
 
 it('не использует непроходимые и недоступные клетки', () => {
   const grid = field();

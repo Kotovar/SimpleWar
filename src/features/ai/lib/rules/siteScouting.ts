@@ -1,16 +1,22 @@
-import { BUILDINGS_CONFIG, type MilitaryUnit } from '@shared/config';
+import {
+  BEACON_DURATION,
+  BUILDINGS_CONFIG,
+  type MilitaryUnit,
+} from '@shared/config';
 import { createExplorationDanger } from '@shared/lib';
 import type { AiRule, Candidate } from '../../model/types';
 import type { AiContext } from '../context';
 import { chebyshev, manhattan, around } from '../geometry';
-import { stepToward, standCells } from '../movement';
+import { pathsFrom, stepToward, standCells } from '../movement';
+import { resourceSites } from '../facts';
 import { affordable } from '../saving';
-import { isFree, moveTo, taskOf, wouldBlock } from './common';
+import { isFree, moveTo, taskOf } from './common';
+import { siteOk } from './building';
 import { campRecruit } from './campRecruitment';
 import { unitsOf } from './roleKit';
 
-/** Опасность для R08 одна на всех разведчиков шага. */
-const siteDanger = (ctx: AiContext) =>
+/** Общая оценка опасности на пути разведчика к находкам и руинам. */
+export const siteDanger = (ctx: AiContext) =>
   createExplorationDanger(
     ctx.width,
     ctx.height,
@@ -59,7 +65,7 @@ const siteMoves = (
           'R08',
           unit,
           next,
-          (site.type === 'camp' ? 54 : 68) - Math.min(15, total / 3),
+          (site.type === 'camp' ? 76 : 84) - Math.min(15, total / 3),
           'иду к известной находке',
           {
             basis: { site: site.type, x: site.x, y: site.y },
@@ -93,12 +99,25 @@ export const R09: AiRule = {
   group: 'scout',
   title: 'Сигнальный костёр',
   evaluate: ctx => {
-    if (ctx.frontier.length || !affordable(ctx, BUILDINGS_CONFIG.beacon.cost))
-      return [];
+    if (!affordable(ctx, BUILDINGS_CONFIG.beacon.cost)) return [];
     const buildings = [
       ...ctx.obs.ownBuildings,
       ...(ctx.obs.alliedBuildings ?? []),
     ];
+    const richSites = resourceSites(ctx, 'gold').filter(
+      site =>
+        ctx.obs.knownRichGold?.[site.y]?.[site.x] &&
+        !buildings.some(b => manhattan(b, site) <= b.sightRange) &&
+        ctx.workers.some(worker => {
+          if (worker.workplaceId || worker.maxMovePoints <= 0) return false;
+          const { cost } = pathsFrom(ctx, worker);
+          return standCells(ctx, site).some(
+            cell =>
+              (cost.get(cell.y * ctx.width + cell.x) ?? Infinity) <
+              worker.maxMovePoints * BEACON_DURATION,
+          );
+        }),
+    );
     return unitsOf(ctx, 'scout').flatMap((unit): Candidate[] => {
       if (
         !isFree(ctx, unit.id) ||
@@ -111,21 +130,20 @@ export const R09: AiRule = {
         manhattan(unit, ctx.base) >= 3 &&
         manhattan(unit, ctx.base) <= 9;
       const front = ctx.memory.operation.target;
-      if (!nearBase && (!front || manhattan(unit, front) > 8)) return [];
+      const rich = richSites.find(site => manhattan(unit, site) <= 6);
+      const watch =
+        !ctx.frontier.length &&
+        (nearBase || (front && manhattan(unit, front) <= 8));
+      if (!rich && !watch) return [];
       const cell = around(unit).find(
         p =>
           ctx.obs.visible[p.y]?.[p.x] &&
-          ['grass', 'hill'].includes(ctx.known(p.x, p.y) ?? '') &&
-          !ctx.occupied(p.x, p.y) &&
-          ctx.threatAt(p) === 0 &&
+          siteOk(ctx, 'beacon', p) &&
           !ctx.struck(p) &&
-          !(ctx.obs.sites ?? []).some(
-            site => site.x === p.x && site.y === p.y,
-          ) &&
+          (!rich || manhattan(p, rich) <= BUILDINGS_CONFIG.beacon.sightRange) &&
           !buildings.some(
             b => manhattan(b, p) <= (b.type === 'beacon' ? 5 : 2),
-          ) &&
-          !wouldBlock(ctx, p),
+          ),
       );
       return cell
         ? [
@@ -134,8 +152,10 @@ export const R09: AiRule = {
               group: 'scout',
               actorId: unit.id,
               action: { type: 'lightBeacon', unitId: unit.id, ...cell },
-              score: 46,
-              reason: 'оставляю обзор на подходах',
+              score: rich ? 68 : 46,
+              reason: rich
+                ? 'оставляю обзор богатой жилы для рабочего'
+                : 'оставляю обзор на подходах',
             },
           ]
         : [];
